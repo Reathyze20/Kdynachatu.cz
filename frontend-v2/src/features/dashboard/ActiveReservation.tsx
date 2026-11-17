@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
+import type { DashboardReservationsData, UpcomingReservation, LastStay, ReservationParticipantLite } from "@/api/dashboard";
 import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { CalendarPlus } from "lucide-react";
@@ -49,6 +49,22 @@ function buildLastStayBlock(lastStay: LastStay | null | undefined): React.ReactN
       <span className="last-stay-text">
         Prázdná {daysLabel}{checklistPart}
       </span>
+    </div>
+  );
+}
+
+function buildParticipantStack(participants: ReservationParticipantLite[] | undefined): React.ReactNode {
+  if (!participants || participants.length === 0) return null;
+  return (
+    <div className="status-participants">
+      <span className="status-participants-label">Také jede</span>
+      <div className="status-participants-avatars">
+        {participants.map((p) => (
+          <span key={p.userId} className="status-participant" title={p.username}>
+            <AnimalAvatar icon={p.userAnimalIcon} username={p.username} color={p.userColor || undefined} size={24} />
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -222,6 +238,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
               </div>
             </div>
           </div>
+          {buildParticipantStack(active.participants)}
           {checkoutReminderNode}
           {buildCombinedNextBlock()}
           {buildUpcomingList()}

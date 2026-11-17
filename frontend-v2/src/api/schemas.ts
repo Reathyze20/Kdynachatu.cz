@@ -21,6 +21,13 @@ const PendingShoppingItemSchema = z.object({
   isEssential: z.boolean(),
 })
 
+const ReservationParticipantLiteSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  userColor: z.string().nullable(),
+  userAnimalIcon: z.string().nullable().optional(),
+})
+
 const ActiveReservationSchema = z.object({
   id: z.string(),
   username: z.string(),
@@ -31,6 +38,7 @@ const ActiveReservationSchema = z.object({
   purpose: z.string(),
   handoverNote: z.string().nullable().optional(),
   isCheckoutCompleted: z.boolean().optional(),
+  participants: z.array(ReservationParticipantLiteSchema).optional(),
 })
 
 const UpcomingReservationSchema = z.object({
@@ -43,6 +51,7 @@ const UpcomingReservationSchema = z.object({
   to: z.string(),
   purpose: z.string(),
   status: z.string().optional(),
+  participants: z.array(ReservationParticipantLiteSchema).optional(),
 })
 
 const LastStaySchema = z.object({

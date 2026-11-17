@@ -1,5 +1,12 @@
 // Types matching src/types.ts — duplicated here to avoid cross-project imports
 
+export interface ReservationParticipant {
+  userId: string;
+  username: string;
+  userColor?: string | null;
+  userAnimalIcon?: string | null;
+}
+
 export interface Reservation {
   id: string;
   userId: string;
@@ -15,6 +22,8 @@ export interface Reservation {
   isCheckoutCompleted?: boolean;
   checkoutCompletedBy?: string | null;
   checkoutCompletedAt?: string | null;
+  /** Co-occupants (spolucestující); organizer is userId above */
+  participants?: ReservationParticipant[];
 }
 
 export interface UserAvailability {

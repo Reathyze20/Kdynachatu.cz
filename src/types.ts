@@ -16,6 +16,13 @@ export interface User {
   role?: "admin" | "user" | "guest";
 }
 
+export interface ReservationParticipant {
+  userId: string;
+  username: string;
+  userColor?: string | null;
+  userAnimalIcon?: string | null;
+}
+
 export interface Reservation {
   id: string;
   userId: string;
@@ -31,6 +38,8 @@ export interface Reservation {
   isCheckoutCompleted?: boolean;
   checkoutCompletedBy?: string | null;
   checkoutCompletedAt?: string | null;
+  /** Co-occupants (spolucestujici); organizer is userId above */
+  participants?: ReservationParticipant[];
 }
 
 export interface ShoppingListItem {

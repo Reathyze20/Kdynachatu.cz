@@ -255,6 +255,17 @@ const schemas: Record<string, JsonSchema> = {
       isCheckoutCompleted: { type: "boolean", nullable: true },
       checkoutCompletedBy: { type: "string", nullable: true },
       checkoutCompletedAt: { type: "string", format: "date-time", nullable: true },
+      participants: { type: "array", items: ref("ReservationParticipant") },
+    },
+  },
+  ReservationParticipant: {
+    type: "object",
+    required: ["userId", "username"],
+    properties: {
+      userId: { type: "string", format: "uuid" },
+      username: { type: "string", example: "babicka" },
+      userColor: { type: "string", nullable: true },
+      userAnimalIcon: { type: "string", nullable: true },
     },
   },
   Availability: {
@@ -294,6 +305,11 @@ const schemas: Record<string, JsonSchema> = {
       notes: { type: "string", nullable: true },
       handoverNote: { type: "string", nullable: true },
       status: { type: "string", enum: ["primary", "soft"], nullable: true },
+      participantIds: {
+        type: "array",
+        items: { type: "string", format: "uuid" },
+        description: "IDs spolucestujicich (organizator se vynecha)",
+      },
     },
   },
   ShoppingUser: {
