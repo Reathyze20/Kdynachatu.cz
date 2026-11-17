@@ -103,7 +103,7 @@ Continue to: **[POSTMAN-GUIDE.md](POSTMAN-GUIDE.md)**
 Continue to: **[PLAYWRIGHT-GUIDE.md](PLAYWRIGHT-GUIDE.md)**
 
 ### 🎯 Manual Testing in Browser
-See: **[../SPRINT-0-SMOKE-TEST.md](../SPRINT-0-SMOKE-TEST.md)** for manual test scenarios
+See: **[../SMOKE-TEST.md](../SMOKE-TEST.md)** for manual test scenarios
 
 ---
 

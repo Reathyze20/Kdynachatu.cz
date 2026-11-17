@@ -1,6 +1,6 @@
 # SEP-1 B1 – Návrh oddělení produkce a stagingu
 
-Stav: schváleno (odpovědi na otázky §6) · 27. 9. 2026 · navazuje na [`SEP-1.md`](SEP-1.md) fáze B
+Stav: schváleno (odpovědi na otázky §6) · 27. 9. 2026 · navazuje na [`SEP-1.md`](SEP-1.md) fáze B; cílový stav hostingu nově určuje [ADR-0002](../adr/0002-hosting-a-deploy.md)
 Tento dokument je jen plán. Nic z něj zatím není implementováno.
 
 ---

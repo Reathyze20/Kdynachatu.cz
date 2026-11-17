@@ -127,7 +127,7 @@ npm run docker:logs      # zobrazí logy aplikace
 
 ### 📚 Další dokumentace
 - **Implementation Roadmap:** [docs/learning/IMPLEMENTATION-ROADMAP.md](docs/learning/IMPLEMENTATION-ROADMAP.md) — co je hotové a co chybí
-- **Manuální testování:** [docs/SPRINT-0-SMOKE-TEST.md](docs/SPRINT-0-SMOKE-TEST.md) — rodinné smoke test scénáře
+- **Manuální testování:** [docs/SMOKE-TEST.md](docs/SMOKE-TEST.md) — rodinné smoke test scénáře
 
 ### 🔧 API dokumentace
 - **Swagger UI:** http://localhost:3000/api/docs (v devu zapnuté automaticky)

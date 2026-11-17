@@ -1,5 +1,7 @@
 # SEP-1 – Oddělení rodinné verze od vývoje pro víc rodin
 
+> **Nahrazeno [ADR-0002](../adr/0002-hosting-a-deploy.md) (2026-11-17).** Starý server je pozastavený a rodina se vrací jako chata č. 1 na verzi z `main` (staging z `main`, produkce z tagu). Dokument zůstává jen kvůli odkazům z `CLAUDE.md` a `.github/` a smaže se spolu s implementací ADR-0002.
+
 Verze 1 · 27. 9. 2026
 Navazuje na `docs/PRODUCT-PLAN.md` a `docs/SDLC.md`. Tento úkol má přednost před fází 1 (multi-tenancy).
 
@@ -96,7 +98,7 @@ Rodinná verze je veřejně dostupná, proto potřebuje opravy S-1 a S-2 hned.
 
 ### Fáze D – Ověření (den 5)
 
-- [ ] chataceskestredohori.cz funguje: přihlášení, kalendář, rezervace, chat, fotky (projde rodinný smoke test z `docs/SPRINT-0-SMOKE-TEST.md`),
+- [ ] chataceskestredohori.cz funguje: přihlášení, kalendář, rezervace, chat, fotky (projde rodinný smoke test z `docs/SMOKE-TEST.md`),
 - [ ] staging funguje a neobsahuje žádná skutečná rodinná data,
 - [ ] PR s cílem `main` nijak nezmění produkci,
 - [ ] pokus o přímý push do `rodina-stable` je odmítnut,
