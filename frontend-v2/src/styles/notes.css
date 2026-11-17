@@ -96,17 +96,17 @@
 }
 
 /* Sidebar footer — sticky button at bottom */
-.sidebar-footer {
-  padding: 12px 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+/* "Nové téma" sedí v hlavičce vedle titulku (vzor z Galerie) — dole by
+   kolidoval s help FABem a překrýval poslední téma v seznamu. */
+.notes-new-thread-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  padding: 9px 14px;
+  min-height: 44px;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
-}
-
-.sidebar-footer-btn {
-  width: 100%;
-  font-size: 0.95rem;
-  padding: 10px 16px;
-  border-radius: 12px;
 }
 
 .thread-item {

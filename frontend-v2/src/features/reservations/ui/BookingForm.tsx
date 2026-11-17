@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import type { Reservation } from "@/api/reservations";
-import { useCreateReservation, useUpdateReservation, useDeleteReservation } from "../hooks/useReservations";
+import { useCreateReservation, useUpdateReservation, useDeleteReservation, useUsers } from "../hooks/useReservations";
+import { useAuth } from "@/context/AuthContext";
+import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { showToast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { Home, CalendarClock } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -26,11 +29,13 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   const [notes, setNotes] = useState("");
   const [handover, setHandover] = useState("");
   const [soft, setSoft] = useState(false);
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [backupWarning, setBackupWarning] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fromRef = useRef<HTMLInputElement>(null);
@@ -38,6 +43,15 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   const create = useCreateReservation();
   const update = useUpdateReservation();
   const del = useDeleteReservation();
+  const { user } = useAuth();
+  const { data: members } = useUsers();
+  // Selectable co-occupants: everyone in the cabin except the organizer (current user)
+  const selectableMembers = (members ?? []).filter((m) => m.id !== user?.userId);
+
+  const toggleParticipant = (id: string) => {
+    if (submitError) setSubmitError(null);
+    setParticipantIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   // Pre-fill when editing
   useEffect(() => {
@@ -48,6 +62,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       setNotes(existing.notes ?? "");
       setHandover(existing.handoverNote ?? "");
       setSoft(existing.status === "soft");
+      setParticipantIds(existing.participants?.map((p) => p.userId) ?? []);
     } else {
       setFrom(fromDate ?? "");
       setTo(toDate ?? "");
@@ -55,9 +70,11 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       setNotes("");
       setHandover("");
       setSoft(false);
+      setParticipantIds([]);
     }
     setBackupWarning(false);
     setSubmitError(null);
+    setFieldErrors({});
     setDeleteError(null);
   }, [existing, fromDate, toDate, open]);
 
@@ -86,8 +103,9 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
     if (btn) btn.disabled = true;
     setSubmitting(true);
     setSubmitError(null);
+    setFieldErrors({});
     try {
-      const payload = { from, to, purpose, notes, handoverNote: handover, soft };
+      const payload = { from, to, purpose, notes, handoverNote: handover, soft, participantIds };
       if (isEdit && existing) {
         await update.mutateAsync({ id: existing.id, payload });
         onClose();
@@ -97,13 +115,23 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
         onClose();
       }
     } catch (error) {
-      setSubmitError(
-        getNetworkAwareActionMessage(
-          error,
-          "Rezervaci se nepodařilo uložit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se rezervace stihla uložit. Zkuste to znovu po obnovení připojení.",
-        ),
-      );
+      const validationErrors = (error as { response?: { data?: { errors?: { path: string; message: string }[] } } })
+        ?.response?.data?.errors;
+      if (Array.isArray(validationErrors)) {
+        const newFieldErrors: Record<string, string> = {};
+        for (const err of validationErrors) {
+          newFieldErrors[err.path] = err.message;
+        }
+        setFieldErrors(newFieldErrors);
+      } else {
+        setSubmitError(
+          getNetworkAwareActionMessage(
+            error,
+            "Rezervaci se nepodařilo uložit. Zkuste to znovu.",
+            "Spojení vypadlo dřív, než se rezervace stihla uložit. Zkuste to znovu po obnovení připojení.",
+          ),
+        );
+      }
     } finally {
       setSubmitting(false);
       if (btn) btn.disabled = false;
@@ -180,35 +208,41 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="modal-date-from">Příjezd</label>
-            <input
-              ref={fromRef}
-              id="modal-date-from"
-              type="date"
-              className="form-control"
-              value={from}
-              onChange={(e) => {
-                if (submitError) setSubmitError(null);
-                setFrom(e.target.value);
-              }}
-              required
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label htmlFor="modal-date-from">Příjezd</label>
+              <input
+                ref={fromRef}
+                id="modal-date-from"
+                type="date"
+                className={`form-control ${fieldErrors.from ? "is-invalid" : ""}`}
+                value={from}
+                onChange={(e) => {
+                  if (submitError) setSubmitError(null);
+                  if (fieldErrors.from) setFieldErrors(prev => ({ ...prev, from: undefined }));
+                  setFrom(e.target.value);
+                }}
+                required
+              />
+              {fieldErrors.from && <span className="field-error-msg">{fieldErrors.from}</span>}
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="modal-date-to">Odjezd</label>
-            <input
-              id="modal-date-to"
-              type="date"
-              className="form-control"
-              value={to}
-              onChange={(e) => {
-                if (submitError) setSubmitError(null);
-                setTo(e.target.value);
-              }}
-              required
-            />
+            <div className="form-group">
+              <label htmlFor="modal-date-to">Odjezd</label>
+              <input
+                id="modal-date-to"
+                type="date"
+                className={`form-control ${fieldErrors.to ? "is-invalid" : ""}`}
+                value={to}
+                onChange={(e) => {
+                  if (submitError) setSubmitError(null);
+                  if (fieldErrors.to) setFieldErrors(prev => ({ ...prev, to: undefined }));
+                  setTo(e.target.value);
+                }}
+                required
+              />
+              {fieldErrors.to && <span className="field-error-msg">{fieldErrors.to}</span>}
+            </div>
           </div>
 
           <div className="form-group">
@@ -216,16 +250,51 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
             <input
               id="purpose-input"
               type="text"
-              className="form-control"
+              className={`form-control ${fieldErrors.purpose ? "is-invalid" : ""}`}
               value={purpose}
               onChange={(e) => {
                 if (submitError) setSubmitError(null);
+                if (fieldErrors.purpose) setFieldErrors(prev => ({ ...prev, purpose: undefined }));
                 setPurpose(e.target.value);
               }}
               placeholder="Víkend, Dovolená…"
               maxLength={200}
             />
+            {fieldErrors.purpose && <span className="field-error-msg">{fieldErrors.purpose}</span>}
           </div>
+
+          {selectableMembers.length > 0 && (
+            <div className="form-group">
+              <label>
+                Kdo jede s tebou?{" "}
+                {participantIds.length > 0 && (
+                  <span className="char-count">{participantIds.length} vybráno</span>
+                )}
+              </label>
+              <div className="participant-picker" role="group" aria-label="Spolucestující">
+                {selectableMembers.map((m) => {
+                  const selected = participantIds.includes(m.id);
+                  return (
+                    <button
+                      type="button"
+                      key={m.id}
+                      className={`participant-chip${selected ? " participant-chip--selected" : ""}`}
+                      onClick={() => toggleParticipant(m.id)}
+                      aria-pressed={selected}
+                    >
+                      <AnimalAvatar
+                        icon={m.animalIcon ?? null}
+                        username={m.username}
+                        color={m.color || undefined}
+                        size={22}
+                      />
+                      <span>{m.username}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="notes-textarea">
@@ -261,19 +330,55 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
             />
           </div>
 
-          <div className="form-group form-group--checkbox">
-            <label htmlFor="soft-reservation-checkbox">
-              <input
-                id="soft-reservation-checkbox"
-                type="checkbox"
-                checked={soft}
-                onChange={(e) => {
+          <div className="space-y-3 mb-6 mt-4">
+            <label className="block text-sm font-medium text-slate-700">Typ rezervace</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
                   if (submitError) setSubmitError(null);
-                  setSoft(e.target.checked);
+                  setSoft(false);
                 }}
-              />{" "}
-              Předběžná rezervace
-            </label>
+                className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
+                  !soft
+                    ? "border-emerald-500 bg-emerald-50"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
+                  !soft ? "bg-emerald-200 text-emerald-800" : "bg-slate-100 text-slate-500"
+                }`}>
+                  <Home size={18} />
+                </div>
+                <div>
+                  <div className={`font-semibold text-sm ${!soft ? "text-emerald-900" : "text-slate-700"}`}>Pevná</div>
+                  <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-emerald-700" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
+                </div>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  if (submitError) setSubmitError(null);
+                  setSoft(true);
+                }}
+                className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
+                  soft
+                    ? "border-amber-500 bg-amber-50"
+                    : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
+                  soft ? "bg-amber-200 text-amber-800" : "bg-slate-100 text-slate-500"
+                }`}>
+                  <CalendarClock size={18} />
+                </div>
+                <div>
+                  <div className={`font-semibold text-sm ${soft ? "text-amber-900" : "text-slate-700"}`}>Předběžná</div>
+                  <div className={`text-[10px] leading-tight mt-0.5 ${soft ? "text-amber-700" : "text-slate-500"}`}>Zatím blokuji termín</div>
+                </div>
+              </button>
+            </div>
           </div>
           {submitError ? (
             <div className="error-message show" role="alert">{submitError}</div>

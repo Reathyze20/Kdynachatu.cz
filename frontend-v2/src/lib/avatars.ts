@@ -40,10 +40,27 @@ export const AVATARS: AvatarDef[] = [
 /** Map for O(1) lookups by ID */
 const AVATAR_MAP = new Map(AVATARS.map((a) => [a.id, a]));
 
+/**
+ * Older accounts stored the English avatar name (from before the ID rename
+ * to Czech). Without this alias, `getAvatarById("fox")` returns undefined
+ * and the raw string leaks into the UI instead of an icon.
+ */
+const LEGACY_ID_ALIASES: Record<string, string> = {
+  fox: "liska", wolf: "vlk", deer: "jelen", lynx: "rys", squirrel: "veverka",
+  rabbit: "kralik", hedgehog: "jezek", dog: "pes", cow: "krava", sheep: "ovce",
+  horse: "kun", chicken: "slepice", frog: "zaba", snake: "had", lion: "lev",
+  tiger: "tygr", elephant: "slon", panda: "panda", koala: "koala",
+  kangaroo: "klokan", zebra: "zebra", giraffe: "zirafa", meerkat: "surikata",
+};
+
+function resolveId(id: string): string {
+  return AVATAR_MAP.has(id) ? id : (LEGACY_ID_ALIASES[id] ?? id);
+}
+
 /** Get avatar definition by ID. Returns undefined for unknown IDs. */
 export function getAvatarById(id: string | null | undefined): AvatarDef | undefined {
   if (!id) return undefined;
-  return AVATAR_MAP.get(id);
+  return AVATAR_MAP.get(resolveId(id));
 }
 
 /**
@@ -52,5 +69,5 @@ export function getAvatarById(id: string | null | undefined): AvatarDef | undefi
  */
 export function isAvatarId(value: string | null | undefined): boolean {
   if (!value) return false;
-  return AVATAR_MAP.has(value);
+  return AVATAR_MAP.has(resolveId(value));
 }

@@ -87,6 +87,45 @@
   flex-wrap: wrap;
 }
 
+/* Stav výběru v hlavičce — nahrazuje statistiky, dokud je aktivní výběr.
+   Zpětná vazba tak zůstává u prstu (v mřížce), ne až pod kalendářem. */
+.selectionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 6px 8px 6px 14px;
+  background: rgba(63, 123, 99, 0.1);
+  border: 1px solid rgba(63, 123, 99, 0.3);
+  border-radius: var(--radius-full);
+}
+
+.selectionChipText {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--brand-primary-hover);
+  line-height: 1.2;
+}
+
+.selectionChipClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(63, 123, 99, 0.15);
+  color: var(--brand-primary-hover);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+
+.selectionChipClear:hover {
+  background: rgba(63, 123, 99, 0.28);
+}
+
 .calendarGridScroller {
   width: 100%;
   min-width: 0;
@@ -2180,6 +2219,11 @@ button.btnReset {
     flex-wrap: wrap;
   }
 
+  .selectionChipClear {
+    width: 40px;
+    height: 40px;
+  }
+
   .monthNavArrow {
     width: 44px;
     height: 44px;
@@ -2371,6 +2415,9 @@ button.btnReset {
 
   .rangeHint {
     width: 100%;
+    /* Clear the fixed help FAB (bottom:80px right:16px, 48px) which would
+       otherwise sit on top of this card's wrapped text at rest. */
+    padding-right: calc(var(--space-md) + 56px);
   }
 
   /* ── FAB button: above mobile nav ────────────────────────────── */

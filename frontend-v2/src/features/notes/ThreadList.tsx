@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Plus } from "lucide-react";
 import type { NoteThread } from "@/api/notes";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 
@@ -73,6 +74,14 @@ export function ThreadList({
       <div className="notes-sidebar-header">
         <div className="notes-sidebar-title">
           <h2>Témata</h2>
+          <button
+            className="btn-primary notes-new-thread-btn"
+            onClick={onCreateThread}
+            data-testid="notes-create-thread-button"
+          >
+            <Plus size={16} />
+            Nové téma
+          </button>
         </div>
         <div className="notes-search">
           <input
@@ -139,15 +148,6 @@ export function ThreadList({
         })}
       </div>
 
-      <div className="sidebar-footer">
-        <button
-          className="btn-primary sidebar-footer-btn"
-          onClick={onCreateThread}
-          data-testid="notes-create-thread-button"
-        >
-          Nové téma
-        </button>
-      </div>
     </div>
   );
 }

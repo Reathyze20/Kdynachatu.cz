@@ -243,6 +243,7 @@ export function ReservationsPage() {
           onRangeStartSet={cal.setRangeStart}
           onShowDetail={setSelectedReservation}
           onDaySelect={handleDaySelect}
+          onDayClear={() => setSelectedDay(null)}
           showCreateButton={filtered.length > 0 || !!selectedReservation}
           quickStatsNode={
             <QuickStats

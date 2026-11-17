@@ -3,12 +3,13 @@
  * Překlad: div.top-bar z index.html + dropdown logika + nav z router.ts buildNav()
  */
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { NAV_ROUTES } from '@/lib/navRoutes'
 import { useCabinFeatures, isFeatureEnabled } from '@/hooks/useCabinFeatures'
-import { ScrollText, Settings, Shield, UserPlus } from 'lucide-react'
+import { ChevronDown, LogOut, ScrollText, Settings, Shield, User, UserPlus } from 'lucide-react'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 
 interface TopBarProps {
@@ -19,18 +20,36 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
   const { user, isAdmin, isSuperAdmin, logout } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-  // Zavřít dropdown při kliknutí mimo
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false)
-      }
+  function toggleDropdown() {
+    if (!dropdownOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect()
+      setMenuPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right })
     }
+    setDropdownOpen(!dropdownOpen)
+  }
+
+  // Zavřít dropdown při kliknutí mimo, scrollu nebo změně velikosti okna
+  useEffect(() => {
+    if (!dropdownOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node
+      if (dropdownRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      setDropdownOpen(false)
+    }
+    const close = () => setDropdownOpen(false)
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    window.addEventListener('resize', close)
+    document.addEventListener('scroll', close, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('resize', close)
+      document.removeEventListener('scroll', close, true)
+    }
+  }, [dropdownOpen])
 
   function handleLogout() {
     setDropdownOpen(false)
@@ -80,7 +99,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
           title="Otevřít profilové menu"
           aria-expanded={dropdownOpen}
           aria-haspopup="true"
-          onClick={() => setDropdownOpen((v) => !v)}
+          onClick={toggleDropdown}
           data-testid="profile-menu-button"
         >
           <span id="nav-animal-icon" className="nav-avatar">
@@ -90,10 +109,20 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
             <span className="greeting">Ahoj, </span>
             <span className="username">{username}!</span>
           </div>
-          <span className="nav-dropdown-arrow">▼</span>
+          <span className="nav-dropdown-arrow" aria-hidden="true">
+            <ChevronDown size={16} />
+          </span>
         </button>
 
-        <div id="nav-dropdown-menu" className={`nav-dropdown-menu${dropdownOpen ? '' : ' hidden'}`} role="menu" data-testid="profile-menu">
+        {dropdownOpen && menuPos && createPortal(
+        <div
+          id="nav-dropdown-menu"
+          className="nav-dropdown-menu"
+          role="menu"
+          data-testid="profile-menu"
+          ref={menuRef}
+          style={{ top: menuPos.top, right: menuPos.right }}
+        >
           {cabin?.name && (
             <>
               <div className="nav-dropdown-label" title={cabin.name}>{cabin.name}</div>
@@ -106,6 +135,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
             onClick={() => { setDropdownOpen(false); onOpenProfileDrawer() }}
             data-testid="profile-menu-profile-button"
           >
+            <User size={16} />
             Osobní profil
           </button>
 
@@ -119,7 +149,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
                   onClick={() => setDropdownOpen(false)}
                   data-testid="profile-menu-superadmin-link"
                 >
-                  <Shield size={16} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />
+                  <Shield size={16} />
                   Backoffice
                 </Link>
               )}
@@ -132,7 +162,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
                     onClick={() => setDropdownOpen(false)}
                     data-testid="profile-menu-admin-link"
                   >
-                    <Settings size={16} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />
+                    <Settings size={16} />
                     Administrativa
                   </Link>
                   <Link
@@ -142,7 +172,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
                     onClick={() => setDropdownOpen(false)}
                     data-testid="profile-menu-invites-link"
                   >
-                    <UserPlus size={16} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />
+                    <UserPlus size={16} />
                     Pozvat člena
                   </Link>
                   <Link
@@ -152,7 +182,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
                     onClick={() => setDropdownOpen(false)}
                     data-testid="profile-menu-diagnostics-link"
                   >
-                    <ScrollText size={16} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />
+                    <ScrollText size={16} />
                     Diagnostika
                   </Link>
                 </>
@@ -162,15 +192,12 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
 
           <div className="nav-dropdown-separator"></div>
           <button id="logout-button" className="nav-dropdown-item" onClick={handleLogout} data-testid="profile-menu-logout-button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
+            <LogOut size={16} />
             Odhlásit
           </button>
-        </div>
+        </div>,
+        document.body
+        )}
       </div>
     </div>
   )

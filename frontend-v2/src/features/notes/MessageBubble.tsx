@@ -4,6 +4,7 @@ import type { Note } from "@/api/notes";
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar';
 import { ReactionBar } from './ReactionBar';
 import { escapeHtml } from '@/lib/utils';
+import { formatMessage } from './formatMessage';
 
 interface UserInfo {
   color?: string;
@@ -20,29 +21,6 @@ interface Props {
   onContextMenu: (note: Note, rect: DOMRect) => void;
   onToggleReaction: (noteId: string, emoji: string) => void;
   onReplyClick?: (replyToId: string) => void;
-}
-
-/** Convert [x]/[ ] checklist lines into HTML spans */
-function formatMessage(raw: string): string {
-  const lines = raw
-    .split("\n")
-    .map((line) => line.replace(/^\|\s*/, ""));
-
-  const hasChecks = lines.some((l) => /^\[[ x]\]/i.test(l));
-  if (!hasChecks) return lines.join("<br>");
-
-  const parts = lines.map((line) => {
-    const done = line.match(/^\[x\]\s*(.*)/i);
-    const todo = line.match(/^\[ \]\s*(.*)/);
-    if (done)
-      return `<span class="msg-cb msg-cb-done">✓ <span>${done[1]}</span></span>`;
-    if (todo)
-      return `<span class="msg-cb msg-cb-todo">○ <span>${todo[1]}</span></span>`;
-    return line === ""
-      ? `<span class="msg-spacer"></span>`
-      : `<span class="msg-line">${line}</span>`;
-  });
-  return `<div class="msg-protocol">${parts.join("")}</div>`;
 }
 
 export function MessageBubble({
