@@ -35,3 +35,17 @@ V tomto repu tento tok nahrazuje `superpowers:brainstorming`, `superpowers:writi
 - `src/types.ts` ↔ `frontend-v2/src/api/*.ts` – wire typy záměrně zdvojené, mění se spolu.
 - `frontend-v2/src/hooks/useRealtimeSync.ts` – Socket.IO event → invalidace dotazů; nový serverový event sem patří vždy.
 - `.agents/skills/CabinSaaS_Architect/SKILL.md` – pravidla a inventář komponent pro `frontend-v2/`; přečti před prací na UI.
+
+## Agent skills
+
+### Issue tracker
+
+Issues a specy jsou GitHub issues v `Reathyze20/Kdynachatu.cz` (CLI `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Pět výchozích rolí (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` (vzniká líně) + `docs/adr/` v kořeni repa. See `docs/agents/domain.md`.

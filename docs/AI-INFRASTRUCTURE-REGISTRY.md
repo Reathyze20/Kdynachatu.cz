@@ -61,7 +61,7 @@ Pravidlo:
 | `.agents/skills/frontend-design/` | frontend-design | active | high-polish UI work |
 | `.agents/skills/saas-playbook/` | saas-playbook | active | product/launch/business checklists |
 | `.agents/skills/skill-creator/` | skill-creator | active | skill creation and benchmarking |
-| `skills-lock.json` | (third-party) | active | skilly z `npx skills add` (anthropics/skills, mattpocock/skills); bez vlastních evals, `validate:ai` je nevyžaduje |
+| `.claude/skills/` (mattpocock) | grilling, grill-with-docs, domain-modeling, to-spec, to-tickets, implement, tdd, code-review, triage, diagnosing-bugs, codebase-design, writing-for-agents, setup-matt-pocock-skills | active | proces podle `docs/SDLC.md`; kopie `mattpocock/skills` @ `5863806`, neupravovat ručně |
 | `.claude/skills/database-migrations/` | database-migrations | active | Claude Code: postup změny Prisma schématu |
 | `.claude/skills/verify/` | verify | active | Claude Code: spuštění a ověření aplikace naživo |
 

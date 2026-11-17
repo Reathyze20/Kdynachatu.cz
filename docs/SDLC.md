@@ -141,7 +141,7 @@ Claude GitHub App má právo zapisovat i do workflow, proto se změny v `.github
 **Steering agenta v repu** – co je v kontextu vždy, musí si to zasloužit (pravidla prořezávání: jediný zdroj pravdy, žádný sediment, žádné no-opy):
 - `CLAUDE.md` – jen nepřekročitelná pravidla, příkazy a navigační pointery.
 - `CODING_STANDARDS.md` – konvence, načítá je jen `/code-review`; smí růst.
-- `.claude/skills/` – projektové skilly (`database-migrations`, `verify`); `.agents/skills/` – sdílené skilly včetně `mattpocock/skills` (verze v `skills-lock.json`).
+- `.claude/skills/` – skilly, které Claude Code načítá i v cloud session: projektové (`database-migrations`, `verify`) a kopie `mattpocock/skills` (commit v `docs/AI-INFRASTRUCTURE-REGISTRY.md`; aktualizace = nová kopie, ne ruční úpravy). `.agents/skills/` čte jen Copilot.
 - `docs/agents/` – konfigurace pro skilly (issue tracker, labely, doménové dokumenty).
 - `.claude/settings.json` – deny pravidla a PreToolUse hook, vypnutá auto-memory. `.claude/hooks/protect-paths.mjs` – exit 2 pro `.env*`, `.github/**`, `.claude/settings*.json`, `.claude/hooks/**` a existující migrace.
 - Deny pravidla a hooky jsou první linie, ne bezpečnostní hranice (`git -C . push …` je obejde). Hranicí je ruleset a CI.
