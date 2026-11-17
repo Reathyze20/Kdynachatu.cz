@@ -5,6 +5,7 @@ import { validate } from "../../validators/validate";
 import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
 import prisma from "../../utils/prisma";
+import { isPrimaryCollisionBlocked } from "./reservationHelpers";
 import logger from "../../utils/logger";
 
 const router = Router();
@@ -162,6 +163,47 @@ async function publishReservationActivityNote(params: {
   }
 }
 
+type ParticipantPayload = {
+  userId: string;
+  username: string;
+  userColor: string;
+  userAnimalIcon: string | null;
+};
+
+/**
+ * Filtruje ID spolucestujících: ponechá jen uživatele ve stejné chatě,
+ * odstraní organizátora (ten je Reservation.userId) i duplicity.
+ */
+async function sanitizeParticipantIds(
+  rawIds: unknown,
+  cabinId: string,
+  organizerId: string,
+): Promise<string[]> {
+  if (!Array.isArray(rawIds)) return [];
+  const unique = Array.from(new Set(rawIds.filter((v): v is string => typeof v === "string")));
+  const candidates = unique.filter((id) => id !== organizerId);
+  if (candidates.length === 0) return [];
+  const members = await prisma.user.findMany({
+    where: { id: { in: candidates }, cabinId },
+    select: { id: true },
+  });
+  return members.map((m) => m.id);
+}
+
+/** Načte účastníky rezervace jako payload pro API/socket. */
+async function loadParticipantsPayload(reservationId: string): Promise<ParticipantPayload[]> {
+  const rows = await prisma.reservationParticipant.findMany({
+    where: { reservationId },
+    include: { user: { select: { id: true, username: true, color: true, animalIcon: true } } },
+  });
+  return rows.map((p) => ({
+    userId: p.userId,
+    username: p.user.username,
+    userColor: p.user.color,
+    userAnimalIcon: p.user.animalIcon,
+  }));
+}
+
 // ============================================================================
 //                        GET ALL RESERVATIONS
 // ============================================================================
@@ -177,6 +219,11 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
               username: true,
               color: true,
               animalIcon: true,
+            },
+          },
+          participants: {
+            include: {
+              user: { select: { id: true, username: true, color: true, animalIcon: true } },
             },
           },
         },
@@ -207,6 +254,12 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
       isCheckoutCompleted: r.isCheckoutCompleted,
       checkoutCompletedBy: r.checkoutCompletedBy,
       checkoutCompletedAt: r.checkoutCompletedAt?.toISOString() ?? null,
+      participants: r.participants.map((p) => ({
+        userId: p.userId,
+        username: p.user.username,
+        userColor: p.user.color,
+        userAnimalIcon: p.user.animalIcon,
+      })),
     }));
 
     const availResult = availabilities.map((a) => ({
@@ -230,7 +283,7 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
 //                         CREATE RESERVATION
 // ============================================================================
 router.post("/", protect, requireCabin, validate(createReservationSchema), async (req: Request, res: Response) => {
-  const { from, to, purpose, notes, handoverNote, status: requestedStatus } = req.body;
+  const { from, to, purpose, notes, handoverNote, status: requestedStatus, participantIds } = req.body;
 
   try {
     const newStart = new Date(from);
@@ -281,6 +334,18 @@ router.post("/", protect, requireCabin, validate(createReservationSchema), async
       },
     });
 
+    // Co-occupants (spolucestující) — organizer stays as userId
+    const cleanParticipantIds = await sanitizeParticipantIds(participantIds, cabinId, req.user!.userId);
+    if (cleanParticipantIds.length > 0) {
+      await prisma.reservationParticipant.createMany({
+        data: cleanParticipantIds.map((uid) => ({ reservationId: newReservation.id, userId: uid })),
+        skipDuplicates: true,
+      });
+    }
+    const participants = cleanParticipantIds.length > 0
+      ? await loadParticipantsPayload(newReservation.id)
+      : [];
+
     emitToCabin(cabinId, "reservation:created", {
       id: newReservation.id,
       userId: newReservation.userId,
@@ -293,6 +358,7 @@ router.post("/", protect, requireCabin, validate(createReservationSchema), async
       status: newReservation.status,
       userColor: newReservation.user.color,
       userAnimalIcon: newReservation.user.animalIcon,
+      participants,
     });
 
     await publishReservationActivityNote({
@@ -323,6 +389,7 @@ router.post("/", protect, requireCabin, validate(createReservationSchema), async
       status: newReservation.status,
       userColor: newReservation.user.color,
       userAnimalIcon: newReservation.user.animalIcon,
+      participants,
     });
   } catch (error) {
     logger.error("RESERVATIONS", "Create reservation error", { error: String(error), userId: req.user?.userId });
@@ -435,7 +502,7 @@ router.put("/monthly-note", protect, requireCabin, validate(upsertMonthlyNoteSch
 // ============================================================================
 router.put("/:id", protect, requireCabin, validate(updateReservationSchema), async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { purpose, notes, handoverNote, status, from, to } = req.body;
+  const { purpose, notes, handoverNote, status, from, to, participantIds } = req.body;
 
   try {
     const reservation = await prisma.reservation.findFirst({
@@ -472,22 +539,23 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
     const effectiveTo = to ? new Date(to) : reservation.dateTo;
     const effectiveStatus = status ?? reservation.status;
 
-    // If the result would be a primary reservation, check for collisions with OTHER primary reservations
-    if (effectiveStatus === "primary") {
-      const collision = await prisma.reservation.findFirst({
-        where: {
-          id: { not: id }, // exclude self
-          cabinId: req.user!.cabinId,
-          status: "primary",
-          dateFrom: { lte: effectiveTo },
-          dateTo: { gte: effectiveFrom },
-        },
+    // If the result would be a primary reservation, check for collisions with OTHER primary reservations.
+    // The DB lookup stays here; the block/allow decision is a pure predicate (unit-tested in isolation).
+    const hasOverlappingPrimary = effectiveStatus === "primary"
+      ? (await prisma.reservation.findFirst({
+          where: {
+            id: { not: id }, // exclude self
+            cabinId: req.user!.cabinId,
+            status: "primary",
+            dateFrom: { lte: effectiveTo },
+            dateTo: { gte: effectiveFrom },
+          },
+        })) !== null
+      : false;
+    if (isPrimaryCollisionBlocked(effectiveStatus, hasOverlappingPrimary)) {
+      return res.status(409).json({
+        message: "V tomto termínu již existuje potvrzená rezervace. Nastav stav jako záložní.",
       });
-      if (collision) {
-        return res.status(409).json({
-          message: "V tomto termínu již existuje potvrzená rezervace. Nastav stav jako záložní.",
-        });
-      }
     }
 
     const updated = await prisma.reservation.update({
@@ -510,6 +578,19 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
         },
       },
     });
+
+    // Sync co-occupants when the client sends participantIds (undefined = leave unchanged)
+    if (participantIds !== undefined) {
+      const cleanParticipantIds = await sanitizeParticipantIds(participantIds, req.user!.cabinId!, updated.userId);
+      await prisma.reservationParticipant.deleteMany({ where: { reservationId: id } });
+      if (cleanParticipantIds.length > 0) {
+        await prisma.reservationParticipant.createMany({
+          data: cleanParticipantIds.map((uid) => ({ reservationId: id, userId: uid })),
+          skipDuplicates: true,
+        });
+      }
+    }
+    const participants = await loadParticipantsPayload(id);
 
     const updateMessage = buildReservationUpdatedMessage(req.user!.username, beforeUpdate, {
       id: updated.id,
@@ -543,6 +624,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
       status: updated.status,
       userColor: updated.user.color,
       userAnimalIcon: updated.user.animalIcon,
+      participants,
     };
 
     emitToCabin(req.user!.cabinId!, "reservation:updated", updatedPayload);

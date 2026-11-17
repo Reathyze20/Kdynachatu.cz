@@ -8,6 +8,13 @@ export interface PendingShoppingItem {
   isEssential: boolean;
 }
 
+export interface ReservationParticipantLite {
+  userId: string;
+  username: string;
+  userColor: string | null;
+  userAnimalIcon: string | null;
+}
+
 export interface UpcomingReservation {
   id: string;
   userId: string;
@@ -18,6 +25,7 @@ export interface UpcomingReservation {
   to: string;
   purpose: string;
   status: string;
+  participants?: ReservationParticipantLite[];
 }
 
 export interface ActiveReservation {
@@ -30,6 +38,7 @@ export interface ActiveReservation {
   purpose: string;
   handoverNote: string | null;
   isCheckoutCompleted: boolean;
+  participants?: ReservationParticipantLite[];
 }
 
 export interface LastStay {

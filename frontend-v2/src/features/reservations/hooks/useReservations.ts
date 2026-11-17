@@ -44,6 +44,8 @@ interface BookingPayload {
   notes?: string;
   handoverNote?: string;
   status?: "primary" | "soft";
+  /** IDs of co-occupants going on this stay (organizer excluded) */
+  participantIds?: string[];
 }
 
 export function useCreateReservation() {
