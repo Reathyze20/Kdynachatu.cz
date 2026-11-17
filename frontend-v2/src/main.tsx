@@ -10,6 +10,10 @@ import './index.css'
 import App from './App'
 import { installGlobalErrorHandlers } from '@/lib/errorReporting'
 import { initOfflineQueue } from '@/lib/offlineQueue'
+import { initPwaInstall } from '@/lib/pwaInstall'
+
+// Musí běžet před renderem — `beforeinstallprompt` přichází brzy a jen jednou
+initPwaInstall()
 
 // Načtení uživatelsky nastaveného pozadí při startu aplikace
 const customBg = localStorage.getItem('app-background');
