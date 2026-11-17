@@ -49,3 +49,4 @@ Pět výchozích rolí (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-
 ### Domain docs
 
 Single-context: `GLOSSARY.md` (vzniká líně) + `docs/adr/` v kořeni repa. See `docs/agents/domain.md`.
+
