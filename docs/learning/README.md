@@ -97,9 +97,7 @@ npm run preflight:deploy       # Validate before deployment
 
 ### In This Repo
 - [API Quickstart](../API-QUICKSTART.md) — API endpoint reference
-- [Playwright Readiness Checklist](../PLAYWRIGHT-READINESS-CHECKLIST.md) — Complete selector inventory
-- [Playwright Starter Guide](../PLAYWRIGHT-STARTER-GUIDE.md) — App structure for testers
-- [Sprint 0 Smoke Test](../SPRINT-0-SMOKE-TEST.md) — Manual testing scenarios
+- [Sprint 0 Smoke Test](../SMOKE-TEST.md) — Manual testing scenarios
 
 ### External
 - [Postman Learning Center](https://learning.postman.com/)

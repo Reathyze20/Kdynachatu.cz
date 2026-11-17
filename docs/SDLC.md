@@ -3,7 +3,7 @@
 Verified: 2026-09-27
 Scope: vývojový proces pro práci s AI agenty (Claude Code, Copilot), hlavně pro cloud sessions spouštěné z mobilu
 
-Tento dokument doplňuje produktové plány (`FAMILY-READY-PLAN.md`, PRD) o to, **jak** se kód mění.
+Tento dokument doplňuje produkt (`PRODUCT.md`) a ADR (`adr/`) o to, **jak** se kód mění. Celý dokument se přepisuje na postup podle Matta Pococka v kroku 1 roadmapy.
 Značky u pravidel:
 
 - ⚙️ **vynuceno strojem** (CI, hook, GitHub nastavení) a v repu už existuje
@@ -76,7 +76,7 @@ Cílová pyramida:
 | Unit | Vitest | Doménová logika (kalendář, náklady, hlasování), Zod schémata | FE ⚙️, BE 🔜 |
 | Integrační API | Vitest + Supertest nad Express app + reálný PostgreSQL | Endpointy, autorizace, validace | 🔜 |
 | Tenant isolation | Supertest + reálná DB, 2 seedované chaty | Viz níže | 🔜 povinné a blokující |
-| E2E | Playwright | 3–5 kritických cest | 🔜 (viz `PLAYWRIGHT-*.md`) |
+| E2E | Playwright | 3–5 kritických cest | 🔜 |
 
 **Reálná DB, ne mocky.** V CI Testcontainers (`postgres:16`) nebo service container; v cloud session `service postgresql start` a databáze `kdynachatu_test`. Testy čtou jen `DATABASE_URL`, takže fungují s oběma variantami.
 

@@ -1,6 +1,6 @@
 # Stack Facts
 
-Verified: 2026-04-19
+Verified: 2026-11-17
 Scope: canonical short stack facts for AI guidance
 
 - Frontend app lives in `frontend-v2/`.
@@ -13,5 +13,5 @@ Scope: canonical short stack facts for AI guidance
 - Dev startup: root `npm run dev` starts backend and frontend together.
 - Frontend dev proxy expects backend on `http://localhost:3000`.
 - Production deploy uses GitHub Actions SSH deploy, PM2, and `prisma migrate deploy`.
-- Family production (chataceskestredohori.cz) deploys only from branch `rodina-stable` (its own `deploy.yml`); `main` is multi-family development and targets staging (staging.kdynachatu.cz). See `docs/plans/SEP-1.md`.
+- Target hosting (ADR-0002, `docs/adr/0002-hosting-a-deploy.md`): one VPS, `main` deploys to staging (staging.kdynachatu.cz), production (kdynachatu.cz, family = cabin #1) only from release tag `v*` after manual approval. Until implemented, the old `rodina-stable` / SEP-1 setup is still what the workflows encode.
 - Production server Node/PM2 tooling lives under `/home/reathyze/.nvm`; server-side helper scripts must source NVM before calling `node`, `npm`, or `pm2`.

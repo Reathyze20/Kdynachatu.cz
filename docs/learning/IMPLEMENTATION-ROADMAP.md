@@ -22,9 +22,9 @@
 ### Playwright (Partially Ready)
 - ✅ Application has stable `data-testid` selectors on all key elements
 - ✅ Playwright starter guide ([PLAYWRIGHT-GUIDE.md](PLAYWRIGHT-GUIDE.md)) complete
-- ✅ Playwright readiness checklist ([../PLAYWRIGHT-READINESS-CHECKLIST.md](../PLAYWRIGHT-READINESS-CHECKLIST.md)) documents all selectors
+- ✅ Playwright readiness checklist documented all selectors (removed 2026-11-17, selectors are `data-testid` in code)
 - ✅ Frontend has clear route roots, navigation, and page selectors
-- ✅ Smoke test flow documented ([../SPRINT-0-SMOKE-TEST.md](../SPRINT-0-SMOKE-TEST.md))
+- ✅ Smoke test flow documented ([../SMOKE-TEST.md](../SMOKE-TEST.md))
 - ✅ Quick start guide ([GETTING-STARTED.md](GETTING-STARTED.md)) complete
 
 ### Infrastructure

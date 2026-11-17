@@ -12,7 +12,7 @@ Tenhle dokument je zamerne kratky. Nenahrazuje detailni QA, ale ma zrychlit prvn
 - Deploy workflow ceka na `GET http://localhost:3000/api/health`, ne na nahodny protected endpoint.
 - Manualni smoke helper: `./manual-post-deploy-smoke-check.ps1`.
 - Manualni PM2 log rotation helper: `./manual-install-pm2-logrotate.ps1`.
-- Funkcni manualni E2E subset je v `docs/SPRINT-0-SMOKE-TEST.md`.
+- Funkcni manualni E2E subset je v `docs/SMOKE-TEST.md`.
 
 ---
 
@@ -112,7 +112,7 @@ Se zapnutym `-RequireOperationsMinimum` navic kontroluje:
 
 ### Kdyz fast smoke projde
 
-Pokud nasazeni menilo auth, onboarding, invites nebo shopping, navaz manualnim subsetem v `docs/SPRINT-0-SMOKE-TEST.md`.
+Pokud nasazeni menilo auth, onboarding, invites nebo shopping, navaz manualnim subsetem v `docs/SMOKE-TEST.md`.
 
 ---
 

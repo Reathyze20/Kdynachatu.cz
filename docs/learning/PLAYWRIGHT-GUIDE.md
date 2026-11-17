@@ -236,7 +236,6 @@ page.getByTestId('shopping-list-row') // Repeatable
 page.getByTestId('shopping-item-row') // Repeatable
 ```
 
-**Full selector inventory:** See [../PLAYWRIGHT-READINESS-CHECKLIST.md](../PLAYWRIGHT-READINESS-CHECKLIST.md)
 
 ---
 
@@ -603,9 +602,7 @@ Already automatic! Playwright saves screenshots when tests fail.
 ## Reference Documentation
 
 - **Playwright Docs:** https://playwright.dev/
-- **App Selector Inventory:** [../PLAYWRIGHT-READINESS-CHECKLIST.md](../PLAYWRIGHT-READINESS-CHECKLIST.md)
-- **App Flow Guide:** [../PLAYWRIGHT-STARTER-GUIDE.md](../PLAYWRIGHT-STARTER-GUIDE.md)
-- **Manual Test Scenarios:** [../SPRINT-0-SMOKE-TEST.md](../SPRINT-0-SMOKE-TEST.md)
+- **Manual Test Scenarios:** [../SMOKE-TEST.md](../SMOKE-TEST.md)
 
 ---
 
