@@ -87,12 +87,22 @@ function AppRoutes() {
       ? '/dashboard'
       : '/onboarding'
 
-  // Honor ?redirect (set by PrivateRoute) after login — but only same-origin
-  // absolute paths, never protocol-relative (`//evil.com`) open redirects.
+  // Honor ?redirect (set by PrivateRoute) after login — but only same-origin.
+  // Resolve against the current origin and reject anything that escapes it:
+  // protocol-relative (`//evil.com`), backslash (`/\evil.com`, normalized to
+  // `//` by the URL parser), or any absolute cross-origin URL.
   const redirectParam = new URLSearchParams(location.search).get('redirect')
-  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
-    ? redirectParam
-    : null
+  let safeRedirect: string | null = null
+  if (redirectParam) {
+    try {
+      const url = new URL(redirectParam, window.location.origin)
+      if (url.origin === window.location.origin) {
+        safeRedirect = url.pathname + url.search + url.hash
+      }
+    } catch {
+      safeRedirect = null
+    }
+  }
   const loginRedirectTo = safeRedirect ?? authedHome
 
   return (
