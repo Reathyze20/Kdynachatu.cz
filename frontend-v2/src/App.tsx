@@ -39,7 +39,13 @@ const OnboardingPage = lazyRetry(() => import('@/features/onboarding/OnboardingP
 // ─── Guard pro přihlášené routy ─────────────────────────────────────────────────
 function PrivateRoute({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useAuth()
-  if (!isLoggedIn) return <Navigate to="/login" replace />
+  const location = useLocation()
+  if (!isLoggedIn) {
+    // Preserve where the user was headed so deep links (e.g. from a WhatsApp
+    // nudge) land correctly after login instead of dumping them on the home page.
+    const target = encodeURIComponent(location.pathname + location.search)
+    return <Navigate to={`/login?redirect=${target}`} replace />
+  }
   return <>{children}</>
 }
 
@@ -74,17 +80,26 @@ function SuperAdminRoute({ children }: { children: ReactNode }) {
 // ─── Route table ───────────────────────────────────────────────────────────────
 function AppRoutes() {
   const { isLoggedIn, user } = useAuth()
+  const location = useLocation()
   const authedHome = user?.isSuperAdmin && !user?.cabinId
     ? '/superadmin'
     : user?.cabinId
       ? '/dashboard'
       : '/onboarding'
 
+  // Honor ?redirect (set by PrivateRoute) after login — but only same-origin
+  // absolute paths, never protocol-relative (`//evil.com`) open redirects.
+  const redirectParam = new URLSearchParams(location.search).get('redirect')
+  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+    ? redirectParam
+    : null
+  const loginRedirectTo = safeRedirect ?? authedHome
+
   return (
     <Routes>
       {/* Auth */}
       <Route path="/" element={isLoggedIn ? <Navigate to={authedHome} replace /> : <LandingPage />} />
-      <Route path="/login" element={isLoggedIn ? <Navigate to={authedHome} replace /> : <AuthPage />} />
+      <Route path="/login" element={isLoggedIn ? <Navigate to={loginRedirectTo} replace /> : <AuthPage />} />
       <Route path="/reset-password" element={isLoggedIn ? <Navigate to={authedHome} replace /> : <ResetPasswordPage />} />
       {/* Token-based verify route (standalone stránka) */}
       <Route path="/verify" element={<VerifyEmailPage />} />
