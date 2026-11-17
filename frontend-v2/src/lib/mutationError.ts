@@ -51,7 +51,10 @@ export function handleMutationError(
       ? serverMessage
       : statusMessage
 
-    if (!options?.silent) {
+    const httpErr = err as Error & { response?: { status?: number; data?: { errors?: unknown } } }
+    const isValidationError = httpErr.response?.status === 400 && Array.isArray(httpErr.response?.data?.errors)
+
+    if (!options?.silent && !isValidationError) {
       showToast(
         {
           title: fallbackTitle,

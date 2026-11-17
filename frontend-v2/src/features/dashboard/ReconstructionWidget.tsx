@@ -35,12 +35,12 @@ export function ReconstructionWidget({ data }: Props) {
 
   if (data.totalActiveCount === 0) {
     return (
-      <div className="glass-card reconstruction-card-empty">
+      <div className="glass-card dashboard-card-compact">
         <div className="card-body-full">
-          <div className="reconstruction-empty-row">
-            <Wrench size={16} className="reconstruction-empty-icon" />
-            <span className="reconstruction-empty-text">Údržba — žádné otevřené úkoly</span>
-            <a href="/reconstruction" className="reconstruction-empty-cta" onClick={(e) => { e.preventDefault(); navigate("/reconstruction"); }}>
+          <div className="dashboard-compact-row">
+            <Wrench size={16} className="dashboard-compact-icon" />
+            <span className="dashboard-compact-text">Údržba — žádné otevřené úkoly</span>
+            <a href="/reconstruction" className="dashboard-compact-cta" onClick={(e) => { e.preventDefault(); navigate("/reconstruction"); }}>
               Přidat →
             </a>
           </div>

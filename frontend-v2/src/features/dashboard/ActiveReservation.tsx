@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import type { DashboardReservationsData, UpcomingReservation, LastStay, ReservationParticipantLite } from "@/api/dashboard";
+import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
 import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { CalendarPlus } from "lucide-react";
@@ -79,7 +79,9 @@ function buildLastStayBlock(lastStay: LastStay | null | undefined): React.ReactN
   );
 }
 
-function buildParticipantStack(participants: ReservationParticipantLite[] | undefined): React.ReactNode {
+type ParticipantLite = { userId: string; username: string; userColor: string | null; userAnimalIcon: string | null };
+
+function buildParticipantStack(participants: ParticipantLite[] | undefined): React.ReactNode {
   if (!participants || participants.length === 0) return null;
   return (
     <div className="status-participants">

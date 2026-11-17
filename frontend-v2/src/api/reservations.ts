@@ -52,6 +52,7 @@ export interface ReservationUser {
   username: string;
   color?: string;
   role?: string;
+  animalIcon?: string | null;
 }
 
 export interface ReservationsApiResponse {

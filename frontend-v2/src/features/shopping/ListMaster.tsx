@@ -4,6 +4,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ShoppingList } from '@/api/shopping'
 import { useAuth } from '@/context/AuthContext'
+import { Archive, Send, Trash2 } from 'lucide-react'
 
 interface Props {
   lists: ShoppingList[]
@@ -79,7 +80,7 @@ export function ListMaster({
                     aria-label="Sdílet do nástěnky"
                     onClick={() => onShare(list)}
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21v-9a3 3 0 0 1 3-3h9M21 3l-9 9"/></svg>
+                    <Send className="w-4 h-4" aria-hidden="true" />
                   </button>
                   {allDone && !list.isResolved && (
                     <button
@@ -88,7 +89,7 @@ export function ListMaster({
                       aria-label="Archivovat seznam"
                       onClick={() => onArchive(list.id)}
                     >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <Archive className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
                   {canEdit && (
@@ -98,7 +99,7 @@ export function ListMaster({
                       aria-label="Smazat seznam"
                       onClick={() => onDelete(list.id)}
                     >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>

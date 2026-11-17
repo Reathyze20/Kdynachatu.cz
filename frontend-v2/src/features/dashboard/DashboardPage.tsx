@@ -15,6 +15,7 @@ import { HandoverNote } from "./HandoverNote";
 import { EssentialWarning } from "./EssentialWarning";
 import { DepartureBanner } from "./DepartureBanner";
 import { ReconstructionWidget } from "./ReconstructionWidget";
+import { NudgeTray } from "./NudgeTray";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { motion } from "framer-motion";
 
@@ -273,6 +274,73 @@ export function DashboardPage() {
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
 
+  // Prázdné widgety kolabují na kompaktní řádek a řadí se pod mřížku;
+  // během načítání (a při chybě) zůstávají v mřížce, aby layout neskákal.
+  const isShoppingEmpty = shoppingQuery.isSuccess && (shoppingQuery.data?.totalPendingShoppingCount ?? 0) === 0;
+  const isHandoverEmpty = notesQuery.isSuccess && !(handoverNote ?? "").trim();
+  const isReconstructionEmpty = reconstructionQuery.isSuccess && (reconstructionQuery.data?.totalActiveCount ?? 0) === 0;
+
+  const collapsibleWidgets = [
+    {
+      key: "shopping",
+      testId: "dashboard-shopping-widget",
+      isEmpty: isShoppingEmpty,
+      node: shoppingQuery.isLoading ? (
+        <ShoppingSkeleton />
+      ) : shoppingQuery.isError ? (
+        <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nákupy se nepodařilo načíst" />}>
+          <FeatureErrorFallback title="Nákupy se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
+        </ErrorBoundary>
+      ) : shoppingQuery.data ? (
+        <ShoppingWidget
+          items={shoppingQuery.data.pendingShoppingItems}
+          totalCount={shoppingQuery.data.totalPendingShoppingCount}
+          totalItemsCount={shoppingQuery.data.totalItemsCount}
+        />
+      ) : null,
+    },
+    {
+      key: "handover",
+      testId: "dashboard-handover-widget",
+      isEmpty: isHandoverEmpty,
+      node: notesQuery.isLoading ? (
+        <HandoverNoteSkeleton />
+      ) : notesQuery.isError ? (
+        <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nástěnku se nepodařilo načíst" />}>
+          <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
+        </ErrorBoundary>
+      ) : notesQuery.data ? (
+        <HandoverNote
+          note={handoverNote}
+          author={handoverNoteAuthor}
+          updatedAt={handoverNoteUpdatedAt}
+          onNoteUpdate={(newNote, author, updatedAt) => {
+            setHandoverNote(newNote);
+            setHandoverNoteAuthor(author ?? null);
+            setHandoverNoteUpdatedAt(updatedAt ?? null);
+          }}
+        />
+      ) : null,
+    },
+    {
+      key: "reconstruction",
+      testId: "dashboard-reconstruction-widget",
+      isEmpty: isReconstructionEmpty,
+      node: reconstructionQuery.isLoading ? (
+        <ReconstructionSkeleton />
+      ) : reconstructionQuery.isError ? (
+        <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Údržbu se nepodařilo načíst" />}>
+          <FeatureErrorFallback title="Údržbu se nepodařilo načíst" error={reconstructionQuery.error as Error} resetErrorBoundary={() => reconstructionQuery.refetch()} />
+        </ErrorBoundary>
+      ) : reconstructionQuery.data ? (
+        <ReconstructionWidget data={reconstructionQuery.data} />
+      ) : null,
+    },
+  ];
+
+  const gridWidgets = collapsibleWidgets.filter((w) => !w.isEmpty);
+  const emptyWidgets = collapsibleWidgets.filter((w) => w.isEmpty);
+
   return (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
       {/* Winter banner */}
@@ -308,6 +376,9 @@ export function DashboardPage() {
         />
       )}
 
+      {/* Nudge tray — timely coordination prompts derived from existing data */}
+      <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />
+
       {/* Main grid */}
       <motion.div
         className="dashboard-grid"
@@ -342,58 +413,30 @@ export function DashboardPage() {
           )}
         </motion.div>
 
-        {/* Row 1, Col 3: Shopping Widget */}
-        <motion.div variants={cardVariants} data-testid="dashboard-shopping-widget">
-          {shoppingQuery.isLoading ? (
-            <ShoppingSkeleton />
-          ) : shoppingQuery.isError ? (
-            <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nákupy se nepodařilo načíst" />}>
-              <FeatureErrorFallback title="Nákupy se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
-            </ErrorBoundary>
-          ) : shoppingQuery.data ? (
-            <ShoppingWidget
-              items={shoppingQuery.data.pendingShoppingItems}
-              totalCount={shoppingQuery.data.totalPendingShoppingCount}
-              totalItemsCount={shoppingQuery.data.totalItemsCount}
-            />
-          ) : null}
-        </motion.div>
-
-        {/* Row 2, Col 1: Handover Note */}
-        <motion.div variants={cardVariants} data-testid="dashboard-handover-widget">
-          {notesQuery.isLoading ? (
-            <HandoverNoteSkeleton />
-          ) : notesQuery.isError ? (
-            <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nástěnku se nepodařilo načíst" />}>
-              <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
-            </ErrorBoundary>
-          ) : notesQuery.data ? (
-            <HandoverNote
-              note={handoverNote}
-              author={handoverNoteAuthor}
-              updatedAt={handoverNoteUpdatedAt}
-              onNoteUpdate={(newNote, author, updatedAt) => {
-                setHandoverNote(newNote);
-                setHandoverNoteAuthor(author ?? null);
-                setHandoverNoteUpdatedAt(updatedAt ?? null);
-              }}
-            />
-          ) : null}
-        </motion.div>
-
-        {/* Row 2, Col 2: Reconstruction Widget */}
-        <motion.div variants={cardVariants} data-testid="dashboard-reconstruction-widget">
-          {reconstructionQuery.isLoading ? (
-            <ReconstructionSkeleton />
-          ) : reconstructionQuery.isError ? (
-            <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Údržbu se nepodařilo načíst" />}>
-              <FeatureErrorFallback title="Údržbu se nepodařilo načíst" error={reconstructionQuery.error as Error} resetErrorBoundary={() => reconstructionQuery.refetch()} />
-            </ErrorBoundary>
-          ) : reconstructionQuery.data ? (
-            <ReconstructionWidget data={reconstructionQuery.data} />
-          ) : null}
-        </motion.div>
+        {/* Widgety s obsahem, v pořadí: Nákupy | Nástěnka | Údržba */}
+        {gridWidgets.map((w) => (
+          <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
+            {w.node}
+          </motion.div>
+        ))}
       </motion.div>
+
+      {/* Prázdné widgety — kompaktní řádky pod mřížkou */}
+      {emptyWidgets.length > 0 && (
+        <motion.div
+          className="dashboard-compact-stack"
+          variants={gridVariants}
+          initial="hidden"
+          animate="visible"
+          data-testid="dashboard-compact-stack"
+        >
+          {emptyWidgets.map((w) => (
+            <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
+              {w.node}
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
 
       {isAdmin && (activationQuery.isLoading ? (
         <motion.div variants={cardVariants} data-testid="dashboard-activation-widget">

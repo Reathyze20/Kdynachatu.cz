@@ -798,6 +798,12 @@ button.folder-context-item.folder-context-item--danger:hover {
     padding: var(--space-sm);
   }
 
+  /* Dashed "Nové album" tile duplicates the header + button and the
+     empty-state CTA; on a phone it pushes real albums below the fold. */
+  .folder-card--new {
+    display: none;
+  }
+
   .gallery-glass-card {
     border-radius: var(--radius-xl, 12px);
   }

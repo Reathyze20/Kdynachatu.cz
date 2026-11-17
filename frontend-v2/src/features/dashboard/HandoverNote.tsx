@@ -74,24 +74,18 @@ export function HandoverNote({ note, author, updatedAt, onNoteUpdate }: Props) {
 
   return (
     <>
-      <div className="glass-card dashboard-handover-card" id="dashboard-handover-note">
-        <div className="card-body-full handover-card-content">
-          <div className="dashboard-card-header">
-            <span className="dashboard-card-header-title">Vzkaz</span>
-            {!isGuest && (
-              <button className="handover-edit-btn" id="btn-edit-handover" title="Upravit vzkaz" onClick={openModal}>
-                <SquarePen size={16} />
-              </button>
-            )}
-          </div>
-          {noteText ? (
+      {noteText ? (
+        <div className="glass-card dashboard-handover-card" id="dashboard-handover-note">
+          <div className="card-body-full handover-card-content">
+            <div className="dashboard-card-header">
+              <span className="dashboard-card-header-title">Vzkaz</span>
+              {!isGuest && (
+                <button className="handover-edit-btn" id="btn-edit-handover" title="Upravit vzkaz" onClick={openModal}>
+                  <SquarePen size={16} />
+                </button>
+              )}
+            </div>
             <div className="handover-note-text">{noteText}</div>
-          ) : (
-            <p className="handover-note-empty">
-              {isGuest ? "Zatím žádný vzkaz." : "Žádný vzkaz — klikněte na tužku a napište."}
-            </p>
-          )}
-          {noteText && (
             <div className="card-footer">
               <span className="card-footer-meta">
                 {author && updatedAt
@@ -106,9 +100,23 @@ export function HandoverNote({ note, author, updatedAt, onNoteUpdate }: Props) {
                 Přejít do chatu →
               </a>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="glass-card dashboard-card-compact" id="dashboard-handover-note">
+          <div className="card-body-full">
+            <div className="dashboard-compact-row">
+              <SquarePen size={16} className="dashboard-compact-icon" />
+              <span className="dashboard-compact-text">Nástěnka — žádný vzkaz</span>
+              {!isGuest && (
+                <button className="dashboard-compact-cta" id="btn-edit-handover" onClick={openModal}>
+                  Napsat →
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Modal
         isOpen={modalOpen}
