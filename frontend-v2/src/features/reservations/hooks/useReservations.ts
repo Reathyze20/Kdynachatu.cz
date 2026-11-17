@@ -9,6 +9,7 @@ import type {
   ReservationsApiResponse,
   MissingSummary,
   CheckoutStatus,
+  CheckoutState,
   UserAvailability,
 } from "@/api/reservations";
 
@@ -102,9 +103,14 @@ export function useAssignReservation() {
 export function useCheckoutReservation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiClient.patch<CheckoutStatus>(`/reservations/${id}/checkout`).then((r) => r.data),
-    onMutate: async (id: string) => {
+    mutationFn: ({ id, state }: { id: string; state?: CheckoutState }) =>
+      apiClient
+        .patch<CheckoutStatus>(
+          `/reservations/${id}/checkout`,
+          state !== undefined ? { checkoutState: state } : undefined,
+        )
+        .then((r) => r.data),
+    onMutate: async ({ id, state }: { id: string; state?: CheckoutState }) => {
       await qc.cancelQueries({ queryKey: RESERVATIONS_KEY });
       const previous = qc.getQueryData<ReservationsApiResponse>(RESERVATIONS_KEY);
 
@@ -112,14 +118,21 @@ export function useCheckoutReservation() {
         qc.setQueryData<ReservationsApiResponse>(RESERVATIONS_KEY, {
           ...previous,
           reservations: previous.reservations.map((r) =>
-            r.id === id ? { ...r, isCheckoutCompleted: true, checkoutCompletedAt: new Date().toISOString() } : r
+            r.id === id
+              ? {
+                  ...r,
+                  isCheckoutCompleted: true,
+                  checkoutCompletedAt: new Date().toISOString(),
+                  ...(state !== undefined ? { checkoutState: state } : {}),
+                }
+              : r
           ),
         });
       }
 
       return { previous };
     },
-    onError: (_err, _id, context) => {
+    onError: (_err, _vars, context) => {
       if (context?.previous) {
         qc.setQueryData(RESERVATIONS_KEY, context.previous);
       }

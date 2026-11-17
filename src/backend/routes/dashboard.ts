@@ -177,6 +177,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         to: lastStayReservation.dateTo.toISOString().split("T")[0],
         isCheckoutCompleted: lastStayReservation.isCheckoutCompleted,
         daysEmpty: Math.floor((new Date(todayStr).getTime() - lastStayReservation.dateTo.getTime()) / (1000 * 60 * 60 * 24)),
+        checkoutState: lastStayReservation.checkoutState ?? null,
       } : null,
       stats: {
         myNightsThisYear: myStaysThisYear.reduce((sum, r) => {

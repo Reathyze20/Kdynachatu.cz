@@ -41,6 +41,15 @@ export interface ActiveReservation {
   participants?: ReservationParticipantLite[];
 }
 
+export interface CheckoutStateLite {
+  gas?: "full" | "half" | "low" | "empty" | null;
+  heatingOff?: boolean;
+  waterOff?: boolean;
+  broken?: string;
+  leftBehind?: string;
+  note?: string;
+}
+
 export interface LastStay {
   username: string;
   userColor: string | null;
@@ -49,6 +58,7 @@ export interface LastStay {
   to: string;
   isCheckoutCompleted: boolean;
   daysEmpty: number;
+  checkoutState?: CheckoutStateLite | null;
 }
 
 export interface DashboardReservationsData {

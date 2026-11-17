@@ -170,6 +170,11 @@ model Reservation {
   checkoutCompletedBy String?   @map("checkout_completed_by")
   checkoutCompletedAt DateTime? @map("checkout_completed_at")
 
+  // ── Structured "state of the cabin" left at checkout (arrival-briefing source) ──
+  // JSON: { gas?, heatingOff?, waterOff?, broken?, leftBehind?, note? }
+  checkoutState   Json?     @map("checkout_state")
+  checkoutStateAt DateTime? @map("checkout_state_at")
+
   // ── Cabin relation ────────────────────────────────────────────────────
   cabinId String? @map("cabin_id")
   cabin   Cabin?  @relation(fields: [cabinId], references: [id], onDelete: Cascade)

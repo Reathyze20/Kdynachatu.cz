@@ -5,7 +5,8 @@ import { validate } from "../../validators/validate";
 import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
 import prisma from "../../utils/prisma";
-import { isPrimaryCollisionBlocked } from "./reservationHelpers";
+import { Prisma } from "../../generated/prisma/client.js";
+import { isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
 import logger from "../../utils/logger";
 
 const router = Router();
@@ -989,6 +990,7 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
 
     const { id } = req.params;
     const cabinId = req.user.cabinId!;
+    const cleanState = sanitizeCheckoutState(req.body?.checkoutState);
 
     // Find the reservation, ensure it belongs to the same cabin
     const reservation = await prisma.reservation.findFirst({
@@ -1005,14 +1007,18 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
       return res.status(404).json({ message: "Rezervace nenalezena." });
     }
 
-    // Already completed — return idempotent response with current state
+    // Already completed — allow updating the structured state, then return current status
     if (reservation.isCheckoutCompleted) {
-      const full = await prisma.reservation.findUnique({
+      const full = await prisma.reservation.update({
         where: { id },
+        data: cleanState !== undefined
+          ? { checkoutState: cleanState as Prisma.InputJsonValue, checkoutStateAt: new Date() }
+          : {},
         select: {
           isCheckoutCompleted: true,
           checkoutCompletedBy: true,
           checkoutCompletedAt: true,
+          checkoutState: true,
         },
       });
       // Resolve username of the person who completed it
@@ -1025,26 +1031,29 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
         completedByUsername = u?.username ?? null;
       }
       return res.json({
-        message: "Odjezdový checklist byl již dokončen.",
+        message: cleanState !== undefined ? "Stav chaty uložen." : "Odjezdový checklist byl již dokončen.",
         isCheckoutCompleted: true,
         checkoutCompletedBy: full?.checkoutCompletedBy ?? null,
         checkoutCompletedByUsername: completedByUsername,
         checkoutCompletedAt: full?.checkoutCompletedAt?.toISOString() ?? null,
+        checkoutState: full?.checkoutState ?? null,
       });
     }
 
-    // Mark checkout as completed
+    // Mark checkout as completed (and persist structured state if provided)
     const updated = await prisma.reservation.update({
       where: { id },
       data: {
         isCheckoutCompleted: true,
         checkoutCompletedBy: req.user.userId,
         checkoutCompletedAt: new Date(),
+        ...(cleanState !== undefined ? { checkoutState: cleanState as Prisma.InputJsonValue, checkoutStateAt: new Date() } : {}),
       },
       select: {
         isCheckoutCompleted: true,
         checkoutCompletedBy: true,
         checkoutCompletedAt: true,
+        checkoutState: true,
       },
     });
 
@@ -1060,6 +1069,7 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
       checkoutCompletedBy: updated.checkoutCompletedBy,
       checkoutCompletedByUsername: req.user.username,
       checkoutCompletedAt: updated.checkoutCompletedAt?.toISOString() ?? null,
+      checkoutState: updated.checkoutState ?? null,
     });
   } catch (error) {
     logger.error("RESERVATIONS", "Checkout completion error", { error: String(error) });
@@ -1083,6 +1093,7 @@ router.get("/:id/checkout", protect, requireCabin, async (req: Request, res: Res
         isCheckoutCompleted: true,
         checkoutCompletedBy: true,
         checkoutCompletedAt: true,
+        checkoutState: true,
       },
     });
 
@@ -1105,6 +1116,7 @@ router.get("/:id/checkout", protect, requireCabin, async (req: Request, res: Res
       checkoutCompletedBy: reservation.checkoutCompletedBy,
       checkoutCompletedByUsername: completedByUsername,
       checkoutCompletedAt: reservation.checkoutCompletedAt?.toISOString() ?? null,
+      checkoutState: reservation.checkoutState ?? null,
     });
   } catch (error) {
     logger.error("RESERVATIONS", "Get checkout status error", { error: String(error) });

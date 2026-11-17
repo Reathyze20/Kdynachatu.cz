@@ -54,6 +54,15 @@ const UpcomingReservationSchema = z.object({
   participants: z.array(ReservationParticipantLiteSchema).optional(),
 })
 
+const CheckoutStateLiteSchema = z.object({
+  gas: z.enum(["full", "half", "low", "empty"]).nullable().optional(),
+  heatingOff: z.boolean().optional(),
+  waterOff: z.boolean().optional(),
+  broken: z.string().optional(),
+  leftBehind: z.string().optional(),
+  note: z.string().optional(),
+})
+
 const LastStaySchema = z.object({
   username: z.string(),
   userColor: z.string().nullable(),
@@ -62,6 +71,7 @@ const LastStaySchema = z.object({
   to: z.string(),
   isCheckoutCompleted: z.boolean(),
   daysEmpty: z.number(),
+  checkoutState: CheckoutStateLiteSchema.nullable().optional(),
 })
 
 export const DashboardReservationsSchema = z.object({
