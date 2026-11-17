@@ -2123,6 +2123,9 @@
   /* Actions: always visible on mobile */
   .master-item-actions {
     opacity: 1 !important;
+    /* Extra breathing room between 44px targets — delete sits next to
+       share/archive, so a tight gap risks a mis-tap on a destructive action. */
+    gap: 8px;
   }
 
   .master-action-btn {

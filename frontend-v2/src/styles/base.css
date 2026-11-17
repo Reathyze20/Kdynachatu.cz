@@ -114,6 +114,14 @@ body::before {
   body {
     padding: 0;
   }
+
+  /* iOS Safari při fokusu přiblíží stránku, když má pole písmo < 16 px.
+     !important kvůli třídám jednotlivých polí (13.6px, 15.2px…). */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 .hidden {

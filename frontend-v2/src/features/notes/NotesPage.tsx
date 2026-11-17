@@ -74,6 +74,16 @@ export function NotesPage() {
     }
   }, [])
 
+  // Otevřený chat na mobilu: nápověda (.fab-help) by jinak překryla tlačítko Odeslat
+  const mobileChatOpen = isMobile && mobileShowChat;
+  useEffect(() => {
+    if (!mobileChatOpen) return
+    document.body.classList.add('notes-chat-open')
+    return () => {
+      document.body.classList.remove('notes-chat-open')
+    }
+  }, [mobileChatOpen])
+
   // User color/icon map — cachováno React Query (30 min), ne useEffect bez cache
   const { data: rawUsers = [] } = useQuery<Users[]>({
     queryKey: ["users-list"],

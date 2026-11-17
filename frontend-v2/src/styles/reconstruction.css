@@ -1281,13 +1281,19 @@ select.form-input {
 }
 
 @media (max-width: 900px) {
+  /* Grid místo flex-wrap: tři dlaždice vždy v jedné řadě.
+     Flex basis 128px dával na telefonu 2+1 s osamoceným Úkoly přes celou šířku. */
   .reconstruction-summary {
     width: 100%;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 
   .reconstruction-summary-pill {
-    flex: 1 1 128px;
+    min-width: 0;
+    padding: 10px 8px;
+    justify-content: center;
   }
 }
 
@@ -1299,10 +1305,6 @@ select.form-input {
   .kanban-column-body {
     max-height: none;
     overflow: visible;
-  }
-
-  .reconstruction-summary-pill {
-    width: 100%;
   }
 
   .card-action-edit,

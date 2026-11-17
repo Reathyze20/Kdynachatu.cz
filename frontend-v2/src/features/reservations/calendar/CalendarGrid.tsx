@@ -41,6 +41,7 @@ interface CalendarGridProps {
   onShowDetail: (r: Reservation) => void;
   onShowMonthList: () => void;
   onDaySelect: (dateStr: string) => void;
+  onDayClear?: () => void;
   quickStatsNode?: React.ReactNode;
   /** Hide the "Vytvořit rezervaci" button when EmptyState CTA is visible in the right panel */
   showCreateButton?: boolean;
@@ -62,6 +63,7 @@ export function CalendarGrid({
   onShowDetail,
   onShowMonthList,
   onDaySelect,
+  onDayClear,
   quickStatsNode,
   showCreateButton: _showCreateButton = true,
 }: CalendarGridProps) {
@@ -133,10 +135,12 @@ export function CalendarGrid({
       ? `Vybraný den: ${formatCzechDate(selectedDay)}`
       : "Vyberte den v kalendáři";
 
+  // Formulace bez směrových odkazů — seznam rezervací je na desktopu vpravo,
+  // na mobilu pod kalendářem.
   const rangeDescription = rangeStart
-    ? "Druhý tap na pozdější den potvrdí odjezd. Detail rezervací zůstává dostupný v seznamu vpravo."
+    ? "Druhé klepnutí na pozdější den potvrdí odjezd."
     : selectedDay
-      ? "Vpravo vidíte jen rezervace pro zvolený den. Znovu klepněte na stejný den a tím zahájíte novou rezervaci."
+      ? "Seznam rezervací teď ukazuje jen zvolený den. Dalším klepnutím na stejný den začnete novou rezervaci."
       : "První klepnutí zobrazí rezervace pro konkrétní den. Druhým klepnutím na stejný den začnete vybírat pobyt.";
 
   const handleHover = (dateStr: string) => {
@@ -161,7 +165,29 @@ export function CalendarGrid({
           <button className={styles.iconButton} onClick={onGoToNext}>❯</button>
         </div>
         <div className={styles.calendarStats}>
-          {quickStatsNode}
+          {rangeStart || selectedDay ? (
+            <div className={styles.selectionChip} data-testid="calendar-selection-chip">
+              <span className={styles.selectionChipText}>{rangeTitle}</span>
+              <button
+                type="button"
+                className={styles.selectionChipClear}
+                aria-label="Zrušit výběr"
+                title="Zrušit výběr"
+                onClick={() => {
+                  if (rangeStart) {
+                    onRangeClear();
+                    setRangeHoverDate(null);
+                  } else {
+                    onDayClear?.();
+                  }
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          ) : quickStatsNode}
         </div>
       </div>
 
@@ -213,7 +239,8 @@ export function CalendarGrid({
             </svg>
           </div>
           <div className={styles.rangeHintBody}>
-            <strong>{rangeTitle}</strong>
+            {/* Při aktivním výběru nese titulek chip v hlavičce — tady stačí instrukce */}
+            {!(rangeStart || selectedDay) && <strong>{rangeTitle}</strong>}
             <span>{rangeDescription}</span>
           </div>
           {rangeStart ? (

@@ -117,6 +117,7 @@ model User {
   reconstructionItems        ReconstructionItem[]
   reconstructionVotes        ReconstructionVote[]
   reservationWatches         ReservationWatcher[]
+  reservationParticipations  ReservationParticipant[]
   inventoryUpdates           InventoryItem[]      @relation("UpdatedBy")
   availabilities             UserAvailability[]
   inviteLinksCreated         InviteLink[]
@@ -169,18 +170,42 @@ model Reservation {
   checkoutCompletedBy String?   @map("checkout_completed_by")
   checkoutCompletedAt DateTime? @map("checkout_completed_at")
 
+  // ── Structured "state of the cabin" left at checkout (arrival-briefing source) ──
+  // JSON: { gas?, heatingOff?, waterOff?, broken?, leftBehind?, note? }
+  checkoutState   Json?     @map("checkout_state")
+  checkoutStateAt DateTime? @map("checkout_state_at")
+
   // ── Cabin relation ────────────────────────────────────────────────────
   cabinId String? @map("cabin_id")
   cabin   Cabin?  @relation(fields: [cabinId], references: [id], onDelete: Cascade)
 
   // Relations
-  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  watchers ReservationWatcher[]
+  user         User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  watchers     ReservationWatcher[]
+  participants ReservationParticipant[]
 
   @@index([cabinId])
   @@index([cabinId, dateFrom, dateTo])
   @@index([cabinId, status])
   @@map("reservations")
+}
+
+// ============================================================================
+// RESERVATION PARTICIPANTS — kdo další jede na dané rezervaci (spolucestující)
+// Organizátor zůstává jako Reservation.userId; tady jsou ostatní účastníci.
+// ============================================================================
+model ReservationParticipant {
+  reservationId String   @map("reservation_id")
+  userId        String   @map("user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([reservationId, userId])
+  @@index([userId])
+  @@map("reservation_participants")
 }
 
 // ============================================================================

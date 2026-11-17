@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import apiClient from "@/api/client";
 import { showToast } from "@/lib/toast";
-import { CircleCheck, AlertTriangle } from "lucide-react";
+import { ShoppingCart, AlertTriangle } from "lucide-react";
 import type { PendingShoppingItem } from "@/api/dashboard";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 
@@ -80,19 +80,16 @@ export function ShoppingWidget({ items: initialItems, totalCount: initialTotal, 
 
   if (localTotal === 0) {
     return (
-      <div className="glass-card">
+      <div className="glass-card dashboard-card-compact">
         <div className="card-body-full" id="dashboard-shopping">
-          {header}
           {actionError ? (
             <div className="error-message show" role="alert">{actionError}</div>
           ) : null}
-          <div className="empty-state-card">
-            <span className="empty-state-icon" style={{ color: "var(--color-primary)", opacity: 0.7 }}>
-              <CircleCheck size={32} />
-            </span>
-            <p className="empty-text">Na chatě nic nechybí!</p>
-            <a href="/shopping" className="empty-cta" onClick={(e) => { e.preventDefault(); navigate("/shopping"); }}>
-              Nový seznam
+          <div className="dashboard-compact-row">
+            <ShoppingCart size={16} className="dashboard-compact-icon" />
+            <span className="dashboard-compact-text">Nákupy — nic nechybí</span>
+            <a href="/shopping" className="dashboard-compact-cta" onClick={(e) => { e.preventDefault(); navigate("/shopping"); }}>
+              Nový seznam →
             </a>
           </div>
         </div>

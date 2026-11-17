@@ -21,6 +21,13 @@ const PendingShoppingItemSchema = z.object({
   isEssential: z.boolean(),
 })
 
+const ReservationParticipantLiteSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  userColor: z.string().nullable(),
+  userAnimalIcon: z.string().nullable().optional(),
+})
+
 const ActiveReservationSchema = z.object({
   id: z.string(),
   username: z.string(),
@@ -31,6 +38,7 @@ const ActiveReservationSchema = z.object({
   purpose: z.string(),
   handoverNote: z.string().nullable().optional(),
   isCheckoutCompleted: z.boolean().optional(),
+  participants: z.array(ReservationParticipantLiteSchema).optional(),
 })
 
 const UpcomingReservationSchema = z.object({
@@ -43,6 +51,16 @@ const UpcomingReservationSchema = z.object({
   to: z.string(),
   purpose: z.string(),
   status: z.string().optional(),
+  participants: z.array(ReservationParticipantLiteSchema).optional(),
+})
+
+const CheckoutStateLiteSchema = z.object({
+  gas: z.enum(["full", "half", "low", "empty"]).nullable().optional(),
+  heatingOff: z.boolean().optional(),
+  waterOff: z.boolean().optional(),
+  broken: z.string().optional(),
+  leftBehind: z.string().optional(),
+  note: z.string().optional(),
 })
 
 const LastStaySchema = z.object({
@@ -53,6 +71,7 @@ const LastStaySchema = z.object({
   to: z.string(),
   isCheckoutCompleted: z.boolean(),
   daysEmpty: z.number(),
+  checkoutState: CheckoutStateLiteSchema.nullable().optional(),
 })
 
 export const DashboardReservationsSchema = z.object({

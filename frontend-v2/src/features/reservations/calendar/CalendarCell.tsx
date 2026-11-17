@@ -172,7 +172,7 @@ export function CalendarCell({
                     key={r.id}
                     className={barCls}
                     style={barStyle}
-                    title={`${r.username} (${r.purpose})`}
+                    title={`${r.username} (${r.purpose})${r.participants && r.participants.length > 0 ? ` +${r.participants.length}: ${r.participants.map((p) => p.username).join(", ")}` : ""}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onShowDetail(r);

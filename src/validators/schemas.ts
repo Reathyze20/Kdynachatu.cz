@@ -56,6 +56,7 @@ export const createReservationSchema = z.object({
   purpose: z.string().min(1, "Účel je povinný").max(100, "Maximální délka je 100 znaků"),
   notes: z.string().max(1000, "Maximální délka je 1000 znaků").optional(),
   handoverNote: z.string().max(1000, "Maximální délka je 1000 znaků").optional(),
+  participantIds: z.array(z.string().uuid("Neplatné ID účastníka")).max(50).optional(),
 }).refine(data => new Date(data.to) >= new Date(data.from), {
   message: "Datum odjezdu nesmí být před příjezdem",
   path: ["to"],
@@ -68,6 +69,7 @@ export const updateReservationSchema = z.object({
   notes: z.string().max(1000, "Maximální délka je 1000 znaků").optional(),
   handoverNote: z.string().max(1000, "Maximální délka je 1000 znaků").optional(),
   status: z.enum(["soft", "primary"]).optional(),
+  participantIds: z.array(z.string().uuid("Neplatné ID účastníka")).max(50).optional(),
 }).refine(data => {
   if (data.from && data.to) {
     return new Date(data.to) >= new Date(data.from);

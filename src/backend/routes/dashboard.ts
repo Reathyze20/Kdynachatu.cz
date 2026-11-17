@@ -74,13 +74,19 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
     const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth] = await Promise.all([
       prisma.reservation.findMany({
         where: { cabinId, dateFrom: { gte: new Date(todayStr) }, status: "primary" },
-        include: { user: { select: { username: true, color: true, animalIcon: true } } },
+        include: {
+          user: { select: { username: true, color: true, animalIcon: true } },
+          participants: { include: { user: { select: { id: true, username: true, color: true, animalIcon: true } } } },
+        },
         orderBy: { dateFrom: "asc" },
         take: 5,
       }),
       prisma.reservation.findFirst({
         where: { cabinId, dateFrom: { lte: new Date(todayStr) }, dateTo: { gte: new Date(todayStr) }, status: "primary" },
-        include: { user: { select: { username: true, color: true, animalIcon: true } } },
+        include: {
+          user: { select: { username: true, color: true, animalIcon: true } },
+          participants: { include: { user: { select: { id: true, username: true, color: true, animalIcon: true } } } },
+        },
       }),
       prisma.reservation.findFirst({
         where: { cabinId, userId: req.user.userId, dateTo: new Date(todayStr), status: "primary" },
@@ -130,6 +136,12 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         purpose: activeReservation.purpose,
         handoverNote: activeReservation.handoverNote ?? null,
         isCheckoutCompleted: activeReservation.isCheckoutCompleted,
+        participants: activeReservation.participants.map((p) => ({
+          userId: p.userId,
+          username: p.user.username,
+          userColor: p.user.color,
+          userAnimalIcon: p.user.animalIcon,
+        })),
       } : null,
       upcomingReservations: upcomingReservations
         .filter((r) => r.dateTo >= r.dateFrom)
@@ -143,6 +155,12 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
           to: r.dateTo.toISOString().split("T")[0],
           purpose: r.purpose,
           status: r.status,
+          participants: r.participants.map((p) => ({
+            userId: p.userId,
+            username: p.user.username,
+            userColor: p.user.color,
+            userAnimalIcon: p.user.animalIcon,
+          })),
         })),
       myNextReservation: myNextReservation ? {
         from: myNextReservation.dateFrom.toISOString().split("T")[0],
@@ -159,6 +177,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         to: lastStayReservation.dateTo.toISOString().split("T")[0],
         isCheckoutCompleted: lastStayReservation.isCheckoutCompleted,
         daysEmpty: Math.floor((new Date(todayStr).getTime() - lastStayReservation.dateTo.getTime()) / (1000 * 60 * 60 * 24)),
+        checkoutState: lastStayReservation.checkoutState ?? null,
       } : null,
       stats: {
         myNightsThisYear: myStaysThisYear.reduce((sum, r) => {
