@@ -61,6 +61,9 @@ Pravidlo:
 | `.agents/skills/frontend-design/` | frontend-design | active | high-polish UI work |
 | `.agents/skills/saas-playbook/` | saas-playbook | active | product/launch/business checklists |
 | `.agents/skills/skill-creator/` | skill-creator | active | skill creation and benchmarking |
+| `skills-lock.json` | (third-party) | active | skilly z `npx skills add` (anthropics/skills, mattpocock/skills); bez vlastních evals, `validate:ai` je nevyžaduje |
+| `.claude/skills/database-migrations/` | database-migrations | active | Claude Code: postup změny Prisma schématu |
+| `.claude/skills/verify/` | verify | active | Claude Code: spuštění a ověření aplikace naživo |
 
 ### Prompts
 
@@ -90,11 +93,12 @@ Pravidlo:
 
 | File | Status | Purpose |
 |---|---|---|
-| `CLAUDE.md` | active | short Claude Code instructions, points to `docs/SDLC.md` |
+| `CLAUDE.md` | active | nepřekročitelná pravidla, příkazy, navigační pointery; proces odkazuje na `docs/SDLC.md` |
+| `CODING_STANDARDS.md` | active | konvence repa pro `/code-review` (osa Standards) |
+| `docs/agents/` | active | konfigurace mattpocock skillů: issue tracker, triage labely, doménové dokumenty |
 | `.claude/settings.json` | active | deny rules + PreToolUse hook (single-repo cloud sessions too) |
 | `.claude/hooks/protect-paths.mjs` | active | blocks agent edits to `.env*`, `.github/`, `.claude/` config, existing migrations |
-| `docs/SDLC.md` | active | development process, DoR/DoD, migration policy, GitHub settings |
-| `docs/specs/_TEMPLATE.md` | active | feature spec template |
+| `docs/SDLC.md` | active | proces grill → spec → tickety → implement (GitHub Issues), DoD, migrace, GitHub nastavení |
 | `docs/adr/_TEMPLATE.md` | active | architecture decision record template |
 | `.github/workflows/ci.yml` | active | required check `preflight` on every PR |
 | `.github/workflows/guardrails.yml` | active | required check `guardrails` (PR size, sensitive paths, migrations, focused tests) |

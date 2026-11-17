@@ -196,10 +196,22 @@ async function validateInstructions(findings: Finding[]): Promise<void> {
   }
 }
 
+async function readLockedSkills(): Promise<Set<string>> {
+  // Skilly nainstalované přes `npx skills add` (zapsané v skills-lock.json) jsou cizí a verzované
+  // hashem; evals a záznam v registru se vyžadují jen u vlastních skillů.
+  try {
+    const lock = JSON.parse(await readText(path.join(repoRoot, 'skills-lock.json'))) as { skills?: Record<string, unknown> }
+    return new Set(Object.keys(lock.skills ?? {}))
+  } catch {
+    return new Set()
+  }
+}
+
 async function validateSkills(findings: Finding[]): Promise<void> {
   const skillRoot = path.join(repoRoot, '.agents/skills')
   const entries = await fs.readdir(skillRoot, { withFileTypes: true })
   const names: Array<{ file: string; name: string }> = []
+  const lockedSkills = await readLockedSkills()
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue
@@ -227,6 +239,8 @@ async function validateSkills(findings: Finding[]): Promise<void> {
       pushFinding(findings, 'WARNING', relativeSkillFile, `Skill name '${fm.name}' does not match folder '${entry.name}'.`)
     }
     if (fm.name) names.push({ file: relativeSkillFile, name: fm.name })
+
+    if (lockedSkills.has(entry.name)) continue
 
     if (!await exists(rel(evalsFile))) {
       pushFinding(findings, 'ERROR', rel(evalsFile), 'Skill is missing evals/evals.json.')
@@ -387,13 +401,14 @@ async function validateRegistry(findings: Finding[]): Promise<void> {
   const promptFiles = await walk(path.join(repoRoot, '.github/prompts'), (file) => file.endsWith('.prompt.md'))
   const skillRoot = path.join(repoRoot, '.agents/skills')
   const skillEntries = await fs.readdir(skillRoot, { withFileTypes: true })
+  const lockedSkills = await readLockedSkills()
 
   for (const file of [...instructionFiles, ...agentFiles, ...promptFiles]) {
     expectedEntries.add(rel(file))
   }
 
   for (const entry of skillEntries) {
-    if (!entry.isDirectory()) continue
+    if (!entry.isDirectory() || lockedSkills.has(entry.name)) continue
     expectedEntries.add(`${rel(path.join(skillRoot, entry.name))}/`)
   }
 
