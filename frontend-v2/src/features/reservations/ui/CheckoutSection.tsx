@@ -1,9 +1,30 @@
 import { useState, useEffect } from "react";
 import apiClient from "@/api/client";
-import type { Reservation, CheckoutStatus } from "@/api/reservations";
+import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservations";
 import { useCheckoutReservation } from "../hooks/useReservations";
 import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
 import styles from "../Reservations.module.css";
+
+type GasLevel = "full" | "half" | "low" | "empty";
+const GAS_OPTIONS: { v: GasLevel; label: string }[] = [
+  { v: "full", label: "Plný" },
+  { v: "half", label: "Půl" },
+  { v: "low", label: "Dochází" },
+  { v: "empty", label: "Prázdný" },
+];
+const GAS_LABEL: Record<GasLevel, string> = { full: "plný", half: "půl", low: "dochází", empty: "prázdný" };
+
+function chipStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: "4px 12px",
+    borderRadius: 999,
+    border: `1px solid ${active ? "var(--color-primary, #ea580c)" : "var(--color-border, #d0d5dd)"}`,
+    background: active ? "color-mix(in srgb, var(--color-primary, #ea580c) 14%, transparent)" : "transparent",
+    fontWeight: active ? 600 : 400,
+    cursor: "pointer",
+    fontSize: "0.85rem",
+  };
+}
 
 /** Returns true if reservation is active or was active in the last ~day */
 function isReservationActiveOrRecent(r: Reservation): boolean {
@@ -27,6 +48,13 @@ export function CheckoutSection({ reservation }: Props) {
 
   const [tasks, setTasks] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  // Structured "state of the cabin" (arrival-briefing source)
+  const [gas, setGas] = useState<GasLevel | null>(null);
+  const [heatingOff, setHeatingOff] = useState(false);
+  const [waterOff, setWaterOff] = useState(false);
+  const [broken, setBroken] = useState("");
+  const [leftBehind, setLeftBehind] = useState("");
+  const [stateNote, setStateNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [completedStatus, setCompletedStatus] = useState<CheckoutStatus | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -110,6 +138,7 @@ export function CheckoutSection({ reservation }: Props) {
     const formatted = ts
       ? `${ts.getDate()}.${ts.getMonth() + 1}.${ts.getFullYear()} ${ts.getHours().toString().padStart(2, "0")}:${ts.getMinutes().toString().padStart(2, "0")}`
       : "";
+    const s = completedStatus.checkoutState;
     return (
       <div className={styles.checkoutSection}>
         <div className={styles.checkoutCompleted}>
@@ -119,21 +148,23 @@ export function CheckoutSection({ reservation }: Props) {
             {formatted && <span className={styles.checkoutCompletedDate}>{formatted}</span>}
           </div>
         </div>
+        {s && (
+          <div style={{ marginTop: 10, fontSize: "0.85rem", lineHeight: 1.6 }}>
+            {s.gas && <div><strong>Plyn:</strong> {GAS_LABEL[s.gas as GasLevel] ?? s.gas}</div>}
+            {s.heatingOff && <div>Topení vypnuté</div>}
+            {s.waterOff && <div>Voda uzavřená</div>}
+            {s.broken && <div><strong>Rozbité:</strong> {s.broken}</div>}
+            {s.leftBehind && <div><strong>Nechal/a:</strong> {s.leftBehind}</div>}
+            {s.note && <div><strong>Vzkaz:</strong> {s.note}</div>}
+          </div>
+        )}
       </div>
     );
   }
 
-  // --- No tasks ---
-  if (!loading && tasks.length === 0) {
-    return (
-      <div className={styles.checkoutSection}>
-        <div className={styles.emptyTasksBox}>Bez výjezdových úkolů.</div>
-      </div>
-    );
-  }
-
-  // --- Form state ---
-  const allChecked = tasks.length > 0 && checked.size === tasks.length;
+  // --- Form: state-of-the-cabin + optional checklist (not yet completed) ---
+  // Confirm needs all checklist tasks ticked; with no tasks it's always allowed.
+  const allChecked = tasks.length === 0 || checked.size === tasks.length;
 
   const toggle = (i: number) => {
     setChecked((prev) => {
@@ -144,11 +175,20 @@ export function CheckoutSection({ reservation }: Props) {
     });
   };
 
+  const buildState = (): CheckoutState => ({
+    gas: gas ?? undefined,
+    heatingOff: heatingOff || undefined,
+    waterOff: waterOff || undefined,
+    broken: broken.trim() || undefined,
+    leftBehind: leftBehind.trim() || undefined,
+    note: stateNote.trim() || undefined,
+  });
+
   const handleConfirm = async () => {
     if (!allChecked) return;
     setSubmitError(null);
     try {
-      await checkout.mutateAsync(reservation.id);
+      await checkout.mutateAsync({ id: reservation.id, state: buildState() });
     } catch (error) {
       setSubmitError(
         getNetworkAwareActionMessage(
@@ -160,11 +200,48 @@ export function CheckoutSection({ reservation }: Props) {
     }
   };
 
+  const clearErr = () => { if (submitError) setSubmitError(null); };
+
   return (
     <div className={styles.checkoutSection}>
-      <div>
-        <h4 className={styles.checkoutTitle}>Výjezdový protokol</h4>
+      <h4 className={styles.checkoutTitle}>Stav chaty při odjezdu</h4>
+      <p className={styles.checkoutHint} style={{ marginTop: -4 }}>
+        Vyplň pro dalšího návštěvníka — uvidí to jako přivítání. Vše nepovinné.
+      </p>
+
+      {/* Plyn */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", display: "block", marginBottom: 6 }}>Plyn</label>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {GAS_OPTIONS.map((o) => (
+            <button type="button" key={o.v} style={chipStyle(gas === o.v)} onClick={() => { clearErr(); setGas(gas === o.v ? null : o.v); }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Topení / voda */}
+      <div style={{ display: "flex", gap: 16, marginBottom: 12, flexWrap: "wrap" }}>
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.9rem" }}>
+          <input type="checkbox" checked={heatingOff} onChange={(e) => { clearErr(); setHeatingOff(e.target.checked); }} /> Topení vypnuté
+        </label>
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.9rem" }}>
+          <input type="checkbox" checked={waterOff} onChange={(e) => { clearErr(); setWaterOff(e.target.checked); }} /> Voda uzavřená
+        </label>
+      </div>
+
+      <textarea className="form-control" style={{ marginBottom: 8 }} rows={2} maxLength={1000}
+        placeholder="Rozbité / potřebuje pozornost…" value={broken} onChange={(e) => { clearErr(); setBroken(e.target.value); }} />
+      <textarea className="form-control" style={{ marginBottom: 8 }} rows={2} maxLength={1000}
+        placeholder="Co jsem nechal/a (dřevo, jídlo…)" value={leftBehind} onChange={(e) => { clearErr(); setLeftBehind(e.target.value); }} />
+      <textarea className="form-control" style={{ marginBottom: 12 }} rows={2} maxLength={1000}
+        placeholder="Vzkaz pro dalšího" value={stateNote} onChange={(e) => { clearErr(); setStateNote(e.target.value); }} />
+
+      {/* Výjezdový protokol — jen pokud chata má nakonfigurované úkoly */}
+      {tasks.length > 0 && (
         <>
+          <h4 className={styles.checkoutTitle}>Výjezdový protokol</h4>
           <p className={styles.checkoutProgress}>
             Splněno <span className={styles.checkoutProgressBold}>{checked.size}</span> z{" "}
             <span className={styles.checkoutProgressBold}>{tasks.length}</span> úkolů
@@ -172,33 +249,27 @@ export function CheckoutSection({ reservation }: Props) {
           <div className={styles.checkoutTasksList}>
             {tasks.map((task, i) => (
               <label key={i} className={styles.checkoutTaskItem}>
-                <input
-                  type="checkbox"
-                  checked={checked.has(i)}
-                  onChange={() => {
-                    if (submitError) setSubmitError(null);
-                    toggle(i);
-                  }}
-                />
+                <input type="checkbox" checked={checked.has(i)} onChange={() => { clearErr(); toggle(i); }} />
                 <span>{task}</span>
               </label>
             ))}
           </div>
-          <button
-            className={styles.checkoutConfirmBtn}
-            disabled={!allChecked || checkout.isPending}
-            onClick={handleConfirm}
-          >
-            {checkout.isPending ? "Ukládám…" : "Potvrdit odjezd"}
-          </button>
-          {!allChecked && tasks.length > 0 && (
-            <p className={styles.checkoutHint}>Potvrď všechny úkoly pro odeslání.</p>
-          )}
-          {submitError ? (
-            <div className="error-message show" role="alert">{submitError}</div>
-          ) : null}
         </>
-      </div>
+      )}
+
+      <button
+        className={styles.checkoutConfirmBtn}
+        disabled={!allChecked || checkout.isPending}
+        onClick={handleConfirm}
+      >
+        {checkout.isPending ? "Ukládám…" : "Potvrdit odjezd"}
+      </button>
+      {tasks.length > 0 && !allChecked && (
+        <p className={styles.checkoutHint}>Potvrď všechny úkoly pro odeslání.</p>
+      )}
+      {submitError ? (
+        <div className="error-message show" role="alert">{submitError}</div>
+      ) : null}
     </div>
   );
 }

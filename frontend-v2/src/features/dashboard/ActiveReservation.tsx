@@ -34,6 +34,29 @@ function buildNextBlock(res: UpcomingReservation | null): React.ReactNode {
   );
 }
 
+const GAS_LABEL_CZ: Record<string, string> = { full: "plný", half: "půl", low: "dochází", empty: "prázdný" };
+
+/** Arrival briefing derived from the last completed stay's checkout state. */
+function buildArrivalBriefing(lastStay: LastStay): React.ReactNode {
+  const s = lastStay.checkoutState;
+  if (!s) return null;
+  const chips: string[] = [];
+  if (s.gas) chips.push(`Plyn: ${GAS_LABEL_CZ[s.gas] ?? s.gas}`);
+  if (s.heatingOff) chips.push("topení vypnuté");
+  if (s.waterOff) chips.push("voda uzavřená");
+  const hasText = !!(s.broken || s.leftBehind || s.note);
+  if (chips.length === 0 && !hasText) return null;
+  return (
+    <div className="arrival-briefing">
+      <div className="arrival-briefing-title">Od minule — {lastStay.username}</div>
+      {chips.length > 0 && <div className="arrival-briefing-chips">{chips.join(" · ")}</div>}
+      {s.broken && <div className="arrival-briefing-line"><strong>Rozbité:</strong> {s.broken}</div>}
+      {s.leftBehind && <div className="arrival-briefing-line"><strong>Nechal/a:</strong> {s.leftBehind}</div>}
+      {s.note && <div className="arrival-briefing-line">{s.note}</div>}
+    </div>
+  );
+}
+
 function buildLastStayBlock(lastStay: LastStay | null | undefined): React.ReactNode {
   if (!lastStay) return null;
   const daysLabel = lastStay.daysEmpty === 0 ? "dnes" :
@@ -45,11 +68,14 @@ function buildLastStayBlock(lastStay: LastStay | null | undefined): React.ReactN
     ? " · Checklist OK"
     : lastStay.daysEmpty > 0 ? " · Checklist nevyplněn" : "";
   return (
-    <div className={`last-stay-inline${isLongEmpty ? " last-stay-warning" : ""}`}>
-      <span className="last-stay-text">
-        Prázdná {daysLabel}{checklistPart}
-      </span>
-    </div>
+    <>
+      <div className={`last-stay-inline${isLongEmpty ? " last-stay-warning" : ""}`}>
+        <span className="last-stay-text">
+          Prázdná {daysLabel}{checklistPart}
+        </span>
+      </div>
+      {buildArrivalBriefing(lastStay)}
+    </>
   );
 }
 
