@@ -13,6 +13,7 @@ import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
 import { HelpFab } from '@/components/shared/HelpFab'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
+import { InstallBanner } from '@/components/shared/InstallBanner'
 import { RouteTransitionSkeleton, getRouteSkeletonVariant } from '@/components/shared/RouteTransitionSkeleton'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 
@@ -123,6 +124,9 @@ export function AppShell() {
 
       {/* Help FAB + modal */}
       <HelpFab />
+
+      {/* Nabídka instalace na plochu (jen mobil, mimo nainstalovanou appku) */}
+      <InstallBanner />
     </div>
   )
 }
