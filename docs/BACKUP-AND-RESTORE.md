@@ -181,11 +181,49 @@ Priklad po deployi:
 2. Spustit `restore uploads --file ... --yes`.
 3. Zkontrolovat galerii, thumbnaily a wallpapers.
 
+## Off-site kopie na lokální PC
+
+Zálohy na VPS nepřežijí ztrátu serveru (pozastavení služby, smazání VPS, havárie disku).
+Proto se denně stahují na PC skriptem `manual-pull-backups.ps1` (zatím místo placených záloh
+u poskytovatele nebo object storage).
+
+Předpoklady:
+
+- SSH klíč na PC funguje bez hesla (nebo přes `ssh-agent`) pro `reathyze@<IP serveru>`,
+- host key serveru je v `known_hosts` — poprvé se připoj ručně: `ssh reathyze@<IP serveru>`,
+- na serveru už proběhl aspoň jeden backup (deploy ho seedne, jinak cron ve 3:00).
+
+Jednorázové stažení a registrace denní úlohy v Plánovači úloh Windows:
+
+```powershell
+.\manual-pull-backups.ps1 -ServerHost <IP serveru> -InstallScheduledTask
+```
+
+Co skript dělá:
+
+- stáhne do `%USERPROFILE%\chata-zalohy\{db,uploads}` jen soubory, které lokálně chybí,
+- přeskočí soubory mladší 10 minut (záloha se možná ještě zapisuje),
+- každý soubor ověří přes SHA-256 proti serveru (do té doby leží jako `.part`),
+- lokálně drží zálohy 30 dní (`-KeepDays`), vždy ale nejméně 3 nejnovější od každého druhu (`-MinKeep`),
+- když je nejnovější záloha starší než 48 h (`-StaleHours`), skončí exit kódem 2 — server
+  pravděpodobně přestal zálohovat,
+- loguje do `%USERPROFILE%\chata-zalohy\pull-backups.log`.
+
+Naplánovaná úloha „Chata - stažení záloh" běží denně ve 12:00 (`-TaskTime`). PC neběží pořád,
+proto má zapnuté „spustit co nejdříve po zmeškání" — doběhne po zapnutí PC. Při chybě nebo
+staré záloze ukáže notifikaci ve Windows. Odebrání: `Unregister-ScheduledTask -TaskName "Chata - stažení záloh"`.
+
+Limity:
+
+- kopie je jen tak čerstvá, jak často běží PC; server drží 14 dní, takže PC stačí zapnout
+  aspoň jednou za ~13 dní, jinak se nejstarší zálohy ztratí bez stažení,
+- archiv uploads je pokaždé plný (ne inkrementální) — při 30denní retenci počítej s ~30× velikostí
+  galerie na disku PC,
+- `.env` (tajné klíče, SMTP) se nezálohuje — pro obnovu ho drž zvlášť (správce hesel / šifrovaně).
+
 ## Co tento zaklad jeste neresi
 
-- off-site kopii zaloh mimo VPS,
-- automatickou kontrolu uspesnosti backupu pres alert,
+- automatickou kontrolu uspesnosti backupu pres alert (castecne: lokalni pull upozorni na starou zalohu),
 - snapshot celeho serveru,
-- point-in-time recovery PostgreSQL.
-
-Tohle je zamerne prvni bezpecny krok pro family-ready provoz. Dalsi vrstva muze byt synchronizace zaloh do object storage nebo na druhy stroj.
+- point-in-time recovery PostgreSQL,
+- off-site kopii nezavislou na tom, jestli bezi domaci PC (object storage / druhy stroj).
