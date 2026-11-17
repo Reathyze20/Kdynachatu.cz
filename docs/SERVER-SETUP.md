@@ -1,6 +1,6 @@
 # Nový produkční server – návod krok za krokem
 
-> **Stav 2026-11-17:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – poskytovatel **Hetzner 4 GB** (varianta níže v kroku 1), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu. Části návodu, které počítají s deployem z `main` přímo do produkce a buildem na serveru, se přepíšou při implementaci ADR-0002 (krok 3 roadmapy).
+> **Stav 2026-11-17:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17; postup objednávky v kroku 1 už neplatí, zbytek návodu je pro Ubuntu 24.04 obecný), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu. Části návodu, které počítají s deployem z `main` přímo do produkce a buildem na serveru, se přepíšou při implementaci ADR-0002 (krok 3 roadmapy).
 
 Cíl: připravit čistý VPS tak, aby na něj fungoval stávající deploy z `.github/workflows/deploy.yml`
 (push na `main` → GitHub Actions → SSH jako `reathyze` → `/home/reathyze/chata`, PM2 app `chata-app`),
