@@ -63,7 +63,6 @@ Pravidlo:
 | `.agents/skills/skill-creator/` | skill-creator | active | skill creation and benchmarking |
 | `.claude/skills/` (mattpocock) | grilling, grill-with-docs, domain-modeling, to-spec, to-tickets, implement, tdd, code-review, triage, diagnosing-bugs, codebase-design, writing-for-agents, setup-matt-pocock-skills | active | proces podle `docs/SDLC.md`; kopie `mattpocock/skills` @ `5863806`, neupravovat ručně |
 | `.claude/skills/database-migrations/` | database-migrations | active | Claude Code: postup změny Prisma schématu |
-| `.claude/skills/verify/` | verify | active | Claude Code: spuštění a ověření aplikace naživo |
 
 ### Prompts
 
