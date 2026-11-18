@@ -120,7 +120,7 @@ export function PrivacyPage() {
               <span className="legal-storage-icon">●</span>
               <div>
                 <strong>Přihlašovací údaje</strong>
-                <span>Abyste nemuseli zadávat heslo při každé návštěvě. Platí 30 dní nebo do odhlášení.</span>
+                <span>Abyste nemuseli zadávat heslo při každé návštěvě. Platí 7 dní nebo do odhlášení.</span>
               </div>
             </div>
             <div className="legal-storage-item">
