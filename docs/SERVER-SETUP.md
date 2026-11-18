@@ -1,6 +1,8 @@
 # Nový produkční server – návod krok za krokem
 
-> **Stav 2026-11-17:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17; postup objednávky v kroku 1 už neplatí, zbytek návodu je pro Ubuntu 24.04 obecný), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu. Části návodu, které počítají s deployem z `main` přímo do produkce a buildem na serveru, se přepíšou při implementaci ADR-0002 (krok 3 roadmapy).
+> **Stav 2026-11-18:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu. Části návodu, které počítají s deployem z `main` přímo do produkce a buildem na serveru, se přepíšou při implementaci ADR-0002 (krok 3 roadmapy).
+>
+> **Kdo co poskytuje:** server = **Netcup** · doména `kdynachatu.cz` a její DNS = **WEDOS** (jen registrace domény, nic dalšího se tam nekupuje; registrace platí do 2027-02-23 – prodloužit) · e-maily = **Resend** (doména už ověřená, DNS záznamy hotové) · starý server `89.221.217.81` se ruší (krok 11).
 
 Cíl: připravit čistý VPS tak, aby na něj fungoval stávající deploy z `.github/workflows/deploy.yml`
 (push na `main` → GitHub Actions → SSH jako `reathyze` → `/home/reathyze/chata`, PM2 app `chata-app`),
@@ -8,9 +10,9 @@ a přestěhovat na něj data ze starého serveru.
 
 Konvence v návodu:
 
-- `NOVA_IP` = IP adresa nového VPS (dostaneš e-mailem / v administraci WEDOS)
+- `NOVA_IP` = IP adresa Netcup VPS (v e-mailu od Netcupu nebo v Netcup SCP)
 - `STARA_IP` = starý server (`89.221.217.81`)
-- `DOMENA` = doména appky (dnes `chataceskestredohori.cz`)
+- `DOMENA` = `kdynachatu.cz` (stará `chataceskestredohori.cz` vypršela, neřeší se)
 - Příkazy s `$` spouštíš na serveru, příkazy s `PS>` v PowerShellu na svém PC.
 - Kde je `<...>`, doplň vlastní hodnotu.
 
@@ -18,23 +20,17 @@ Celkový čas: cca 1,5–2 hodiny včetně čekání na DNS.
 
 ---
 
-## 1. Objednávka na WEDOS
+## 1. Netcup VPS (objednáno)
 
-1. wedos.cz → **Servery → VPS ON** → objednat.
-2. Konfigurace:
-   - **CPU:** 1–2 vCPU
-   - **RAM:** 2 GB (méně ne — `npm ci` + Vite build při deployi potřebuje paměť)
-   - **Disk:** 40 GB SSD (VPS ON jde později zvětšit, ne zmenšit)
-   - **OS:** Ubuntu 24.04 LTS
-   - **Zálohy:** ne (appka se zálohuje sama a kopie se denně stahuje na PC, viz krok 10.1) · **DDoS ochrana:** ne
-3. Pokud formulář nabízí vložení **SSH klíče**, vlož svůj veřejný klíč (viz krok 2.1). Jinak ti přijde root heslo.
-4. Odešli objednávku, zaplať a počkej na e-mail s IP adresou.
+Server je objednaný (Netcup VPS nano, 2 vCore, 2 GB RAM, 60 GB). Zbývá:
 
-> Popisky ve WEDOS administraci se mohou mírně lišit — důležité jsou hodnoty výše.
+1. Z e-mailu od Netcupu si vezmi IP adresu (`NOVA_IP`) a přístup do **SCP** (Server Control Panel, `servercontrolpanel.de`).
+2. Pokud na serveru ještě není **Ubuntu 24.04**: SCP → server → **Media → Images** → Ubuntu 24.04 → při instalaci vlož svůj veřejný SSH klíč (krok 2.1). Bez klíče ti přijde root heslo.
+3. Placené zálohy u Netcupu nejsou nutné (appka se zálohuje sama a kopie se denně stahuje na PC, viz krok 10.1).
 
-**Varianta Hetzner (levnější):** console.hetzner.com → nový projekt → **Add Server** → lokace Nuremberg nebo
-Falkenstein → image **Ubuntu 24.04** → typ shared vCPU x86 (CX23 nebo nejbližší s 4 GB RAM) → přidej svůj SSH
-klíč (krok 2.1) → placené Backups nejsou nutné (appka se zálohuje sama). Dál pokračuj krokem 2.2.
+> Popisky v Netcup SCP se mohou mírně lišit – důležité je Ubuntu 24.04 a SSH klíč.
+>
+> 2 GB RAM stačí jen s **2 GB swapem** (krok 2.3) a bez buildu na serveru (ADR-0002).
 
 ---
 
@@ -197,6 +193,8 @@ $ chmod 600 /home/reathyze/chata/.env
 
 Udělej to těsně před přepnutím DNS, ať nic nechybí. Ideálně ve chvíli, kdy nikdo z rodiny appku nepoužívá.
 
+> **Záloha už je na PC** (`%USERPROFILE%\chata-zaloha`: `chata.dump`, `chata-uploads.tgz`, `chata.env` z 2026-11-06, novější data neexistují). Pokud starý server už neběží nebo se na něm od té doby nic nezměnilo, kroky 6.1 a první `scp` v 6.2 přeskoč a nahraj soubory rovnou z této složky.
+
 ### 6.1 Na starém serveru
 
 ```bash
@@ -256,7 +254,7 @@ $ nano /home/reathyze/.ssh/authorized_keys   # nový řádek s obsahem chata_dep
 
 ### 7.2 Secrets v repozitáři
 
-GitHub → `Reathyze20/Cabin_Reservation_App` → **Settings → Secrets and variables → Actions** → uprav:
+GitHub → `Reathyze20/Kdynachatu.cz` → **Settings → Secrets and variables → Actions** → uprav:
 
 | Secret | Hodnota |
 |---|---|
@@ -286,10 +284,13 @@ $ curl -s http://localhost:3000/api/health    # {"status":"ok",...}
 
 ## 8. DNS
 
-U registrátora domény (pokud je doména na WEDOS: administrace → Domény → DNS záznamy):
+Doména zůstává na WEDOS, mění se jen kam ukazuje: WEDOS administrace → **Domény → kdynachatu.cz → DNS záznamy**:
 
-- záznam **A** pro `DOMENA` → `NOVA_IP`
-- případně **A** pro `www.DOMENA` → `NOVA_IP`
+- záznam **A** pro `kdynachatu.cz` (název prázdný) → `NOVA_IP`
+- případně **A** pro `www` → `NOVA_IP`
+- později pro staging **A** pro `staging` → `NOVA_IP` (viz `plans/SEP-1-staging-setup.md`)
+
+**Nesahat** na záznamy Resendu: `send` (MX + TXT), `resend._domainkey`, `_dmarc` – bez nich nechodí e-maily.
 
 Tip: den předem sniž TTL záznamu na 300 s, přepnutí pak proběhne rychle.
 
@@ -386,5 +387,5 @@ Zálohy se ukládají do `%USERPROFILE%\chata-zalohy`. Detaily v `docs/BACKUP-AN
 Nech ho běžet ještě cca týden jako zálohu. Potom:
 
 1. poslední `pg_dump` + uploads si stáhni na PC (pro jistotu),
-2. zruš službu u starého poskytovatele,
+2. zruš **VPS** u starého poskytovatele (WEDOS) – **doménu `kdynachatu.cz` nerušit**, ta na WEDOS zůstává,
 3. aktualizuj IP v `nginx-chata.conf` / dokumentaci, pokud je tam uvedená.
