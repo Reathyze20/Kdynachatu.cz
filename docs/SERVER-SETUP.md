@@ -177,12 +177,12 @@ DATABASE_URL=postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata?schema=pub
 JWT_SECRET=<vygeneruj: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
 FRONTEND_URL=https://DOMENA
 
-# e-maily (Amazon SES) — hodnoty převezmi ze starého .env
-SMTP_HOST=email-smtp.eu-central-1.amazonaws.com
-SMTP_PORT=587
-SMTP_USER=<...>
-SMTP_PASS=<...>
-EMAIL_FROM="Chatačeskéstředohoří <noreply@chataceskestredohori.cz>"
+# e-maily (Resend) — SES ze starého .env už nefunguje, viz OPERATIONS-RUNBOOK.md §5.1
+SMTP_HOST=smtp.resend.com
+SMTP_PORT=465
+SMTP_USER=resend
+SMTP_PASS=<Resend API key>
+EMAIL_FROM="Kdy na chatu <noreply@kdynachatu.cz>"
 ```
 
 > Při stěhování **ponech stejný `JWT_SECRET`** jako na starém serveru — jinak se všichni z rodiny budou muset znovu přihlásit.

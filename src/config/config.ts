@@ -66,12 +66,12 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-// SMTP Configuration — Amazon SES (Frankfurt eu-central-1)
+// SMTP Configuration — Resend (smtp.resend.com); secrets only in .env
 export const SMTP_HOST = process.env.SMTP_HOST || "";
 export const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
 export const SMTP_USER = process.env.SMTP_USER || "";
 export const SMTP_PASS = process.env.SMTP_PASS || "";
-export const EMAIL_FROM = process.env.EMAIL_FROM || '"Chatačeskéstředohoří" <noreply@chataceskestredohori.cz>';
+export const EMAIL_FROM = process.env.EMAIL_FROM || '"Kdy na chatu" <noreply@kdynachatu.cz>';
 
 // Frontend URL (for verification links in emails)
 const DEFAULT_FRONTEND_URL = "http://localhost:5173";

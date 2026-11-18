@@ -1,12 +1,12 @@
 /* ============================================================================
-   utils/email.ts — Email services via Amazon SES (SMTP)
+   utils/email.ts — Email services via Resend (SMTP)
    ============================================================================ */
 
 import nodemailer from "nodemailer";
 import logger from "./logger";
 import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, FRONTEND_URL } from "../config/config";
 
-// ─── Nodemailer transporter (Amazon SES SMTP) ────────────────────────────────
+// ─── Nodemailer transporter (Resend SMTP) ─────────────────────────────────────
 
 const createTransporter = () => {
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
@@ -28,7 +28,6 @@ const createTransporter = () => {
 const transporter = createTransporter();
 const EMAIL_APP_NAME = "Chatačeskéstředohoří";
 const EMAIL_APP_FOOTER = `${EMAIL_APP_NAME} — Rodinná aplikace pro správu chaty`;
-const DEFAULT_EMAIL_FROM = `"${EMAIL_APP_NAME}" <noreply@chataceskestredohori.cz>`;
 
 function ensureEmailTransport(emailKind: string): void {
   if (transporter) {
@@ -492,7 +491,7 @@ export const sendEmail = async (opts: { to: string; subject: string; html: strin
 
   try {
     await transporter.sendMail({
-      from: EMAIL_FROM || DEFAULT_EMAIL_FROM,
+      from: EMAIL_FROM,
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
