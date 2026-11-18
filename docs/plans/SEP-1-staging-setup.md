@@ -57,6 +57,7 @@ reathyze$ nano .env
 V `.env` vyplnit:
 - `DATABASE_URL` s heslem role `staging_app` z kroku 2,
 - `JWT_SECRET`: nový, **jiný než v produkci**. Vygenerovat: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
+- `STAGING_SEED_ADMIN_PASSWORD` a `STAGING_SEED_MEMBER_PASSWORD`: hesla fiktivních účtů ze seedu (krok 6), min. 12 znaků, bez `#`, jiná než v produkci.
 
 Zbytek nechat (`DEPLOY_TARGET=staging`, `PORT=3100`, prázdné `SMTP_*`). Deploy skript odmítne pokračovat, pokud tyto hodnoty nesedí.
 
@@ -92,13 +93,21 @@ Value: true
 
 Pak GitHub → Actions → **Deploy to Staging** → **Run workflow** (větev `main`). Další deploye poběží automaticky po každém merge do `main`.
 
+Po prvním zeleném deployi naplnit staging fiktivními daty:
+
+```bash
+reathyze$ cd /home/reathyze/chata-staging && npm run db:seed
+```
+
+Vznikne chata `demo` („Testovací chata“) s účty `demo-spravce` (role admin, heslo `STAGING_SEED_ADMIN_PASSWORD`), `demo-jana` a `demo-petr` (heslo `STAGING_SEED_MEMBER_PASSWORD`) a ukázkovými rezervacemi, nákupy, poznámkou k měsíci a chatem. Seed jde spustit opakovaně: v chatě `demo` smaže a znovu vytvoří rezervace, nákupy, poznámky k měsíci a chat (změny testerů v nich zmizí, ostatní moduly jako galerie nebo deník zůstanou), tři demo účty vrátí do výchozího stavu, nic nezduplikuje a jiných chat se nedotkne. Bez `DEPLOY_TARGET=staging` a DB končící na `_staging` skončí chybou.
+
 ## 7. Ověření
 
 - [ ] Workflow **Deploy to Staging** je zelený, v logu je `Guards passed: target=staging …` a `Server is healthy`.
 - [ ] `https://staging.kdynachatu.cz` chce heslo, po zadání se načte aplikace.
 - [ ] `https://chataceskestredohori.cz` funguje beze změny.
 - [ ] `reathyze$ npx pm2 ls` ukazuje `chata-app` (produkce) i `chata-staging`.
-- [ ] Staging neobsahuje žádná rodinná data (prázdná DB; fiktivní data přidá seed v dalším PR).
+- [ ] Staging neobsahuje žádná rodinná data, jen fiktivní chatu `demo` ze seedu; přihlášení jako `demo-spravce` funguje.
 
 ## Když něco selže
 
