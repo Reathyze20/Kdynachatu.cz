@@ -234,7 +234,7 @@ npx pm2 logs chata-app --lines 200 --nostream | grep -iE "email|smtp"
 
 | V logu | Význam | Co dělat |
 |---|---|---|
-| `... email sent to ...` s `messageId` | Resend e-mail převzal | krok 3 (doručení) |
+| `... email sent to ...` (u resetu hesla s `messageId`) nebo `Email sent to ...` + `Invite email sent` u pozvánky | Resend e-mail převzal | krok 3 (doručení) |
 | `SMTP credentials are not fully configured` při startu | chybí `SMTP_HOST`, `SMTP_USER` nebo `SMTP_PASS` | krok 2 |
 | `SMTP is not fully configured` / `SMTP_NOT_CONFIGURED` | totéž, v produkci odeslání selže | krok 2 |
 | `[SIMULATION] ...` | proces neběží s `NODE_ENV=production` a SMTP není nastavené, nic se neposílá | krok 2 |
@@ -246,10 +246,10 @@ npx pm2 logs chata-app --lines 200 --nostream | grep -iE "email|smtp"
 
 ```bash
 grep -E "^(SMTP_HOST|SMTP_PORT|SMTP_USER|EMAIL_FROM)=" .env
-grep -c "^SMTP_PASS=re_" .env   # 1 = API key vyplněný; hodnotu nevypisuj do terminálu ani do issue
+grep -cE '^SMTP_PASS="?re_' .env   # 1 = API key vyplněný; hodnotu nevypisuj do terminálu ani do issue
 ```
 
-- `SMTP_PORT=465` musí jít s TLS (aplikace ho zapne sama), `587` se STARTTLS. Jiný port nepoužívej.
+- Aplikace zapne TLS jen pro `SMTP_PORT=465`; každý jiný port jede přes STARTTLS. Použitelné jsou proto `465`, `587` a záložní `2587` (Resend). Port `2465` (implicitní TLS) aplikace neumí, nepoužívej ho.
 - Po změně `.env` restartuj proces: `npx pm2 restart chata-app --update-env`.
 - Nový API key: Resend dashboard → API Keys → Create (oprávnění „Sending access“, doména `kdynachatu.cz`), starý klíč smaž.
 
@@ -265,13 +265,14 @@ grep -c "^SMTP_PASS=re_" .env   # 1 = API key vyplněný; hodnotu nevypisuj do t
 ```bash
 nc -vz smtp.resend.com 465
 nc -vz smtp.resend.com 587
+nc -vz smtp.resend.com 2587
 ```
 
-Když neprojde ani jeden port, blokuje ho firewall VPS nebo poskytovatel (někteří blokují odchozí SMTP u nových serverů – požádej podporu o odblokování). Když prochází jen jeden, nastav ten do `SMTP_PORT` a restartuj.
+Když neprojde žádný port, blokuje je firewall VPS nebo poskytovatel (někteří blokují odchozí SMTP u nových serverů – požádej podporu o odblokování). Když prochází jen některý, nastav ho do `SMTP_PORT` a restartuj s `--update-env`.
 
 ### 5. Ověřit opravu
 
-Jednou zkus reset hesla na vlastní účet („Zapomněli jste heslo?“ na přihlašovací obrazovce) a odeslání pozvánky na vlastní adresu z administrace chaty. V logu musí být `email sent` s `messageId` a e-mail musí dorazit do schránky. Když problém trvá déle než den, založ issue a do té doby posílej pozvánky tlačítkem „Text zprávy“ v administraci (WhatsApp/SMS) a reset hesla řeš ručně.
+Jednou zkus reset hesla na vlastní účet („Zapomněli jste heslo?“ na přihlašovací obrazovce) a odeslání pozvánky na vlastní adresu z administrace chaty. V logu musí být `Password reset email sent to ...` (s `messageId`) a `Invite email sent` a oba e-maily musí dorazit do schránky. Když problém trvá déle než den, založ issue a do té doby posílej pozvánky tlačítkem „Text zprávy“ v administraci (WhatsApp/SMS) a reset hesla řeš ručně.
 
 ---
 
