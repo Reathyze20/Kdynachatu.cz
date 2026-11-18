@@ -97,6 +97,42 @@ Po kazdem backupu vznikne:
 - vedle nej metadata soubor `.json`,
 - probehne prune souboru starsich nez `BACKUP_RETENTION_DAYS`.
 
+## Nacvik migrace (rehearsal)
+
+```bash
+npm run migration:rehearsal
+```
+
+Nacvicitelna migracni cesta zalohy (restore -> backfillCabin -> count-check) proti
+odhoditelnemu `postgres:16` kontejneru. Slouzi k overeni cutover postupu bez zasahu
+do produkce.
+
+Co rehearsal dela:
+
+- spusti disposable PostgreSQL 16 kontejner (publikovany na `REHEARSAL_PG_PORT`,
+  default `59432`, aby nekolidoval s lokalni DB na 5432),
+- vytvori source DB ve tvaru stare zalohy pred multi-tenancy (vetsina radku ma
+  `cabinId = NULL`, jedna rezervace uz patri existujici chate),
+- zazalohuje source pres skutecny `backupManager` a obnovi do ciloveho DB,
+- spusti skutecny `backfillCabin` nad obnovenymi daty,
+- **count-check**: porovna pocty radku source vs. obnoveno+backfillnuto pro vsechny
+  entity (`users`, `reservations`, `shoppingItems`, `noteThreads`, `notes`, `gallery`,
+  `diary`, `reconstructionItems`, `inventoryItems`) — restore ani backfill nesmi
+  zadny radek ztratit, zduplikovat ani preskocit,
+- **spot-check** jedne rezervace: po restore zustava beze zmeny a backfill ji doplni
+  `cabinId`,
+- overi, ze rezervace s uz existujicim `cabinId` si ho podrzi (backfill doplnuje jen
+  `NULL`, nikdy neprepisuje),
+- obnovi uploads archiv a overi pocet souboru,
+- skonci chybou pri jakemkoliv nesouladu.
+
+Cistou count-check funkci (`compareCounts`) pokryvaji unit testy
+`src/scripts/migrationCountCheck.test.ts` (`npm run test:backend`).
+
+> Pozn.: krok s uploady vola `tar` s archivni cestou na disku `C:`. Spoustej rehearsal
+> z PowerShellu (`tar` = `System32\tar.exe`/bsdtar); GNU `tar` z Gitu bere `C:` jako
+> vzdaleny host a selze. Na serveru/CI (POSIX) je to bez rozdilu.
+
 ## Restore
 
 Restore je zamerne oddeleny od `npm run`, protoze potrebuje konkretni soubor a explicitni potvrzeni.
