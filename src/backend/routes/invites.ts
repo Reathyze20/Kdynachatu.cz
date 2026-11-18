@@ -3,8 +3,8 @@
    ============================================================================ */
 import { Router, Request, Response } from "express";
 import { hashPassword } from "../../utils/password";
-import jwt from "jsonwebtoken";
-import { FRONTEND_URL, JWT_SECRET } from "../../config/config";
+import { signAuthToken } from "../../utils/authToken";
+import { FRONTEND_URL } from "../../config/config";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { protect } from "../../middleware/authMiddleware";
@@ -283,17 +283,7 @@ router.post("/accept/:token", validate(acceptInviteSchema), async (req: Request,
     ]);
 
     // Generate JWT — user is immediately logged in
-    const jwtToken = jwt.sign(
-      {
-        userId: newUser.id,
-        username: newUser.username,
-        role: newUser.role,
-        cabinId: newUser.cabinId,
-        isSuperAdmin: newUser.isSuperAdmin,
-      },
-      JWT_SECRET,
-      { expiresIn: "30d" },
-    );
+    const jwtToken = signAuthToken(newUser);
 
     logger.info("INVITES", "Invite accepted — new user created", {
       userId: newUser.id,
