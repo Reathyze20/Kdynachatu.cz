@@ -100,7 +100,7 @@ Nový soubor `nginx-staging.conf`: `server_name staging.kdynachatu.cz`, proxy na
 
 ### 4.5 Seed stagingu
 
-`src/scripts/seedStaging.ts` + `npm run staging:seed`: fiktivní chata („Testovací chata“), 3–4 fiktivní členové, pár rezervací, zpráv a položek nákupního seznamu. Skript skončí chybou, pokud `DEPLOY_TARGET` není `staging` nebo DB nekončí na `_staging`. Idempotentní (smaže a znovu vytvoří jen svá data).
+`src/scripts/seedStaging.ts` + `npm run db:seed` (smoke `npm run staging:seed-smoke`): fiktivní chata `demo` („Testovací chata“), správce + 2 členové, pár rezervací, zpráv a položek nákupního seznamu. Skript skončí chybou, pokud `DEPLOY_TARGET` není `staging` nebo DB nekončí na `_staging`. Idempotentní (smaže a znovu vytvoří jen svá data).
 
 ### 4.6 E-maily ve stagingu
 

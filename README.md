@@ -85,7 +85,8 @@ npm run preview          # build + start
 npm run prisma:generate  # vygeneruje Prisma klienta
 npm run prisma:migrate   # vytvoří migraci
 npm run prisma:studio    # otevře Prisma Studio (DB GUI)
-npm run db:seed          # naimportuje archivní JSON data
+npm run db:seed          # fiktivní data pro staging (jen DEPLOY_TARGET=staging, DB *_staging)
+npm run db:migrate-json  # naimportuje archivní JSON data (dřív db:seed)
 
 # Testování & validace
 npm run preflight:deploy # kontrola před nasazením (TS + testy + build)
