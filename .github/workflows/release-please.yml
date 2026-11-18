@@ -1,0 +1,46 @@
+name: Release Please
+
+# On every push to main, release-please keeps a release PR up to date
+# (version bump + CHANGELOG.md from Conventional Commits). Merging that PR
+# creates the tag vX.Y.Z and a GitHub release, which starts deploy.yml.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # tag + GitHub release
+      pull-requests: write # release PR
+      actions: write # dispatch deploy.yml (see below)
+    env:
+      # Optional PAT / GitHub App token. Tags and PRs created with the default
+      # GITHUB_TOKEN do not trigger other workflows (no CI on the release PR,
+      # no deploy on tag push), so without it deploy.yml is dispatched below.
+      HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
+
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Start production deploy for the new tag
+        if: steps.release.outputs.release_created == 'true' && env.HAS_RELEASE_TOKEN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref "$TAG" -f tag="$TAG"

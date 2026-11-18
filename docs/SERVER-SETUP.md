@@ -1,11 +1,12 @@
 # Nový produkční server – návod krok za krokem
 
-> **Stav 2026-11-18:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu. Části návodu, které počítají s deployem z `main` přímo do produkce a buildem na serveru, se přepíšou při implementaci ADR-0002 (krok 3 roadmapy).
+> **Stav 2026-11-18:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu (`.github/workflows/deploy.yml`, #96).
 >
 > **Kdo co poskytuje:** server = **Netcup** · doména `kdynachatu.cz` a její DNS = **WEDOS** (jen registrace domény, nic dalšího se tam nekupuje; registrace platí do 2027-02-23 – prodloužit) · e-maily = **Resend** (doména už ověřená, DNS záznamy hotové) · starý server `89.221.217.81` se ruší (krok 11).
 
-Cíl: připravit čistý VPS tak, aby na něj fungoval stávající deploy z `.github/workflows/deploy.yml`
-(push na `main` → GitHub Actions → SSH jako `reathyze` → `/home/reathyze/chata`, PM2 app `chata-app`),
+Cíl: připravit čistý VPS tak, aby na něj fungoval deploy z `.github/workflows/deploy.yml`
+(release tag `v*` → build v GitHub Actions → schválení v environment `production` → SSH jako `reathyze`
+→ `/home/reathyze/chata/releases/<tag>`, PM2 app `chata-app` na portu 3000),
 a přestěhovat na něj data ze starého serveru.
 
 Konvence v návodu:
@@ -65,7 +66,7 @@ $ ufw allow OpenSSH
 $ ufw allow 'Nginx Full'
 $ ufw --force enable
 
-# 2 GB swap — pojistka, aby build při deployi nespadl na nedostatek RAM
+# 2 GB swap — pojistka, aby npm ci při deployi nespadl na nedostatek RAM (build běží v GitHub Actions)
 $ fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
 $ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
@@ -163,11 +164,14 @@ $ mkdir -p /home/reathyze/chata/data/uploads /home/reathyze/backups/cabin
 $ nano /home/reathyze/chata/.env
 ```
 
-Nejjednodušší je zkopírovat `.env` ze starého serveru (krok 6) a změnit v něm jen `DATABASE_URL`.
+`.env` a `data/` v `/home/reathyze/chata` sdílí všechny verze appky. Deploy vedle nich zakládá `releases/<tag>_<čas>/` a symlink `current` na běžící verzi.
+
+Nejjednodušší je zkopírovat `.env` ze starého serveru (krok 6), změnit v něm `DATABASE_URL` a doplnit `DEPLOY_TARGET=production` (bez něj deploy odmítne běžet).
 Pokud zakládáš nový, minimum je:
 
 ```env
 NODE_ENV=production
+DEPLOY_TARGET=production
 PORT=3000
 DATABASE_URL=postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata?schema=public
 JWT_SECRET=<vygeneruj: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
@@ -223,7 +227,7 @@ PS> scp chata.dump chata-uploads.tgz chata.env reathyze@NOVA_IP:/tmp/
 
 ```bash
 $ cd /home/reathyze/chata
-$ cp /tmp/chata.env .env && nano .env    # změň DATABASE_URL na nový (krok 3), zbytek nech
+$ cp /tmp/chata.env .env && nano .env    # změň DATABASE_URL na nový (krok 3), přidej DEPLOY_TARGET=production, zbytek nech
 $ chmod 600 .env
 $ pg_restore --no-owner --role=chata -d "postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata" /tmp/chata.dump
 $ tar -xzf /tmp/chata-uploads.tgz -C data
@@ -252,26 +256,37 @@ Veřejný klíč přidej na server:
 $ nano /home/reathyze/.ssh/authorized_keys   # nový řádek s obsahem chata_deploy.pub
 ```
 
-### 7.2 Secrets v repozitáři
+### 7.2 Environment `production` a secrets
 
-GitHub → `Reathyze20/Kdynachatu.cz` → **Settings → Secrets and variables → Actions** → uprav:
+GitHub → `Reathyze20/Kdynachatu.cz` → **Settings → Environments → New environment** `production`:
+
+- **Required reviewers:** ty (každý produkční deploy čeká na tvoje schválení),
+- **Deployment branches and tags:** Selected → tag `v*` a větev `main` (ruční spuštění z UI běží z `main`),
+- **Environment secrets** (stejné názvy jako u `staging`):
 
 | Secret | Hodnota |
 |---|---|
 | `SSH_HOST` | `NOVA_IP` |
 | `SSH_USER` | `reathyze` |
 | `SSH_PRIVATE_KEY` | celý obsah `$HOME\.ssh\chata_deploy` (soukromý, včetně řádků `-----BEGIN/END-----`) |
-| `SERVER_PATH` | `/home/reathyze/chata` |
 
-`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` v secrets nevadí, ale nepoužijí se — `.env` už na serveru existuje.
+`SERVER_PATH`, `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` se nepoužívají — cesta je ve workflow, `.env` je na serveru.
+
+**Settings → Actions → General → Workflow permissions:** zaškrtni **Allow GitHub Actions to create and approve pull requests** (release-please otevírá release PR).
 
 ### 7.3 První deploy
 
-GitHub → **Actions → Deploy to Production** → poslední běh → **Re-run all jobs**
-(nebo jakýkoli push na `main`).
+Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main`:
 
-Deploy sám nainstaluje závislosti, spustí migrace, sestaví frontend, nastartuje `chata-app`
-v PM2 a nastaví denní zálohy do `/home/reathyze/backups/cabin` (cron ve 3:00).
+1. Po merge do `main` udržuje workflow **Release Please** otevřený release PR (verze + `CHANGELOG.md`).
+   Release PR z výchozího tokenu nespustí CI: zavři ho a hned znovu otevři, pak checky naběhnou.
+2. Merge release PR vytvoří tag a spustí **Deploy to Production**. Ručně: **Actions → Deploy to Production → Run workflow** s tagem
+   (takhle se dělá i rollback na starší verzi).
+3. Build proběhne v Actions, pak deploy čeká na schválení v environment `production`.
+
+Na serveru deploy rozbalí artefakt do `releases/`, spustí `npm ci --omit=dev`, zálohu DB, `prisma migrate deploy`,
+přepne `current`, restartuje `chata-app` a ověří `/api/health`. Když health check selže, vrátí `current`
+na předchozí verzi. Nastaví také denní zálohy do `/home/reathyze/backups/cabin` (cron ve 3:00).
 
 Kontrola na serveru:
 

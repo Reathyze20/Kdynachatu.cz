@@ -10,10 +10,8 @@
 #   RELEASE_BUNDLE  path to the uploaded release.tgz
 #
 # The guards run before anything on the server is touched.
-# For now only DEPLOY_TARGET=staging is wired up. Family production keeps
-# deploying through the inline script in deploy.yml on rodina-stable until
-# SEP-1 B4 moves it here (together with the production-only legacy migration
-# repairs and the backup cron).
+# Only DEPLOY_TARGET=staging is wired up here. Production deploys a prebuilt
+# artifact from a release tag via scripts/deploy/deploy-release.sh (deploy.yml).
 set -euo pipefail
 
 fail() { echo "DEPLOY GUARD: $*" >&2; exit 1; }
@@ -25,7 +23,7 @@ PRODUCTION_APP_PATH="/home/reathyze/chata"
 # ── Guards ─────────────────────────────────────────────────────────────
 case "$DEPLOY_TARGET" in
   production)
-    fail "production still deploys via deploy.yml on rodina-stable (SEP-1 B4 moves it here)" ;;
+    fail "production deploys via scripts/deploy/deploy-release.sh (deploy.yml from tag v*)" ;;
   staging)
     [ "$SOURCE_REF" = "refs/heads/main" ] || fail "staging accepts only main (got $SOURCE_REF)"
     [ "$(realpath -m "$APP_PATH")" != "$PRODUCTION_APP_PATH" ] || fail "staging must not use the production directory"

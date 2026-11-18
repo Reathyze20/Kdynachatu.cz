@@ -1,0 +1,136 @@
+name: Deploy to Production
+
+# Family production (kdynachatu.cz) deploys only from a release tag vX.Y.Z on
+# main (ADR-0002). Everything is built here; the server only runs
+# `npm ci --omit=dev`, migrations and a PM2 restart (2 GB RAM).
+# Rollback = run this workflow manually with an older tag.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy (e.g. v1.2.3)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    name: Build release artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Validate tag
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Production deploys only release tags vX.Y.Z (got '$TAG')."
+            exit 1
+          fi
+
+      - name: Checkout tag
+        uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Refuse tags that are not on main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::Tag $TAG is not on main."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend-v2/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend-v2
+
+      # Prisma generate, backend typecheck, frontend tests and Vite build (dist/frontend).
+      - name: Build and verify
+        run: npm run preflight:deploy
+
+      # node_modules are not shipped: the server installs production deps
+      # itself so native modules (bcrypt, sharp) match its platform.
+      - name: Package release artifact
+        run: |
+          echo "$TAG $(git rev-parse HEAD)" > RELEASE
+          tar -czf release.tgz RELEASE package.json package-lock.json tsconfig.json \
+            prisma.config.ts prisma src dist/frontend scripts/deploy
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ env.TAG }}
+          path: release.tgz
+          retention-days: 30
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://kdynachatu.cz
+
+    steps:
+      - name: Download release artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: release-${{ env.TAG }}
+
+      - name: Upload release artifact to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: release.tgz
+          target: /tmp/chata-prod-upload/
+
+      - name: Run release deploy script on server
+        uses: appleboy/ssh-action@v1
+        env:
+          APP_PATH: /home/reathyze/chata
+          PM2_NAME: chata-app
+          APP_PORT: '3000'
+          SOURCE_REF: refs/tags/${{ env.TAG }}
+          RELEASE_TAG: ${{ env.TAG }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command_timeout: 15m
+          envs: APP_PATH,PM2_NAME,APP_PORT,SOURCE_REF,RELEASE_TAG
+          script: |
+            set -e
+            UPLOAD=/tmp/chata-prod-upload
+            # Run the script from the uploaded artifact, not from the server copy.
+            tar -xzOf "$UPLOAD/release.tgz" scripts/deploy/deploy-release.sh > "$UPLOAD/deploy-release.sh"
+            RELEASE_BUNDLE="$UPLOAD/release.tgz" bash "$UPLOAD/deploy-release.sh"

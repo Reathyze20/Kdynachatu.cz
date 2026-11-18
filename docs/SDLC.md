@@ -95,7 +95,7 @@ Postup krok za krokem je ve skillu `database-migrations` (`.claude/skills/databa
 
 ## 7. Větve, PR a GitHub nastavení
 
-`main` je vývoj pro víc rodin a nasazuje se na staging. Rodinná produkce se zatím nasazuje jen z `rodina-stable`, kam jdou jen hotfixy (`plans/SEP-1.md`); po implementaci ADR-0002 (krok 3, #63) produkce z release tagu. Větve `feat/…`, `fix/…`, `chore/…`, `docs/…` s číslem ticketu, případně `claude/…` z cloud sessions. Merge squash.
+`main` je vývoj pro víc rodin a nasazuje se na staging. Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main` (release-please otevírá release PR, jeho merge vytvoří tag, `deploy.yml` čeká na schválení v environment `production`; ADR-0002). `rodina-stable` (`plans/SEP-1.md`) zůstává jen pro hotfixy starého nasazení, dokud ji ADR-0002 (#63) neodstraní. Větve `feat/…`, `fix/…`, `chore/…`, `docs/…` s číslem ticketu, případně `claude/…` z cloud sessions. Merge squash.
 
 **Nastavení na GitHubu (ručně)** – bez toho ostatní pravidla chrání jen dobrovolnost agenta:
 
@@ -107,9 +107,9 @@ Postup krok za krokem je ve skillu `database-migrations` (`.claude/skills/databa
 | Secret scanning + push protection | zapnout | Brání commitu secrets |
 | CodeQL | default setup, JavaScript/TypeScript | Statická analýza v PR |
 | Dependabot alerts + security updates | zapnout (`.github/dependabot.yml` je v repu) | Zranitelné závislosti |
-| Environment `production` | required reviewer = vy | 🔜 s deployem z tagu (#63) |
+| Environment `production` | required reviewer = vy, secrets `SSH_*` (`SERVER-SETUP.md` §7) | Brána před produkčním deployem z tagu (`deploy.yml`) |
 | Auto-merge | vypnuto | Merge je vždy vědomé rozhodnutí |
-| Actions → Workflow permissions | read-only `GITHUB_TOKEN` | Minimum oprávnění |
+| Actions → Workflow permissions | read-only `GITHUB_TOKEN` + allow GitHub Actions to create pull requests | Minimum oprávnění; release-please otevírá release PR |
 
 **Labely:** triage (§3) a pro guardrails `human-reviewed`, `large-pr-ok`, `migration-contract-approved`.
 
