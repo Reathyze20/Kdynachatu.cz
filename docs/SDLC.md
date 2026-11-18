@@ -1,6 +1,6 @@
 # SDLC – jak se v Kdy na chatu mění kód
 
-Verified: 2026-11-17
+Verified: 2026-11-18
 Scope: vývojový proces pro práci s AI agenty (Claude Code lokálně i v cloud session z mobilu). Postup podle kurzu AI Coding Crash Course (Matt Pocock).
 
 Produkt je v `PRODUCT.md`, drahá rozhodnutí v `adr/`, práce a roadmapa v GitHub Issues (map issue #69). Tento dokument popisuje, **jak** se kód mění.

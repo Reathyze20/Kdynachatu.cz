@@ -51,10 +51,10 @@ NEW="$APP_PATH/releases/$NAME"
 PREVIOUS="$(readlink "$CURRENT" || true)" # relative target, empty on the first deploy
 echo "Guards passed: tag=$RELEASE_TAG release=$NAME previous=${PREVIOUS:-none}"
 
-LIVE=0
+KEEP_NEW=0 # 1 = keep $NEW on exit (it is live, or kept for debugging)
 cleanup() {
   rm -f "$RELEASE_BUNDLE"
-  if [ "$LIVE" != 1 ]; then rm -rf "$NEW"; fi
+  if [ "$KEEP_NEW" != 1 ]; then rm -rf "$NEW"; fi
 }
 trap cleanup EXIT
 
@@ -98,7 +98,7 @@ npx --no-install prisma migrate deploy
 echo "=== Switching to $NAME ==="
 point_current_to "releases/$NAME"
 if restart_app && healthy; then
-  LIVE=1
+  KEEP_NEW=1
 else
   echo "=== /api/health failed for $NAME ===" >&2
   if [ -n "$PREVIOUS" ]; then
@@ -107,7 +107,7 @@ else
     if restart_app && healthy; then echo "Rollback OK, $PREVIOUS is live again." >&2
     else echo "ROLLBACK FAILED: check 'pm2 logs $PM2_NAME'" >&2; fi
   else
-    LIVE=1 # first deploy: nothing to roll back to, keep the release for debugging
+    KEEP_NEW=1 # first deploy: nothing to roll back to, keep the release for debugging
   fi
   exit 1
 fi

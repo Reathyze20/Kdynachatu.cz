@@ -6,7 +6,7 @@
 
 Cíl: připravit čistý VPS tak, aby na něj fungoval deploy z `.github/workflows/deploy.yml`
 (release tag `v*` → build v GitHub Actions → schválení v environment `production` → SSH jako `reathyze`
-→ `/home/reathyze/chata/releases/<tag>`, PM2 app `chata-app` na portu 3000),
+→ `/home/reathyze/chata/releases/<tag>_<čas>`, PM2 app `chata-app` na portu 3000),
 a přestěhovat na něj data ze starého serveru.
 
 Konvence v návodu:
@@ -286,7 +286,7 @@ Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main`:
 
 Na serveru deploy rozbalí artefakt do `releases/`, spustí `npm ci --omit=dev`, zálohu DB, `prisma migrate deploy`,
 přepne `current`, restartuje `chata-app` a ověří `/api/health`. Když health check selže, vrátí `current`
-na předchozí verzi. Nastaví také denní zálohy do `/home/reathyze/backups/cabin` (cron ve 3:00).
+na předchozí verzi (u úplně prvního deploye není kam, appka zůstane spadlá – `pm2 logs chata-app`). Nastaví také denní zálohy do `/home/reathyze/backups/cabin` (cron ve 3:00).
 
 Kontrola na serveru:
 
