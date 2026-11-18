@@ -24,6 +24,7 @@ const DEMO_USERS = [
 ] as const;
 
 type Tx = Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
+type DemoUserIds = Record<(typeof DEMO_USERS)[number]["key"], string>;
 
 /** Datum (UTC půlnoc) posunuté o `offset` dní od dneška – data zůstávají „aktuální“. */
 function day(offset: number): Date {
@@ -32,11 +33,11 @@ function day(offset: number): Date {
 }
 
 async function upsertDemoUsers(tx: Tx, cabinId: string, hashes: { admin: string; member: string }) {
-  const ids = {} as Record<(typeof DEMO_USERS)[number]["key"], string>;
+  const ids = {} as DemoUserIds;
   for (const { key, ...user } of DEMO_USERS) {
     const existing = await tx.user.findUnique({ where: { username: user.username }, select: { cabinId: true } });
-    if (existing?.cabinId && existing.cabinId !== cabinId) {
-      throw new Error(`User '${user.username}' belongs to another cabin; refusing to move it.`);
+    if (existing && existing.cabinId !== cabinId) {
+      throw new Error(`User '${user.username}' exists outside the demo cabin; refusing to take it over.`);
     }
     const data = {
       ...user,
@@ -45,6 +46,8 @@ async function upsertDemoUsers(tx: Tx, cabinId: string, hashes: { admin: string;
       isVerified: true,
       isEmailVerified: true,
       isBanned: false,
+      isSuperAdmin: false,
+      verificationToken: null, passwordResetToken: null, passwordResetExpiresAt: null,
     };
     const saved = await tx.user.upsert({ where: { username: user.username }, update: data, create: data });
     ids[key] = saved.id;
@@ -62,7 +65,7 @@ async function clearDemoContent(tx: Tx, cabinId: string) {
   await tx.monthlyNote.deleteMany({ where: { cabinId } });
 }
 
-async function createDemoContent(tx: Tx, cabinId: string, u: Record<"admin" | "jana" | "petr", string>) {
+async function createDemoContent(tx: Tx, cabinId: string, u: DemoUserIds) {
   await tx.reservation.createMany({
     data: [
       { cabinId, userId: u.jana, dateFrom: day(-10), dateTo: day(-7), purpose: "Prodloužený víkend",
@@ -122,7 +125,7 @@ async function main(): Promise<void> {
       const userIds = await upsertDemoUsers(tx, cabin.id, hashes);
       await clearDemoContent(tx, cabin.id);
       await createDemoContent(tx, cabin.id, userIds);
-    });
+    }, { timeout: 30_000 });
     console.log(`Staging seed OK: cabin '${DEMO_SUBDOMAIN}', users ${DEMO_USERS.map((u) => u.username).join(", ")}.`);
   } finally {
     await prisma.$disconnect();
