@@ -3,14 +3,13 @@
    ============================================================================ */
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
+import { signAuthToken } from "../../utils/authToken";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import { validate } from "../../validators/validate";
 import { updateCabinSettingsSchema, createCabinSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
-import { JWT_SECRET } from "../../config/config";
 
 const router = Router();
 
@@ -314,17 +313,7 @@ router.post("/create", protect, validate(createCabinSchema), async (req: Request
     });
 
     // Issue a new JWT with the updated cabinId embedded
-    const newToken = jwt.sign(
-      {
-        userId: updatedUser.id,
-        username: updatedUser.username,
-        role: updatedUser.role,
-        cabinId: updatedUser.cabinId,
-        isSuperAdmin: updatedUser.isSuperAdmin,
-      },
-      JWT_SECRET,
-      { expiresIn: "30d" }
-    );
+    const newToken = signAuthToken(updatedUser);
 
     res.status(201).json({
       token: newToken,

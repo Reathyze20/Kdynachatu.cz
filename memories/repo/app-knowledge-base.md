@@ -17,7 +17,7 @@
 | **Frontend v2 (React)** | ✅ | Beta | 14 features, 9 hlavních stránek, TanStack Query, shadcn/ui |
 | **Legacy Frontend** | ⚠️ | Deprecated | 1 stránka zbývá (cabin-settings.ts), zbytek migrace hotov |
 | **Database Schema** | ✅ | Production | 22 modelů, 22 migrací, multi-tenant cabinId na všech tabulkách |
-| **Autentizace & Auth** | ✅ | Beta | JWT 30d, 3 role (admin/user/guest), invite links, email verifikace |
+| **Autentizace & Auth** | ✅ | Beta | JWT 7d, 3 role (admin/user/guest), invite links, email verifikace |
 | **Multi-tenant Readiness** | ⚠️ | Partial | cabinId na modelech, requireCabin middleware, X-Cabin-Id header; chybí tenant routing |
 | **Mobile Experience** | ✅ | Beta | Responsive layout, MobileNav, MobileHeader, PWA ready |
 | **Testing** | ❌ | Minimal | 1 test soubor (VerifyEmailPage.test.tsx), vitest nastaven |
@@ -87,7 +87,7 @@
 9. **Route handlers** — 21 route souborů
 
 **Autentizační flow:**
-1. `POST /api/login` → Zod validace → bcrypt porovnání → JWT sign (30d expiry)
+1. `POST /api/login` → Zod validace → bcrypt porovnání → JWT sign (7d expiry, `signAuthToken` v `src/utils/authToken.ts`)
 2. JWT payload: `{ userId, username, role, cabinId }`
 3. `protect` middleware: ověří Bearer token → nastaví `req.user`
 4. `requireCabin` middleware: ověří `req.user.cabinId` existuje → 403 pokud ne

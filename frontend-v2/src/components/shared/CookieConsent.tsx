@@ -62,7 +62,7 @@ export function CookieConsent() {
             <div className="cookie-detail-items">
               <div className="cookie-detail-item">
                 <span>●</span>
-                <div><strong>Přihlášení</strong><span>Abyste nemuseli zadávat heslo pokaždé znovu (30 dní)</span></div>
+                <div><strong>Přihlášení</strong><span>Abyste nemuseli zadávat heslo pokaždé znovu (7 dní)</span></div>
               </div>
               <div className="cookie-detail-item">
                 <span>●</span>

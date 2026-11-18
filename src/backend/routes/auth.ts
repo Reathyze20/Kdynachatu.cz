@@ -1,8 +1,7 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { hashPassword, verifyPassword } from "../../utils/password";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../../config/config";
+import { signAuthToken } from "../../utils/authToken";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { sendPasswordResetEmail, sendVerificationEmailWithPIN, sendVerificationEmailWithToken } from "../../utils/email";
@@ -124,17 +123,7 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
       }
     }
 
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        username: user.username,
-        role: user.role,
-        cabinId: user.cabinId,
-        isSuperAdmin: user.isSuperAdmin,
-      },
-      JWT_SECRET,
-      { expiresIn: "30d" }
-    );
+    const token = signAuthToken(user);
 
     res.json({
       token,
@@ -583,17 +572,7 @@ router.get("/refresh-token", protect, async (req: Request, res: Response) => {
 
     if (!user) return res.status(404).json({ message: "Uživatel nenalezen." });
 
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        username: user.username,
-        role: user.role,
-        cabinId: user.cabinId,
-        isSuperAdmin: user.isSuperAdmin,
-      },
-      JWT_SECRET,
-      { expiresIn: "30d" }
-    );
+    const token = signAuthToken(user);
 
     logger.info("AUTH", "Token refreshed", { userId: user.id, hasCabin: !!user.cabinId });
 
