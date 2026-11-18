@@ -220,6 +220,62 @@ Tenhle krok je rozumny jen kdyz je appka spadla nebo po deployi nabehne nekonzis
 
 ---
 
+## 5.1 E-mail nedorazil / SMTP padá
+
+E-maily (reset hesla, pozvánka, ověření e-mailu, onboarding, varování před mrazem) odcházejí přes Resend SMTP z adresy `noreply@kdynachatu.cz`. Konfigurace je jen v `.env` na serveru: `SMTP_HOST=smtp.resend.com`, `SMTP_PORT=465` (TLS) nebo `587` (STARTTLS), `SMTP_USER=resend`, `SMTP_PASS=<Resend API key>`, `EMAIL_FROM="Kdy na chatu <noreply@kdynachatu.cz>"`. Vzor je v `.env.example`.
+
+### 1. Zjistit, jestli aplikace e-mail vůbec odeslala
+
+Logy procesu (spouštět jako v kroku 3 sekce 5, v adresáři aplikace):
+
+```bash
+npx pm2 logs chata-app --lines 200 --nostream | grep -iE "email|smtp"
+```
+
+| V logu | Význam | Co dělat |
+|---|---|---|
+| `... email sent to ...` (u resetu hesla s `messageId`) nebo `Email sent to ...` + `Invite email sent` u pozvánky | Resend e-mail převzal | krok 3 (doručení) |
+| `SMTP credentials are not fully configured` při startu | chybí `SMTP_HOST`, `SMTP_USER` nebo `SMTP_PASS` | krok 2 |
+| `SMTP is not fully configured` / `SMTP_NOT_CONFIGURED` | totéž, v produkci odeslání selže | krok 2 |
+| `[SIMULATION] ...` | proces neběží s `NODE_ENV=production` a SMTP není nastavené, nic se neposílá | krok 2 |
+| `Failed to send ... email` s `535` / `Invalid login` | špatný nebo zrušený API key | krok 2, nový API key |
+| `Failed to send ...` s `ETIMEDOUT` / `ECONNREFUSED` | server se k `smtp.resend.com` nedostane (firewall, blokovaný port) | krok 4 |
+| `Failed to send ...` s `450`/`550` a zmínkou o doméně | doména `kdynachatu.cz` v Resendu není ověřená nebo `EMAIL_FROM` je z jiné domény | krok 3 |
+
+### 2. Zkontrolovat `.env` na serveru
+
+```bash
+grep -E "^(SMTP_HOST|SMTP_PORT|SMTP_USER|EMAIL_FROM)=" .env
+grep -cE '^SMTP_PASS="?re_' .env   # 1 = API key vyplněný; hodnotu nevypisuj do terminálu ani do issue
+```
+
+- Aplikace zapne TLS jen pro `SMTP_PORT=465`; každý jiný port jede přes STARTTLS. Použitelné jsou proto `465`, `587` a záložní `2587` (Resend). Port `2465` (implicitní TLS) aplikace neumí, nepoužívej ho.
+- Po změně `.env` restartuj proces: `npx pm2 restart chata-app --update-env`.
+- Nový API key: Resend dashboard → API Keys → Create (oprávnění „Sending access“, doména `kdynachatu.cz`), starý klíč smaž.
+
+### 3. Resend převzal e-mail, ale nedorazil
+
+- Resend dashboard → Emails: najdi zprávu podle adresáta. Stav `delivered` = problém je u příjemce (spam, filtr), `bounced` / `complained` = adresa neexistuje nebo příjemce označil spam.
+- Resend dashboard → Domains: `kdynachatu.cz` musí být `Verified`. Když není, zkontroluj u registrátora (WEDOS DNS) záznamy SPF (TXT na `send.kdynachatu.cz`), DKIM (TXT `resend._domainkey`) a MX pro `send` podle hodnot v Resendu.
+- Ověření z libovolného počítače: `nslookup -type=TXT resend._domainkey.kdynachatu.cz`.
+- Rodině řekni, ať se podívá do spamu a označí e-mail jako „není spam“.
+
+### 4. Server se k SMTP nedostane
+
+```bash
+nc -vz smtp.resend.com 465
+nc -vz smtp.resend.com 587
+nc -vz smtp.resend.com 2587
+```
+
+Když neprojde žádný port, blokuje je firewall VPS nebo poskytovatel (někteří blokují odchozí SMTP u nových serverů – požádej podporu o odblokování). Když prochází jen některý, nastav ho do `SMTP_PORT` a restartuj s `--update-env`.
+
+### 5. Ověřit opravu
+
+Jednou zkus reset hesla na vlastní účet („Zapomněli jste heslo?“ na přihlašovací obrazovce) a odeslání pozvánky na vlastní adresu z administrace chaty. V logu musí být `Password reset email sent to ...` (s `messageId`) a `Invite email sent` a oba e-maily musí dorazit do schránky. Když problém trvá déle než den, založ issue a do té doby posílej pozvánky tlačítkem „Text zprávy“ v administraci (WhatsApp/SMS) a reset hesla řeš ručně.
+
+---
+
 ## 6. Minimalni Definition of Done pro monitoring blok
 
 Monitoring a alerting minimum je hotove az kdyz plati vsechno:
