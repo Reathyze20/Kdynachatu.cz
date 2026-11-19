@@ -20,8 +20,8 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: 'Chatačeskéstředohoří',
-        short_name: 'Chata',
+        name: 'Kdy na chatu',
+        short_name: 'Kdy na chatu',
         description: 'Rodinná aplikace pro správu chaty — rezervace, galerie, deník, nástěnka',
         lang: 'cs',
         dir: 'ltr',

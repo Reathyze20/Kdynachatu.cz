@@ -104,7 +104,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify }
     <div id="login-section" className="login-container card" data-testid="login-form-view">
       <div className="auth-brand">
         <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
-        <h1 className="auth-brand-text">Chatačeskéstředohoří</h1>
+        <h1 className="auth-brand-text">Kdy na chatu</h1>
       </div>
       <p className="auth-subtitle">Přihlaste se ke svému účtu</p>
 
