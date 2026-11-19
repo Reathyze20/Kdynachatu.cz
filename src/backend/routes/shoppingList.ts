@@ -103,6 +103,14 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
   }
 });
 
+// Item of the caller's cabin; when the route has :listId, the item must sit in that list.
+// An item without a list belongs to no cabin → 404, same as a foreign one.
+function findCabinItem(cabinId: string, itemId: string, listId?: string) {
+  return prisma.shoppingListItem.findFirst({
+    where: { id: itemId, ...(listId ? { listId } : {}), list: { cabinId } },
+  });
+}
+
 // ============================================================================
 //                    MARK ITEM AS PURCHASED / UPDATE STATUS
 // ============================================================================
@@ -125,12 +133,19 @@ async function handlePurchaseItem(req: Request, res: Response) {
 
   try {
     // Verify item's list belongs to user's cabin
-    const item = await prisma.shoppingListItem.findUnique({
-      where: { id: itemId },
-      include: { list: { select: { cabinId: true } } },
-    });
-    if (!item || (item.list && item.list.cabinId !== req.user!.cabinId)) {
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
+    if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
+    }
+
+    // Splits only with members of the same cabin
+    if (isPurchased && Array.isArray(splitWith) && splitWith.length > 0) {
+      const userIds = [...new Set<string>(splitWith)];
+      const members = await prisma.user.count({ where: { id: { in: userIds }, cabinId: req.user!.cabinId } });
+      if (members !== userIds.length) {
+        return res.status(404).json({ message: "Uživatel nenalezen." });
+      }
+      splitWith = userIds;
     }
 
     // Use transaction — update item + restock linked inventory + handle splits
@@ -217,11 +232,8 @@ router.post("/:itemId/move-from-pantry", protect, requireCabin, async (req: Requ
   const { itemId } = req.params;
 
   try {
-    const item = await prisma.shoppingListItem.findUnique({
-      where: { id: itemId },
-      include: { list: { select: { cabinId: true } } },
-    });
-    if (!item || (item.list && item.list.cabinId !== req.user!.cabinId)) {
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
+    if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
 
@@ -275,11 +287,8 @@ router.patch("/:itemId/toggle-essential", protect, requireCabin, async (req: Req
       return res.status(403).json({ message: "Hosté nemohou měnit kritické položky." });
     }
 
-    const item = await prisma.shoppingListItem.findUnique({
-      where: { id: itemId },
-      include: { list: { select: { cabinId: true } } },
-    });
-    if (!item || (item.list && item.list.cabinId !== req.user!.cabinId)) {
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
+    if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
 
@@ -302,12 +311,9 @@ async function deleteItem(req: Request, res: Response) {
   const { itemId } = req.params;
   try {
     // Fetch the item and verify it belongs to user's cabin
-    const item = await prisma.shoppingListItem.findUnique({
-      where: { id: itemId },
-      select: { linkedInventoryId: true, list: { select: { cabinId: true } } },
-    });
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
 
-    if (!item || (item.list && item.list.cabinId !== req.user!.cabinId)) {
+    if (!item) {
       return res.status(404).json({ message: "Položka nenalezena" });
     }
 
