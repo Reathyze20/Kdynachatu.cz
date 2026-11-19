@@ -11,7 +11,8 @@ import { Eye, EyeOff } from 'lucide-react'
 
 interface LoginFormProps {
   onShowForgotPassword: () => void
-  onShowRegister: () => void
+  /** Bez handleru (registrace chat uzavřená) se odkaz na registraci nezobrazí. */
+  onShowRegister?: () => void
   onShowVerify: (username: string, prefillCode?: string) => void
 }
 
@@ -202,17 +203,19 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify }
         )}
       </form>
 
-      <p className="toggle-form-text">
-        Ještě nemáte účet?{' '}
-        <a
-          href="#"
-          id="show-register-link"
-          onClick={(e) => { e.preventDefault(); onShowRegister() }}
-          data-testid="login-show-register-link"
-        >
-          Zaregistrujte se
-        </a>
-      </p>
+      {onShowRegister && (
+        <p className="toggle-form-text">
+          Ještě nemáte účet?{' '}
+          <a
+            href="#"
+            id="show-register-link"
+            onClick={(e) => { e.preventDefault(); onShowRegister() }}
+            data-testid="login-show-register-link"
+          >
+            Zaregistrujte se
+          </a>
+        </p>
+      )}
     </div>
   )
 }

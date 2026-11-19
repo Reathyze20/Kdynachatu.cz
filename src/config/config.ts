@@ -56,6 +56,18 @@ function readBooleanEnv(name: string, fallback: boolean): boolean {
 // API docs are enabled by default in development and disabled by default in production.
 export const ENABLE_API_DOCS = readBooleanEnv("ENABLE_API_DOCS", process.env.NODE_ENV !== "production");
 
+// Registrace nových chat (POST /api/register, /api/cabin/create). Mimo produkci zapnuto;
+// v produkci jen při explicitním true (bezpečné výchozí = zavřeno). Prázdná hodnota = nenastaveno.
+export function resolveCabinSignupEnabled(rawValue: string | undefined, nodeEnv: string | undefined): boolean {
+  const value = rawValue?.trim().toLowerCase() ?? "";
+  if (!value) {
+    return nodeEnv !== "production";
+  }
+  return ["1", "true", "yes", "on"].includes(value);
+}
+
+export const CABIN_SIGNUP_ENABLED = resolveCabinSignupEnabled(process.env.CABIN_SIGNUP_ENABLED, process.env.NODE_ENV);
+
 // Uploads — configurable via UPLOADS_PATH env var (Docker mounts, custom paths)
 const defaultUploads = path.join(__dirname, "../../data/uploads");
 export const UPLOADS_PATH = process.env.UPLOADS_PATH || defaultUploads;

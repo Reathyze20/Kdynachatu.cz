@@ -127,3 +127,8 @@ export interface ReconstructionItem {
   createdAt: string;
   status?: "pending" | "approved" | "done"; // Pro úkoly
 }
+
+// GET /api/signup-status – zda jde založit novou chatu (CABIN_SIGNUP_ENABLED)
+export interface SignupStatusResponse {
+  cabinSignupEnabled: boolean;
+}
