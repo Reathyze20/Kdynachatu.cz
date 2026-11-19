@@ -146,7 +146,7 @@ postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata
 
 > Heslo bez znaků `@ : / ? #` — jinak je musíš v URL escapovat.
 >
-> **Bez `?schema=public`.** Deploy před migrací zálohuje DB přes `pg_dump` a ten Prisma parametr `schema` odmítne (`invalid URI query parameter`), deploy pak skončí chybou. Prisma bez něj použije schéma `public` stejně.
+> **`?schema=public` netřeba.** Prisma bez něj použije schéma `public` stejně. Zálohovací skript (`npm run backup:db`) od #118 parametry, kterým `pg_dump` nerozumí, sám odřízne (dřív na něm deploy padal: `invalid URI query parameter: "schema"`). Ručně spouštěný `pg_dump` ho ale pořád odmítne.
 
 ---
 
