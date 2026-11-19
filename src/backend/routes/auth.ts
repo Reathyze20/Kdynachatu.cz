@@ -8,6 +8,8 @@ import { sendPasswordResetEmail, sendVerificationEmailWithPIN, sendVerificationE
 import { validate } from "../../validators/validate";
 import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from "../../validators/schemas";
 import { protect } from "../../middleware/authMiddleware";
+import { CABIN_SIGNUP_ENABLED } from "../../config/config";
+import { requireCabinSignupOpen, signupStatusHandler } from "./cabinSignup";
 
 const router = Router();
 
@@ -142,10 +144,15 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
 });
 
 // ============================================================================
+//   GET /api/signup-status — public: can a new cabin be created? (CABIN_SIGNUP_ENABLED)
+// ============================================================================
+router.get("/signup-status", signupStatusHandler(CABIN_SIGNUP_ENABLED));
+
+// ============================================================================
 //                      REGISTER (Workspace Onboarding)
 //   Creates Cabin + Admin User in a single transaction
 // ============================================================================
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (req: Request, res: Response) => {
   // ── Zod validation ───────────────────────────────────────────────────
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
