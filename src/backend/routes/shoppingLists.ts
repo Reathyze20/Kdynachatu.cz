@@ -295,11 +295,11 @@ router.put("/:listId/items/:itemId", protect, requireCabin, async (req: Request,
 
         const userId = req.user!.userId;
 
-        const item = await prisma.shoppingListItem.findUnique({
-            where: { id: itemId },
+        const item = await prisma.shoppingListItem.findFirst({
+            where: { id: itemId, listId, list: { cabinId: req.user!.cabinId } },
         });
 
-        if (!item || item.listId !== listId) {
+        if (!item) {
             return res.status(404).json({ message: "Položka v seznamu nenalezena" });
         }
 
