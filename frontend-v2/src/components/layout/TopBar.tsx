@@ -74,7 +74,7 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
     <div className="top-bar" data-testid="desktop-topbar">
       <div className="nav-left-group">
         <Link to={user?.isSuperAdmin && !user?.cabinId ? '/superadmin' : '/dashboard'} className="brand-logo-lockup" data-testid="desktop-home-link">
-          <img src="/logo-icon.svg" alt="Chatačeskéstředohoří" className="nav-logo-icon" />
+          <img src="/logo-icon.svg" alt="Kdy na chatu" className="nav-logo-icon" />
         </Link>
 
         <nav id="app-nav" className="app-nav" data-testid="desktop-primary-nav">
