@@ -18,12 +18,14 @@ before(async () => {
   const express = (await import("express")).default;
   const authRoutes = (await import("./auth")).default;
   const cabinRoutes = (await import("./cabin")).default;
+  const invitesRoutes = (await import("./invites")).default;
 
   // Stejné cesty jako v server.new.ts.
   const app = express();
   app.use(express.json());
   app.use("/api", authRoutes);
   app.use("/api/cabin", cabinRoutes);
+  app.use("/api/invites", invitesRoutes);
 
   server = app.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", () => resolve()));
@@ -67,6 +69,35 @@ describe("cabin signup closed (CABIN_SIGNUP_ENABLED=false)", () => {
     });
     assert.equal(res.status, 403);
     assert.deepEqual(await res.json(), { message: CLOSED_MESSAGE });
+  });
+});
+
+// Bez reálné DB (harness přijde s #120) jde ověřit jen, že brána tyto routy nepustí na 403:
+// projdou až k dotazu do DB, který na nedostupném portu skončí 500. Plný test přihlášení a přijetí
+// pozvánky při vypnuté registraci přibude s integračním harnessem.
+describe("login and invite acceptance are not gated by the signup flag", () => {
+  const notClosed = async (res: Response) => {
+    assert.notEqual(res.status, 403);
+    const body = (await res.json()) as { message?: string };
+    assert.notEqual(body.message, CLOSED_MESSAGE);
+  };
+
+  test("POST /api/login reaches the handler", async () => {
+    const res = await fetch(`${baseUrl}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "novak", password: "Heslo-123456" }),
+    });
+    await notClosed(res);
+  });
+
+  test("POST /api/invites/accept/:token reaches the handler", async () => {
+    const res = await fetch(`${baseUrl}/api/invites/accept/some-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "novak", password: "Heslo-123456" }),
+    });
+    await notClosed(res);
   });
 });
 

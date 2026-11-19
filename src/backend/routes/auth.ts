@@ -144,7 +144,7 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
 });
 
 // ============================================================================
-//   GET /api/signup-status — veřejně: jde založit novou chatu? (CABIN_SIGNUP_ENABLED)
+//   GET /api/signup-status — public: can a new cabin be created? (CABIN_SIGNUP_ENABLED)
 // ============================================================================
 router.get("/signup-status", signupStatusHandler(CABIN_SIGNUP_ENABLED));
 

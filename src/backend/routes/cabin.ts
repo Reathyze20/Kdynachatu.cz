@@ -266,7 +266,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
 //  POST /api/cabin/create — Create a new cabin for a logged-in user who has no cabin yet
 //  Used by the Onboarding flow (multi-tenant SaaS setup)
 // ============================================================================
-// Zavřená registrace odpoví 403 ještě před ověřením tokenu – stav je veřejný (GET /api/signup-status).
+// Closed signup answers 403 before token checks – the status is public anyway (GET /api/signup-status).
 router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, validate(createCabinSchema), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });

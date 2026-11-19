@@ -154,8 +154,8 @@ export default function OnboardingPage() {
           <div data-testid="onboarding-invite-only">
             <h2 className="onboarding-title">Do chaty se vstupuje přes pozvánku</h2>
             <p className="auth-subtitle">
-              Vítejte{user?.username ? `, ${user.username}` : ''}! Nové chaty teď zakládat nejde.
-              Požádejte správce své chaty o pozvánku a otevřete odkaz, který vám pošle.
+              Vítejte{user?.username ? `, ${user.username}` : ''}! Nové chaty teď zakládat nejde,
+              do chaty vás přidá její správce pozvánkou.
             </p>
           </div>
         )}

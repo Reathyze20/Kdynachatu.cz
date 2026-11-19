@@ -49,6 +49,7 @@ describe("CABIN_SIGNUP_ENABLED", () => {
     assert.equal(config.resolveCabinSignupEnabled("", "production"), false);
     assert.equal(config.resolveCabinSignupEnabled("false", "production"), false);
     assert.equal(config.resolveCabinSignupEnabled("nonsense", "production"), false);
+    assert.equal(config.resolveCabinSignupEnabled("1", "production"), false);
   });
 
   test("in production an explicit true opens signup", () => {
