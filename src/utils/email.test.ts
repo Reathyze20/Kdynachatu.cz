@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 // config.ts ukončí proces bez JWT_SECRET a DATABASE_URL; SMTP_* zapnou transporter.
 // dotenv existující klíč nepřepíše, takže lokální .env test neovlivní.
 process.env.JWT_SECRET ||= "test-secret-for-email-unit-tests-0123456789";
-process.env.DATABASE_URL ||= "postgresql://test:test@localhost:5432/test";
+process.env.DATABASE_URL ||= "postgresql://unit:unit@127.0.0.1:1/unit_tests_never_connect";
 process.env.SMTP_HOST = "smtp.example.test";
 process.env.SMTP_USER = "test";
 process.env.SMTP_PASS = "test";
