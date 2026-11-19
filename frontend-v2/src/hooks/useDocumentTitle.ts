@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const APP_NAME = 'Chatačeskéstředohoří'
+const APP_NAME = 'Kdy na chatu'
 
 /**
  * Sets document.title on mount and restores default on unmount.
