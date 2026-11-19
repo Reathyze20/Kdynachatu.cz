@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.1.0...v1.2.0) (2026-11-19)
+
+
+### Features
+
+* **auth:** flag to close new cabin signup (CABIN_SIGNUP_ENABLED) ([#123](https://github.com/Reathyze20/Kdynachatu.cz/issues/123)) ([2712f91](https://github.com/Reathyze20/Kdynachatu.cz/commit/2712f91a2d86e4a3077a92dd16ef68f6d6410b0b))
+
+
+### Bug Fixes
+
+* **backup:** strip non-libpq params from DATABASE_URL for pg_dump/pg_restore ([#122](https://github.com/Reathyze20/Kdynachatu.cz/issues/122)) ([04eb794](https://github.com/Reathyze20/Kdynachatu.cz/commit/04eb794e116ac41e8553dbc11780672a41615bbc))
+
 ## [1.1.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.0.0...v1.1.0) (2026-11-19)
 
 
