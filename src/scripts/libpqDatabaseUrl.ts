@@ -1,6 +1,7 @@
 // Prisma connection strings may carry query parameters that libpq rejects
 // (e.g. `?schema=public` -> `pg_dump: error: invalid URI query parameter: "schema"`).
-// pg_dump/pg_restore get only the parameters libpq understands.
+// pg_dump/pg_restore get only the parameters libpq understands. Keys are compared raw:
+// libpq keywords never need percent-encoding, so an encoded key is not one of them.
 // Source: https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS
 const LIBPQ_URI_PARAMETERS = new Set([
   "host",
@@ -45,6 +46,13 @@ const LIBPQ_URI_PARAMETERS = new Set([
   "service",
   "target_session_attrs",
   "load_balance_hosts",
+  "min_protocol_version",
+  "max_protocol_version",
+  "sslkeylogfile",
+  "oauth_issuer",
+  "oauth_client_id",
+  "oauth_client_secret",
+  "oauth_scope",
   // libpq accepts `ssl=true` in URIs for JDBC compatibility (maps to sslmode=require).
   "ssl",
 ]);
@@ -58,7 +66,7 @@ export function toLibpqDatabaseUrl(databaseUrl: string): string {
   const kept = databaseUrl
     .slice(queryStart + 1)
     .split("&")
-    .filter((pair) => LIBPQ_URI_PARAMETERS.has(decodeURIComponent(pair.split("=")[0])));
+    .filter((pair) => LIBPQ_URI_PARAMETERS.has(pair.split("=")[0]));
 
   return kept.length > 0 ? `${base}?${kept.join("&")}` : base;
 }

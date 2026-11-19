@@ -36,4 +36,8 @@ describe("toLibpqDatabaseUrl", () => {
       "postgresql://u:p%40ss%3Fw0rd@h:5432/app?sslmode=require",
     );
   });
+
+  test("drops a malformed percent-encoded key instead of throwing", () => {
+    assert.equal(toLibpqDatabaseUrl("postgresql://u:p@h/app?%zz=1&sslmode=require"), "postgresql://u:p@h/app?sslmode=require");
+  });
 });
