@@ -84,7 +84,6 @@ export function as(app: Express, user: TestUser) {
     get: (path: string) => request(app).get(path).set("Authorization", auth),
     post: (path: string) => request(app).post(path).set("Authorization", auth),
     put: (path: string) => request(app).put(path).set("Authorization", auth),
-    patch: (path: string) => request(app).patch(path).set("Authorization", auth),
     delete: (path: string) => request(app).delete(path).set("Authorization", auth),
   };
 }

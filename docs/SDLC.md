@@ -79,10 +79,10 @@ Dnes: frontend Vitest (`frontend-v2/src/test/`, jsdom), backend unit testy přes
 **Reálná DB, ne mocky.** Testy čtou jen `DATABASE_URL`, kterou nastaví skript; `.env` se nepoužije.
 
 **Jak spustit integrační testy:**
-- Lokálně (běžící Docker): `npm run test:integration` – dočasný `postgres:16` na portu **5433**, `prisma migrate deploy`, testy sériově, kontejner se smaže i při selhání. Lokální DB na 5432 se nepoužije nikdy.
+- Lokálně (běžící Docker): `npm run test:integration` – dočasný `postgres:16` na portu **5433**, `prisma migrate deploy`, testy sériově, kontejner se smaže i při selhání. Lokální DB na 5432 tento režim nepoužije nikdy; `TEST_DATABASE_URL` lokálně nenastavujte.
 - CI a cloud session: `TEST_DATABASE_URL=postgresql://…/kdynachatu_test npm run test:integration` – bez Dockeru, nad service containerem nebo `service postgresql start`.
 - Guard: běh skončí ještě před migrací i před každým truncate, když název DB neobsahuje `test` nebo jde o `cabin_reservation`.
-- Nový test: soubor `*.itest.ts`, první import `./env`; v `before` `setupIntegrationFile()` (truncate + seed chaty A a B se správcem a členem), požadavky přes `as(app, w.memberA)`, realtime přes `recordRealtimeEmits()` (`src/testing/integration/harness.ts`). Uploady jdou do dočasného adresáře, e-maily se neodesílají, rate limity jsou vypnuté.
+- Nový test: soubor `*.itest.ts`, první import `./env`; v `before` `setupIntegrationFile()` (truncate + seed chaty A a B se správcem a členem), požadavky přes `as(app, world.memberA)`, realtime přes `recordRealtimeEmits()` (`src/testing/integration/harness.ts`). Uploady jdou do dočasného adresáře, e-maily se neodesílají, rate limity jsou vypnuté.
 
 **Tenant-isolation sada** (cíl #64): seed chaty A a B; každý endpoint s ID vrací uživateli z A na zdroj z B **404**; listy pro A neobsahují ID z B; socket z A se nedostane do roomu B; upload z B není dostupný s tokenem z A; meta-test projde modely s `cabinId` v `prisma/schema.prisma` a ověří, že každý má test.
 

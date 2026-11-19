@@ -6,7 +6,7 @@ import prisma from "../../utils/prisma";
 import { as, recordRealtimeEmits, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
 
 let app: Express;
-let w: TestWorld;
+let world: TestWorld;
 let reservationA: string;
 let reservationB: string;
 
@@ -28,11 +28,11 @@ const snapshot = (id: string) =>
   prisma.reservation.findUnique({ where: { id }, include: { participants: true, watchers: true } });
 
 before(async () => {
-  ({ app, world: w } = await setupIntegrationFile());
-  reservationA = await createReservation(w.memberA, "2027-01-10");
-  reservationB = await createReservation(w.memberB, "2027-01-10", [w.adminB]);
+  ({ app, world } = await setupIntegrationFile());
+  reservationA = await createReservation(world.memberA, "2027-01-10");
+  reservationB = await createReservation(world.memberB, "2027-01-10", [world.adminB]);
   await prisma.userAvailability.create({
-    data: { userId: w.memberB.id, cabinId: w.cabinB.id, startDate: new Date("2027-02-01"), endDate: new Date("2027-02-03") },
+    data: { userId: world.memberB.id, cabinId: world.cabinB.id, startDate: new Date("2027-02-01"), endDate: new Date("2027-02-03") },
   });
 });
 
@@ -40,11 +40,11 @@ after(teardownIntegrationFile);
 
 describe("reservations: list is scoped to the caller's cabin", () => {
   test("cabin A list contains no reservation, participant or availability from cabin B", async () => {
-    const res = await as(app, w.memberA).get("/api/reservations");
+    const res = await as(app, world.memberA).get("/api/reservations");
     assert.equal(res.status, 200);
     assert.deepEqual(res.body.reservations.map((r: { id: string }) => r.id), [reservationA]);
     const body = JSON.stringify(res.body);
-    for (const leak of [reservationB, w.memberB.id, w.adminB.id, w.memberB.username, w.adminB.username]) {
+    for (const leak of [reservationB, world.memberB.id, world.adminB.id, world.memberB.username, world.adminB.username]) {
       assert.equal(body.includes(leak), false, `leaked ${leak}`);
     }
   });
@@ -64,7 +64,7 @@ for (const actor of ["memberA", "adminA"] as const) {
     for (const [name, call] of cases) {
       test(name, async () => {
         const before = await snapshot(reservationB);
-        const res = await call(w[actor]);
+        const res = await call(world[actor]);
         assert.equal(res.status, 404);
         assert.deepEqual(await snapshot(reservationB), before);
       });
@@ -75,46 +75,67 @@ for (const actor of ["memberA", "adminA"] as const) {
 describe("reservations: participants from cabin B are rejected", () => {
   test("create in A with a cabin B participant → 404, nothing created", async () => {
     const countBefore = await prisma.reservation.count();
-    const res = await as(app, w.memberA).post("/api/reservations")
-      .send({ from: "2027-03-01", to: "2027-03-03", purpose: "S cizincem", participantIds: [w.memberB.id] });
+    const res = await as(app, world.memberA).post("/api/reservations")
+      .send({ from: "2027-03-01", to: "2027-03-03", purpose: "S cizincem", participantIds: [world.memberB.id] });
     assert.equal(res.status, 404);
     assert.equal(await prisma.reservation.count(), countBefore);
   });
 
   test("update in A with a cabin B participant → 404, reservation unchanged", async () => {
     const before = await snapshot(reservationA);
-    const res = await as(app, w.memberA).put(`/api/reservations/${reservationA}`)
-      .send({ purpose: "Změna", participantIds: [w.memberB.id] });
+    const res = await as(app, world.memberA).put(`/api/reservations/${reservationA}`)
+      .send({ purpose: "Změna", participantIds: [world.memberB.id] });
     assert.equal(res.status, 404);
     assert.deepEqual(await snapshot(reservationA), before);
   });
 
   test("admin A cannot assign a cabin A reservation to a cabin B user (404)", async () => {
-    const res = await as(app, w.adminA).post(`/api/reservations/${reservationA}/assign`).send({ newOwnerId: w.memberB.id });
+    const res = await as(app, world.adminA).post(`/api/reservations/${reservationA}/assign`).send({ newOwnerId: world.memberB.id });
     assert.equal(res.status, 404);
-    assert.equal((await snapshot(reservationA))?.userId, w.memberA.id);
+    assert.equal((await snapshot(reservationA))?.userId, world.memberA.id);
   });
 });
 
 describe("reservations: same-cabin flows still work (positive control)", () => {
+  test("editing with a participant who has since left the cabin → 200, that participant is dropped (as before)", async () => {
+    const former = await prisma.user.create({
+      data: { username: "byvaly-clen-a", passwordHash: "x", color: "#123456", cabinId: world.cabinA.id },
+    });
+    const formerUser = { id: former.id, username: former.username, role: "user", cabinId: world.cabinA.id };
+    const id = await createReservation(world.adminA, "2027-05-01", [formerUser, world.memberA]);
+    await prisma.user.update({ where: { id: former.id }, data: { cabinId: null } });
+
+    const res = await as(app, world.adminA).put(`/api/reservations/${id}`)
+      .send({ purpose: "Upraveno", participantIds: [former.id, world.memberA.id] });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.participants.map((p: { userId: string }) => p.userId), [world.memberA.id]);
+  });
+
+  test("assign without a valid newOwnerId → 400, owner unchanged", async () => {
+    const id = await createReservation(world.memberA, "2027-06-01");
+    const res = await as(app, world.adminA).post(`/api/reservations/${id}/assign`).send({});
+    assert.equal(res.status, 400);
+    assert.equal((await snapshot(id))?.userId, world.memberA.id);
+  });
+
   test("create in A with a cabin A participant → 201 and realtime goes only to cabin A's room", async () => {
     const recorder = recordRealtimeEmits();
     try {
-      const res = await as(app, w.adminA).post("/api/reservations")
-        .send({ from: "2027-04-01", to: "2027-04-03", purpose: "Rodinný pobyt", participantIds: [w.memberA.id] });
+      const res = await as(app, world.adminA).post("/api/reservations")
+        .send({ from: "2027-04-01", to: "2027-04-03", purpose: "Rodinný pobyt", participantIds: [world.memberA.id] });
       assert.equal(res.status, 201);
-      assert.deepEqual(res.body.participants.map((p: { userId: string }) => p.userId), [w.memberA.id]);
+      assert.deepEqual(res.body.participants.map((p: { userId: string }) => p.userId), [world.memberA.id]);
       assert.ok(recorder.emits.some((e) => e.event === "reservation:created"));
-      assert.deepEqual([...new Set(recorder.emits.map((e) => e.room))], [`cabin:${w.cabinA.id}`]);
+      assert.deepEqual([...new Set(recorder.emits.map((e) => e.room))], [`cabin:${world.cabinA.id}`]);
     } finally {
       recorder.restore();
     }
   });
 
   test("member A cannot assign (403 stays inside the cabin), admin A can", async () => {
-    const denied = await as(app, w.memberA).post(`/api/reservations/${reservationA}/assign`).send({ newOwnerId: w.adminA.id });
+    const denied = await as(app, world.memberA).post(`/api/reservations/${reservationA}/assign`).send({ newOwnerId: world.adminA.id });
     assert.equal(denied.status, 403);
-    const ok = await as(app, w.adminA).post(`/api/reservations/${reservationA}/assign`).send({ newOwnerId: w.adminA.id });
+    const ok = await as(app, world.adminA).post(`/api/reservations/${reservationA}/assign`).send({ newOwnerId: world.adminA.id });
     assert.equal(ok.status, 200);
   });
 });

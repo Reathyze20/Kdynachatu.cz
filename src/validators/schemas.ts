@@ -215,6 +215,10 @@ export const deleteReservationSchema = z.object({
   id: z.string().uuid("Neplatné ID rezervace"),
 });
 
+export const assignReservationSchema = z.object({
+  newOwnerId: z.string().uuid("Neplatné ID uživatele"),
+});
+
 // Reservation — checkout
 export const completeCheckoutSchema = z.object({
   reservationId: z.string().uuid("Neplatné ID rezervace"),
