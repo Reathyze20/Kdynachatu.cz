@@ -607,6 +607,7 @@ const paths: Record<string, OpenApiObject> = {
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+        "404": jsonResponse(ref("ErrorResponse"), "Ucastnik (participantIds) neni clenem chaty"),
       },
     },
   },

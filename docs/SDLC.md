@@ -67,16 +67,22 @@ Mezi fázemi `/clear` – každá fáze začíná s čistým kontextem a čte je
 
 ## 5. Testy
 
-Dnes: frontend Vitest (`frontend-v2/src/test/`, jsdom), backend unit testy čistých helperů přes `node:test` (`src/**/*.test.ts`). Backend harness s reálnou DB je krok 4 roadmapy (#64).
+Dnes: frontend Vitest (`frontend-v2/src/test/`, jsdom), backend unit testy přes `node:test` (`src/**/*.test.ts`, spouští je i `preflight:deploy`) a backend integrační testy nad reálným PostgreSQL (`src/**/*.itest.ts`, krok 4 roadmapy #64).
 
 | Vrstva | Nástroj | Co | Stav |
 |---|---|---|---|
 | Unit | Vitest / node:test | doménová logika (kalendář, náklady, hlasování), Zod schémata | ⚙️ |
-| Integrační API | Supertest nad Express app + reálný PostgreSQL | endpointy, autorizace, validace | 🔜 #64 |
-| Tenant isolation | Supertest + reálná DB, 2 seedované chaty | viz níže | 🔜 #64, povinné a blokující |
+| Integrační API | Supertest nad Express app + reálný PostgreSQL | endpointy, autorizace, validace | ⚙️ lokálně (`npm run test:integration`), v CI po vložení snippetu do `ci.yml` |
+| Tenant isolation | Supertest + reálná DB, 2 seedované chaty | viz níže | ⚙️ rezervace; další domény 🔜 #64, povinné a blokující |
 | E2E | Playwright | 3–5 kritických cest | 🔜 |
 
-**Reálná DB, ne mocky.** V CI service container `postgres:16`, v cloud session `service postgresql start` a databáze `kdynachatu_test`. Testy čtou jen `DATABASE_URL`.
+**Reálná DB, ne mocky.** Testy čtou jen `DATABASE_URL`, kterou nastaví skript; `.env` se nepoužije.
+
+**Jak spustit integrační testy:**
+- Lokálně (běžící Docker): `npm run test:integration` – dočasný `postgres:16` na portu **5433**, `prisma migrate deploy`, testy sériově, kontejner se smaže i při selhání. Lokální DB na 5432 se nepoužije nikdy.
+- CI a cloud session: `TEST_DATABASE_URL=postgresql://…/kdynachatu_test npm run test:integration` – bez Dockeru, nad service containerem nebo `service postgresql start`.
+- Guard: běh skončí ještě před migrací i před každým truncate, když název DB neobsahuje `test` nebo jde o `cabin_reservation`.
+- Nový test: soubor `*.itest.ts`, první import `./env`; v `before` `setupIntegrationFile()` (truncate + seed chaty A a B se správcem a členem), požadavky přes `as(app, w.memberA)`, realtime přes `recordRealtimeEmits()` (`src/testing/integration/harness.ts`). Uploady jdou do dočasného adresáře, e-maily se neodesílají, rate limity jsou vypnuté.
 
 **Tenant-isolation sada** (cíl #64): seed chaty A a B; každý endpoint s ID vrací uživateli z A na zdroj z B **404**; listy pro A neobsahují ID z B; socket z A se nedostane do roomu B; upload z B není dostupný s tokenem z A; meta-test projde modely s `cabinId` v `prisma/schema.prisma` a ověří, že každý má test.
 
