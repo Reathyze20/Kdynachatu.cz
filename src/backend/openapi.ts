@@ -607,6 +607,42 @@ const paths: Record<string, OpenApiObject> = {
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+        "404": jsonResponse(ref("ErrorResponse"), "Ucastnik (participantIds) neni clenem chaty"),
+      },
+    },
+  },
+  "/api/reservations/{id}": {
+    put: {
+      tags: ["Reservations"],
+      summary: "Uprav rezervaci (vlastnik nebo admin)",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: jsonRequestBody(ref("CreateReservationRequest"), "Vsechna pole jsou volitelna; status muze byt i backup"),
+      responses: {
+        "200": jsonResponse(ref("Reservation"), "Rezervace byla upravena"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
+        "403": jsonResponse(ref("ErrorResponse"), "Cizi rezervace v ramci chaty a uzivatel neni admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Rezervace nebo ucastnik neni v chate uzivatele"),
+        "409": jsonResponse(ref("ErrorResponse"), "Kolize s potvrzenou rezervaci"),
+      },
+    },
+  },
+  "/api/reservations/{reservationId}/assign": {
+    post: {
+      tags: ["Reservations"],
+      summary: "Prirad rezervaci jinemu clenovi chaty (admin)",
+      security: bearerSecurity,
+      parameters: [{ name: "reservationId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: jsonRequestBody({
+        type: "object",
+        required: ["newOwnerId"],
+        properties: { newOwnerId: { type: "string", format: "uuid" } },
+      }),
+      responses: {
+        "200": jsonResponse({ type: "object", properties: { message: { type: "string" } } }, "Prirazeno"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
+        "403": jsonResponse(ref("ErrorResponse"), "Pouze admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Rezervace nebo novy vlastnik neni v chate uzivatele"),
       },
     },
   },
