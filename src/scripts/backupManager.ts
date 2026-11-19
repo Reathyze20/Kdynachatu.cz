@@ -5,6 +5,7 @@ import path from "node:path";
 import os from "node:os";
 import dotenv from "dotenv";
 import { fileURLToPath } from "node:url";
+import { toLibpqDatabaseUrl } from "./libpqDatabaseUrl";
 
 type BackupTarget = "db" | "uploads" | "all";
 type RestoreTarget = "db" | "uploads";
@@ -295,7 +296,7 @@ async function backupDatabase(): Promise<BackupResult> {
   const pgDumpCommand = getCommandSpec("PG_DUMP_COMMAND", "pg_dump");
   await ensureCommandAvailable(pgDumpCommand);
 
-  const databaseUrl = getRequiredEnv("DATABASE_URL");
+  const databaseUrl = toLibpqDatabaseUrl(getRequiredEnv("DATABASE_URL"));
   const retentionDays = getRetentionDays();
   const backupDir = path.join(getBackupRoot(), "db");
   const filePath = path.join(backupDir, `db_${getTimestamp()}.dump`);
@@ -374,7 +375,7 @@ async function restoreDatabase(archivePath: string, yes: boolean): Promise<void>
   await ensureCommandAvailable(pgRestoreCommand);
   await ensureExists(archivePath, "Database backup file");
 
-  const databaseUrl = getRequiredEnv("DATABASE_URL");
+  const databaseUrl = toLibpqDatabaseUrl(getRequiredEnv("DATABASE_URL"));
   await runCommandFromFile(pgRestoreCommand, [
     "--dbname",
     databaseUrl,
