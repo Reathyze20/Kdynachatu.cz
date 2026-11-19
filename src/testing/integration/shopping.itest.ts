@@ -14,6 +14,8 @@ let itemB: string;
 let pantryB: string;
 let pantryItemB: string;
 let orphanItemB: string;
+/** Every cabin B fixture name starts with this, so any leaked name shows up in a body search. */
+const CABIN_B_NAME_PREFIX = "Tajn";
 
 type Call = (user: TestUser) => Promise<{ status: number }>;
 
@@ -148,7 +150,7 @@ describe("shopping splits: splitting with a cabin B user → 404, nothing is cre
 describe("shopping: lists for cabin A contain nothing from cabin B", () => {
   const leaks = () => [
     listB, itemB, pantryB, pantryItemB, orphanItemB, world.memberB.id, world.adminB.id,
-    world.memberB.username, world.adminB.username, "Tajn",
+    world.memberB.username, world.adminB.username, CABIN_B_NAME_PREFIX,
   ];
 
   for (const path of ["/api/shopping-lists", "/api/shopping-lists?isPantry=true", "/api/shopping-lists/pantry", "/api/shopping-list"]) {

@@ -103,12 +103,11 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
   }
 });
 
-// Položka chaty přihlášeného uživatele; s `:listId` v cestě musí ležet právě v tomto seznamu.
-// Položka bez seznamu nepatří žádné chatě → 404 stejně jako cizí.
-function findCabinItem(req: Request) {
-  const { itemId, listId } = req.params;
+// Item of the caller's cabin; when the route has :listId, the item must sit in that list.
+// An item without a list belongs to no cabin → 404, same as a foreign one.
+function findCabinItem(cabinId: string, itemId: string, listId?: string) {
   return prisma.shoppingListItem.findFirst({
-    where: { id: itemId, ...(listId ? { listId } : {}), list: { cabinId: req.user!.cabinId } },
+    where: { id: itemId, ...(listId ? { listId } : {}), list: { cabinId } },
   });
 }
 
@@ -134,12 +133,12 @@ async function handlePurchaseItem(req: Request, res: Response) {
 
   try {
     // Verify item's list belongs to user's cabin
-    const item = await findCabinItem(req);
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
 
-    // Rozpočítat jde jen na členy stejné chaty
+    // Splits only with members of the same cabin
     if (isPurchased && Array.isArray(splitWith) && splitWith.length > 0) {
       const userIds = [...new Set<string>(splitWith)];
       const members = await prisma.user.count({ where: { id: { in: userIds }, cabinId: req.user!.cabinId } });
@@ -233,7 +232,7 @@ router.post("/:itemId/move-from-pantry", protect, requireCabin, async (req: Requ
   const { itemId } = req.params;
 
   try {
-    const item = await findCabinItem(req);
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
@@ -288,7 +287,7 @@ router.patch("/:itemId/toggle-essential", protect, requireCabin, async (req: Req
       return res.status(403).json({ message: "Hosté nemohou měnit kritické položky." });
     }
 
-    const item = await findCabinItem(req);
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
@@ -312,7 +311,7 @@ async function deleteItem(req: Request, res: Response) {
   const { itemId } = req.params;
   try {
     // Fetch the item and verify it belongs to user's cabin
-    const item = await findCabinItem(req);
+    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
 
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena" });
