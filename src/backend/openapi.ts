@@ -608,11 +608,7 @@ const paths: Record<string, OpenApiObject> = {
       tags: ["Cabin"],
       summary: "Zaloz chatu pro prihlaseneho uzivatele bez chaty (onboarding)",
       security: bearerSecurity,
-      requestBody: jsonRequestBody({
-        type: "object",
-        required: ["name"],
-        properties: { name: { type: "string", minLength: 2, maxLength: 100, example: "Chata U Lesa" } },
-      }),
+      requestBody: jsonRequestBody({ type: "object", required: ["name"], properties: { name: { type: "string", minLength: 2, maxLength: 100 } } }),
       responses: {
         "201": jsonResponse({ type: "object" }, "Chata vytvorena, odpoved obsahuje novy token a cabinId"),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup nebo ucet uz chatu ma"),

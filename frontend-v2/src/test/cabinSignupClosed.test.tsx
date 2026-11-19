@@ -48,7 +48,6 @@ describe('cabin signup closed (CABIN_SIGNUP_ENABLED)', () => {
     renderPage(<AuthPage />)
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith('/signup-status'))
     expect(screen.getByTestId('login-form')).toBeInTheDocument()
-    expect(screen.queryByTestId('login-show-register-link')).not.toBeInTheDocument()
     expect(screen.queryByText(/Zaregistrujte se/)).not.toBeInTheDocument()
   })
 

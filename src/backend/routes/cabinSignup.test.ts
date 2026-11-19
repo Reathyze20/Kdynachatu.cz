@@ -38,6 +38,14 @@ after(async () => {
   await prisma.$disconnect();
 });
 
+const post = (path: string, body: object) =>
+  fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer whatever" },
+    body: JSON.stringify(body),
+  });
+const signup = { cabinName: "Chata Test", weatherLocation: "Praha", username: "novak", email: "novak@example.com", password: "Heslo-123456" };
+
 describe("cabin signup closed (CABIN_SIGNUP_ENABLED=false)", () => {
   test("GET /api/signup-status reports signup as closed", async () => {
     const res = await fetch(`${baseUrl}/api/signup-status`);
@@ -45,60 +53,22 @@ describe("cabin signup closed (CABIN_SIGNUP_ENABLED=false)", () => {
     assert.deepEqual(await res.json(), { cabinSignupEnabled: false });
   });
 
-  test("POST /api/register returns 403 without touching the database", async () => {
-    const res = await fetch(`${baseUrl}/api/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        cabinName: "Chata Test",
-        weatherLocation: "Praha",
-        username: "novak",
-        email: "novak@example.com",
-        password: "Heslo-123456",
-      }),
+  for (const [path, body] of [["/api/register", signup], ["/api/cabin/create", { name: "Chata Test" }]] as const) {
+    test(`POST ${path} returns 403 without touching the database`, async () => {
+      const res = await post(path, body);
+      assert.equal(res.status, 403);
+      assert.deepEqual(await res.json(), { message: CLOSED_MESSAGE });
     });
-    assert.equal(res.status, 403);
-    assert.deepEqual(await res.json(), { message: CLOSED_MESSAGE });
-  });
+  }
 
-  test("POST /api/cabin/create returns 403 without touching the database", async () => {
-    const res = await fetch(`${baseUrl}/api/cabin/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer whatever" },
-      body: JSON.stringify({ name: "Chata Test" }),
+  // Bez DB harnessu (#120) jen ověření, že brána je nepustí na 403 – dojdou až k DB a skončí 500.
+  for (const path of ["/api/login", "/api/invites/accept/some-token"]) {
+    test(`POST ${path} is not gated by the signup flag`, async () => {
+      const res = await post(path, { username: "novak", password: "Heslo-123456" });
+      assert.notEqual(res.status, 403);
+      assert.notEqual(((await res.json()) as { message?: string }).message, CLOSED_MESSAGE);
     });
-    assert.equal(res.status, 403);
-    assert.deepEqual(await res.json(), { message: CLOSED_MESSAGE });
-  });
-});
-
-// Bez reálné DB (harness přijde s #120) jde ověřit jen, že brána tyto routy nepustí na 403:
-// projdou až k dotazu do DB, který na nedostupném portu skončí 500. Plný test přihlášení a přijetí
-// pozvánky při vypnuté registraci přibude s integračním harnessem.
-describe("login and invite acceptance are not gated by the signup flag", () => {
-  const notClosed = async (res: Response) => {
-    assert.notEqual(res.status, 403);
-    const body = (await res.json()) as { message?: string };
-    assert.notEqual(body.message, CLOSED_MESSAGE);
-  };
-
-  test("POST /api/login reaches the handler", async () => {
-    const res = await fetch(`${baseUrl}/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "novak", password: "Heslo-123456" }),
-    });
-    await notClosed(res);
-  });
-
-  test("POST /api/invites/accept/:token reaches the handler", async () => {
-    const res = await fetch(`${baseUrl}/api/invites/accept/some-token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "novak", password: "Heslo-123456" }),
-    });
-    await notClosed(res);
-  });
+  }
 });
 
 describe("requireCabinSignupOpen", () => {
