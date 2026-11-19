@@ -200,11 +200,13 @@ FRONTEND_URL=https://DOMENA
 
 # e-maily (Resend) — SES ze starého .env už nefunguje, viz OPERATIONS-RUNBOOK.md §5.1
 SMTP_HOST=smtp.resend.com
-SMTP_PORT=465
+SMTP_PORT=2587
 SMTP_USER=resend
 SMTP_PASS=<Resend API key>
 EMAIL_FROM="Kdy na chatu <noreply@kdynachatu.cz>"
 ```
+
+> **Port 2587, ne 465/587:** Netcup blokuje odchozí 465 i 587 (spojení jen visí, appka nespadne, e-maily tiše nechodí). Resend nabízí stejné SMTP i na 2465/2587; 2587 = STARTTLS, se kterým `src/utils/email.ts` funguje bez úprav (`secure` jen pro 465). API klíč stačí s oprávněním **Sending access** pro doménu `kdynachatu.cz`.
 
 > `JWT_SECRET` je **nový**, ne ten ze starého serveru (ADR-0002, [MIGRATION-CUTOVER.md](MIGRATION-CUTOVER.md) §1) – rodina se po přechodu přihlásí znovu. Prázdné `SMTP_PASS` appce nebrání naběhnout, jen nechodí e-maily.
 
