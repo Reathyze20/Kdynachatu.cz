@@ -10,6 +10,8 @@ import { validate } from "../../validators/validate";
 import { updateCabinSettingsSchema, createCabinSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
+import { CABIN_SIGNUP_ENABLED } from "../../config/config";
+import { requireCabinSignupOpen } from "./cabinSignup";
 
 const router = Router();
 
@@ -264,7 +266,8 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
 //  POST /api/cabin/create — Create a new cabin for a logged-in user who has no cabin yet
 //  Used by the Onboarding flow (multi-tenant SaaS setup)
 // ============================================================================
-router.post("/create", protect, validate(createCabinSchema), async (req: Request, res: Response) => {
+// Closed signup answers 403 before token checks – the status is public anyway (GET /api/signup-status).
+router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, validate(createCabinSchema), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
     if (req.user.cabinId) {

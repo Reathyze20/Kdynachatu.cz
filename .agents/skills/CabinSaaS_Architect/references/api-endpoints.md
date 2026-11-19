@@ -7,7 +7,8 @@ Complete map of all backend endpoints. Read this when building API modules or co
 | Method | Path | Auth | Body / Query | Response |
 |---|---|---|---|---|
 | POST | `/api/login` | no | `{ username, password }` | `{ token, username, userId, role, color, animalIcon, cabinId }` |
-| POST | `/api/register` | no | `{ cabinName, subdomain?, weatherLocation, username, email, password, color? }` | `{ message, requiresVerification? }` |
+| POST | `/api/register` | no | `{ cabinName, subdomain?, weatherLocation, username, email, password, color? }` | `{ message, requiresVerification? }`; 403 when CABIN_SIGNUP_ENABLED is off |
+| GET | `/api/signup-status` | no | — | `{ cabinSignupEnabled }` |
 | GET | `/api/verify-token` | no | `?token=<hash>` | `{ message }` |
 | POST | `/api/verify-email` | no | `{ username, code }` | `{ message }` |
 | GET | `/api/health` | no | — | `{ status, timestamp, database }` |
@@ -151,7 +152,7 @@ Complete map of all backend endpoints. Read this when building API modules or co
 |---|---|---|---|---|---|
 | GET | `/api/cabin` | yes | all | — | `{ id, name, subdomain, description, welcomeMessage, rules, departureChecklist, coverPhotoUrl, weatherLocation, isWinterized, features }` |
 | PATCH | `/api/cabin` | yes | admin | `{ name?, description?, welcomeMessage?, rules?, departureChecklist?, ... }` | cabin object |
-| POST | `/api/cabin/create` | yes | — | `{ name }` | `{ token, cabinId, cabinName, ... }` |
+| POST | `/api/cabin/create` | yes | — | `{ name }` | `{ token, cabinId, cabinName, ... }`; 403 when CABIN_SIGNUP_ENABLED is off |
 
 ## Invites (`/api/invites`)
 
