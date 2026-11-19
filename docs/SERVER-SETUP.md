@@ -141,10 +141,12 @@ $ sudo systemctl restart postgresql
 Výsledný connection string (použiješ v `.env`):
 
 ```
-postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata?schema=public
+postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata
 ```
 
 > Heslo bez znaků `@ : / ? #` — jinak je musíš v URL escapovat.
+>
+> **Bez `?schema=public`.** Deploy před migrací zálohuje DB přes `pg_dump` a ten Prisma parametr `schema` odmítne (`invalid URI query parameter`), deploy pak skončí chybou. Prisma bez něj použije schéma `public` stejně.
 
 ---
 
@@ -192,7 +194,7 @@ Zakládej `.env` **nový** – starý obsahuje nefunkční SES a starý `JWT_SEC
 NODE_ENV=production
 DEPLOY_TARGET=production
 PORT=3000
-DATABASE_URL=postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata?schema=public
+DATABASE_URL=postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata
 JWT_SECRET=<vygeneruj: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
 FRONTEND_URL=https://DOMENA
 
