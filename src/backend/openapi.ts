@@ -193,6 +193,13 @@ const schemas: Record<string, JsonSchema> = {
       message: { type: "string", example: "OK" },
     },
   },
+  SignupStatusResponse: {
+    type: "object",
+    required: ["cabinSignupEnabled"],
+    properties: {
+      cabinSignupEnabled: { type: "boolean", example: false },
+    },
+  },
   CabinSettings: {
     type: "object",
     required: ["id", "name", "subdomain", "weatherLocation", "isWinterized", "features", "createdAt"],
@@ -521,7 +528,17 @@ const paths: Record<string, OpenApiObject> = {
       responses: {
         "201": jsonResponse(ref("RegisterResponse"), "Registrace probehla uspesne"),
         "400": jsonResponse(ref("ErrorResponse"), "Neplatny vstup"),
+        "403": jsonResponse(ref("ErrorResponse"), "Registrace novych chat je uzavrena (CABIN_SIGNUP_ENABLED)"),
         "409": jsonResponse(ref("ErrorResponse"), "Konflikt uzivatele nebo e-mailu"),
+      },
+    },
+  },
+  "/api/signup-status": {
+    get: {
+      tags: ["Auth"],
+      summary: "Verejny stav registrace novych chat (CABIN_SIGNUP_ENABLED)",
+      responses: {
+        "200": jsonResponse(ref("SignupStatusResponse"), "Zda jde zalozit novou chatu"),
       },
     },
   },
@@ -583,6 +600,20 @@ const paths: Record<string, OpenApiObject> = {
         "400": jsonResponse(ref("ErrorResponse"), "Neplatny vstup"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "403": jsonResponse(ref("ErrorResponse"), "Pouze admin muze menit nastaveni"),
+      },
+    },
+  },
+  "/api/cabin/create": {
+    post: {
+      tags: ["Cabin"],
+      summary: "Zaloz chatu pro prihlaseneho uzivatele bez chaty (onboarding)",
+      security: bearerSecurity,
+      requestBody: jsonRequestBody({ type: "object", required: ["name"], properties: { name: { type: "string", minLength: 2, maxLength: 100 } } }),
+      responses: {
+        "201": jsonResponse({ type: "object" }, "Chata vytvorena, odpoved obsahuje novy token a cabinId"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup nebo ucet uz chatu ma"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Registrace novych chat je uzavrena (CABIN_SIGNUP_ENABLED)"),
       },
     },
   },

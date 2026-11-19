@@ -63,6 +63,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | LoginForm | Form | ✅ Complete |
 | RegisterForm | Form | ✅ Complete |
 | VerifyForm | Form | ✅ Complete |
+| hooks/useCabinSignup | Hook | ✅ `signupEnabled` (CABIN_SIGNUP_ENABLED), `SIGNUP_STATUS_KEY` |
 
 ### Dashboard (`features/dashboard/`)
 | Component | Type | Status |
@@ -183,6 +184,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Module | Key Exports | Functions |
 |---|---|---|
 | `client.ts` | `apiClient` (Axios) | JWT interceptor, 401 handler |
+| `auth.ts` | `SignupStatusResponse`, `authApi` | getSignupStatus |
 | `admin.ts` | `CabinUser`, `adminApi` | getUsers, getSystemInfo, getLogs, getInvites, createInvite, updateUserRole, deactivateUser |
 | `dashboard.ts` | `DashboardData`, `dashboardApi` | getDashboard, getWeather, getWeatherForecast, getFreeWeekends |
 | `diary.ts` | `DiaryFolder`, `DiaryEntry`, `diaryApi` | getFolders, createFolder, renameFolder, getEntriesInFolder, createEntry, updateEntry, deleteEntry |

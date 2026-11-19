@@ -31,3 +31,29 @@ describe("e-mail sender", () => {
     });
   }
 });
+
+describe("CABIN_SIGNUP_ENABLED", () => {
+  test("outside production signup is open when the variable is not set", () => {
+    assert.equal(config.resolveCabinSignupEnabled(undefined, "development"), true);
+    assert.equal(config.resolveCabinSignupEnabled(undefined, undefined), true);
+    assert.equal(config.resolveCabinSignupEnabled("", "test"), true);
+  });
+
+  test("outside production an explicit false closes signup", () => {
+    assert.equal(config.resolveCabinSignupEnabled("false", "development"), false);
+    assert.equal(config.resolveCabinSignupEnabled("0", undefined), false);
+  });
+
+  test("in production signup is closed unless explicitly enabled", () => {
+    assert.equal(config.resolveCabinSignupEnabled(undefined, "production"), false);
+    assert.equal(config.resolveCabinSignupEnabled("", "production"), false);
+    assert.equal(config.resolveCabinSignupEnabled("false", "production"), false);
+    assert.equal(config.resolveCabinSignupEnabled("nonsense", "production"), false);
+    assert.equal(config.resolveCabinSignupEnabled("1", "production"), false);
+  });
+
+  test("in production an explicit true opens signup", () => {
+    assert.equal(config.resolveCabinSignupEnabled("true", "production"), true);
+    assert.equal(config.resolveCabinSignupEnabled(" TRUE ", "production"), true);
+  });
+});
