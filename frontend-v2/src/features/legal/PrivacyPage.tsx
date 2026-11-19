@@ -17,8 +17,8 @@ export function PrivacyPage() {
         <section>
           <h2>Kdo jsme</h2>
           <p>
-            Provozovatelem služby <strong>Chatačeskéstředohoří</strong> je její autor.
-            Pokud máte jakýkoli dotaz, napište nám na <a href="mailto:noreply@chataceskestredohori.cz">noreply@chataceskestredohori.cz</a>.
+            Provozovatelem služby <strong>Kdy na chatu</strong> je její autor.
+            Pokud máte jakýkoli dotaz, napište nám na <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a>.
           </p>
         </section>
 
@@ -165,7 +165,7 @@ export function PrivacyPage() {
           <h2>Kontakt</h2>
           <p>
             Máte otázky ohledně svých údajů? Napište nám na{' '}
-            <a href="mailto:noreply@chataceskestredohori.cz">noreply@chataceskestredohori.cz</a> — rádi odpovíme.
+            <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a> — rádi odpovíme.
           </p>
         </section>
 
