@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { resolveSeedConfig } from "./seedStagingConfig";
+import { resolveSeedConfig, resolveUploadsPath } from "./seedStagingConfig";
 
 const validEnv = (over: Record<string, string | undefined> = {}) => ({
   DEPLOY_TARGET: "staging",
@@ -38,6 +38,20 @@ describe("resolveSeedConfig", () => {
     assert.throws(() => resolveSeedConfig(validEnv({ DATABASE_URL: undefined })), /DATABASE_URL/);
   });
 
+  test("accepts the integration-harness database whose name contains 'test'", () => {
+    const config = resolveSeedConfig(
+      validEnv({ DATABASE_URL: "postgresql://postgres:postgres@localhost:5433/kdynachatu_test" }),
+    );
+    assert.equal(config.databaseUrl, "postgresql://postgres:postgres@localhost:5433/kdynachatu_test");
+  });
+
+  test("still refuses the known production database even though it is not _staging", () => {
+    assert.throws(
+      () => resolveSeedConfig(validEnv({ DATABASE_URL: "postgresql://cabin:x@localhost:5432/cabin_reservation" })),
+      /_staging|test/,
+    );
+  });
+
   test("refuses missing, short or placeholder passwords", () => {
     assert.throws(() => resolveSeedConfig(validEnv({ STAGING_SEED_ADMIN_PASSWORD: undefined })), /ADMIN_PASSWORD/);
     assert.throws(() => resolveSeedConfig(validEnv({ STAGING_SEED_MEMBER_PASSWORD: "kratke" })), /MEMBER_PASSWORD/);
@@ -45,5 +59,17 @@ describe("resolveSeedConfig", () => {
       () => resolveSeedConfig(validEnv({ STAGING_SEED_ADMIN_PASSWORD: "CHANGE_ME_STAGING_SEED" })),
       /ADMIN_PASSWORD/,
     );
+  });
+});
+
+describe("resolveUploadsPath", () => {
+  test("prefers UPLOADS_PATH from env", () => {
+    assert.equal(resolveUploadsPath({ UPLOADS_PATH: "/srv/uploads" }), "/srv/uploads");
+    assert.equal(resolveUploadsPath({ UPLOADS_PATH: "  /srv/uploads  " }), "/srv/uploads");
+  });
+
+  test("falls back to the data/uploads default when UPLOADS_PATH is unset", () => {
+    const resolved = resolveUploadsPath({});
+    assert.ok(resolved.replace(/\\/g, "/").endsWith("/data/uploads"), `got ${resolved}`);
   });
 });

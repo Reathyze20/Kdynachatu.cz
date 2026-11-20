@@ -1,7 +1,12 @@
 /**
  * Guard + config for `seedStaging.ts`. The seed must never touch a non-staging DB
- * (docs/plans/SEP-1-deploy.md §4.5): DEPLOY_TARGET=staging AND DB name ends in `_staging`.
+ * (docs/plans/SEP-1-deploy.md §4.5): DEPLOY_TARGET=staging AND the DB name either ends in
+ * `_staging` or contains `test` (the only exception: the disposable integration-test harness
+ * DB `kdynachatu_test`, so the seed can be exercised by `npm run test:integration`).
  */
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 export interface SeedConfig {
   databaseUrl: string;
   adminPassword: string;
@@ -11,6 +16,15 @@ export interface SeedConfig {
 type Env = Record<string, string | undefined>;
 
 const MIN_PASSWORD_LENGTH = 12;
+
+/** Cesta uploadů pro seed – z UPLOADS_PATH, jinak default `data/uploads` (shodně s config.ts).
+ * Config.ts nejde importovat (process.exit bez JWT_SECRET), proto se čte env tady. */
+export function resolveUploadsPath(env: Env): string {
+  const fromEnv = env.UPLOADS_PATH?.trim();
+  if (fromEnv) return fromEnv;
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  return path.resolve(here, "../../data/uploads");
+}
 
 function databaseName(url: string): string {
   try {
@@ -37,8 +51,12 @@ export function resolveSeedConfig(env: Env): SeedConfig {
     throw new Error("DATABASE_URL is required.");
   }
   const dbName = databaseName(databaseUrl);
-  if (!dbName.endsWith("_staging")) {
-    throw new Error(`seedStaging runs only against a database ending in _staging (got '${dbName}').`);
+  const isStaging = dbName.endsWith("_staging");
+  const isIntegrationHarness = dbName.toLowerCase().includes("test");
+  if (!isStaging && !isIntegrationHarness) {
+    throw new Error(
+      `seedStaging runs only against a database ending in _staging or an integration-test DB (got '${dbName}').`,
+    );
   }
   return {
     databaseUrl,
