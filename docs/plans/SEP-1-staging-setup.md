@@ -3,6 +3,8 @@
 Jednorázový postup pro `staging.kdynachatu.cz` na **produkčním Netcup VPS** – staging běží jako druhý proces na stejném stroji jako produkce `kdynachatu.cz` (jiný port, jiná DB, jiný adresář). Níže značí `<IP_NETCUP>` veřejnou IP toho serveru (stejnou jako A záznam produkční `kdynachatu.cz`).
 Souvisí s [`SEP-1-deploy.md`](SEP-1-deploy.md) a [`ADR-0002`](../adr/0002-hosting-a-deploy.md). **Produkční adresář, databáze ani nginx blok se nemění.**
 
+**Na serveru se nic nebuilduje.** Workflow `deploy-staging.yml` po každém merge do `main` sestaví v GitHub Actions hotový artefakt (Prisma klient, frontend `dist/`, backend bez `node_modules`) a na server ho nasadí stejný skript jako produkci, `scripts/deploy/deploy-release.sh` s `DEPLOY_TARGET=staging`. Na serveru proběhne jen `npm ci --omit=dev`, `prisma migrate deploy` a restart PM2 – při 2 GB RAM sdílených s produkcí by `npm ci` s dev závislostmi nebo Vite build hrozil OOM, který by shodil i rodinu. Staging nemá zálohy DB ani backup cron (jen fiktivní data). Rozložení: `/home/reathyze/chata-staging/.env` a `data/` sdílené, `releases/main-<sha>_<čas>/` jednotlivé verze, `current` odkaz na běžící verzi (při neúspěšném health checku se vrátí na předchozí).
+
 Legenda: `root$` = příkaz jako root, `reathyze$` = jako uživatel `reathyze`.
 
 ## 1. DNS
@@ -59,7 +61,7 @@ V `.env` vyplnit:
 - `JWT_SECRET`: nový, **jiný než v produkci**. Vygenerovat: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 - `STAGING_SEED_ADMIN_PASSWORD` a `STAGING_SEED_MEMBER_PASSWORD`: hesla fiktivních účtů ze seedu (krok 6), min. 12 znaků, bez `#`, jiná než v produkci.
 
-Zbytek nechat (`DEPLOY_TARGET=staging`, `PORT=3100`, prázdné `SMTP_*`). Deploy skript odmítne pokračovat, pokud tyto hodnoty nesedí.
+Zbytek nechat (`DEPLOY_TARGET=staging`, `PORT=3100`, prázdné `SMTP_*`). Deploy skript odmítne pokračovat, pokud tyto hodnoty nesedí nebo `DATABASE_URL` nemíří na DB končící `_staging`.
 
 ## 4. Heslo pro staging (HTTP basic auth)
 
@@ -84,6 +86,8 @@ Pokud produkční nginx konfigurace není v `sites-available`, ale v `conf.d/`, 
 
 ## 6. Zapnutí deploye
 
+GitHub → Settings → Environments → **New environment** `staging` se secrets `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY` (stejný server a uživatel jako produkce, `SERVER-SETUP.md` §7; required reviewer netřeba).
+
 GitHub → Settings → Secrets and variables → Actions → záložka **Variables** → **New repository variable**:
 
 ```
@@ -96,14 +100,14 @@ Pak GitHub → Actions → **Deploy to Staging** → **Run workflow** (větev `m
 Po prvním zeleném deployi naplnit staging fiktivními daty:
 
 ```bash
-reathyze$ cd /home/reathyze/chata-staging && npm run db:seed
+reathyze$ cd /home/reathyze/chata-staging/current && npm run db:seed
 ```
 
 Vznikne chata `demo` („Testovací chata“) s účty `demo-spravce` (role admin, heslo `STAGING_SEED_ADMIN_PASSWORD`), `demo-jana` a `demo-petr` (heslo `STAGING_SEED_MEMBER_PASSWORD`) a ukázkovými rezervacemi, nákupy, poznámkou k měsíci a chatem. Seed jde spustit opakovaně: v chatě `demo` smaže a znovu vytvoří rezervace, nákupy, poznámky k měsíci a chat (změny testerů v nich zmizí, ostatní moduly jako galerie nebo deník zůstanou), tři demo účty vrátí do výchozího stavu, nic nezduplikuje a jiných chat se nedotkne. Bez `DEPLOY_TARGET=staging` a DB končící na `_staging` skončí chybou.
 
 ## 7. Ověření
 
-- [ ] Workflow **Deploy to Staging** je zelený, v logu je `Guards passed: target=staging …` a `Server is healthy`.
+- [ ] Workflow **Deploy to Staging** je zelený, v logu je `Guards passed: target=staging …`, `Healthy after …` a `Deployed main-…`; žádný `npm run build`.
 - [ ] `https://staging.kdynachatu.cz` chce heslo, po zadání se načte aplikace.
 - [ ] `https://kdynachatu.cz` (produkce) funguje beze změny.
 - [ ] `reathyze$ npx pm2 ls` ukazuje `chata-app` (produkce) i `chata-staging`.
