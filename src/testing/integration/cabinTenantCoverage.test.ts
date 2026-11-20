@@ -113,8 +113,6 @@ describe("tenant pokrytí: odkazy a dluhy odpovídají realitě", () => {
   test("seznam přiznaných dluhů (status gap) je explicitní a aktuální", () => {
     // Když gap získá dedikovaný itest (přepni na coveredBy), nebo přibude nový gap,
     // tenhle seznam se musí vědomě upravit — ať se dluh neplíží bez povšimnutí.
-    assert.deepEqual(coverageGaps(), [
-      "MonthlyNote",
-    ]);
+    assert.deepEqual(coverageGaps(), []);
   });
 });
