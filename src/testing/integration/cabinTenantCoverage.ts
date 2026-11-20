@@ -93,9 +93,9 @@ export const CABIN_MODEL_COVERAGE: Record<string, Coverage> = {
   User: coveredBy("auth.itest.ts"),
   Wallpaper: coveredBy("wallpapers.itest.ts"),
   InviteLink: coveredBy("invites.itest.ts"),
+  DiaryFolder: coveredBy("diary.itest.ts"),
 
   // ── Vlastní tenant endpointy, dedikovaný tenant itest zatím chybí (budoucí tickety) ──
-  DiaryFolder: coverageGap("vlastní endpointy v diary.ts; tenant itest zatím není"),
   ReconstructionItem: coverageGap("vlastní endpointy v reconstruction.ts; tenant itest zatím není"),
   InventoryItem: coverageGap("vlastní endpointy v inventory.ts; tenant itest zatím není"),
   MonthlyNote: coverageGap("endpointy měsíčních poznámek v reservations.ts; tenant itest zatím není"),
