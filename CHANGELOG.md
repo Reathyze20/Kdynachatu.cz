@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.2.0...v1.3.0) (2026-11-20)
+
+
+### Features
+
+* **deploy:** staging deploys a prebuilt artifact via deploy-release.sh ([#155](https://github.com/Reathyze20/Kdynachatu.cz/issues/155)) ([a186347](https://github.com/Reathyze20/Kdynachatu.cz/commit/a1863473518f47d882aaa523a89a3da93751c8e8))
+
 ## [1.2.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.1.0...v1.2.0) (2026-11-19)
 
 
