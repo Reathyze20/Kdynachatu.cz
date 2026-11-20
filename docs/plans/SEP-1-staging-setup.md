@@ -1,7 +1,7 @@
 # SEP-1 B3 – Příprava serveru pro staging
 
-Jednorázový postup pro `staging.kdynachatu.cz` na stávajícím VPS (`89.221.217.81`).
-Souvisí s [`SEP-1-deploy.md`](SEP-1-deploy.md). **Produkční adresář, databáze ani nginx blok se nemění.**
+Jednorázový postup pro `staging.kdynachatu.cz` na **produkčním Netcup VPS** – staging běží jako druhý proces na stejném stroji jako produkce `kdynachatu.cz` (jiný port, jiná DB, jiný adresář). Níže značí `<IP_NETCUP>` veřejnou IP toho serveru (stejnou jako A záznam produkční `kdynachatu.cz`).
+Souvisí s [`SEP-1-deploy.md`](SEP-1-deploy.md) a [`ADR-0002`](../adr/0002-hosting-a-deploy.md). **Produkční adresář, databáze ani nginx blok se nemění.**
 
 Legenda: `root$` = příkaz jako root, `reathyze$` = jako uživatel `reathyze`.
 
@@ -10,10 +10,10 @@ Legenda: `root$` = příkaz jako root, `reathyze$` = jako uživatel `reathyze`.
 U registrátora `kdynachatu.cz` přidat záznam:
 
 ```
-staging.kdynachatu.cz.   A   89.221.217.81
+staging.kdynachatu.cz.   A   <IP_NETCUP>
 ```
 
-Ověření (může trvat až hodinu): `dig +short staging.kdynachatu.cz` vrátí `89.221.217.81`.
+Ověření (může trvat až hodinu): `dig +short staging.kdynachatu.cz` vrátí `<IP_NETCUP>`.
 
 ## 2. Databáze a role
 
@@ -49,7 +49,7 @@ root$ psql "postgresql://staging_app:SEM_SILNE_HESLO@localhost:5432/NAZEV_PRODUK
 ```bash
 reathyze$ mkdir -p /home/reathyze/chata-staging
 reathyze$ cd /home/reathyze/chata-staging
-reathyze$ curl -fsSL https://raw.githubusercontent.com/Reathyze20/Cabin_Reservation_App/main/.env.staging.example -o .env
+reathyze$ curl -fsSL https://raw.githubusercontent.com/Reathyze20/Kdynachatu.cz/main/.env.staging.example -o .env
 reathyze$ chmod 600 .env
 reathyze$ nano .env
 ```
@@ -73,7 +73,7 @@ Jméno `rodina` je jen příklad. Heslo si uložte, budete ho zadávat v prohlí
 ## 5. nginx a HTTPS
 
 ```bash
-root$ curl -fsSL https://raw.githubusercontent.com/Reathyze20/Cabin_Reservation_App/main/nginx-staging.conf \
+root$ curl -fsSL https://raw.githubusercontent.com/Reathyze20/Kdynachatu.cz/main/nginx-staging.conf \
         -o /etc/nginx/sites-available/staging.kdynachatu.cz
 root$ ln -s /etc/nginx/sites-available/staging.kdynachatu.cz /etc/nginx/sites-enabled/
 root$ nginx -t && systemctl reload nginx
@@ -105,7 +105,7 @@ Vznikne chata `demo` („Testovací chata“) s účty `demo-spravce` (role admi
 
 - [ ] Workflow **Deploy to Staging** je zelený, v logu je `Guards passed: target=staging …` a `Server is healthy`.
 - [ ] `https://staging.kdynachatu.cz` chce heslo, po zadání se načte aplikace.
-- [ ] `https://chataceskestredohori.cz` funguje beze změny.
+- [ ] `https://kdynachatu.cz` (produkce) funguje beze změny.
 - [ ] `reathyze$ npx pm2 ls` ukazuje `chata-app` (produkce) i `chata-staging`.
 - [ ] Staging neobsahuje žádná rodinná data, jen fiktivní chatu `demo` ze seedu; přihlášení jako `demo-spravce` funguje.
 
