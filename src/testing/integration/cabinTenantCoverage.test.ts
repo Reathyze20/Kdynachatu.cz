@@ -116,7 +116,6 @@ describe("tenant pokrytí: odkazy a dluhy odpovídají realitě", () => {
     assert.deepEqual(coverageGaps(), [
       "DiaryFolder",
       "InventoryItem",
-      "InviteLink",
       "MonthlyNote",
       "ReconstructionItem",
     ]);
