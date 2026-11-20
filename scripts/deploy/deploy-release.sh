@@ -36,7 +36,8 @@ case "$DEPLOY_TARGET" in
   staging)
     [[ "$RELEASE_TAG" =~ ^main-[0-9a-f]{7,40}$ ]] || fail "not a staging build name (main-<sha>): '$RELEASE_TAG'"
     [ "$SOURCE_REF" = "refs/heads/main" ] || fail "staging accepts only main (got $SOURCE_REF)"
-    case "$(realpath -m "$APP_PATH")/" in
+    resolved_path=$(realpath -m "$APP_PATH") || fail "cannot resolve APP_PATH '$APP_PATH'"
+    case "$resolved_path/" in
       "$PRODUCTION_APP_PATH"/*) fail "staging must not use the production directory $PRODUCTION_APP_PATH (got $APP_PATH)" ;;
     esac
     [ "$PM2_NAME" = "chata-staging" ] || fail "staging must run as pm2 process chata-staging, never chata-app (got $PM2_NAME)"
@@ -150,7 +151,7 @@ fi
 
 echo "=== Pruning old releases (keeping $KEEP_RELEASES) ==="
 cd "$APP_PATH/releases"
-# shellcheck disable=SC2012 # release names are vX.Y.Z_<timestamp>, newest first by mtime
+# shellcheck disable=SC2012 # release names are vX.Y.Z_<timestamp> / main-<sha>_<timestamp>, newest first by mtime
 ls -1t | tail -n +"$((KEEP_RELEASES + 1))" | while read -r old; do
   [ "releases/$old" = "$(readlink "$CURRENT")" ] || rm -rf "$old"
 done
