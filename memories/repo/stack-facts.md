@@ -13,5 +13,5 @@ Scope: canonical short stack facts for AI guidance
 - Dev startup: root `npm run dev` starts backend and frontend together.
 - Frontend dev proxy expects backend on `http://localhost:3000`.
 - Production deploy uses GitHub Actions SSH deploy, PM2, and `prisma migrate deploy`.
-- Target hosting (ADR-0002, `docs/adr/0002-hosting-a-deploy.md`): one VPS, `main` deploys to staging (staging.kdynachatu.cz), production (kdynachatu.cz, family = cabin #1) only from release tag `v*` after manual approval. Until implemented, the old `rodina-stable` / SEP-1 setup is still what the workflows encode.
+- Hosting (ADR-0002, `docs/adr/0002-hosting-a-deploy.md`): one VPS, `main` deploys to staging (staging.kdynachatu.cz), production (kdynachatu.cz, family = cabin #1) only from release tag `v*` after manual approval. This model is now in effect (step 3, #63); the legacy `rodina-stable` / SEP-1 dual-track is retired and must not be used for deploys (branch kept, not deleted; to be archived under the `archive/rodina-stable` tag).
 - Production server Node/PM2 tooling lives under `/home/reathyze/.nvm`; server-side helper scripts must source NVM before calling `node`, `npm`, or `pm2`.
