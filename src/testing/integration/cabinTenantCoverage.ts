@@ -92,9 +92,9 @@ export const CABIN_MODEL_COVERAGE: Record<string, Coverage> = {
   ThreadReadStatus: coveredBy("chat.itest.ts"), // read-status tabulka; izolace ověřena v chat.itest.ts
   User: coveredBy("auth.itest.ts"),
   Wallpaper: coveredBy("wallpapers.itest.ts"),
+  InviteLink: coveredBy("invites.itest.ts"),
 
   // ── Vlastní tenant endpointy, dedikovaný tenant itest zatím chybí (budoucí tickety) ──
-  InviteLink: coverageGap("vlastní endpointy v invites.ts; tenant itest zatím není"),
   DiaryFolder: coverageGap("vlastní endpointy v diary.ts; tenant itest zatím není"),
   ReconstructionItem: coverageGap("vlastní endpointy v reconstruction.ts; tenant itest zatím není"),
   InventoryItem: coverageGap("vlastní endpointy v inventory.ts; tenant itest zatím není"),
