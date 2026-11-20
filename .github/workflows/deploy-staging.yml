@@ -1,9 +1,11 @@
 name: Deploy to Staging
 
-# Staging (staging.kdynachatu.cz) is deployed only from `main`.
-# Family production lives on `rodina-stable` and has its own deploy.yml there.
-# Disabled until the server is prepared (SEP-1 B3): set repository variable
-# STAGING_ENABLED=true (Settings → Secrets and variables → Actions → Variables).
+# Staging (staging.kdynachatu.cz) deploys every push to main (ADR-0002).
+# Everything is built here; the server (2 GB RAM shared with production) only
+# runs `npm ci --omit=dev`, migrations and a PM2 restart, via the same
+# scripts/deploy/deploy-release.sh as production with DEPLOY_TARGET=staging.
+# Disabled until the server is prepared (docs/plans/SEP-1-staging-setup.md):
+# set repository variable STAGING_ENABLED=true.
 on:
   push:
     branches: [main]
@@ -16,17 +18,21 @@ concurrency:
   group: deploy-staging
   cancel-in-progress: false
 
+env:
+  BUILD_NAME: main-${{ github.sha }}
+
 jobs:
-  preflight:
-    name: Staging Preflight
+  build:
+    name: Build staging artifact
     if: vars.STAGING_ENABLED == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Refuse to deploy anything but main
         if: github.ref != 'refs/heads/main'
         run: |
-          echo "::error::Staging deploy is allowed only from main (got ${{ github.ref }})."
+          echo "::error::Staging deploy is allowed only from main (got $GITHUB_REF)."
           exit 1
 
       - name: Checkout repository
@@ -48,37 +54,43 @@ jobs:
         run: npm ci
         working-directory: frontend-v2
 
-      - name: Run deploy preflight
+      # Prisma generate, backend typecheck, tests and Vite build (dist/frontend).
+      - name: Build and verify
         run: npm run preflight:deploy
+
+      # Same artifact as deploy.yml: node_modules are not shipped, the server
+      # installs production deps itself so native modules match its platform.
+      - name: Package release artifact
+        run: |
+          echo "$BUILD_NAME $(git rev-parse HEAD)" > RELEASE
+          tar -czf release.tgz RELEASE package.json package-lock.json tsconfig.json \
+            prisma.config.ts prisma src dist/frontend scripts/deploy
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: staging-${{ github.sha }}
+          path: release.tgz
+          retention-days: 7
+          if-no-files-found: error
 
   deploy:
     name: Deploy to Staging Server
     runs-on: ubuntu-latest
-    needs: preflight
+    needs: build
+    timeout-minutes: 20
     environment:
       name: staging
       url: https://staging.kdynachatu.cz
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - name: Download release artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: staging-${{ github.sha }}
 
-      - name: Package release bundle
-        run: |
-          tar \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=.env \
-            --exclude=node_modules \
-            --exclude=frontend-v2/node_modules \
-            --exclude=dist \
-            --exclude=data \
-            --exclude=release.tgz \
-            --exclude=src/generated/prisma \
-            -czf release.tgz . || [ $? -eq 1 ]
-
-      - name: Upload release bundle to server
-        uses: appleboy/scp-action@master
+      - name: Upload release artifact to server
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0, SHA-pinned: gets the SSH key
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -87,23 +99,25 @@ jobs:
           source: release.tgz
           target: /tmp/chata-staging-upload/
 
-      - name: Run guarded deploy script on server
-        uses: appleboy/ssh-action@master
+      - name: Run release deploy script on server
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         env:
           DEPLOY_TARGET: staging
           APP_PATH: /home/reathyze/chata-staging
           PM2_NAME: chata-staging
           APP_PORT: '3100'
           SOURCE_REF: ${{ github.ref }}
+          RELEASE_TAG: ${{ env.BUILD_NAME }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          envs: DEPLOY_TARGET,APP_PATH,PM2_NAME,APP_PORT,SOURCE_REF
+          command_timeout: 15m
+          envs: DEPLOY_TARGET,APP_PATH,PM2_NAME,APP_PORT,SOURCE_REF,RELEASE_TAG
           script: |
             set -e
             UPLOAD=/tmp/chata-staging-upload
-            # Run the script from the uploaded bundle, not from the server copy.
-            tar -xzOf "$UPLOAD/release.tgz" ./scripts/deploy/remote-deploy.sh > "$UPLOAD/remote-deploy.sh"
-            RELEASE_BUNDLE="$UPLOAD/release.tgz" bash "$UPLOAD/remote-deploy.sh"
+            # Run the script from the uploaded artifact, not from the server copy.
+            tar -xzOf "$UPLOAD/release.tgz" scripts/deploy/deploy-release.sh > "$UPLOAD/deploy-release.sh"
+            RELEASE_BUNDLE="$UPLOAD/release.tgz" bash "$UPLOAD/deploy-release.sh"
