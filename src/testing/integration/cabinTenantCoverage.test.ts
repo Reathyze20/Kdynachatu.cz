@@ -115,7 +115,6 @@ describe("tenant pokrytí: odkazy a dluhy odpovídají realitě", () => {
     // tenhle seznam se musí vědomě upravit — ať se dluh neplíží bez povšimnutí.
     assert.deepEqual(coverageGaps(), [
       "MonthlyNote",
-      "ReconstructionItem",
     ]);
   });
 });
