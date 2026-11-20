@@ -152,5 +152,8 @@ describe("seedStaging – guard proti převzetí cizího uživatele", () => {
   test("odmítne převzít uživatele mimo demo chatu a nic nevytvoří", async () => {
     await assert.rejects(runStagingSeed(prisma, { ...PASSWORDS, uploadsPath }), /outside the demo cabin/);
     assert.equal(await prisma.cabin.count({ where: { subdomain: "demo" } }), 0, "demo chata nevznikla (rollback)");
+    // Fail before writing anything: soubory se zapisují až po úspěšné transakci.
+    const seedFiles = fs.readdirSync(uploadsPath).filter((n) => n.startsWith(SEED_FILE_PREFIX));
+    assert.equal(seedFiles.length, 0, "při odmítnutí nevznikl žádný seed soubor");
   });
 });

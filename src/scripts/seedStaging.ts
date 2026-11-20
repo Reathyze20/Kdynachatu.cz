@@ -18,7 +18,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/password";
 import { resolveSeedConfig, resolveUploadsPath } from "./seedStagingConfig";
-import { cleanSeedFiles, writeSeedImage, type SeedColor } from "./seedStagingFiles";
+import { cleanSeedFiles, writeSeedImage, SEED_FILE_PREFIX, type SeedColor } from "./seedStagingFiles";
 
 dotenv.config();
 
@@ -61,19 +61,33 @@ function yearMonth(offset: number): { year: number; month: number } {
 
 // ── Soubory ─────────────────────────────────────────────────────────────────
 
-/** Přepíše seed soubory (prefix `seed-`) a vrátí jejich veřejné cesty. */
-async function writeSeedImages(uploadsPath: string): Promise<SeedImages> {
+// Jediný zdroj pravdy pro seed fotky: slug + barva. Cesty i fyzické soubory z něj nemůžou utéct.
+const SEED_IMAGE_SPECS: { slug: string; color: SeedColor }[] = [
+  { slug: "cover", color: { r: 94, g: 155, b: 98 } },
+  { slug: "gallery-leto-1", color: { r: 126, g: 188, b: 232 } },
+  { slug: "gallery-leto-2", color: { r: 244, g: 208, b: 111 } },
+  { slug: "gallery-zima-1", color: { r: 176, g: 196, b: 222 } },
+  { slug: "wallpaper-1", color: { r: 60, g: 80, b: 60 } },
+  { slug: "wallpaper-2", color: { r: 40, g: 55, b: 90 } },
+];
+
+/** Veřejná cesta seed fotky (deterministická, bez IO) – jako galerie `/uploads/<name>`. */
+const seedSrc = (slug: string) => `/uploads/${SEED_FILE_PREFIX}${slug}.webp`;
+
+/** Deterministické cesty fotek pro DB (bez zápisu souborů) – aby šel seed „fail before write“. */
+function buildSeedImages(): SeedImages {
+  return {
+    cover: seedSrc("cover"),
+    galleryLeto: [seedSrc("gallery-leto-1"), seedSrc("gallery-leto-2")],
+    galleryZima: seedSrc("gallery-zima-1"),
+    wallpapers: [seedSrc("wallpaper-1"), seedSrc("wallpaper-2")],
+  };
+}
+
+/** Přepíše fyzické seed soubory (prefix `seed-`). Volá se až po úspěšné DB transakci. */
+async function writeSeedImageFiles(uploadsPath: string): Promise<void> {
   await cleanSeedFiles(uploadsPath);
-  const write = (slug: string, color: SeedColor) => writeSeedImage(uploadsPath, slug, color);
-  const [cover, leto1, leto2, zima, wall1, wall2] = await Promise.all([
-    write("cover", { r: 94, g: 155, b: 98 }),
-    write("gallery-leto-1", { r: 126, g: 188, b: 232 }),
-    write("gallery-leto-2", { r: 244, g: 208, b: 111 }),
-    write("gallery-zima-1", { r: 176, g: 196, b: 222 }),
-    write("wallpaper-1", { r: 60, g: 80, b: 60 }),
-    write("wallpaper-2", { r: 40, g: 55, b: 90 }),
-  ]);
-  return { cover, galleryLeto: [leto1, leto2], galleryZima: zima, wallpapers: [wall1, wall2] };
+  await Promise.all(SEED_IMAGE_SPECS.map((s) => writeSeedImage(uploadsPath, s.slug, s.color)));
 }
 
 // ── Chata a uživatelé ─────────────────────────────────────────────────────────
@@ -373,13 +387,16 @@ async function createDemoContent(tx: Tx, cabinId: string, u: DemoUserIds, images
 /** Naseeduje demo chatu do zadané (staging / integrační) DB. Idempotentní. */
 export async function runStagingSeed(prisma: PrismaClient, options: RunSeedOptions): Promise<void> {
   const hashes = { admin: await hashPassword(options.adminPassword), member: await hashPassword(options.memberPassword) };
-  const images = await writeSeedImages(options.uploadsPath);
+  const images = buildSeedImages();
   await prisma.$transaction(async (tx) => {
     const cabin = await upsertCabin(tx, images);
     const userIds = await upsertDemoUsers(tx, cabin.id, hashes);
     await clearDemoContent(tx, cabin.id);
     await createDemoContent(tx, cabin.id, userIds, images);
   }, { timeout: 60_000 });
+  // Teprve po úspěšné DB transakci zapiš fyzické soubory. Když seed skončí chybou dřív
+  // (guard, cizí uživatel), na disku nic nevznikne – „fail before writing anything“.
+  await writeSeedImageFiles(options.uploadsPath);
 }
 
 async function main(): Promise<void> {

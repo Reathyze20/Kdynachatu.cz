@@ -1,8 +1,10 @@
 /**
  * Guard + config for `seedStaging.ts`. The seed must never touch a non-staging DB
  * (docs/plans/SEP-1-deploy.md §4.5): DEPLOY_TARGET=staging AND the DB name either ends in
- * `_staging` or contains `test` (the only exception: the disposable integration-test harness
- * DB `kdynachatu_test`, so the seed can be exercised by `npm run test:integration`).
+ * `_staging` or contains `test`. The `test` branch mirrors the integration-test DB guard
+ * (testing/integration/dbGuard.ts) so the seed can run against the disposable harness DB used by
+ * `npm run test:integration`. The known production DB `cabin_reservation` matches neither and is
+ * always refused.
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,8 +53,9 @@ export function resolveSeedConfig(env: Env): SeedConfig {
     throw new Error("DATABASE_URL is required.");
   }
   const dbName = databaseName(databaseUrl);
-  const isStaging = dbName.endsWith("_staging");
-  const isIntegrationHarness = dbName.toLowerCase().includes("test");
+  const normalizedName = dbName.toLowerCase();
+  const isStaging = normalizedName.endsWith("_staging");
+  const isIntegrationHarness = normalizedName.includes("test");
   if (!isStaging && !isIntegrationHarness) {
     throw new Error(
       `seedStaging runs only against a database ending in _staging or an integration-test DB (got '${dbName}').`,
