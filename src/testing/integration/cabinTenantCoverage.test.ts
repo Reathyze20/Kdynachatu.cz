@@ -119,7 +119,6 @@ describe("tenant pokrytí: odkazy a dluhy odpovídají realitě", () => {
       "InviteLink",
       "MonthlyNote",
       "ReconstructionItem",
-      "Wallpaper",
     ]);
   });
 });
