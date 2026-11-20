@@ -26,6 +26,7 @@
     "db:seed": "tsx src/scripts/seedStaging.ts",
     "db:migrate-json": "tsx src/scripts/migrateData.ts",
     "staging:seed-smoke": "tsx src/scripts/seedStagingSmoke.ts",
+    "verify:staging": "node scripts/verify/staging.mjs",
     "create-learning-admin": "tsx src/scripts/createLearningAdmin.ts",
     "backup:db": "tsx src/scripts/backupManager.ts backup db",
     "backup:uploads": "tsx src/scripts/backupManager.ts backup uploads",
