@@ -168,7 +168,7 @@ Kdyz failuje oboji, je to globalnejsi problem nez jen jedna feature.
 ### 2. Zkontrolovat PM2 proces
 
 ```bash
-ssh root@89.221.217.81 "su - reathyze -s /bin/bash -c 'export NVM_DIR=/home/reathyze/.nvm; . /home/reathyze/.nvm/nvm.sh; cd /home/reathyze/chata; npx pm2 list'"
+ssh root@62.83.119.156 "su - reathyze -s /bin/bash -c 'export NVM_DIR=/home/reathyze/.nvm; . /home/reathyze/.nvm/nvm.sh; cd /home/reathyze/chata; npx pm2 list'"
 ```
 
 Hledej `chata-app` ve stavu `online`. `errored` nebo restart loop je priorita cislo jedna.
@@ -176,7 +176,7 @@ Hledej `chata-app` ve stavu `online`. `errored` nebo restart loop je priorita ci
 ### 3. Zkontrolovat posledni logy
 
 ```bash
-ssh root@89.221.217.81 "su - reathyze -s /bin/bash -c 'export NVM_DIR=/home/reathyze/.nvm; . /home/reathyze/.nvm/nvm.sh; cd /home/reathyze/chata; npx pm2 logs chata-app --lines 50 --nostream'"
+ssh root@62.83.119.156 "su - reathyze -s /bin/bash -c 'export NVM_DIR=/home/reathyze/.nvm; . /home/reathyze/.nvm/nvm.sh; cd /home/reathyze/chata; npx pm2 logs chata-app --lines 50 --nostream'"
 ```
 
 Hledej hlavne:
@@ -190,7 +190,7 @@ Hledej hlavne:
 ### 4. Zkontrolovat lokalni health endpoint na serveru
 
 ```bash
-ssh root@89.221.217.81 "curl -fsS http://localhost:3000/api/health"
+ssh root@62.83.119.156 "curl -fsS http://localhost:3000/api/health"
 ```
 
 - Kdyz lokalni health funguje, ale verejny web ne, problem bude casto v Nginx nebo sitove ceste.
@@ -199,7 +199,7 @@ ssh root@89.221.217.81 "curl -fsS http://localhost:3000/api/health"
 ### 5. Overit disk a logy
 
 ```bash
-ssh root@89.221.217.81 "df -h; du -sh /home/reathyze/chata/data/logs 2>/dev/null || true"
+ssh root@62.83.119.156 "df -h; du -sh /home/reathyze/chata/data/logs 2>/dev/null || true"
 ```
 
 Pokud je disk skoro plny nebo logy narostly neumerne, nejdriv vyres tohle.
@@ -207,7 +207,7 @@ Pokud je disk skoro plny nebo logy narostly neumerne, nejdriv vyres tohle.
 ### 6. Minimalni recovery krok
 
 ```bash
-ssh root@89.221.217.81 "su - reathyze -s /bin/bash -c 'export NVM_DIR=/home/reathyze/.nvm; . /home/reathyze/.nvm/nvm.sh; cd /home/reathyze/chata; npx prisma generate; npx pm2 restart chata-app; npx pm2 save'"
+ssh root@62.83.119.156 "su - reathyze -s /bin/bash -c 'export NVM_DIR=/home/reathyze/.nvm; . /home/reathyze/.nvm/nvm.sh; cd /home/reathyze/chata; npx prisma generate; npx pm2 restart chata-app; npx pm2 save'"
 ```
 
 Tenhle krok je rozumny jen kdyz je appka spadla nebo po deployi nabehne nekonzistentne. Neni to nahrada za pochopeni root cause.

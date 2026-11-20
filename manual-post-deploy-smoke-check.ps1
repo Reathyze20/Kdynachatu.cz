@@ -1,5 +1,5 @@
 param(
-    [string]$ServerHost = "89.221.217.81",
+    [string]$ServerHost = "62.83.119.156",
     [string]$ServerUser = "root",
     [string]$AppUser = "reathyze",
     [string]$AppPath = "/home/reathyze/chata",
