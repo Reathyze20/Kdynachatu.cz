@@ -114,7 +114,6 @@ describe("tenant pokrytí: odkazy a dluhy odpovídají realitě", () => {
     // Když gap získá dedikovaný itest (přepni na coveredBy), nebo přibude nový gap,
     // tenhle seznam se musí vědomě upravit — ať se dluh neplíží bez povšimnutí.
     assert.deepEqual(coverageGaps(), [
-      "DiaryFolder",
       "InventoryItem",
       "MonthlyNote",
       "ReconstructionItem",
