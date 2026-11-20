@@ -101,7 +101,7 @@ Postup krok za krokem je ve skillu `database-migrations` (`.claude/skills/databa
 
 ## 7. Větve, PR a GitHub nastavení
 
-`main` je vývoj pro víc rodin a nasazuje se na staging. Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main` (release-please otevírá release PR, jeho merge vytvoří tag, `deploy.yml` čeká na schválení v environment `production`; ADR-0002). `rodina-stable` (`plans/SEP-1.md`) zůstává jen pro hotfixy starého nasazení, dokud ji ADR-0002 (#63) neodstraní. Větve `feat/…`, `fix/…`, `chore/…`, `docs/…` s číslem ticketu, případně `claude/…` z cloud sessions. Merge squash.
+`main` je vývoj pro víc rodin a nasazuje se na staging. Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main` (release-please otevírá release PR, jeho merge vytvoří tag, `deploy.yml` čeká na schválení v environment `production`; ADR-0002). Jednokolejný tok — žádná samostatná produkční větev; hotfix je oprava na `main` → nový release tag. (Historická dvojkolejnost `main`/`rodina-stable` ze SEP-1 je nahrazena ADR-0002, větev se nemaže a archivuje tagem `archive/rodina-stable`.) Větve `feat/…`, `fix/…`, `chore/…`, `docs/…` s číslem ticketu, případně `claude/…` z cloud sessions. Merge squash.
 
 **Nastavení na GitHubu (ručně)** – bez toho ostatní pravidla chrání jen dobrovolnost agenta:
 
