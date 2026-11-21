@@ -370,14 +370,14 @@ export function ReservationList({
             <div className="flex gap-2">
               <button
                 type="button"
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 onClick={() => setNoteModalOpen(false)}
               >
                 Zrušit
               </button>
               <button
                 type="button"
-                className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+                className="text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
                 disabled={noteText.length > NOTE_MAX_LENGTH || updateNote.isPending}
                 onClick={handleSaveNote}
               >
@@ -400,7 +400,7 @@ export function ReservationList({
             maxLength={NOTE_MAX_LENGTH + 20}
             rows={3}
             placeholder={'Např. „V březnu přijede instalatér 15.–16., buďte prosím doma."'}
-            className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition-colors"
+            className="w-full resize-none rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition-colors"
           />
           {noteSaveError ? (
             <div className="error-message show" role="alert">{noteSaveError}</div>
