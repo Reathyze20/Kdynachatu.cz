@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { getDaysInMonth, getDay, format } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CalendarCell } from "./CalendarCell";
 import type { Reservation, UserAvailability } from "@/api/reservations";
 import styles from "../Reservations.module.css";
@@ -158,11 +159,15 @@ export function CalendarGrid({
       {/* Header */}
       <div className={styles.calendarHeaderBar}>
         <div className={styles.calendarNav}>
-          <button className={styles.iconButton} onClick={onGoToPrev}>❮</button>
+          <button className={styles.iconButton} onClick={onGoToPrev} aria-label="Předchozí měsíc" title="Předchozí měsíc">
+            <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+          </button>
           <h2 className={styles.calendarTitle}>
             {MONTH_NAMES[month]} {year}
           </h2>
-          <button className={styles.iconButton} onClick={onGoToNext}>❯</button>
+          <button className={styles.iconButton} onClick={onGoToNext} aria-label="Další měsíc" title="Další měsíc">
+            <ChevronRight className="w-5 h-5" aria-hidden="true" />
+          </button>
         </div>
         <div className={styles.calendarStats}>
           {rangeStart || selectedDay ? (

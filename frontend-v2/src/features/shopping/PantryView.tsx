@@ -4,6 +4,7 @@
  * Horizontální filter chips: Chybí, Vše, + per-kategorie
  */
 import { useState, useMemo } from 'react'
+import { CircleCheck } from 'lucide-react'
 import type { InventoryItem } from '@/api/shopping'
 import { useInventory, useCreateInventoryItem, useDeleteInventoryItem } from './hooks/useInventory'
 import { useAuth } from '@/context/AuthContext'
@@ -335,7 +336,7 @@ export function PantryView({ onBack }: Props) {
             </div>
           ) : filteredInventory.length === 0 ? (
             <div className="detail-empty-state">
-              <p className="detail-empty-state-icon">✓</p>
+              <CircleCheck size={48} className="detail-empty-state-icon" aria-hidden="true" style={{ color: 'var(--status-success)' }} />
               <h3 className="detail-empty-state-title">
                 {activeFilter === 'missing' ? 'Vše je v pořádku!' : 'Žádné položky'}
               </h3>

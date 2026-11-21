@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ArrowLeft, CircleX } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
@@ -114,7 +115,7 @@ export function InvitePage() {
     return (
       <div className="invite-page" style={bgStyle} data-testid="invite-page" data-invite-step="invalid">
         <div className="invite-card invite-card-narrow" data-testid="invite-invalid-card">
-          <div className="invite-icon" style={{ fontSize: '2rem', color: '#dc2626' }}>×</div>
+          <div className="invite-icon" aria-hidden="true" style={{ color: 'var(--status-error)' }}><CircleX size={48} style={{ display: 'block', margin: '0 auto' }} /></div>
           <h2 className="invite-title">Neplatná pozvánka</h2>
           <p className="invite-text">{error}</p>
           <button className="invite-btn invite-btn-primary invite-btn-full" onClick={() => navigate('/login')} data-testid="invite-invalid-login-button">
@@ -174,9 +175,10 @@ export function InvitePage() {
             className="invite-back-btn"
             onClick={() => setStep('welcome')}
             title="Zpět"
+            aria-label="Zpět"
             data-testid="invite-back-button"
           >
-            ←
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </button>
           <h2 className="invite-heading" style={{ margin: 0, fontSize: '1.15rem' }}>
             Vytvořte si účet — {inviteInfo.cabinName}

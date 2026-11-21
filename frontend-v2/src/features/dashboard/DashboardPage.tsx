@@ -18,6 +18,7 @@ import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { motion } from "framer-motion";
+import { TriangleAlert } from "lucide-react";
 
 // ─── Skeletons ────────────────────────────────────────────────────────
 
@@ -359,7 +360,7 @@ export function DashboardPage() {
       {/* Cabin error banner */}
       {cabinError && (
         <div className="essential-warning-banner" style={{ borderLeftColor: 'var(--status-warning)' }}>
-          <span style={{ fontSize: '1.25rem' }}>⚠</span>
+          <TriangleAlert className="w-5 h-5 inline-block align-middle mr-2" aria-hidden="true" style={{ color: 'var(--status-warning)' }} />
           <span>Nepodařilo se načíst nastavení chaty — některé widgety nemusí fungovat správně.</span>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Plus, ChevronDown, PenLine } from "lucide-react";
+import { Plus, ChevronDown, PenLine, X } from "lucide-react";
 import type { Reservation } from "@/api/reservations";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal } from "@/components/shared/Modal";
@@ -261,7 +261,7 @@ export function ReservationList({
               onClick={onClearDayFilter}
               aria-label="Zrušit filtr dne"
             >
-              ×
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </motion.div>
         )}

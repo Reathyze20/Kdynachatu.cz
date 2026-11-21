@@ -85,9 +85,7 @@
 .nudge-action { border-left-color: #2563eb; }
 .nudge-warn { border-left-color: var(--status-warning, #d97706); }
 
-.nudge-emoji {
-  font-size: 1.2rem;
-  line-height: 1;
+.nudge-icon {
   flex-shrink: 0;
 }
 

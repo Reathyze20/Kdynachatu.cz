@@ -3,6 +3,7 @@
  * Obsahuje editor textu, přikládání fotek a navigaci mezi dny
  */
 import { useState, useEffect, useRef } from 'react'
+import { X } from 'lucide-react'
 import type { DiaryEntry } from '@/api/diary'
 import { useSaveDiaryEntry, useDeleteDiaryEntry } from './hooks/useDiary'
 import { usePhotosByIds } from '@/features/gallery/hooks/useGallery'
@@ -239,7 +240,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
                     onClick={() => removePhoto(photo.id)}
                     aria-label="Odebrat fotku"
                   >
-                    ×
+                    <X className="w-4 h-4 inline-block align-middle" aria-hidden="true" />
                   </button>
                 </div>
               ))}

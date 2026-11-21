@@ -1048,6 +1048,11 @@
   padding: 1px 0;
 }
 
+.msg-cb-icon {
+  flex-shrink: 0;
+  transform: translateY(0.15em);
+}
+
 .msg-cb-done {
   color: #16a34a;
 }

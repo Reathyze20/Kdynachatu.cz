@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import type { DashboardGalleryData, DashboardNotesData } from "@/api/dashboard";
 import { formatCount } from "@/lib/utils";
-import { Camera, MessageCircle, BookOpen } from "lucide-react";
+import { Camera, MessageCircle, BookOpen, ChevronRight } from "lucide-react";
 
 interface Props {
   gallery: DashboardGalleryData | null;
@@ -46,7 +46,7 @@ export function QuickLinksWidget({ gallery, notes }: Props) {
                 }
               </span>
             </div>
-            <span className="quick-link-arrow">→</span>
+            <span className="quick-link-arrow" aria-hidden="true"><ChevronRight className="w-4 h-4" /></span>
           </button>
 
           {/* Chat link */}
@@ -70,7 +70,7 @@ export function QuickLinksWidget({ gallery, notes }: Props) {
             {noteCount > 0 && (
               <span className="quick-link-badge">{noteCount}</span>
             )}
-            <span className="quick-link-arrow">→</span>
+            <span className="quick-link-arrow" aria-hidden="true"><ChevronRight className="w-4 h-4" /></span>
           </button>
 
           {/* Diary link */}
@@ -86,7 +86,7 @@ export function QuickLinksWidget({ gallery, notes }: Props) {
               <span className="quick-link-label">Deník</span>
               <span className="quick-link-meta">Zápisky z pobytů</span>
             </div>
-            <span className="quick-link-arrow">→</span>
+            <span className="quick-link-arrow" aria-hidden="true"><ChevronRight className="w-4 h-4" /></span>
           </button>
         </div>
       </div>

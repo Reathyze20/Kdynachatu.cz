@@ -143,7 +143,7 @@ export function useCheckoutReservation() {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
     },
     onSuccess: () => {
-      showToast("Odjezdový checklist dokončen ✓", "success");
+      showToast("Odjezdový checklist dokončen", "success");
     },
   });
 }
