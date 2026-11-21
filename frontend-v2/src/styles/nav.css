@@ -513,6 +513,13 @@
   }
 
   /* ── Mobile Bottom Nav — Core 5 ────────────────────────────── */
+  /* Jediný zdroj výšky lišty bez bezpečné zóny (#196): 6 px odsazení nahoře
+     i dole + 1 px rámeček + záložka asi 53 px. Používá ji offset obsahu
+     (#page-container) i přepínač zen módu (ZenMode.css). */
+  :root {
+    --mobile-nav-height: 66px;
+  }
+
   .mobile-nav {
     display: flex !important;
     position: fixed;
@@ -529,6 +536,7 @@
     /* Odsazení drží zelené pozadí aktivní záložky od všech okrajů lišty (#192) */
     padding: 6px 8px;
     padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    min-height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-nav-link {
@@ -559,6 +567,6 @@
   /* ── Content offset — fixed header + fixed bottom nav ──────── */
   #page-container {
     padding-top: 64px !important;
-    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(var(--mobile-nav-height) + 10px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }

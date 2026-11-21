@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import layoutCssRaw from '@/styles/layout.css?raw'
 import dashboardCssRaw from '@/styles/dashboard.css?raw'
 import navCssRaw from '@/styles/nav.css?raw'
+import zenModeCssRaw from '@/features/dashboard/ZenMode.css?raw'
 
 /**
  * CSS kontrakt desktop rámu #1b (#171). jsdom neumí media queries ani layout,
@@ -171,5 +172,40 @@ describe('Spodní mobilní lišta — zvýraznění aktivní záložky (#192)', 
 
   it('na desktopu zůstává lišta skrytá', () => {
     expect(declarationsAt(navCssRaw, '.mobile-nav', 1024).get('display')).toBe('none')
+  })
+})
+
+describe('Výška spodní mobilní lišty — jeden zdroj pravdy (#196)', () => {
+  const NAV_HEIGHT = 'var(--mobile-nav-height)'
+
+  it('nav.css definuje výšku lišty jednou proměnnou na mobilu a lišta z ní vychází', () => {
+    const height = declarationsAt(navCssRaw, ':root', 375).get('--mobile-nav-height') ?? ''
+    // Lišta po #194: 6 px odsazení nahoře i dole + 1 px rámeček + záložka asi 53 px = asi 66 px.
+    expect(sumPxIgnoringEnv(height)).toBeGreaterThanOrEqual(66)
+    const minHeight = declarationsAt(navCssRaw, '.mobile-nav', 375).get('min-height') ?? ''
+    expect(minHeight).toContain(NAV_HEIGHT)
+    expect(minHeight).toMatch(/env\(safe-area-inset-bottom/)
+  })
+
+  it('na desktopu proměnná výšky lišty není potřeba', () => {
+    expect(declarationsAt(navCssRaw, ':root', 1024).has('--mobile-nav-height')).toBe(false)
+  })
+
+  it.each([360, 375, 768])('na šířce %i px je přepínač zen módu nad lištou s odstupem včetně bezpečné zóny', (width) => {
+    const bottom = declarationsAt(zenModeCssRaw, '.zen-mode-toggle', width).get('bottom') ?? ''
+    expect(bottom).toContain(NAV_HEIGHT)
+    expect(bottom).toMatch(/env\(safe-area-inset-bottom/)
+    expect(sumPxIgnoringEnv(bottom.replace(NAV_HEIGHT, ''))).toBeGreaterThanOrEqual(8)
+  })
+
+  it('obsah stránky odsazuje lištu stejnou proměnnou včetně bezpečné zóny', () => {
+    const bottom = paddingAt(navCssRaw, '#page-container', 375).bottom
+    expect(bottom).toContain(NAV_HEIGHT)
+    expect(bottom).toMatch(/env\(safe-area-inset-bottom/)
+  })
+
+  it('na desktopu zůstává přepínač zen módu na původním místě', () => {
+    expect(declarationsAt(zenModeCssRaw, '.zen-mode-toggle', 1024).get('bottom')).toBe('var(--space-xl, 24px)')
+    expect(declarationsAt(zenModeCssRaw, '.zen-mode-toggle', 1024).get('left')).toBe('var(--space-xl, 24px)')
   })
 })
