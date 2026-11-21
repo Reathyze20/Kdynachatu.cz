@@ -4,13 +4,13 @@ import assert from "node:assert/strict";
 import type { Express } from "express";
 import prisma from "../../utils/prisma";
 import { calendarTodayIso } from "../../backend/routes/reservationHelpers";
-import { as, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
+import { as, recordRealtimeEmits, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
 
 let app: Express;
 let world: TestWorld;
 
 /** Pobyt, který končí dnes (místní den v Praze, stejně jako dashboard route). */
-async function createStayEndingToday(owner: TestUser, extra: { handoverNote?: string } = {}): Promise<string> {
+async function createStayEndingToday(owner: TestUser, extra: { handoverNote?: string; status?: "primary" | "backup" | "soft" } = {}): Promise<string> {
   const today = new Date(calendarTodayIso(new Date()));
   const reservation = await prisma.reservation.create({
     data: {
@@ -77,5 +77,69 @@ describe("handover: the departure gate follows isCheckoutCompleted", () => {
     const resB = await dashboardAs(world.memberB);
     assert.equal(resB.body.departingToday, true);
     assert.equal(resB.body.departingReservationId, stayB);
+  });
+});
+
+describe("handover: PATCH /checkout notifies the cabin in realtime", () => {
+  test("completing the handover emits reservation:updated with the PUT payload, only to the caller's cabin room", async () => {
+    // backup: PUT /:id níže nesmí narazit na kolizi s jiným potvrzeným pobytem z dřívějších testů
+    const id = await createStayEndingToday(world.memberA, { status: "backup" });
+    const recorder = recordRealtimeEmits();
+    try {
+      const checkout = await as(app, world.memberA)
+        .patch(`/api/reservations/${id}/checkout`)
+        .send({ checkoutState: { note: "Klíč je u souseda" } });
+      assert.equal(checkout.status, 200);
+      assert.deepEqual(recorder.emits.map((e) => [e.room, e.event]), [[`cabin:${world.cabinA.id}`, "reservation:updated"]]);
+      const checkoutPayload = recorder.emits[0].data;
+
+      // Stejný payload jako úprava rezervace přes PUT /:id (beze změny dat)
+      const put = await as(app, world.memberA).put(`/api/reservations/${id}`).send({});
+      assert.equal(put.status, 200);
+      assert.deepEqual(checkoutPayload, put.body);
+      assert.equal((checkoutPayload as { id: string }).id, id);
+    } finally {
+      recorder.restore();
+    }
+  });
+
+  test("updating the state of an already completed handover emits reservation:updated again", async () => {
+    const id = await createStayEndingToday(world.memberA);
+    await as(app, world.memberA).patch(`/api/reservations/${id}/checkout`).send({});
+    const recorder = recordRealtimeEmits();
+    try {
+      const res = await as(app, world.adminA)
+        .patch(`/api/reservations/${id}/checkout`)
+        .send({ checkoutState: { note: "Doplněno" } });
+      assert.equal(res.status, 200);
+      assert.deepEqual(recorder.emits.map((e) => [e.room, e.event]), [[`cabin:${world.cabinA.id}`, "reservation:updated"]]);
+    } finally {
+      recorder.restore();
+    }
+  });
+
+  test("a repeated PATCH without checkoutState changes nothing and emits nothing", async () => {
+    const id = await createStayEndingToday(world.memberA);
+    await as(app, world.memberA).patch(`/api/reservations/${id}/checkout`).send({});
+    const recorder = recordRealtimeEmits();
+    try {
+      const res = await as(app, world.memberA).patch(`/api/reservations/${id}/checkout`).send({});
+      assert.equal(res.status, 200);
+      assert.deepEqual(recorder.emits, []);
+    } finally {
+      recorder.restore();
+    }
+  });
+
+  test("checking out another cabin's stay (404) emits nothing to any room", async () => {
+    const stayB = await createStayEndingToday(world.memberB);
+    const recorder = recordRealtimeEmits();
+    try {
+      const res = await as(app, world.memberA).patch(`/api/reservations/${stayB}/checkout`).send({ checkoutState: { note: "cizí" } });
+      assert.equal(res.status, 404);
+      assert.deepEqual(recorder.emits, []);
+    } finally {
+      recorder.restore();
+    }
   });
 });

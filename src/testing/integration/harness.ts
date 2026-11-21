@@ -93,13 +93,13 @@ export function as(app: Express, user: TestUser) {
 export function recordRealtimeEmits() {
   const io = getIO();
   if (!io) throw new Error("Socket.IO není inicializované – zavolejte nejdřív setupIntegrationFile().");
-  const emits: { room: string; event: string }[] = [];
+  const emits: { room: string; event: string; data: unknown }[] = [];
   const originalTo = io.to.bind(io);
   io.to = ((room: Parameters<typeof io.to>[0]) => {
     const operator = originalTo(room);
     const originalEmit = operator.emit.bind(operator);
     operator.emit = ((event: string, ...args: unknown[]) => {
-      emits.push({ room: String(room), event });
+      emits.push({ room: String(room), event, data: args[0] });
       return originalEmit(event, ...(args as []));
     }) as typeof operator.emit;
     return operator;

@@ -212,6 +212,56 @@ async function loadParticipantsPayload(reservationId: string): Promise<Participa
   }));
 }
 
+const RESERVATION_PAYLOAD_SELECT = {
+  id: true,
+  userId: true,
+  dateFrom: true,
+  dateTo: true,
+  purpose: true,
+  notes: true,
+  handoverNote: true,
+  status: true,
+  user: { select: { username: true, color: true, animalIcon: true } },
+} satisfies Prisma.ReservationSelect;
+
+type ReservationPayloadRow = Prisma.ReservationGetPayload<{ select: typeof RESERVATION_PAYLOAD_SELECT }>;
+
+/** Rezervace ve tvaru, který vrací PUT /:id a posílá event reservation:updated. */
+function toReservationPayload(r: ReservationPayloadRow, participants: ParticipantPayload[]) {
+  return {
+    id: r.id,
+    userId: r.userId,
+    username: r.user.username,
+    from: formatReservationDate(r.dateFrom),
+    to: formatReservationDate(r.dateTo),
+    purpose: r.purpose,
+    notes: r.notes,
+    handoverNote: r.handoverNote,
+    status: r.status,
+    userColor: r.user.color,
+    userAnimalIcon: r.user.animalIcon,
+    participants,
+  };
+}
+
+/**
+ * Pošle členům chaty reservation:updated se stejným payloadem jako PUT /:id.
+ * cabinId musí pocházet z přihlášeného uživatele; dotaz ho filtruje i tady.
+ * Best-effort: zápis už proběhl, takže selhání notifikace jen zaloguje a nevrací klientovi 500.
+ */
+async function emitReservationUpdated(cabinId: string, reservationId: string): Promise<void> {
+  try {
+    const row = await prisma.reservation.findFirst({
+      where: { id: reservationId, cabinId },
+      select: RESERVATION_PAYLOAD_SELECT,
+    });
+    if (!row) return;
+    emitToCabin(cabinId, "reservation:updated", toReservationPayload(row, await loadParticipantsPayload(reservationId)));
+  } catch (error) {
+    logger.error("RESERVATIONS", "Realtime reservation:updated emit failed", { error: String(error), reservationId });
+  }
+}
+
 // ============================================================================
 //                        GET ALL RESERVATIONS
 // ============================================================================
@@ -637,20 +687,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
       });
     }
 
-    const updatedPayload = {
-      id: updated.id,
-      userId: updated.userId,
-      username: updated.user.username,
-      from: updated.dateFrom.toISOString().split("T")[0],
-      to: updated.dateTo.toISOString().split("T")[0],
-      purpose: updated.purpose,
-      notes: updated.notes,
-      handoverNote: updated.handoverNote,
-      status: updated.status,
-      userColor: updated.user.color,
-      userAnimalIcon: updated.user.animalIcon,
-      participants,
-    };
+    const updatedPayload = toReservationPayload(updated, participants);
 
     emitToCabin(req.user!.cabinId!, "reservation:updated", updatedPayload);
 
@@ -1057,6 +1094,10 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
           checkoutState: true,
         },
       });
+      // State changed → notify the cabin; a bare repeat changes nothing and stays silent
+      if (cleanState !== undefined) {
+        await emitReservationUpdated(cabinId, id);
+      }
       // Resolve username of the person who completed it
       let completedByUsername: string | null = null;
       if (full?.checkoutCompletedBy) {
@@ -1098,6 +1139,9 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
       completedBy: req.user.userId,
       cabinId,
     });
+
+    // Notify the cabin right away, otherwise a stale departure banner could overwrite checkoutState
+    await emitReservationUpdated(cabinId, id);
 
     res.json({
       message: "Odjezdový checklist dokončen.",
