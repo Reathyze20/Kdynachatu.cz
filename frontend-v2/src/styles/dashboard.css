@@ -62,12 +62,41 @@
   color: var(--color-text, inherit);
 }
 
-/* ── Nudge tray (coordination prompts) ───────────────────────────────────── */
-.nudge-tray {
+/* ── „Visí na vás“ (NudgeTray, #172): upozornění jako jedna akční karta ── */
+.your-tasks {
+  gap: var(--space-sm);
+}
+
+.your-tasks__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nudge.nudge--first {
+  background: var(--brand-primary-light);
+}
+
+.nudge-cta {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: var(--space-xs);
+}
+
+.your-tasks__more {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  cursor: pointer;
 }
 
 .nudge {
@@ -96,11 +125,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
 }
 
 .nudge-title {
@@ -119,8 +143,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: none;
   background: transparent;
