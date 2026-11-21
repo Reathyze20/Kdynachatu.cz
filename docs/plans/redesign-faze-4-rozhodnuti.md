@@ -26,7 +26,7 @@ export z pickeru.
 
 ## Kde to stojí
 
-- Fáze 1 (vize) ✅ · Fáze 2 (katalog) ✅ · Fáze 3 (rozsah) ✅ · **Fáze 4 běží**.
+- Fáze 1 (vize) ✅ · Fáze 2 (katalog) ✅ · Fáze 3 (rozsah) ✅ · Fáze 4 (design) ✅ · **Fáze 5 (stavba) běží** → rozpad na tickety viz [redesign-faze-5-rozpad.md](redesign-faze-5-rozpad.md).
 - Pravidla FE/UX odsouhlasena → [redesign-faze-4-pravidla.md](redesign-faze-4-pravidla.md)
   (A–H, pevné volby C4a zmírnit sklo · C5a lehké pozadí · H1a umírněná osobnost chaty).
 - **Formát návrhů = „Akcion picker".** Samostatné single-file HTML v `docs/design/`, jedna
