@@ -18,6 +18,7 @@ import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
+import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import { motion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
 
@@ -343,7 +344,7 @@ export function DashboardPage() {
   const gridWidgets = collapsibleWidgets.filter((w) => !w.isEmpty);
   const emptyWidgets = collapsibleWidgets.filter((w) => w.isEmpty);
 
-  return (
+  const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
       {/* Winter banner */}
       {isWinterized && (
@@ -454,4 +455,7 @@ export function DashboardPage() {
       ) : null)}
     </div>
   );
+
+  // Rám #1b: hlavní sloupec; boční panel (další příjezd, dochází) doplní T2.
+  return <TwoColumnLayout>{mainColumn}</TwoColumnLayout>;
 }

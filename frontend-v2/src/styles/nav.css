@@ -1,5 +1,5 @@
 /* ============================================================================
-   Navigation — Top Bar, App Nav, User Info, Mobile Bottom Nav
+   Navigation — Top Bar, User Info, Desktop Sidebar, Mobile Bottom Nav
    ============================================================================ */
 .top-bar {
   display: flex;
@@ -16,13 +16,6 @@
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.05),
     0 1px 0 rgba(0, 0, 0, 0.03);
-}
-
-/* ── Left group: Logo + Nav Links ────────────────────────────── */
-.nav-left-group {
-  display: flex;
-  align-items: center;
-  gap: 32px;
 }
 
 /* ── Brand Logo Lockup (Nav) ──────────────────────────────────── */
@@ -79,54 +72,6 @@
   font-size: 0.95rem;
   margin: 0 0 1.5rem 0;
   font-weight: 500;
-}
-
-.app-nav {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-}
-
-.app-nav .nav-link {
-  position: relative;
-  text-decoration: none;
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: var(--font-size-base);
-  padding: 4px 0;
-  white-space: nowrap;
-  transition: color 0.2s ease;
-}
-
-.app-nav .nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 2px;
-  background-color: var(--color-primary);
-  width: 100%;
-  border-radius: 2px 2px 0 0;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.app-nav .nav-link:hover {
-  color: var(--text-main);
-}
-
-.app-nav .nav-link:hover::after {
-  transform: scaleX(1);
-}
-
-.app-nav .nav-link.active {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.app-nav .nav-link.active::after {
-  transform: scaleX(1);
 }
 
 .user-info {
@@ -555,11 +500,6 @@
     background-repeat: repeat-x;
     background-size: 60px 10px;
     pointer-events: none;
-  }
-
-  /* Hide desktop nav links on mobile */
-  .app-nav {
-    display: none !important;
   }
 
   /* Completely remove top bar on mobile */
