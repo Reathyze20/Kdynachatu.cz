@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
-import { TopBar } from './TopBar'
+import { DesktopSidebar } from './DesktopSidebar'
 import { MobileHeader } from './MobileHeader'
 import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -64,9 +64,6 @@ export function AppShell() {
     <div className="app-wrapper" data-testid="app-shell">
       <a href="#page-container" className="skip-to-content">Přeskočit navigaci</a>
       <div id="app-section" className="app-container">
-        {/* Offline banner */}
-        <OfflineBanner />
-
         {/* Mobile header */}
         <MobileHeader
           animalIcon={animalIcon}
@@ -74,8 +71,11 @@ export function AppShell() {
           onOpenProfileDrawer={() => setProfileDrawerOpen(true)}
         />
 
-        {/* Desktop top bar */}
-        <TopBar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
+        {/* Desktop rám #1b: levý sidebar s profilovým menu (bez horní lišty, #205)
+            + obsah s omezenou čitelnou šířkou (na mobilu display: contents) */}
+        <DesktopSidebar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
+        <div className="app-shell-body">
+        <OfflineBanner />
 
         {/* Page content with route transitions */}
         <main id="page-container" data-testid="app-shell-main">
@@ -106,6 +106,7 @@ export function AppShell() {
             </AnimatePresence>
           </motion.div>
         </main>
+        </div>
 
         {/* Mobile bottom navigation */}
         <MobileNav />

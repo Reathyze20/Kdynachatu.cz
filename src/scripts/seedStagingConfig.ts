@@ -1,7 +1,14 @@
 /**
  * Guard + config for `seedStaging.ts`. The seed must never touch a non-staging DB
- * (docs/plans/SEP-1-deploy.md §4.5): DEPLOY_TARGET=staging AND DB name ends in `_staging`.
+ * (docs/plans/SEP-1-deploy.md §4.5): DEPLOY_TARGET=staging AND the DB name either ends in
+ * `_staging` or contains `test`. The `test` branch mirrors the integration-test DB guard
+ * (testing/integration/dbGuard.ts) so the seed can run against the disposable harness DB used by
+ * `npm run test:integration`. The known production DB `cabin_reservation` matches neither and is
+ * always refused.
  */
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 export interface SeedConfig {
   databaseUrl: string;
   adminPassword: string;
@@ -10,7 +17,24 @@ export interface SeedConfig {
 
 type Env = Record<string, string | undefined>;
 
+/** Fiktivní účty demo chaty. Sdílí je seed a přihlašovací rychlovolba na stagingu
+ * (src/backend/routes/demoAccounts.ts); admin má STAGING_SEED_ADMIN_PASSWORD, ostatní MEMBER. */
+export const DEMO_USERS = [
+  { key: "admin", username: "demo-spravce", email: "demo-spravce@example.invalid", role: "admin", color: "#AB47BC", animalIcon: "liska" },
+  { key: "jana", username: "demo-jana", email: "demo-jana@example.invalid", role: "user", color: "#42A5F5", animalIcon: "veverka" },
+  { key: "petr", username: "demo-petr", email: "demo-petr@example.invalid", role: "user", color: "#66BB6A", animalIcon: "jezek" },
+] as const;
+
 const MIN_PASSWORD_LENGTH = 12;
+
+/** Cesta uploadů pro seed – z UPLOADS_PATH, jinak default `data/uploads` (shodně s config.ts).
+ * Config.ts nejde importovat (process.exit bez JWT_SECRET), proto se čte env tady. */
+export function resolveUploadsPath(env: Env): string {
+  const fromEnv = env.UPLOADS_PATH?.trim();
+  if (fromEnv) return fromEnv;
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  return path.resolve(here, "../../data/uploads");
+}
 
 function databaseName(url: string): string {
   try {
@@ -37,8 +61,13 @@ export function resolveSeedConfig(env: Env): SeedConfig {
     throw new Error("DATABASE_URL is required.");
   }
   const dbName = databaseName(databaseUrl);
-  if (!dbName.endsWith("_staging")) {
-    throw new Error(`seedStaging runs only against a database ending in _staging (got '${dbName}').`);
+  const normalizedName = dbName.toLowerCase();
+  const isStaging = normalizedName.endsWith("_staging");
+  const isIntegrationHarness = normalizedName.includes("test");
+  if (!isStaging && !isIntegrationHarness) {
+    throw new Error(
+      `seedStaging runs only against a database ending in _staging or an integration-test DB (got '${dbName}').`,
+    );
   }
   return {
     databaseUrl,

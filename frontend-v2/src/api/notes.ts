@@ -1,5 +1,4 @@
 // Types for the Notes / Chat module
-
 export interface NoteReaction {
   emoji: string;
   count: number;
@@ -37,12 +36,6 @@ export interface NoteThread {
   lastMessageAt?: string | null;
   lastMessageBy?: string | null;
   hasUnread?: boolean;
-}
-
-export interface ShoppingList {
-  id: string;
-  name: string;
-  items?: { purchased: boolean }[];
 }
 
 export interface SendNotePayload {

@@ -1,10 +1,14 @@
 /* ============================================================================
    Base Reset & Global Styles
    ============================================================================ */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Reset je ve vrstvě base (za preflightem Tailwindu), aby ho utility jako mt-3,
+   p-4 nebo space-y-3 přebily. Nevrstvené CSS by přebilo každou vrstvu (#200). */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 body,

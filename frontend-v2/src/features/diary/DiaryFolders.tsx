@@ -2,6 +2,7 @@
  * DiaryFolders.tsx — Grid složek deníku s filtrem období a hover akcemi
  */
 import { useState } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import type { DiaryFolder } from '@/api/diary'
 import { formatCount } from '@/lib/utils'
 
@@ -115,16 +116,18 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder 
               <button
                 className="icon-btn edit-folder-btn"
                 title="Přejmenovat"
+                aria-label="Přejmenovat"
                 onClick={() => onRename(folder)}
               >
-                ✎
+                <Pencil className="w-4 h-4" aria-hidden="true" />
               </button>
               <button
                 className="icon-btn delete-folder-btn"
                 title="Smazat"
+                aria-label="Smazat"
                 onClick={() => onDelete(folder)}
               >
-                ×
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>

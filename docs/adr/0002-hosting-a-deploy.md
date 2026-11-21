@@ -27,6 +27,6 @@ SEP-1 (9/2026) zmrazil rodinnou produkci na větvi `rodina-stable` (jen hotfixy)
 - **Domény:** `kdynachatu.cz` = produkce (rodina se přihlašuje tam; registrace platí do 2027-02-23 – prodloužit), `staging.kdynachatu.cz` za HTTP basic auth. Stará `chataceskestredohori.cz` vypršela 2026-09-27, redirect proto odpadá.
 - **Data:** produkce startuje ze zálohy 2026-11-06 (DB + uploady); novější data neexistují. Před migrací kontrola počtů, po ní smoke test.
 - **`rodina-stable`** se po přechodu archivuje (tagy zůstanou); pravidla o ní v `CLAUDE.md`, SDLC a `.github/` se odstraní spolu s implementací tohoto ADR.
-- Stávající pojistky zůstávají: `scripts/deploy/remote-deploy.sh` odmítne špatný ref, `deploy-staging.yml` je vypnutý do nastavení serveru (`STAGING_ENABLED`).
+- Stávající pojistky zůstávají: `scripts/deploy/deploy-release.sh` odmítne špatný ref i cíl (staging nesmí na produkční adresář, port, PM2 proces ani DB), `deploy-staging.yml` je vypnutý do nastavení serveru (`STAGING_ENABLED`).
 - Rychlá cesta do produkce zvyšuje riziko úniku dat mezi chatami → tenant-isolation testy (krok 4) jsou povinné dřív než členství (krok 7).
 - Přehodnotit při komerčním spuštění (managed DB, oddělený staging stroj, kontejnery).

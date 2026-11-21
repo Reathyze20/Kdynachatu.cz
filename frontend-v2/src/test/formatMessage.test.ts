@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatMessage } from '@/features/notes/formatMessage'
+import { CHECK_DONE_ICON, CHECK_TODO_ICON, formatMessage } from '@/features/notes/formatMessage'
 import { escapeHtml } from '@/lib/utils'
 
 const render = (raw: string) => formatMessage(escapeHtml(raw))
@@ -18,10 +18,18 @@ describe('formatMessage', () => {
     expect(html).toBe(
       '<div class="msg-protocol">'
       + '<span class="msg-line"><strong>Odjezd z chaty:</strong></span>'
-      + '<span class="msg-cb msg-cb-done">✓ <span>Zamčeno</span></span>'
-      + '<span class="msg-cb msg-cb-todo">○ <span>Vypnutá voda</span></span>'
+      + `<span class="msg-cb msg-cb-done">${CHECK_DONE_ICON}<span>Zamčeno</span></span>`
+      + `<span class="msg-cb msg-cb-todo">${CHECK_TODO_ICON}<span>Vypnutá voda</span></span>`
       + '</div>',
     )
+  })
+
+  it('stav položky checklistu nese lucide SVG ikona skrytá před čtečkou, ne znak', () => {
+    expect(CHECK_DONE_ICON).toMatch(/^<svg [^>]*aria-hidden="true"[^>]*>.*<\/svg>$/)
+    expect(CHECK_DONE_ICON).toContain('<path d="M20 6 9 17l-5-5"/>')
+    expect(CHECK_TODO_ICON).toMatch(/^<svg [^>]*aria-hidden="true"[^>]*>.*<\/svg>$/)
+    expect(CHECK_TODO_ICON).toContain('<circle cx="12" cy="12" r="10"/>')
+    expect(render('- [x] A\n- [ ] B')).not.toMatch(/[✓○]/)
   })
 
   it('checklist bez odrážky (MessageInput) funguje dál', () => {

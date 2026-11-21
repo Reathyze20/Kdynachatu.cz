@@ -82,6 +82,7 @@ export const DashboardReservationsSchema = z.object({
     .nullable()
     .optional(),
   departingToday: z.boolean(),
+  departingReservationId: z.string().nullable().optional(),
   nextFreeWeekend: z
     .object({ start: z.string(), end: z.string() })
     .nullable()
@@ -161,7 +162,6 @@ const ShoppingItemSchema = z.object({
   id: z.string(),
   name: z.string(),
   status: z.enum(['pending', 'bring_from_home', 'purchased']),
-  purchased: z.boolean(),
   addedById: z.string(),
   createdAt: z.string(),
   isEssential: z.boolean(),

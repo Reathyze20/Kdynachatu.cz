@@ -11,13 +11,16 @@ import { WeatherCard } from "./WeatherCard";
 import { ActiveReservation } from "./ActiveReservation";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { ShoppingWidget } from "./ShoppingWidget";
-import { HandoverNote } from "./HandoverNote";
+import { PinnedNote } from "./PinnedNote";
 import { EssentialWarning } from "./EssentialWarning";
 import { DepartureBanner } from "./DepartureBanner";
 import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
+import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
+import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import { motion } from "framer-motion";
+import { TriangleAlert } from "lucide-react";
 
 // ─── Skeletons ────────────────────────────────────────────────────────
 
@@ -97,7 +100,7 @@ export function ShoppingSkeleton() {
   );
 }
 
-export function HandoverNoteSkeleton() {
+export function PinnedNoteSkeleton() {
   return (
     <div className="glass-card dashboard-handover-card" id="dashboard-handover-note">
       <div className="card-body-full handover-card-content">
@@ -190,9 +193,9 @@ const cardVariants = {
 export function DashboardPage() {
   useDocumentTitle('Přehled');
   const { isAdmin } = useAuth();
-  const [handoverNote, setHandoverNote] = useState<string | null>(null);
-  const [handoverNoteAuthor, setHandoverNoteAuthor] = useState<string | null>(null);
-  const [handoverNoteUpdatedAt, setHandoverNoteUpdatedAt] = useState<string | null>(null);
+  const [pinnedNote, setPinnedNote] = useState<string | null>(null);
+  const [pinnedNoteAuthor, setPinnedNoteAuthor] = useState<string | null>(null);
+  const [pinnedNoteUpdatedAt, setPinnedNoteUpdatedAt] = useState<string | null>(null);
 
   // Cabin info
   const cabinQuery = useQuery<CabinSettings>({
@@ -203,7 +206,7 @@ export function DashboardPage() {
 
   // Independent queries for each domain
   const reservationsQuery = useQuery<DashboardReservationsData>({
-    queryKey: ["dashboard", "reservations"],
+    queryKey: DASHBOARD_RESERVATIONS_KEY,
     queryFn: async () => {
       const { data } = await apiClient.get<DashboardReservationsData>("/dashboard/reservations");
       return DashboardReservationsSchema.parse(data) as DashboardReservationsData;
@@ -243,12 +246,12 @@ export function DashboardPage() {
     staleTime: 30_000,
   });
 
-  // Sync handover note initially
+  // Sync the pinned board note initially
   useEffect(() => {
     if (notesQuery.data) {
-      setHandoverNote(prev => prev === null ? notesQuery.data.pinnedHandoverNote : prev);
-      setHandoverNoteAuthor(prev => prev === null ? notesQuery.data.handoverNoteAuthor : prev);
-      setHandoverNoteUpdatedAt(prev => prev === null ? notesQuery.data.handoverNoteUpdatedAt : prev);
+      setPinnedNote(prev => prev === null ? notesQuery.data.pinnedHandoverNote : prev);
+      setPinnedNoteAuthor(prev => prev === null ? notesQuery.data.handoverNoteAuthor : prev);
+      setPinnedNoteUpdatedAt(prev => prev === null ? notesQuery.data.handoverNoteUpdatedAt : prev);
     }
   }, [notesQuery.data]);
 
@@ -277,7 +280,7 @@ export function DashboardPage() {
   // Prázdné widgety kolabují na kompaktní řádek a řadí se pod mřížku;
   // během načítání (a při chybě) zůstávají v mřížce, aby layout neskákal.
   const isShoppingEmpty = shoppingQuery.isSuccess && (shoppingQuery.data?.totalPendingShoppingCount ?? 0) === 0;
-  const isHandoverEmpty = notesQuery.isSuccess && !(handoverNote ?? "").trim();
+  const isPinnedNoteEmpty = notesQuery.isSuccess && !(pinnedNote ?? "").trim();
   const isReconstructionEmpty = reconstructionQuery.isSuccess && (reconstructionQuery.data?.totalActiveCount ?? 0) === 0;
 
   const collapsibleWidgets = [
@@ -302,22 +305,22 @@ export function DashboardPage() {
     {
       key: "handover",
       testId: "dashboard-handover-widget",
-      isEmpty: isHandoverEmpty,
+      isEmpty: isPinnedNoteEmpty,
       node: notesQuery.isLoading ? (
-        <HandoverNoteSkeleton />
+        <PinnedNoteSkeleton />
       ) : notesQuery.isError ? (
         <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nástěnku se nepodařilo načíst" />}>
           <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
         </ErrorBoundary>
       ) : notesQuery.data ? (
-        <HandoverNote
-          note={handoverNote}
-          author={handoverNoteAuthor}
-          updatedAt={handoverNoteUpdatedAt}
+        <PinnedNote
+          note={pinnedNote}
+          author={pinnedNoteAuthor}
+          updatedAt={pinnedNoteUpdatedAt}
           onNoteUpdate={(newNote, author, updatedAt) => {
-            setHandoverNote(newNote);
-            setHandoverNoteAuthor(author ?? null);
-            setHandoverNoteUpdatedAt(updatedAt ?? null);
+            setPinnedNote(newNote);
+            setPinnedNoteAuthor(author ?? null);
+            setPinnedNoteUpdatedAt(updatedAt ?? null);
           }}
         />
       ) : null,
@@ -341,7 +344,7 @@ export function DashboardPage() {
   const gridWidgets = collapsibleWidgets.filter((w) => !w.isEmpty);
   const emptyWidgets = collapsibleWidgets.filter((w) => w.isEmpty);
 
-  return (
+  const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
       {/* Winter banner */}
       {isWinterized && (
@@ -359,7 +362,7 @@ export function DashboardPage() {
       {/* Cabin error banner */}
       {cabinError && (
         <div className="essential-warning-banner" style={{ borderLeftColor: 'var(--status-warning)' }}>
-          <span style={{ fontSize: '1.25rem' }}>⚠</span>
+          <TriangleAlert className="w-5 h-5 inline-block align-middle mr-2" aria-hidden="true" style={{ color: 'var(--status-warning)' }} />
           <span>Nepodařilo se načíst nastavení chaty — některé widgety nemusí fungovat správně.</span>
         </div>
       )}
@@ -369,8 +372,9 @@ export function DashboardPage() {
         <EssentialWarning warning={shoppingQuery.data.essentialWarning} />
       )}
 
-      {reservationsQuery.isSuccess && reservationsQuery.data?.departingToday && (
+      {reservationsQuery.isSuccess && reservationsQuery.data?.departingToday && reservationsQuery.data.departingReservationId && (
         <DepartureBanner
+          reservationId={reservationsQuery.data.departingReservationId}
           departureChecklist={departureChecklist}
           onRefresh={() => reservationsQuery.refetch()}
         />
@@ -451,4 +455,7 @@ export function DashboardPage() {
       ) : null)}
     </div>
   );
+
+  // Rám #1b: hlavní sloupec; boční panel (další příjezd, dochází) doplní redesign Přehledu (#172).
+  return <TwoColumnLayout>{mainColumn}</TwoColumnLayout>;
 }

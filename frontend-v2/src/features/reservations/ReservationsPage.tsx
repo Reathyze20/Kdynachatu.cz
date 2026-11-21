@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { Modal } from "@/components/shared/Modal";
 import styles from "./Reservations.module.css";
+import { isIsoDateInRange } from "@/lib/dateUtils";
 
 /** Filter reservations that intersect with the given calendar month */
 function filterByMonth(reservations: Reservation[], month: number, year: number) {
@@ -210,12 +211,7 @@ export function ReservationsPage() {
 
   // If a specific day is selected, narrow down to reservations covering that day
   const filtered = selectedDay
-    ? monthFiltered.filter((r) => {
-        const ts = new Date(selectedDay + "T00:00:00Z").getTime();
-        const s  = new Date(r.from + "T00:00:00Z").getTime();
-        const e  = new Date(r.to   + "T00:00:00Z").getTime();
-        return ts >= s && ts <= e;
-      })
+    ? monthFiltered.filter((r) => isIsoDateInRange(selectedDay, r.from, r.to))
     : monthFiltered;
 
   // ── Render ─────────────────────────────────────────────────────────────

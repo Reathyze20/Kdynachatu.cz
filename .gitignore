@@ -20,6 +20,10 @@ logs/
 # Local scratch / debug scripts
 /test-db.ts
 
+# Staging verify harness: local credentials + screenshots (keep .example tracked)
+/scripts/verify/staging.env
+/scripts/verify/.artifacts/
+
 # OS / editor
 .DS_Store
 Thumbs.db

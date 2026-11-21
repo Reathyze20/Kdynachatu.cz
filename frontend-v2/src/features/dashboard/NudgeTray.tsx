@@ -47,7 +47,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
     }
   };
 
-  const copyForWhatsApp = async (n: Nudge) => {
+  const copyForWhatsApp = async (n: Pick<Nudge, "whatsapp" | "href">) => {
     if (!n.whatsapp) return;
     const link = `${window.location.origin}${n.href}`;
     try {
@@ -60,9 +60,9 @@ export function NudgeTray({ reservations, shopping }: Props) {
 
   return (
     <div className="nudge-tray" data-testid="dashboard-nudge-tray">
-      {nudges.map((n) => (
+      {nudges.map(({ icon: Icon, ...n }) => (
         <div key={n.id} className={`nudge nudge-${n.tone}`}>
-          <span className="nudge-emoji" aria-hidden>{n.emoji}</span>
+          <Icon className="nudge-icon w-5 h-5" aria-hidden="true" />
           <button className="nudge-body" onClick={() => navigate(n.href)}>
             <span className="nudge-title">{n.title}</span>
             {n.detail && <span className="nudge-detail">{n.detail}</span>}

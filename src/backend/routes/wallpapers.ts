@@ -106,13 +106,10 @@ router.delete(
       where: { id },
     });
 
-    if (!wallpaper) {
+    // Cizí nebo neexistující tapeta je nerozlišitelná od "neexistuje" (tenant kontrakt #64):
+    // cabinId mimo vlastní chatu vrací 404, ne 403, aby neprozradil, že id je reálná tapeta jinde.
+    if (!wallpaper || wallpaper.cabinId !== req.user.cabinId) {
       res.status(404).json({ message: "Tapeta nenalezena" });
-      return;
-    }
-
-    if (wallpaper.cabinId !== req.user.cabinId) {
-      res.status(403).json({ message: "Nemáte oprávnění smazat tuto tapetu" });
       return;
     }
 

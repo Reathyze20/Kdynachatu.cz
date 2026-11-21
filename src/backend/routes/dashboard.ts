@@ -3,57 +3,17 @@ import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
+import { calendarTodayIso, departureGate, nextFreeWeekend } from "./reservationHelpers";
 
 const router = Router();
 
 // ─── Helper: Find next free weekend (Sat–Sun) ─────────────────────────
-async function findNextFreeWeekend(cabinId: string): Promise<{ start: string; end: string } | null> {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  // Pull all future primary reservations
+async function findNextFreeWeekend(cabinId: string, todayStr: string): Promise<{ start: string; end: string } | null> {
   const futureReservations = await prisma.reservation.findMany({
-    where: {
-      cabinId,
-      status: "primary",
-      dateTo: { gte: today },
-    },
+    where: { cabinId, status: "primary", dateTo: { gte: new Date(todayStr) } },
     select: { dateFrom: true, dateTo: true },
   });
-
-  // Build Set of occupied YYYY-MM-DD strings
-  const occupiedDates = new Set<string>();
-  for (const r of futureReservations) {
-    const cur = new Date(r.dateFrom);
-    cur.setHours(0, 0, 0, 0);
-    const end = new Date(r.dateTo);
-    end.setHours(0, 0, 0, 0);
-    while (cur <= end) {
-      occupiedDates.add(cur.toISOString().split("T")[0]);
-      cur.setDate(cur.getDate() + 1);
-    }
-  }
-
-  // Advance to next Saturday (if today is Saturday, start here)
-  const candidate = new Date(today);
-  while (candidate.getDay() !== 6) {
-    candidate.setDate(candidate.getDate() + 1);
-  }
-
-  // Check up to 26 weekends (~6 months)
-  for (let i = 0; i < 26; i++) {
-    const satStr = candidate.toISOString().split("T")[0];
-    const sunday = new Date(candidate);
-    sunday.setDate(sunday.getDate() + 1);
-    const sunStr = sunday.toISOString().split("T")[0];
-
-    if (!occupiedDates.has(satStr) && !occupiedDates.has(sunStr)) {
-      return { start: satStr, end: sunStr };
-    }
-    candidate.setDate(candidate.getDate() + 7);
-  }
-
-  return null; // No free weekend in next 6 months
+  return nextFreeWeekend(todayStr, futureReservations);
 }
 
 // ============================================================================
@@ -68,7 +28,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
 
   try {
     const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+    const todayStr = calendarTodayIso(now);
     const cabinId = req.user!.cabinId!;
 
     const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth] = await Promise.all([
@@ -90,13 +50,15 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
       }),
       prisma.reservation.findFirst({
         where: { cabinId, userId: req.user.userId, dateTo: new Date(todayStr), status: "primary" },
-        select: { handoverNote: true }
+        // My stay ending today; an unfinished handover wins if there are two
+        orderBy: { isCheckoutCompleted: "asc" },
+        select: { id: true, isCheckoutCompleted: true },
       }),
       prisma.reservation.findFirst({
         where: { cabinId, userId: req.user.userId, dateFrom: { gte: new Date(todayStr) } },
         orderBy: { dateFrom: "asc" },
       }),
-      findNextFreeWeekend(cabinId),
+      findNextFreeWeekend(cabinId, todayStr),
       // Last completed stay (ended before today)
       prisma.reservation.findFirst({
         where: { cabinId, dateTo: { lt: new Date(todayStr) }, status: "primary" },
@@ -167,7 +129,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         to: myNextReservation.dateTo.toISOString().split("T")[0],
         purpose: myNextReservation.purpose,
       } : null,
-      departingToday: departingTodayReservation !== null && !departingTodayReservation.handoverNote,
+      ...departureGate(departingTodayReservation),
       nextFreeWeekend,
       lastStay: lastStayReservation ? {
         username: lastStayReservation.user.username,
@@ -205,19 +167,19 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
     const activeListFilter = { isResolved: false, isPantry: false, cabinId };
     const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems] = await Promise.all([
       prisma.shoppingListItem.findMany({
-        where: { purchased: false, status: { not: "purchased" }, list: activeListFilter },
+        where: { status: { not: "purchased" }, list: activeListFilter },
         include: { list: { select: { id: true, name: true } } },
         orderBy: [{ isEssential: "desc" }, { createdAt: "asc" }],
         take: 6,
       }),
       prisma.shoppingListItem.count({
-        where: { purchased: false, status: { not: "purchased" }, list: activeListFilter },
+        where: { status: { not: "purchased" }, list: activeListFilter },
       }),
       prisma.shoppingListItem.count({
         where: { list: activeListFilter },
       }),
       prisma.shoppingListItem.findMany({
-        where: { isEssential: true, purchased: false, status: { not: "purchased" }, list: activeListFilter },
+        where: { isEssential: true, status: { not: "purchased" }, list: activeListFilter },
         select: { id: true, name: true },
         take: 10,
       })

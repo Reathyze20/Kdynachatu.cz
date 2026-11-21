@@ -1,14 +1,13 @@
 /**
  * components/layout/MobileNav.tsx
- * Překlad: nav#mobile-nav z index.html + buildMobileNav() z router.ts
- * Spodní lišta s max. 5 záložkami; sekce navíc (Galerie, Deník, Rekonstrukce…)
- * jsou pod záložkou „Více“, aby byly na mobilu vůbec dosažitelné.
+ * Spodní lišta podle cyklu turnusu (redesign #0, issue #171): Přehled · Kalendář · Předávka · Zásoby · Víc.
+ * Doplňky (Chat, Galerie, Deník, Rekonstrukce) jsou pod „Víc“.
  */
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutGrid } from 'lucide-react'
-import { MOBILE_NAV_ROUTES, splitMobileNav } from '@/lib/navRoutes'
-import { useCabinFeatures, isFeatureEnabled } from '@/hooks/useCabinFeatures'
+import { Link, useLocation } from 'react-router-dom'
+import { MoreHorizontal } from 'lucide-react'
+import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
+import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
 import { Modal } from '@/components/shared/Modal'
 
@@ -20,63 +19,52 @@ export function MobileNav() {
 
   if (!user?.cabinId) return null
 
-  const visibleRoutes = MOBILE_NAV_ROUTES.filter((r) => {
-    if (r.featureKey) return isFeatureEnabled(cabin?.features, r.featureKey)
-    return true
-  })
-  const { tabs, overflow } = splitMobileNav(visibleRoutes)
-  // V sekci schované pod „Více“ je záložka zvýrazněná a má ikonu té sekce.
-  // Popisek zůstává „Více“ — „Rekonstrukce“ se na 360px šířku nevejde.
-  const activeOverflow = overflow.find((r) => location.pathname.startsWith(r.path))
-  const MoreIcon = activeOverflow?.icon ?? LayoutGrid
+  const tabs = visibleNavItems(PRIMARY_NAV, cabin?.features)
+  const more = visibleNavItems(MORE_NAV, cabin?.features)
+  const active = findActiveNavItem([...tabs, ...more], location)
+  const activeMore = active && more.includes(active) ? active : undefined
+  // V sekci schované pod „Víc“ má záložka ikonu té sekce, popisek zůstává „Víc“ (úzké displeje).
+  const MoreIcon = activeMore?.icon ?? MoreHorizontal
+
+  const renderNavLink = (item: NavItem, className: string, onClick?: () => void) => (
+    <Link
+      key={item.to}
+      to={item.to}
+      className={`${className}${item === active ? ' active' : ''}`}
+      aria-current={item === active ? 'page' : undefined}
+      data-testid="mobile-nav-link"
+      data-route={item.to}
+      onClick={onClick}
+    >
+      <item.icon size={20} aria-hidden="true" />
+      <span>{item.label}</span>
+    </Link>
+  )
 
   return (
     <>
-      <nav id="mobile-nav" className="mobile-nav" data-testid="mobile-nav">
-        {tabs.map((route) => (
-          <NavLink
-            key={route.path}
-            to={route.path}
-            className={({ isActive }) => `mobile-nav-link${isActive ? ' active' : ''}`}
-            data-testid="mobile-nav-link"
-            data-route={route.path}
-          >
-            <route.icon size={20} />
-            <span>{route.label}</span>
-          </NavLink>
-        ))}
+      <nav id="mobile-nav" className="mobile-nav" aria-label="Hlavní navigace" data-testid="mobile-nav">
+        {tabs.map((item) => renderNavLink(item, 'mobile-nav-link'))}
 
-        {overflow.length > 0 ? (
+        {more.length > 0 ? (
           <button
             type="button"
-            className={`mobile-nav-link${activeOverflow ? ' active' : ''}`}
+            className={`mobile-nav-link${activeMore ? ' active' : ''}`}
             data-testid="mobile-nav-more"
             aria-haspopup="dialog"
             aria-expanded={moreOpen}
-            aria-label={activeOverflow ? `Více (právě: ${activeOverflow.label})` : 'Více sekcí'}
+            aria-label={activeMore ? `Víc (právě: ${activeMore.label})` : 'Víc sekcí'}
             onClick={() => setMoreOpen(true)}
           >
-            <MoreIcon size={20} />
-            <span>Více</span>
+            <MoreIcon size={20} aria-hidden="true" />
+            <span>Víc</span>
           </button>
         ) : null}
       </nav>
 
-      <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} title="Další sekce">
+      <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} title="Víc">
         <div className="drawer-quicklinks" data-testid="mobile-nav-more-sheet">
-          {overflow.map((route) => (
-            <NavLink
-              key={route.path}
-              to={route.path}
-              className="button-secondary drawer-quicklink"
-              data-testid="mobile-nav-link"
-              data-route={route.path}
-              onClick={() => setMoreOpen(false)}
-            >
-              <route.icon size={18} />
-              <span>{route.label}</span>
-            </NavLink>
-          ))}
+          {more.map((item) => renderNavLink(item, 'button-secondary drawer-quicklink', () => setMoreOpen(false)))}
         </div>
       </Modal>
     </>

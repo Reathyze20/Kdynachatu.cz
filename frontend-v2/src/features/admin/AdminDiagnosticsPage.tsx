@@ -17,7 +17,7 @@ export function AdminDiagnosticsPage() {
   useDocumentTitle('Diagnostika')
 
   return (
-    <div className="main-content-admin pb-20 md:pb-0" data-testid="admin-diagnostics-page">
+    <div className="main-content-admin" data-testid="admin-diagnostics-page">
       <section className="page-card admin-page-card admin-overview-card admin-diagnostics-hero" data-testid="admin-diagnostics-hero">
         <div className="admin-overview-header">
           <div className="admin-overview-copy admin-overview-copy--wide">

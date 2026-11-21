@@ -1,6 +1,6 @@
 # SEP-1 – Oddělení rodinné verze od vývoje pro víc rodin
 
-> **Nahrazeno [ADR-0002](../adr/0002-hosting-a-deploy.md) (2026-11-17).** Starý server je pozastavený a rodina se vrací jako chata č. 1 na verzi z `main` (staging z `main`, produkce z tagu). Dokument zůstává jen kvůli odkazům z `CLAUDE.md` a `.github/` a smaže se spolu s implementací ADR-0002.
+> **⚠️ NAHRAZENO [ADR-0002](../adr/0002-hosting-a-deploy.md) (2026-11-17) — historický záznam, neřiď se jím.** Dvojkolejnost `main`/`rodina-stable` z tohoto plánu už neplatí: rodina běží jako chata č. 1 z `main` (staging z `main`, produkce z release tagu `v*`). Dokument je **ponechán jako historie** (viz #99), nemaže se; aktuální hosting/deploy určuje ADR-0002, `docs/SERVER-SETUP.md` a `.github/workflows/deploy.yml`.
 
 Verze 1 · 27. 9. 2026
 Navazuje na `docs/PRODUCT-PLAN.md` a `docs/SDLC.md`. Tento úkol má přednost před fází 1 (multi-tenancy).

@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
-import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted } from "@/lib/dateUtils";
+import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
-import { CalendarPlus } from "lucide-react";
+import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
+import { useAuth } from "@/context/AuthContext";
+import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
+import { CalendarPlus, CircleCheck, TriangleAlert } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
@@ -97,9 +100,22 @@ function buildParticipantStack(participants: ParticipantLite[] | undefined): Rea
   );
 }
 
+/** Řetězec teď → pak z dat Přehledu; aktivní pobyt API posílá jen pevný. Jméno je unikátní, vlastní pobyt = „Ty“. */
+function dashboardChainStays(data: DashboardReservationsData, myUsername: string | undefined): ChainStay[] {
+  const toChainStay = (r: { id: string; from: string; to: string; username: string }, status: string): ChainStay =>
+    ({ id: r.id, from: r.from, to: r.to, status, username: r.username, isMine: r.username === myUsername });
+  const active = data.activeReservation;
+  return [
+    ...(active ? [toChainStay(active, "primary")] : []),
+    ...data.upcomingReservations.map((r) => toChainStay(r, r.status)),
+  ];
+}
+
 export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const navigate = useNavigate();
-  const todayStr = new Date().toISOString().split("T")[0];
+  const { user } = useAuth();
+  const todayStr = getLocalTodayIso();
+  const chainNode = <TurnusChainLine nodes={buildTurnusChain(dashboardChainStays(data, user?.username), todayStr)} className="status-chain" />;
   const currentHour = new Date().getHours();
   const formattedDate = getTodayFormatted();
   const active = data.activeReservation;
@@ -219,8 +235,8 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
       );
       if (hasCheckoutTasks) {
         checkoutReminderNode = active.isCheckoutCompleted
-          ? <div className="checkout-reminder checkout-reminder-done">✓ Odjezdový checklist splněn</div>
-          : <div className="checkout-reminder checkout-reminder-missed">⚠ Odjezdový checklist nebyl vyplněn</div>;
+          ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
+          : <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>;
       }
     } else if (departingToday) {
       title = active.username;
@@ -241,7 +257,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
       const dLabel = nights === 1 ? "1 den" : nights >= 2 && nights <= 4 ? `${nights} dny` : `${nights} dní`;
       title = active.username;
       
-      const toDate = new Date(active.to);
+      const toDate = isoDateToLocalNoon(active.to);
       const formattedToObj = new Intl.DateTimeFormat("cs-CZ", { weekday: "long", day: "numeric", month: "numeric" }).format(toDate);
       const formattedTo = formattedToObj.split(' ').map(w => w === 'Zítra' ? w : w).join(' ');
 
@@ -266,6 +282,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
               </div>
             </div>
           </div>
+          {chainNode}
           {buildParticipantStack(active.participants)}
           {checkoutReminderNode}
           {buildCombinedNextBlock()}
@@ -297,6 +314,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
               </div>
             </div>
           </div>
+          {chainNode}
           {buildCombinedNextBlock()}
           {buildUpcomingList()}
           {buildLastStayBlock(data.lastStay)}

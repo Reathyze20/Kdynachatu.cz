@@ -1,6 +1,6 @@
 # SDLC – jak se v Kdy na chatu mění kód
 
-Verified: 2026-11-17
+Verified: 2026-11-18
 Scope: vývojový proces pro práci s AI agenty (Claude Code lokálně i v cloud session z mobilu). Postup podle kurzu AI Coding Crash Course (Matt Pocock).
 
 Produkt je v `PRODUCT.md`, drahá rozhodnutí v `adr/`, práce a roadmapa v GitHub Issues (map issue #69). Tento dokument popisuje, **jak** se kód mění.
@@ -67,16 +67,22 @@ Mezi fázemi `/clear` – každá fáze začíná s čistým kontextem a čte je
 
 ## 5. Testy
 
-Dnes: frontend Vitest (`frontend-v2/src/test/`, jsdom), backend unit testy čistých helperů přes `node:test` (`src/**/*.test.ts`). Backend harness s reálnou DB je krok 4 roadmapy (#64).
+Dnes: frontend Vitest (`frontend-v2/src/test/`, jsdom), backend unit testy přes `node:test` (`src/**/*.test.ts`, spouští je i `preflight:deploy`) a backend integrační testy nad reálným PostgreSQL (`src/**/*.itest.ts`, krok 4 roadmapy #64).
 
 | Vrstva | Nástroj | Co | Stav |
 |---|---|---|---|
 | Unit | Vitest / node:test | doménová logika (kalendář, náklady, hlasování), Zod schémata | ⚙️ |
-| Integrační API | Supertest nad Express app + reálný PostgreSQL | endpointy, autorizace, validace | 🔜 #64 |
-| Tenant isolation | Supertest + reálná DB, 2 seedované chaty | viz níže | 🔜 #64, povinné a blokující |
+| Integrační API | Supertest nad Express app + reálný PostgreSQL | endpointy, autorizace, validace | ⚙️ lokálně (`npm run test:integration`), v CI po vložení snippetu do `ci.yml` |
+| Tenant isolation | Supertest + reálná DB, 2 seedované chaty | viz níže | ⚙️ rezervace; další domény 🔜 #64, povinné a blokující |
 | E2E | Playwright | 3–5 kritických cest | 🔜 |
 
-**Reálná DB, ne mocky.** V CI service container `postgres:16`, v cloud session `service postgresql start` a databáze `kdynachatu_test`. Testy čtou jen `DATABASE_URL`.
+**Reálná DB, ne mocky.** Testy čtou jen `DATABASE_URL`, kterou nastaví skript; `.env` se nepoužije.
+
+**Jak spustit integrační testy:**
+- Lokálně (běžící Docker): `npm run test:integration` – dočasný `postgres:16` na portu **5433**, `prisma migrate deploy`, testy sériově, kontejner se smaže i při selhání. Lokální DB na 5432 tento režim nepoužije nikdy; `TEST_DATABASE_URL` lokálně nenastavujte.
+- CI a cloud session: `TEST_DATABASE_URL=postgresql://…/kdynachatu_test npm run test:integration` – bez Dockeru, nad service containerem nebo `service postgresql start`.
+- Guard: běh skončí ještě před migrací i před každým truncate, když název DB neobsahuje `test` nebo jde o `cabin_reservation`.
+- Nový test: soubor `*.itest.ts`, první import `./env`; v `before` `setupIntegrationFile()` (truncate + seed chaty A a B se správcem a členem), požadavky přes `as(app, world.memberA)`, realtime přes `recordRealtimeEmits()` (`src/testing/integration/harness.ts`). Uploady jdou do dočasného adresáře, e-maily se neodesílají, rate limity jsou vypnuté.
 
 **Tenant-isolation sada** (cíl #64): seed chaty A a B; každý endpoint s ID vrací uživateli z A na zdroj z B **404**; listy pro A neobsahují ID z B; socket z A se nedostane do roomu B; upload z B není dostupný s tokenem z A; meta-test projde modely s `cabinId` v `prisma/schema.prisma` a ověří, že každý má test.
 
@@ -95,7 +101,7 @@ Postup krok za krokem je ve skillu `database-migrations` (`.claude/skills/databa
 
 ## 7. Větve, PR a GitHub nastavení
 
-`main` je vývoj pro víc rodin a nasazuje se na staging. Rodinná produkce se zatím nasazuje jen z `rodina-stable`, kam jdou jen hotfixy (`plans/SEP-1.md`); po implementaci ADR-0002 (krok 3, #63) produkce z release tagu. Větve `feat/…`, `fix/…`, `chore/…`, `docs/…` s číslem ticketu, případně `claude/…` z cloud sessions. Merge squash.
+`main` je vývoj pro víc rodin a nasazuje se na staging. Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main` (release-please otevírá release PR, jeho merge vytvoří tag, `deploy.yml` čeká na schválení v environment `production`; ADR-0002). Jednokolejný tok — žádná samostatná produkční větev; hotfix je oprava na `main` → nový release tag. (Historická dvojkolejnost `main`/`rodina-stable` ze SEP-1 je nahrazena ADR-0002, větev se nemaže a archivuje tagem `archive/rodina-stable`.) Větve `feat/…`, `fix/…`, `chore/…`, `docs/…` s číslem ticketu, případně `claude/…` z cloud sessions. Merge squash.
 
 **Nastavení na GitHubu (ručně)** – bez toho ostatní pravidla chrání jen dobrovolnost agenta:
 
@@ -107,9 +113,9 @@ Postup krok za krokem je ve skillu `database-migrations` (`.claude/skills/databa
 | Secret scanning + push protection | zapnout | Brání commitu secrets |
 | CodeQL | default setup, JavaScript/TypeScript | Statická analýza v PR |
 | Dependabot alerts + security updates | zapnout (`.github/dependabot.yml` je v repu) | Zranitelné závislosti |
-| Environment `production` | required reviewer = vy | 🔜 s deployem z tagu (#63) |
+| Environment `production` | required reviewer = vy, secrets `SSH_*` (`SERVER-SETUP.md` §7) | Brána před produkčním deployem z tagu (`deploy.yml`) |
 | Auto-merge | vypnuto | Merge je vždy vědomé rozhodnutí |
-| Actions → Workflow permissions | read-only `GITHUB_TOKEN` | Minimum oprávnění |
+| Actions → Workflow permissions | read-only `GITHUB_TOKEN` + allow GitHub Actions to create pull requests | Minimum oprávnění; release-please otevírá release PR |
 
 **Labely:** triage (§3) a pro guardrails `human-reviewed`, `large-pr-ok`, `migration-contract-approved`.
 

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
+import { useCabinSignup } from '@/features/auth/hooks/useCabinSignup'
 import '@/styles/onboarding.css'
 
 interface CreateCabinResponse {
@@ -37,6 +38,7 @@ export default function OnboardingPage() {
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const { signupEnabled, isLoading: signupLoading } = useCabinSignup()
 
   useEffect(() => {
     let cancelled = false
@@ -102,7 +104,7 @@ export default function OnboardingPage() {
     }
   }
 
-  if (checking) {
+  if (checking || signupLoading) {
     return (
       <div className="onboarding-page" data-testid="onboarding-page" data-onboarding-state="checking">
         <div className="onboarding-card card" style={{ textAlign: 'center' }}>
@@ -128,24 +130,36 @@ export default function OnboardingPage() {
       <div className="onboarding-card card">
         <div className="auth-brand">
           <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
-          <h1 className="auth-brand-text">Chatačeskéstředohoří</h1>
+          <h1 className="auth-brand-text">Kdy na chatu</h1>
         </div>
-        <h2 className="onboarding-title">Vytvořte svůj prostor</h2>
-        <p className="auth-subtitle">
-          Vítejte{user?.username ? `, ${user.username}` : ''}! Pojmenujte svou chatu.
-        </p>
-        <form onSubmit={handleSubmit} noValidate data-testid="onboarding-form">
-          <div className="form-group">
-            <label htmlFor="cabin-name">Název chaty</label>
-            <input ref={nameRef} id="cabin-name" type="text" placeholder="např. Chata U Lesa" maxLength={100} autoFocus autoComplete="off" required data-testid="onboarding-cabin-name-input" />
+        {signupEnabled ? (
+          <>
+            <h2 className="onboarding-title">Vytvořte svůj prostor</h2>
+            <p className="auth-subtitle">
+              Vítejte{user?.username ? `, ${user.username}` : ''}! Pojmenujte svou chatu.
+            </p>
+            <form onSubmit={handleSubmit} noValidate data-testid="onboarding-form">
+              <div className="form-group">
+                <label htmlFor="cabin-name">Název chaty</label>
+                <input ref={nameRef} id="cabin-name" type="text" placeholder="např. Chata U Lesa" maxLength={100} autoFocus autoComplete="off" required data-testid="onboarding-cabin-name-input" />
+              </div>
+              {error && <p className="error-message" data-testid="onboarding-error-message">{error}</p>}
+              <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading} data-testid="onboarding-submit-button">
+                {loading ? 'Vytváří se...' : 'Vytvořit chatu'}
+              </button>
+            </form>
+            <p className="onboarding-hint">Název chaty lze kdykoli změnit v nastavení.</p>
+          </>
+        ) : (
+          <div data-testid="onboarding-invite-only">
+            <h2 className="onboarding-title">Do chaty se vstupuje přes pozvánku</h2>
+            <p className="auth-subtitle">
+              Vítejte{user?.username ? `, ${user.username}` : ''}! Nové chaty teď zakládat nejde,
+              do chaty vás přidá její správce pozvánkou.
+            </p>
           </div>
-          {error && <p className="error-message" data-testid="onboarding-error-message">{error}</p>}
-          <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading} data-testid="onboarding-submit-button">
-            {loading ? 'Vytváří se...' : 'Vytvořit chatu'}
-          </button>
-        </form>
-        <p className="onboarding-hint">Název chaty lze kdykoli změnit v nastavení.</p>
-        
+        )}
+
         <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
             Byli jste pozváni do existující chaty? Požádejte správce o novou pozvánku, nebo zkuste znovu načíst stránku.

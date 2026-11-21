@@ -33,10 +33,10 @@ body .app-container {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* On mobile, shift up above MobileNav */
+/* Na mobilu nad spodní lištu včetně bezpečné zóny (#196); výška lišty je v styles/nav.css */
 @media (max-width: 768px) {
     .zen-mode-toggle {
-        bottom: calc(var(--mobile-nav-height, 64px) + 16px);
+        bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
     }
 }
 

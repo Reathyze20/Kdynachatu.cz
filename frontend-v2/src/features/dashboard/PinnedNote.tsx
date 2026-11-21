@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 
-function formatHandoverDate(iso: string): string {
+function formatNoteDate(iso: string): string {
   const date = new Date(iso);
   return date.toLocaleDateString("cs-CZ", { day: "numeric", month: "long" });
 }
@@ -20,7 +20,11 @@ interface Props {
   onNoteUpdate: (note: string | null, author?: string | null, updatedAt?: string | null) => void;
 }
 
-export function HandoverNote({ note, author, updatedAt, onNoteUpdate }: Props) {
+/**
+ * Vzkaz na nástěnce (AppSettings.pinnedHandoverNote). Není to předávka pobytu
+ * (checkoutState) ani per-rezervační handoverNote z formuláře rezervace.
+ */
+export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
@@ -89,7 +93,7 @@ export function HandoverNote({ note, author, updatedAt, onNoteUpdate }: Props) {
             <div className="card-footer">
               <span className="card-footer-meta">
                 {author && updatedAt
-                  ? `— ${author}, ${formatHandoverDate(updatedAt)}`
+                  ? `— ${author}, ${formatNoteDate(updatedAt)}`
                   : "Vzkaz pro návštěvníky"}
               </span>
               <a

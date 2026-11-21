@@ -43,7 +43,6 @@ function createItem(overrides: Partial<ShoppingItem> = {}): ShoppingItem {
     id: 'item-1',
     name: 'Mléko',
     status: 'pending',
-    purchased: false,
     addedById: 'user-1',
     createdAt: '2026-04-18T12:00:00.000Z',
     isEssential: false,
@@ -85,15 +84,13 @@ describe('shopping optimistic status mutation', () => {
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('purchased')
-      expect(cachedItem?.purchased).toBe(true)
     })
 
-    pendingToggle.resolve({ ...item, status: 'purchased', purchased: true })
+    pendingToggle.resolve({ ...item, status: 'purchased' })
 
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('purchased')
-      expect(cachedItem?.purchased).toBe(true)
     })
   })
 
@@ -115,7 +112,6 @@ describe('shopping optimistic status mutation', () => {
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('purchased')
-      expect(cachedItem?.purchased).toBe(true)
     })
 
     pendingToggle.reject(new Error('server failed'))
@@ -123,7 +119,6 @@ describe('shopping optimistic status mutation', () => {
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('pending')
-      expect(cachedItem?.purchased).toBe(false)
     })
 
     expect(showToast).toHaveBeenCalledWith(
@@ -154,7 +149,6 @@ describe('shopping optimistic status mutation', () => {
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('purchased')
-      expect(cachedItem?.purchased).toBe(true)
     })
 
     pendingToggle.reject(new TypeError('Network Error'))
@@ -162,7 +156,6 @@ describe('shopping optimistic status mutation', () => {
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('purchased')
-      expect(cachedItem?.purchased).toBe(true)
     })
 
     expect(showToast).toHaveBeenCalledWith(
@@ -174,7 +167,7 @@ describe('shopping optimistic status mutation', () => {
   it('optimistically marks bring-from-home without purchased flag', async () => {
     const queryClient = createQueryClient()
     const wrapper = createWrapper(queryClient)
-    const item = createItem({ id: 'item-home', status: 'pending', purchased: false })
+    const item = createItem({ id: 'item-home', status: 'pending' })
     const pendingToggle = createDeferred<ShoppingItem>()
 
     queryClient.setQueryData(SHOPPING_KEY, [createList(item)])
@@ -189,15 +182,13 @@ describe('shopping optimistic status mutation', () => {
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('bring_from_home')
-      expect(cachedItem?.purchased).toBe(false)
     })
 
-    pendingToggle.resolve({ ...item, status: 'bring_from_home', purchased: false })
+    pendingToggle.resolve({ ...item, status: 'bring_from_home' })
 
     await waitFor(() => {
       const cachedItem = queryClient.getQueryData<ShoppingList[]>(SHOPPING_KEY)?.[0].items[0]
       expect(cachedItem?.status).toBe('bring_from_home')
-      expect(cachedItem?.purchased).toBe(false)
     })
   })
 })

@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { z, ZodError } from "zod";
 
 /**
- * Middleware for validating request body against a Zod schema
+ * Middleware for validating request body (or route params) against a Zod schema
  */
-export const validate = (schema: z.ZodSchema) => {
+export const validate = (schema: z.ZodSchema, source: "body" | "params" = "body") => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse(req.body);
+      schema.parse(req[source]);
       next();
     } catch (error) {
       if (error instanceof ZodError) {

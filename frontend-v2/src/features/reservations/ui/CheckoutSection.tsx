@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Check } from "lucide-react";
 import apiClient from "@/api/client";
 import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservations";
 import { useCheckoutReservation } from "../hooks/useReservations";
@@ -142,7 +143,7 @@ export function CheckoutSection({ reservation }: Props) {
     return (
       <div className={styles.checkoutSection}>
         <div className={styles.checkoutCompleted}>
-          <div className={styles.checkoutCompletedIcon}>✓</div>
+          <div className={styles.checkoutCompletedIcon} aria-hidden="true"><Check className="w-5 h-5" /></div>
           <div className={styles.checkoutCompletedText}>
             <strong>Odjezd potvrzen</strong>
             {formatted && <span className={styles.checkoutCompletedDate}>{formatted}</span>}

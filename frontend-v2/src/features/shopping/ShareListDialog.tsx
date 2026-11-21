@@ -3,6 +3,7 @@
  * Akce: "Nový seznam" nebo "Jdu nakupovat" → vyber vlákno → odešli zprávu
  */
 import { useState } from 'react'
+import { Check, Mail, Store } from 'lucide-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { notesThreadApi } from '@/api/shopping'
 import type { NoteThread } from '@/api/shopping'
@@ -106,24 +107,24 @@ export function ShareListDialog({ listName, onClose }: Props) {
               className={`share-note-btn${selectedAction === 'new' ? ' is-selected' : ''}`}
               onClick={() => handleSelectAction('new')}
             >
-              <span className="share-note-btn-icon">✉</span>
+              <span className="share-note-btn-icon" aria-hidden="true"><Mail className="w-5 h-5" /></span>
               <div>
                 <strong>Upozornit na nový seznam</strong>
                 <span>Pošle zprávu ostatním, ať doplní položky</span>
               </div>
-              {selectedAction === 'new' && <span className="share-note-selected-mark">✓</span>}
+              {selectedAction === 'new' && <span className="share-note-selected-mark" aria-hidden="true"><Check className="w-4 h-4" /></span>}
             </button>
             <button
               id="share-note-going"
               className={`share-note-btn share-note-btn-urgent${selectedAction === 'going' ? ' is-selected' : ''}`}
               onClick={() => handleSelectAction('going')}
             >
-              <span className="share-note-btn-icon">⇨</span>
+              <span className="share-note-btn-icon" aria-hidden="true"><Store className="w-5 h-5" /></span>
               <div>
                 <strong>Jdu do obchodu</strong>
                 <span>Urgentní výzva k doplnění seznamu</span>
               </div>
-              {selectedAction === 'going' && <span className="share-note-selected-mark">✓</span>}
+              {selectedAction === 'going' && <span className="share-note-selected-mark" aria-hidden="true"><Check className="w-4 h-4" /></span>}
             </button>
           </div>
 

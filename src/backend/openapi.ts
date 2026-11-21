@@ -193,6 +193,32 @@ const schemas: Record<string, JsonSchema> = {
       message: { type: "string", example: "OK" },
     },
   },
+  SignupStatusResponse: {
+    type: "object",
+    required: ["cabinSignupEnabled"],
+    properties: {
+      cabinSignupEnabled: { type: "boolean", example: false },
+    },
+  },
+  DemoAccountsResponse: {
+    type: "object",
+    required: ["accounts"],
+    properties: {
+      accounts: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["username", "label", "role", "password"],
+          properties: {
+            username: { type: "string", example: "demo-jana" },
+            label: { type: "string", example: "Jana" },
+            role: { type: "string", example: "user" },
+            password: { type: "string" },
+          },
+        },
+      },
+    },
+  },
   CabinSettings: {
     type: "object",
     required: ["id", "name", "subdomain", "weatherLocation", "isWinterized", "features", "createdAt"],
@@ -343,13 +369,12 @@ const schemas: Record<string, JsonSchema> = {
   },
   ShoppingList: {
     type: "object",
-    required: ["id", "name", "createdAt", "isResolved", "isPantry", "items"],
+    required: ["id", "name", "createdAt", "isResolved", "items"],
     properties: {
       id: { type: "string", format: "uuid" },
       name: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
       isResolved: { type: "boolean" },
-      isPantry: { type: "boolean" },
       createdBy: ref("ShoppingUser"),
       items: {
         type: "array",
@@ -521,7 +546,26 @@ const paths: Record<string, OpenApiObject> = {
       responses: {
         "201": jsonResponse(ref("RegisterResponse"), "Registrace probehla uspesne"),
         "400": jsonResponse(ref("ErrorResponse"), "Neplatny vstup"),
+        "403": jsonResponse(ref("ErrorResponse"), "Registrace novych chat je uzavrena (CABIN_SIGNUP_ENABLED)"),
         "409": jsonResponse(ref("ErrorResponse"), "Konflikt uzivatele nebo e-mailu"),
+      },
+    },
+  },
+  "/api/signup-status": {
+    get: {
+      tags: ["Auth"],
+      summary: "Verejny stav registrace novych chat (CABIN_SIGNUP_ENABLED)",
+      responses: {
+        "200": jsonResponse(ref("SignupStatusResponse"), "Zda jde zalozit novou chatu"),
+      },
+    },
+  },
+  "/api/demo-accounts": {
+    get: {
+      tags: ["Auth"],
+      summary: "Fiktivni demo ucty pro rychle prihlaseni (neprazdne jen na stagingu)",
+      responses: {
+        "200": jsonResponse(ref("DemoAccountsResponse"), "Seznam demo uctu, mimo staging prazdny"),
       },
     },
   },
@@ -586,6 +630,20 @@ const paths: Record<string, OpenApiObject> = {
       },
     },
   },
+  "/api/cabin/create": {
+    post: {
+      tags: ["Cabin"],
+      summary: "Zaloz chatu pro prihlaseneho uzivatele bez chaty (onboarding)",
+      security: bearerSecurity,
+      requestBody: jsonRequestBody({ type: "object", required: ["name"], properties: { name: { type: "string", minLength: 2, maxLength: 100 } } }),
+      responses: {
+        "201": jsonResponse({ type: "object" }, "Chata vytvorena, odpoved obsahuje novy token a cabinId"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup nebo ucet uz chatu ma"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Registrace novych chat je uzavrena (CABIN_SIGNUP_ENABLED)"),
+      },
+    },
+  },
   "/api/reservations": {
     get: {
       tags: ["Reservations"],
@@ -607,6 +665,76 @@ const paths: Record<string, OpenApiObject> = {
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+        "404": jsonResponse(ref("ErrorResponse"), "Ucastnik (participantIds) neni clenem chaty"),
+      },
+    },
+  },
+  "/api/reservations/{id}": {
+    put: {
+      tags: ["Reservations"],
+      summary: "Uprav rezervaci (vlastnik nebo admin)",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: jsonRequestBody(ref("CreateReservationRequest"), "Vsechna pole jsou volitelna; status muze byt i backup"),
+      responses: {
+        "200": jsonResponse(ref("Reservation"), "Rezervace byla upravena"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
+        "403": jsonResponse(ref("ErrorResponse"), "Cizi rezervace v ramci chaty a uzivatel neni admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Rezervace nebo ucastnik neni v chate uzivatele"),
+        "409": jsonResponse(ref("ErrorResponse"), "Kolize s potvrzenou rezervaci"),
+      },
+    },
+    delete: {
+      tags: ["Reservations"],
+      summary: "Smaz rezervaci (vlastnik nebo admin); stejne jako puvodni POST /api/reservations/delete",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {
+        "200": jsonResponse(ref("MessageResponse"), "Rezervace byla smazana"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatne ID"),
+        "403": jsonResponse(ref("ErrorResponse"), "Cizi rezervace v ramci chaty a uzivatel neni admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Rezervace neni v chate uzivatele"),
+      },
+    },
+  },
+  "/api/reservations/{reservationId}/assign": {
+    post: {
+      tags: ["Reservations"],
+      summary: "Prirad rezervaci jinemu clenovi chaty (admin)",
+      security: bearerSecurity,
+      parameters: [{ name: "reservationId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      requestBody: jsonRequestBody({
+        type: "object",
+        required: ["newOwnerId"],
+        properties: { newOwnerId: { type: "string", format: "uuid" } },
+      }),
+      responses: {
+        "200": jsonResponse({ type: "object", properties: { message: { type: "string" } } }, "Prirazeno"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
+        "403": jsonResponse(ref("ErrorResponse"), "Pouze admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Rezervace nebo novy vlastnik neni v chate uzivatele"),
+      },
+    },
+  },
+  "/api/dashboard/reservations": {
+    get: {
+      tags: ["Dashboard"],
+      summary: "Rezervacni cast dashboardu (aktivni pobyt, nadchazejici, posledni pobyt, gate odjezdu)",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(
+          {
+            type: "object",
+            properties: {
+              departingToday: { type: "boolean", description: "Muj pobyt dnes konci a predavka (isCheckoutCompleted) jeste neni dokoncena" },
+              departingReservationId: { type: "string", nullable: true, description: "ID tohoto pobytu pro dokonceni predavky (PATCH /api/reservations/{id}/checkout), jinak null" },
+            },
+            additionalProperties: true,
+          },
+          "Data pro dashboard; zde jsou popsana jen pole gate odjezdu",
+        ),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
       },
     },
   },
@@ -615,15 +743,6 @@ const paths: Record<string, OpenApiObject> = {
       tags: ["Shopping"],
       summary: "Seznam aktivnich nakupnich seznamu",
       security: bearerSecurity,
-      parameters: [
-        {
-          name: "isPantry",
-          in: "query",
-          required: false,
-          description: "true = jen spiz, false = bezne seznamy",
-          schema: { type: "string", enum: ["true", "false"] },
-        },
-      ],
       responses: {
         "200": jsonResponse({ type: "array", items: ref("ShoppingList") }, "Aktivni nakupni seznamy"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
@@ -812,6 +931,7 @@ export const openApiSpec = {
     { name: "Users", description: "Current user profile endpoints" },
     { name: "Cabin", description: "Cabin settings and shared configuration" },
     { name: "Reservations", description: "Reservation planning and availability" },
+    { name: "Dashboard", description: "Dashboard summaries" },
     { name: "Shopping", description: "Shopping lists" },
     { name: "Inventory", description: "Pantry and stock" },
     { name: "Channels", description: "Chat channels" },

@@ -88,12 +88,6 @@ export const createShoppingItemSchema = z.object({
   sourceMessageId: z.string().uuid().optional(),
 });
 
-export const updatePurchaseSchema = z.object({
-  purchased: z.boolean(),
-  price: z.number().positive().optional(),
-  splitWith: z.array(z.string().uuid()).optional(),
-});
-
 // Inventory validators
 export const createInventoryItemSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(100, "Maximální délka je 100 znaků"),
@@ -215,6 +209,13 @@ export const deleteReservationSchema = z.object({
   id: z.string().uuid("Neplatné ID rezervace"),
 });
 
+// Reservation — DELETE /:id params (same shape as the POST /delete body)
+export const reservationIdParamsSchema = deleteReservationSchema;
+
+export const assignReservationSchema = z.object({
+  newOwnerId: z.string().uuid("Neplatné ID uživatele"),
+});
+
 // Reservation — checkout
 export const completeCheckoutSchema = z.object({
   reservationId: z.string().uuid("Neplatné ID rezervace"),
@@ -222,8 +223,7 @@ export const completeCheckoutSchema = z.object({
 
 // Shopping list item — status update
 export const updateItemStatusSchema = z.object({
-  status: z.enum(["pending", "bring_from_home", "purchased"]).optional(),
-  purchased: z.boolean().optional(),
+  status: z.enum(["pending", "bring_from_home", "purchased"]),
   price: z.coerce.number().positive().optional().nullable(),
   splitWith: z.array(z.string().uuid()).optional(),
 });

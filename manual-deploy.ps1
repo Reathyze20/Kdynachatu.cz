@@ -5,7 +5,7 @@
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$server = 'root@89.221.217.81'
+$server = 'root@62.83.119.156'
 $releaseBundle = Join-Path $repoRoot 'release.tgz'
 
 Push-Location $repoRoot

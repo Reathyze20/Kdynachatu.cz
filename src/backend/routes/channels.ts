@@ -399,12 +399,15 @@ router.post("/:channelId/messages", protect, requireCabin, async (req: Request, 
   const { message, replyToId } = parsed.data;
 
   try {
-    // Verify channel belongs to this cabin (prevent cross-cabin write)
+    // Cross-cabin / unknown channel is indistinguishable from "does not exist"
+    // per the tenant contract (#64): return 404, not 403.
+    // The guest-writes-blocked 403 above is a permission check inside the own
+    // cabin and must stay 403 — keep these two branches separate.
     const channel = await prisma.noteThread.findFirst({
       where: { id: channelId, cabinId },
     });
     if (!channel) {
-      return res.status(403).json({ message: "Kanál nenalezen nebo k němu nemáte přístup." });
+      return res.status(404).json({ message: "Kanál nenalezen." });
     }
 
     if (replyToId) {

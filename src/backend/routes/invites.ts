@@ -145,15 +145,19 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
 router.delete("/:id", protect, requireCabin, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
-    if (req.user.role !== "admin") return res.status(403).json({ message: "Pouze admin." });
 
     const { id } = req.params;
 
+    // Cizí/neexistující pozvánka je nerozlišitelná od „neexistuje" (tenant kontrakt #64):
+    // scoped lookup přes { id, cabinId } a 404 DŘÍV než kontrola admin role — jinak by 403
+    // prozradilo non-adminovi z jiné chaty, že id je reálná pozvánka jinde (403 jen uvnitř vlastní chaty).
     const invite = await prisma.inviteLink.findFirst({
       where: { id, cabinId: req.user.cabinId! },
     });
 
     if (!invite) return res.status(404).json({ message: "Pozvánka nenalezena." });
+
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Pouze admin." });
 
     await prisma.inviteLink.delete({ where: { id } });
 
@@ -317,10 +321,11 @@ router.post("/accept/:token", validate(acceptInviteSchema), async (req: Request,
 router.post("/:id/send-email", protect, requireCabin, validate(sendInviteEmailSchema), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
-    if (req.user.role !== "admin") return res.status(403).json({ message: "Pouze admin." });
 
     const { email } = req.body;
 
+    // Cizí/neexistující pozvánka → 404 DŘÍV než kontrola admin role (tenant kontrakt #64):
+    // scoped lookup { id, cabinId } neprozradí přes 403 existenci pozvánky v jiné chatě.
     const invite = await prisma.inviteLink.findFirst({
       where: { id: req.params.id, cabinId: req.user.cabinId! },
       include: {
@@ -330,6 +335,8 @@ router.post("/:id/send-email", protect, requireCabin, validate(sendInviteEmailSc
     });
 
     if (!invite) return res.status(404).json({ message: "Pozvánka nenalezena." });
+
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Pouze admin." });
 
     if (new Date() > invite.expiresAt) {
       return res.status(410).json({ message: "Platnost pozvánky vypršela." });

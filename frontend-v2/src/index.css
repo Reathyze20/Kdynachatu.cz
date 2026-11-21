@@ -7,6 +7,8 @@
 
 /* ─── Původní design tokeny a global styly ─── */
 @import './styles/variables.css';
+/* shadcn/ui ↔ Tailwind token most (#164) — aditivní, musí být za variables.css */
+@import './styles/shadcn-tokens.css';
 @import './styles/base.css';
 @import './styles/layout.css';
 @import './styles/nav.css';
@@ -19,6 +21,7 @@
 @import './styles/help.css';
 @import './styles/custom-select.css';
 @import './styles/view-transitions.css';
+@import './styles/turnus-chain.css';
 
 /* ─── Stránkové styly ─── */
 @import './styles/dashboard.css';

@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import { validate } from "../../validators/validate";
-import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema } from "../../validators/schemas";
+import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema, reservationIdParamsSchema, assignReservationSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
 import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
@@ -172,14 +172,17 @@ type ParticipantPayload = {
 };
 
 /**
- * Filtruje ID spolucestujících: ponechá jen uživatele ve stejné chatě,
- * odstraní organizátora (ten je Reservation.userId) i duplicity.
+ * Ověří ID spolucestujících: odstraní organizátora (ten je Reservation.userId) i duplicity
+ * a ponechá jen členy chaty. Vrací null (route vrátí 404), když některé ID nepatří členovi
+ * chaty ani stávajícímu účastníkovi rezervace – cizí uživatel se nesmí tiše zahodit.
+ * Stávající účastník, který mezitím z chaty odešel, se při úpravě tiše vynechá (jako dřív).
  */
-async function sanitizeParticipantIds(
+async function resolveParticipantIds(
   rawIds: unknown,
   cabinId: string,
   organizerId: string,
-): Promise<string[]> {
+  currentParticipantIds: string[] = [],
+): Promise<string[] | null> {
   if (!Array.isArray(rawIds)) return [];
   const unique = Array.from(new Set(rawIds.filter((v): v is string => typeof v === "string")));
   const candidates = unique.filter((id) => id !== organizerId);
@@ -188,8 +191,12 @@ async function sanitizeParticipantIds(
     where: { id: { in: candidates }, cabinId },
     select: { id: true },
   });
-  return members.map((m) => m.id);
+  const memberIds = new Set(members.map((m) => m.id));
+  const unknown = candidates.filter((id) => !memberIds.has(id) && !currentParticipantIds.includes(id));
+  return unknown.length > 0 ? null : candidates.filter((id) => memberIds.has(id));
 }
+
+const PARTICIPANT_NOT_FOUND = { message: "Účastník nenalezen." };
 
 /** Načte účastníky rezervace jako payload pro API/socket. */
 async function loadParticipantsPayload(reservationId: string): Promise<ParticipantPayload[]> {
@@ -203,6 +210,56 @@ async function loadParticipantsPayload(reservationId: string): Promise<Participa
     userColor: p.user.color,
     userAnimalIcon: p.user.animalIcon,
   }));
+}
+
+const RESERVATION_PAYLOAD_SELECT = {
+  id: true,
+  userId: true,
+  dateFrom: true,
+  dateTo: true,
+  purpose: true,
+  notes: true,
+  handoverNote: true,
+  status: true,
+  user: { select: { username: true, color: true, animalIcon: true } },
+} satisfies Prisma.ReservationSelect;
+
+type ReservationPayloadRow = Prisma.ReservationGetPayload<{ select: typeof RESERVATION_PAYLOAD_SELECT }>;
+
+/** Rezervace ve tvaru, který vrací PUT /:id a posílá event reservation:updated. */
+function toReservationPayload(r: ReservationPayloadRow, participants: ParticipantPayload[]) {
+  return {
+    id: r.id,
+    userId: r.userId,
+    username: r.user.username,
+    from: formatReservationDate(r.dateFrom),
+    to: formatReservationDate(r.dateTo),
+    purpose: r.purpose,
+    notes: r.notes,
+    handoverNote: r.handoverNote,
+    status: r.status,
+    userColor: r.user.color,
+    userAnimalIcon: r.user.animalIcon,
+    participants,
+  };
+}
+
+/**
+ * Pošle členům chaty reservation:updated se stejným payloadem jako PUT /:id.
+ * cabinId musí pocházet z přihlášeného uživatele; dotaz ho filtruje i tady.
+ * Best-effort: zápis už proběhl, takže selhání notifikace jen zaloguje a nevrací klientovi 500.
+ */
+async function emitReservationUpdated(cabinId: string, reservationId: string): Promise<void> {
+  try {
+    const row = await prisma.reservation.findFirst({
+      where: { id: reservationId, cabinId },
+      select: RESERVATION_PAYLOAD_SELECT,
+    });
+    if (!row) return;
+    emitToCabin(cabinId, "reservation:updated", toReservationPayload(row, await loadParticipantsPayload(reservationId)));
+  } catch (error) {
+    logger.error("RESERVATIONS", "Realtime reservation:updated emit failed", { error: String(error), reservationId });
+  }
 }
 
 // ============================================================================
@@ -291,6 +348,12 @@ router.post("/", protect, requireCabin, validate(createReservationSchema), async
     const newEnd = new Date(to);
     const cabinId = req.user!.cabinId!;
 
+    // Co-occupants (spolucestující) — organizer stays as userId; a foreign user → 404 before anything is created
+    const cleanParticipantIds = await resolveParticipantIds(participantIds, cabinId, req.user!.userId);
+    if (!cleanParticipantIds) {
+      return res.status(404).json(PARTICIPANT_NOT_FOUND);
+    }
+
     // Check for collision with PRIMARY reservations
     const collision = await prisma.reservation.findFirst({
       where: {
@@ -335,8 +398,6 @@ router.post("/", protect, requireCabin, validate(createReservationSchema), async
       },
     });
 
-    // Co-occupants (spolucestující) — organizer stays as userId
-    const cleanParticipantIds = await sanitizeParticipantIds(participantIds, cabinId, req.user!.userId);
     if (cleanParticipantIds.length > 0) {
       await prisma.reservationParticipant.createMany({
         data: cleanParticipantIds.map((uid) => ({ reservationId: newReservation.id, userId: uid })),
@@ -514,6 +575,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
             username: true,
           },
         },
+        participants: { select: { userId: true } },
       },
     });
 
@@ -559,6 +621,19 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
       });
     }
 
+    // Validate co-occupants before any write (undefined = leave unchanged); a foreign user → 404
+    const cleanParticipantIds = participantIds !== undefined
+      ? await resolveParticipantIds(
+          participantIds,
+          req.user!.cabinId!,
+          reservation.userId,
+          reservation.participants.map((p) => p.userId),
+        )
+      : undefined;
+    if (cleanParticipantIds === null) {
+      return res.status(404).json(PARTICIPANT_NOT_FOUND);
+    }
+
     const updated = await prisma.reservation.update({
       where: { id },
       data: {
@@ -581,8 +656,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
     });
 
     // Sync co-occupants when the client sends participantIds (undefined = leave unchanged)
-    if (participantIds !== undefined) {
-      const cleanParticipantIds = await sanitizeParticipantIds(participantIds, req.user!.cabinId!, updated.userId);
+    if (cleanParticipantIds !== undefined) {
       await prisma.reservationParticipant.deleteMany({ where: { reservationId: id } });
       if (cleanParticipantIds.length > 0) {
         await prisma.reservationParticipant.createMany({
@@ -613,20 +687,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
       });
     }
 
-    const updatedPayload = {
-      id: updated.id,
-      userId: updated.userId,
-      username: updated.user.username,
-      from: updated.dateFrom.toISOString().split("T")[0],
-      to: updated.dateTo.toISOString().split("T")[0],
-      purpose: updated.purpose,
-      notes: updated.notes,
-      handoverNote: updated.handoverNote,
-      status: updated.status,
-      userColor: updated.user.color,
-      userAnimalIcon: updated.user.animalIcon,
-      participants,
-    };
+    const updatedPayload = toReservationPayload(updated, participants);
 
     emitToCabin(req.user!.cabinId!, "reservation:updated", updatedPayload);
 
@@ -640,9 +701,12 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
 // ============================================================================
 //                        DELETE RESERVATION
 // ============================================================================
-router.post("/delete", protect, requireCabin, validate(deleteReservationSchema), async (req: Request, res: Response) => {
-  const { id } = req.body;
-
+/**
+ * Společné jádro obou mazacích endpointů (POST /delete i DELETE /:id): stejná
+ * oprávnění (vlastník nebo admin), cizí chata = 404, stejný socket event
+ * i záznam do aktivity.
+ */
+async function deleteReservation(req: Request, res: Response, id: string) {
   try {
     const reservation = await prisma.reservation.findFirst({
       where: { id, cabinId: req.user!.cabinId },
@@ -686,7 +750,14 @@ router.post("/delete", protect, requireCabin, validate(deleteReservationSchema),
     logger.error("RESERVATIONS", "Delete reservation error", { error: String(error), id });
     res.status(500).json({ message: "Chyba." });
   }
-});
+}
+
+// Původní tvar, zůstává kvůli kompatibilitě (starší klienti, offline fronta).
+router.post("/delete", protect, requireCabin, validate(deleteReservationSchema), (req: Request, res: Response) =>
+  deleteReservation(req, res, req.body.id));
+
+router.delete("/:id", protect, requireCabin, validate(reservationIdParamsSchema, "params"), (req: Request, res: Response) =>
+  deleteReservation(req, res, req.params.id));
 
 // ============================================================================
 //        WATCH: GET /:id/watch — zjistit, zda aktuální user hlídá
@@ -784,21 +855,23 @@ router.delete("/:id/watch", protect, requireCabin, async (req: Request, res: Res
 // ============================================================================
 //                      ASSIGN RESERVATION TO USER
 // ============================================================================
-router.post("/:reservationId/assign", protect, requireCabin, async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Pouze admin." });
-  }
+router.post("/:reservationId/assign", protect, requireCabin, validate(assignReservationSchema), async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno." });
 
   const { reservationId } = req.params;
   const { newOwnerId } = req.body;
 
   try {
-    // Verify reservation belongs to user's cabin
+    // Verify reservation belongs to user's cabin — a foreign reservation is 404 even for non-admins (do not reveal it exists)
     const reservation = await prisma.reservation.findFirst({
       where: { id: reservationId, cabinId: req.user.cabinId },
     });
     if (!reservation) {
       return res.status(404).json({ message: "Rezervace nenalezena." });
+    }
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Pouze admin." });
     }
 
     // Verify new owner belongs to same cabin
@@ -1021,6 +1094,10 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
           checkoutState: true,
         },
       });
+      // State changed → notify the cabin; a bare repeat changes nothing and stays silent
+      if (cleanState !== undefined) {
+        await emitReservationUpdated(cabinId, id);
+      }
       // Resolve username of the person who completed it
       let completedByUsername: string | null = null;
       if (full?.checkoutCompletedBy) {
@@ -1062,6 +1139,9 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
       completedBy: req.user.userId,
       cabinId,
     });
+
+    // Notify the cabin right away, otherwise a stale departure banner could overwrite checkoutState
+    await emitReservationUpdated(cabinId, id);
 
     res.json({
       message: "Odjezdový checklist dokončen.",

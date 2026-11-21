@@ -1,11 +1,12 @@
 # Nový produkční server – návod krok za krokem
 
-> **Stav 2026-11-18:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu. Části návodu, které počítají s deployem z `main` přímo do produkce a buildem na serveru, se přepíšou při implementaci ADR-0002 (krok 3 roadmapy).
+> **Stav 2026-11-19:** cílový stav určuje [ADR-0002](adr/0002-hosting-a-deploy.md) – server **Netcup VPS nano 2 GB** (objednáno 2026-11-17), na jednom VPS produkce i staging, build v GitHub Actions, produkce z release tagu (`.github/workflows/deploy.yml`, #96).
 >
 > **Kdo co poskytuje:** server = **Netcup** · doména `kdynachatu.cz` a její DNS = **WEDOS** (jen registrace domény, nic dalšího se tam nekupuje; registrace platí do 2027-02-23 – prodloužit) · e-maily = **Resend** (doména už ověřená, DNS záznamy hotové) · starý server `89.221.217.81` se ruší (krok 11).
 
-Cíl: připravit čistý VPS tak, aby na něj fungoval stávající deploy z `.github/workflows/deploy.yml`
-(push na `main` → GitHub Actions → SSH jako `reathyze` → `/home/reathyze/chata`, PM2 app `chata-app`),
+Cíl: připravit čistý VPS tak, aby na něj fungoval deploy z `.github/workflows/deploy.yml`
+(release tag `v*` → build v GitHub Actions → schválení v environment `production` → SSH jako `reathyze`
+→ `/home/reathyze/chata/releases/<tag>_<čas>`, PM2 app `chata-app` na portu 3000),
 a přestěhovat na něj data ze starého serveru.
 
 Konvence v návodu:
@@ -25,10 +26,15 @@ Celkový čas: cca 1,5–2 hodiny včetně čekání na DNS.
 Server je objednaný (Netcup VPS nano, 2 vCore, 2 GB RAM, 60 GB). Zbývá:
 
 1. Z e-mailu od Netcupu si vezmi IP adresu (`NOVA_IP`) a přístup do **SCP** (Server Control Panel, `servercontrolpanel.de`).
-2. Pokud na serveru ještě není **Ubuntu 24.04**: SCP → server → **Media → Images** → Ubuntu 24.04 → při instalaci vlož svůj veřejný SSH klíč (krok 2.1). Bez klíče ti přijde root heslo.
+2. Netcup VPS se dodává s **Debianem** – přeinstaluj na **Ubuntu 24.04**:
+   1. SCP → horní menu **SSH Keys** → přidej svůj veřejný klíč (krok 2.1). Bez uloženého klíče instalační formulář pole pro klíč vůbec nenabídne.
+   2. SCP → server → **Media → Images** → **Ubuntu 24.04.x UEFI amd64** (Minimal; ne BIOS, ne cloudimg, ne 26.04 – ta má jiný Postgres).
+   3. Ve formuláři: Locale **`en_US.UTF-8`** (ne `de_DE`), Timezone libovolná (Prague v nabídce není, nastaví se v kroku 2.3), **Create additional user** = `reathyze` + heslo (pro `sudo`, ulož do správce hesel), **SSH Keys** = tvůj klíč, SSH password authentication vypnuto, **Send e-mail to me** zapnout. Pozor, prohlížeč umí do jména a hesla doplnit přihlašovací údaje z Netcupu.
+   4. **Install** (tlačítko úplně dole). Po instalaci se jednou zobrazí root heslo – ulož ho do správce hesel (záchrana přes konzoli **Screen**).
+   5. Před prvním připojením smaž starý otisk serveru: `PS> ssh-keygen -R NOVA_IP`.
 3. Placené zálohy u Netcupu nejsou nutné (appka se zálohuje sama a kopie se denně stahuje na PC, viz krok 10.1).
 
-> Popisky v Netcup SCP se mohou mírně lišit – důležité je Ubuntu 24.04 a SSH klíč.
+> Popisky v Netcup SCP se mohou mírně lišit – důležité je Ubuntu 24.04 a SSH klíč. Pokud jsi zakládal uživatele `reathyze` ve formuláři, krok 2.4 je hotový až na kontrolu `sshd` (přihlášení heslem už je vypnuté).
 >
 > 2 GB RAM stačí jen s **2 GB swapem** (krok 2.3) a bez buildu na serveru (ADR-0002).
 
@@ -58,14 +64,14 @@ $ timedatectl set-timezone Europe/Prague
 
 # balíčky, které appka a deploy skript potřebují
 $ apt install -y nginx postgresql certbot python3-certbot-nginx \
-    rsync psmisc curl git build-essential unattended-upgrades
+    rsync psmisc curl git build-essential unattended-upgrades nano ufw
 
 # firewall: jen SSH + web
 $ ufw allow OpenSSH
 $ ufw allow 'Nginx Full'
 $ ufw --force enable
 
-# 2 GB swap — pojistka, aby build při deployi nespadl na nedostatek RAM
+# 2 GB swap — pojistka, aby npm ci při deployi nespadl na nedostatek RAM (build běží v GitHub Actions)
 $ fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
 $ echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
@@ -115,15 +121,32 @@ $ sudo systemctl restart ssh
 $ psql --version          # poznamenej si verzi (Ubuntu 24.04 = 16)
 $ sudo -u postgres psql -c "CREATE USER chata WITH PASSWORD '<SILNE_HESLO_DB>';"
 $ sudo -u postgres psql -c "CREATE DATABASE chata OWNER chata;"
+# k produkční DB se smí připojit jen role chata (staging role ji neuvidí)
+$ sudo -u postgres psql -c "REVOKE CONNECT ON DATABASE chata FROM PUBLIC;" -c "GRANT CONNECT ON DATABASE chata TO chata;"
+```
+
+Paměťové limity pro 2 GB RAM (ADR-0002):
+
+```bash
+$ sudo -u postgres psql <<'SQL'
+ALTER SYSTEM SET shared_buffers = '128MB';
+ALTER SYSTEM SET work_mem = '4MB';
+ALTER SYSTEM SET maintenance_work_mem = '64MB';
+ALTER SYSTEM SET effective_cache_size = '512MB';
+ALTER SYSTEM SET max_connections = '30';
+SQL
+$ sudo systemctl restart postgresql
 ```
 
 Výsledný connection string (použiješ v `.env`):
 
 ```
-postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata?schema=public
+postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata
 ```
 
 > Heslo bez znaků `@ : / ? #` — jinak je musíš v URL escapovat.
+>
+> **`?schema=public` netřeba.** Prisma bez něj použije schéma `public` stejně. Zálohovací skript (`npm run backup:db`) od #118 parametry, kterým `pg_dump` nerozumí, sám odřízne (dřív na něm deploy padal: `invalid URI query parameter: "schema"`). Ručně spouštěný `pg_dump` ho ale pořád odmítne.
 
 ---
 
@@ -163,25 +186,31 @@ $ mkdir -p /home/reathyze/chata/data/uploads /home/reathyze/backups/cabin
 $ nano /home/reathyze/chata/.env
 ```
 
-Nejjednodušší je zkopírovat `.env` ze starého serveru (krok 6) a změnit v něm jen `DATABASE_URL`.
-Pokud zakládáš nový, minimum je:
+`.env` a `data/` v `/home/reathyze/chata` sdílí všechny verze appky. Deploy vedle nich zakládá `releases/<tag>_<čas>/` a symlink `current` na běžící verzi.
+
+Zakládej `.env` **nový** – starý obsahuje nefunkční SES a starý `JWT_SECRET`. `DEPLOY_TARGET=production` je povinný (bez něj deploy odmítne běžet). Minimum:
 
 ```env
 NODE_ENV=production
+DEPLOY_TARGET=production
 PORT=3000
-DATABASE_URL=postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata?schema=public
+DATABASE_URL=postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata
 JWT_SECRET=<vygeneruj: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
 FRONTEND_URL=https://DOMENA
 
 # e-maily (Resend) — SES ze starého .env už nefunguje, viz OPERATIONS-RUNBOOK.md §5.1
 SMTP_HOST=smtp.resend.com
-SMTP_PORT=465
+SMTP_PORT=2587
 SMTP_USER=resend
 SMTP_PASS=<Resend API key>
 EMAIL_FROM="Kdy na chatu <noreply@kdynachatu.cz>"
 ```
 
-> Při stěhování **ponech stejný `JWT_SECRET`** jako na starém serveru — jinak se všichni z rodiny budou muset znovu přihlásit.
+> **Port 2587, ne 465/587:** Netcup blokuje odchozí 465 i 587 (spojení jen visí, appka nespadne, e-maily tiše nechodí). Resend nabízí stejné SMTP i na 2465/2587; 2587 = STARTTLS, se kterým `src/utils/email.ts` funguje bez úprav (`secure` jen pro 465). API klíč stačí s oprávněním **Sending access** pro doménu `kdynachatu.cz`.
+
+> **Registrace nových chat (`CABIN_SIGNUP_ENABLED`):** v produkci je bez proměnné **zavřená** – `POST /api/register` a `POST /api/cabin/create` vrací 403 „Registrace nových chat je zatím uzavřená.“, přihlašovací obrazovka nenabízí registraci a onboarding odkáže na pozvánku. Rodina se přidává přes pozvánky, přihlášení a reset hesla fungují dál. Otevřít ji jde jen explicitně `CABIN_SIGNUP_ENABLED=true` v `.env` a restartem appky. Mimo produkci je bez proměnné otevřená. Aktuální stav: `curl https://DOMENA/api/signup-status`.
+
+> `JWT_SECRET` je **nový**, ne ten ze starého serveru (ADR-0002, [MIGRATION-CUTOVER.md](MIGRATION-CUTOVER.md) §1) – rodina se po přechodu přihlásí znovu. Prázdné `SMTP_PASS` appce nebrání naběhnout, jen nechodí e-maily.
 
 ```bash
 $ chmod 600 /home/reathyze/chata/.env
@@ -216,19 +245,17 @@ $ ls -lh /tmp/chata.dump /tmp/chata-uploads.tgz
 ```powershell
 PS> mkdir $HOME\chata-migrace; cd $HOME\chata-migrace
 PS> scp reathyze@STARA_IP:/tmp/chata.dump reathyze@STARA_IP:/tmp/chata-uploads.tgz reathyze@STARA_IP:/tmp/chata.env .
-PS> scp chata.dump chata-uploads.tgz chata.env reathyze@NOVA_IP:/tmp/
+PS> scp chata.dump chata-uploads.tgz reathyze@NOVA_IP:/tmp/   # chata.env na nový server nepatří (krok 5)
 ```
 
 ### 6.3 Na novém serveru
 
 ```bash
 $ cd /home/reathyze/chata
-$ cp /tmp/chata.env .env && nano .env    # změň DATABASE_URL na nový (krok 3), zbytek nech
-$ chmod 600 .env
 $ pg_restore --no-owner --role=chata -d "postgresql://chata:<SILNE_HESLO_DB>@localhost:5432/chata" /tmp/chata.dump
 $ tar -xzf /tmp/chata-uploads.tgz -C data
 $ ls data/uploads | head
-$ rm /tmp/chata.dump /tmp/chata-uploads.tgz /tmp/chata.env
+$ rm /tmp/chata.dump /tmp/chata-uploads.tgz
 ```
 
 Pak smaž kopie i na starém serveru (`rm /tmp/chata.*`) a ve složce `chata-migrace` na PC.
@@ -252,26 +279,37 @@ Veřejný klíč přidej na server:
 $ nano /home/reathyze/.ssh/authorized_keys   # nový řádek s obsahem chata_deploy.pub
 ```
 
-### 7.2 Secrets v repozitáři
+### 7.2 Environment `production` a secrets
 
-GitHub → `Reathyze20/Kdynachatu.cz` → **Settings → Secrets and variables → Actions** → uprav:
+GitHub → `Reathyze20/Kdynachatu.cz` → **Settings → Environments → New environment** `production`:
+
+- **Required reviewers:** ty (každý produkční deploy čeká na tvoje schválení),
+- **Deployment branches and tags:** Selected → tag `v*` a větev `main` (ruční spuštění z UI běží z `main`),
+- **Environment secrets** (stejné názvy jako u `staging`):
 
 | Secret | Hodnota |
 |---|---|
 | `SSH_HOST` | `NOVA_IP` |
 | `SSH_USER` | `reathyze` |
 | `SSH_PRIVATE_KEY` | celý obsah `$HOME\.ssh\chata_deploy` (soukromý, včetně řádků `-----BEGIN/END-----`) |
-| `SERVER_PATH` | `/home/reathyze/chata` |
 
-`DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` v secrets nevadí, ale nepoužijí se — `.env` už na serveru existuje.
+`SERVER_PATH`, `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` se nepoužívají — cesta je ve workflow, `.env` je na serveru.
+
+**Settings → Actions → General → Workflow permissions:** zaškrtni **Allow GitHub Actions to create and approve pull requests** (release-please otevírá release PR).
 
 ### 7.3 První deploy
 
-GitHub → **Actions → Deploy to Production** → poslední běh → **Re-run all jobs**
-(nebo jakýkoli push na `main`).
+Produkce se nasazuje jen z release tagu `vX.Y.Z` na `main`:
 
-Deploy sám nainstaluje závislosti, spustí migrace, sestaví frontend, nastartuje `chata-app`
-v PM2 a nastaví denní zálohy do `/home/reathyze/backups/cabin` (cron ve 3:00).
+1. Po merge do `main` udržuje workflow **Release Please** otevřený release PR (verze + `CHANGELOG.md`).
+   Release PR z výchozího tokenu nespustí CI: zavři ho a hned znovu otevři, pak checky naběhnou.
+2. Merge release PR vytvoří tag a spustí **Deploy to Production**. Ručně: **Actions → Deploy to Production → Run workflow** s tagem
+   (takhle se dělá i rollback na starší verzi).
+3. Build proběhne v Actions, pak deploy čeká na schválení v environment `production`.
+
+Na serveru deploy rozbalí artefakt do `releases/`, spustí `npm ci --omit=dev`, zálohu DB, `prisma migrate deploy`,
+přepne `current`, restartuje `chata-app` a ověří `/api/health`. Když health check selže, vrátí `current`
+na předchozí verzi (u úplně prvního deploye není kam, appka zůstane spadlá – `pm2 logs chata-app`). Nastaví také denní zálohy do `/home/reathyze/backups/cabin` (cron ve 3:00).
 
 Kontrola na serveru:
 
@@ -313,7 +351,8 @@ Vlož (zjednodušená verze `nginx-chata.conf` z repa — bez SSL řádků, ty d
 ```nginx
 server {
     listen 80;
-    server_name DOMENA;
+    listen [::]:80;
+    server_name DOMENA www.DOMENA;
 
     client_max_body_size 60M;
 
@@ -348,13 +387,25 @@ server {
 }
 ```
 
+Požadavky na holou IP nebo cizí hostname nemají dostat appku (data by byla vidět přes IP ještě před DNS a HTTPS). `sudo nano /etc/nginx/sites-available/default-deny`:
+
+```nginx
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    return 444;
+}
+```
+
 ```bash
 $ sudo ln -s /etc/nginx/sites-available/chata /etc/nginx/sites-enabled/chata
+$ sudo ln -s /etc/nginx/sites-available/default-deny /etc/nginx/sites-enabled/default-deny
 $ sudo rm /etc/nginx/sites-enabled/default
 $ sudo nginx -t && sudo systemctl reload nginx
 
 # HTTPS certifikát (DNS už musí ukazovat na NOVA_IP)
-$ sudo certbot --nginx -d DOMENA --redirect -m reathyze20@gmail.com --agree-tos
+$ sudo certbot --nginx -d DOMENA -d www.DOMENA --redirect -m reathyze20@gmail.com --agree-tos
 $ sudo certbot renew --dry-run    # ověří automatickou obnovu
 ```
 
@@ -363,7 +414,7 @@ $ sudo certbot renew --dry-run    # ověří automatickou obnovu
 ## 10. Kontrola, že vše funguje
 
 - [ ] `https://DOMENA/api/health` vrací `"status":"ok"`
-- [ ] přihlášení vlastním účtem funguje (bez nutnosti nového loginu, pokud jsi zachoval `JWT_SECRET`)
+- [ ] přihlášení vlastním účtem funguje (po novém `JWT_SECRET` je nutné nové přihlášení)
 - [ ] kalendář ukazuje existující rezervace
 - [ ] galerie ukazuje staré fotky a jde nahrát nová
 - [ ] chat: zpráva se objeví i v druhém okně bez reloadu (Socket.IO přes Nginx)

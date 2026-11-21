@@ -7,7 +7,8 @@
  * it's worth broadcasting, a `whatsapp` message for the "Kopírovat pro WhatsApp"
  * bridge (the manual precursor to the Phase-3 bot).
  */
-import { daysUntil } from "@/lib/dateUtils";
+import { Car, Flame, House, Luggage, ShoppingCart, type LucideIcon } from "lucide-react";
+import { daysUntil, getLocalTodayIso } from "@/lib/dateUtils";
 import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
 
 export type NudgeTone = "info" | "action" | "warn";
@@ -17,7 +18,8 @@ export interface Nudge {
    *  dismissed nudge reappears (e.g. long-empty re-surfaces weekly). */
   id: string;
   tone: NudgeTone;
-  emoji: string;
+  /** UI ikona z lucide-react (ne emoji, #165). */
+  icon: LucideIcon;
   title: string;
   detail?: string;
   /** In-app navigation target. */
@@ -35,7 +37,7 @@ interface BuildNudgesInput {
 
 export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge[] {
   const nudges: Nudge[] = [];
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getLocalTodayIso();
 
   // 1. Departure today — prompt the leaving occupant to fill the state.
   const active = reservations?.activeReservation;
@@ -43,7 +45,7 @@ export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge
     nudges.push({
       id: `departure-${active.id}`,
       tone: "action",
-      emoji: "🧳",
+      icon: Luggage,
       title: "Dnes odjíždíš z chaty",
       detail: "Vyplň stav chaty pro dalšího — zabere to 30 sekund.",
       href: "/reservations",
@@ -59,7 +61,7 @@ export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge
     nudges.push({
       id: `arrival-${myNext.from}`,
       tone: "info",
-      emoji: "🚗",
+      icon: Car,
       title: "Zítra jedeš na chatu",
       detail: `Mrkni na stav chaty od minule.${lowPart}`,
       href: "/dashboard",
@@ -75,7 +77,7 @@ export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge
     nudges.push({
       id: `supply-${lowItems.slice().sort().join("|")}`,
       tone: "warn",
-      emoji: "🛒",
+      icon: ShoppingCart,
       title: `Na chatě ${low.count === 1 ? "dochází položka" : "docházejí položky"}`,
       detail: lowItems.join(", "),
       href: "/shopping",
@@ -89,7 +91,7 @@ export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge
     nudges.push({
       id: `gas-${gas}-${reservations?.lastStay?.to ?? ""}`,
       tone: "warn",
-      emoji: "🔥",
+      icon: Flame,
       title: `Plyn: ${GAS_CZ[gas]}`,
       detail: "Poslední návštěva nahlásila docházející plyn.",
       href: "/shopping",
@@ -105,7 +107,7 @@ export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge
     nudges.push({
       id: `empty-${Math.floor(last.daysEmpty / 7)}`, // re-appears weekly if still empty
       tone: "info",
-      emoji: "🏡",
+      icon: House,
       title: `Chata je prázdná ${last.daysEmpty} dní`,
       detail: "Dlouho tam nikdo nebyl.",
       href: "/reservations",

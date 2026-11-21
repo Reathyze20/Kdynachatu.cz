@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
-import apiClient from "@/api/client";
+import { shoppingApi } from "@/api/shopping";
 import { showToast } from "@/lib/toast";
 import { ShoppingCart, AlertTriangle } from "lucide-react";
 import type { PendingShoppingItem } from "@/api/dashboard";
@@ -28,9 +28,7 @@ export function ShoppingWidget({ items: initialItems, totalCount: initialTotal, 
   }, [initialItems, initialTotal]);
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ listId, itemId, purchased }: { listId: string; itemId: string; purchased: boolean }) => {
-      await apiClient.put(`/shopping-lists/${listId}/items/${itemId}`, { purchased });
-    },
+    mutationFn: ({ itemId }: { itemId: string }) => shoppingApi.toggleItemStatus(itemId, "purchased"),
     onSuccess: () => {
       setActionError(null);
       // Refetch so new items replace the checked-off ones
@@ -62,7 +60,7 @@ export function ShoppingWidget({ items: initialItems, totalCount: initialTotal, 
     // Optimistic: remove from local list
     setLocalItems((prev) => prev.filter((i) => i.id !== item.id));
     setLocalTotal((prev) => Math.max(0, prev - 1));
-    toggleMutation.mutate({ listId: item.listId, itemId: item.id, purchased: true });
+    toggleMutation.mutate({ itemId: item.id });
   };
 
   const header = (

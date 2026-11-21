@@ -8,7 +8,7 @@ const router = Router();
 
 router.get("/system", protect, requireCabin, async (req: Request, res: Response) => {
   if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "PĹ™Ă­stup pouze pro administrĂˇtora." });
+    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
   }
 
   try {

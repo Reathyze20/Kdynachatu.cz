@@ -317,7 +317,7 @@ export function getRouteSkeletonVariant(pathname: string): RouteSkeletonVariant 
 
 export function RouteTransitionSkeleton({ variant = 'dashboard' }: RouteTransitionSkeletonProps) {
   return (
-    <div className="flex h-full min-h-full flex-col p-4 md:p-6 lg:p-8 pb-20 md:pb-0">
+    <div className="flex h-full min-h-full flex-col p-3 md:p-0">
       <div className="flex min-h-0 flex-1 flex-col rounded-[28px] border border-white/60 bg-white/92 p-5 shadow-xl backdrop-blur-md md:p-7">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-3">

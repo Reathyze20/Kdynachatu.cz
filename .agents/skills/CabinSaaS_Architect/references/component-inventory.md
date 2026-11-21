@@ -32,9 +32,11 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Component | Purpose | Key Props |
 |---|---|---|
 | **AppShell** | Main wrapper — header + nav + `<Outlet>` with Framer Motion route transitions | — |
-| **TopBar** | Desktop navigation bar with cabin name, nav links, user dropdown | `onOpenProfileDrawer` |
+| **DesktopSidebar** | Desktop left sidebar (frame #1b), a glass card: cabin name + `PRIMARY_NAV` and a „Víc“ group with `MORE_NAV`, icon + label; footer with help (`HelpFab variant="sidebar"`) and `SidebarProfileMenu`. Desktop has no top bar (#205) | `onOpenProfileDrawer` |
+| **SidebarProfileMenu** | Profile menu at the bottom of the desktop sidebar (profile, backoffice, admin, invites, diagnostics, logout); opens upward via portal, keyboard menu-button pattern; avatar only on the collapsed sidebar | `onOpenProfileDrawer` |
+| **TwoColumnLayout** | Page layout of frame #1b: main column + optional side panel (`<aside>`), side by side from 1024 px (1.5fr : 1fr), stacked on smaller screens; no side panel = nothing rendered, main takes full width. Side panel = light context only, never an action you must not miss | `children, aside?, asideLabel?, className?` |
 | **MobileHeader** | Mobile top bar with user avatar | `animalIcon, username, onOpenProfileDrawer` |
-| **MobileNav** | Bottom tab bar (5 items) from `MOBILE_NAV_ROUTES` | — |
+| **MobileNav** | Bottom tab bar: `PRIMARY_NAV` (Přehled · Kalendář · Předávka · Zásoby) + „Víc“ sheet with `MORE_NAV` | — |
 | **ProfileDrawer** | Right-side sheet with profile settings, avatar/color picker, password change, logout | `open, onClose` |
 
 ---
@@ -51,6 +53,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **HelpFab** | Floating help button + modal with app guide | — |
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
 | **ColorPicker** | Grid of 18 swatch colors for profile | `value, onChange` |
+| **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y (po 14. 12.) → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
 
 ---
 
@@ -63,6 +66,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | LoginForm | Form | ✅ Complete |
 | RegisterForm | Form | ✅ Complete |
 | VerifyForm | Form | ✅ Complete |
+| hooks/useCabinSignup | Hook | ✅ `signupEnabled` (CABIN_SIGNUP_ENABLED), `SIGNUP_STATUS_KEY` |
 
 ### Dashboard (`features/dashboard/`)
 | Component | Type | Status |
@@ -72,7 +76,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | ActiveReservation | Card | ✅ |
 | DepartureBanner | Banner | ✅ |
 | EssentialWarning | Alert | ✅ |
-| HandoverNote | Card | ✅ |
+| PinnedNote | Card | ✅ |
 | ShoppingWidget | Widget | ✅ |
 
 ### Reservations (`features/reservations/`)
@@ -183,6 +187,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Module | Key Exports | Functions |
 |---|---|---|
 | `client.ts` | `apiClient` (Axios) | JWT interceptor, 401 handler |
+| `auth.ts` | `SignupStatusResponse`, `authApi` | getSignupStatus |
 | `admin.ts` | `CabinUser`, `adminApi` | getUsers, getSystemInfo, getLogs, getInvites, createInvite, updateUserRole, deactivateUser |
 | `dashboard.ts` | `DashboardData`, `dashboardApi` | getDashboard, getWeather, getWeatherForecast, getFreeWeekends |
 | `diary.ts` | `DiaryFolder`, `DiaryEntry`, `diaryApi` | getFolders, createFolder, renameFolder, getEntriesInFolder, createEntry, updateEntry, deleteEntry |
@@ -210,9 +215,10 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | File | Key Exports |
 |---|---|
 | `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `SWATCH_COLORS`, `MONTH_NAMES`, `DAY_NAMES` |
-| `dateUtils.ts` | `formatDateRange()`, `formatWeekendRange()`, `nightsBetween()`, `nightsLabel()`, `daysUntil()`, `getTodayFormatted()`, `getLocalTodayIso()` |
+| `dateUtils.ts` | `formatDateRange()`, `formatWeekendRange()`, `nightsBetween()`, `nightsLabel()`, `daysUntil()`, `formatShortDayDate()`, `getTodayFormatted()`, `getLocalTodayIso()` |
 | `toast.ts` | `showToast(message, type)` — dispatches window event |
-| `navRoutes.ts` | `NAV_ROUTES[]`, `MOBILE_NAV_ROUTES[]` — route definitions |
+| `turnusChain.ts` | `buildTurnusChain(stays, today)` — nodes teď/další/pak from firm (`primary`) stays only, own stay `isMine` |
+| `navRoutes.ts` | `PRIMARY_NAV[]`, `MORE_NAV[]`, `visibleNavItems()`, `findActiveNavItem()` — global navigation model |
 | `networkError.ts` | `isNetworkError()`, `OFFLINE_TOAST_MSG` |
 
 ---

@@ -142,6 +142,8 @@ The app uses a two-layer design-token architecture defined in `variables.css`. W
 | Soft backgrounds | `--bg-app` (#f4f7f5) | `bg-slate-50` |
 | Card background | `--bg-card` (#ffffff) | `bg-white` |
 
+**shadcn semantic utilities** (`bg-primary`, `text-muted-foreground`, `border-input`, `ring-ring`, `bg-destructive`, …) are wired to these tokens by the theme bridge in `src/styles/shadcn-tokens.css` (light `:root` references `variables.css`, dark = `.dark` class). Prefer them in new components; do not redefine legacy `--color-*` aliases there.
+
 **Do not** introduce chaotic palettes. Stick to **Emerald** for primary actions and **Slate** for neutrals. Danger = `red-600`, Success = `green-600`, Warning = `amber-600`, Info = `blue-600`.
 
 ### Typography
@@ -273,7 +275,7 @@ Follow the established `frontend-v2/src/` layout exactly:
 api/          → Axios functions per domain (one file per backend route group)
 components/
   ui/         → shadcn/ui primitives (Button, Card, Input...)
-  layout/     → AppShell, TopBar, MobileHeader, MobileNav, ProfileDrawer
+  layout/     → AppShell, DesktopSidebar, SidebarProfileMenu, MobileHeader, MobileNav, ProfileDrawer
   shared/     → Modal, Toast, HelpFab, OfflineBanner, FeatureErrorFallback...
 features/     → Domain-driven page modules (one folder per feature)
   <feature>/

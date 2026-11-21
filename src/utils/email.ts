@@ -26,7 +26,7 @@ const createTransporter = () => {
 };
 
 const transporter = createTransporter();
-const EMAIL_APP_NAME = "Chatačeskéstředohoří";
+const EMAIL_APP_NAME = "Kdy na chatu";
 const EMAIL_APP_FOOTER = `${EMAIL_APP_NAME} — Rodinná aplikace pro správu chaty`;
 
 function ensureEmailTransport(emailKind: string): void {

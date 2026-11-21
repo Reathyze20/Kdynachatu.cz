@@ -8,8 +8,8 @@ Rodinná PWA na koordinaci sdílené chaty (rezervace, nákupy, předávka, pozn
 - Nikdy `prisma migrate dev` ani `db push`. Změna schématu jen podle skillu `database-migrations`; existující soubory v `prisma/migrations/` se nikdy neupravují.
 - Neměň `.github/`, `.claude/`, auth ani middleware bez výslovného zadání.
 - Nikdy nepracuj s produkční databází ani produkčními soubory. Staging používá jen fiktivní data.
-- Nikdy push do `main` ani do `rodina-stable`. Jeden ticket = jedna větev z `main` = jeden PR do ~400 řádků.
-- `rodina-stable` = rodinná produkce (push spouští produkční deploy). Jdou do ní jen opravy výslovně zadané jako hotfix: oprava nejdřív na `main`, pak cherry-pick do `hotfix/<popis>` z `rodina-stable` a PR do `rodina-stable` (`docs/plans/SEP-1.md`).
+- Nikdy push do `main`. Jeden ticket = jedna větev z `main` = jeden PR do ~400 řádků.
+- Produkce se nasazuje **jen z release tagu `v*`** po ručním schválení v GitHub environment `production` (`.github/workflows/deploy.yml` + release-please, ADR-0002). Jednokolejný tok: hotfix = oprava nejdřív na `main`, pak nový release tag; žádná samostatná produkční větev. (Historická dvojkolejnost `main`/`rodina-stable` ze SEP-1 je nahrazena ADR-0002; větev `rodina-stable` se nemaže, archivuje se tagem `archive/rodina-stable`.)
 
 ## Proces
 Práce jde přes GitHub Issues: grilling → `/to-spec` → `/to-tickets` → `/implement` → `/code-review`, mezi fázemi `/clear`. Postup, brány a GitHub nastavení: `docs/SDLC.md` – přečti, než začneš nový ticket nebo PR. Roadmapa je map issue #69.

@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { TriangleAlert } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/api/client";
+import { completeCheckout } from "@/api/reservations";
+import { RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { showToast } from "@/lib/toast";
 import { Modal } from "@/components/shared/Modal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { getLocalTodayIso } from "@/lib/dateUtils";
 
 const BANNER_KEY = "departure_dismissed_date";
 const DEFAULT_CHECKLIST = [
@@ -19,19 +23,21 @@ const DEFAULT_CHECKLIST = [
 function isDismissedToday(): boolean {
   const stored = sessionStorage.getItem(BANNER_KEY);
   if (!stored) return false;
-  return stored === new Date().toISOString().split("T")[0];
+  return stored === getLocalTodayIso();
 }
 
 function dismissToday(): void {
-  sessionStorage.setItem(BANNER_KEY, new Date().toISOString().split("T")[0]);
+  sessionStorage.setItem(BANNER_KEY, getLocalTodayIso());
 }
 
 interface Props {
+  /** Můj dnes končící pobyt s nedokončenou předávkou (z gate dashboardu) */
+  reservationId: string;
   departureChecklist: string[];
   onRefresh: () => void;
 }
 
-export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
+export function DepartureBanner({ reservationId, departureChecklist, onRefresh }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dismissed, setDismissed] = useState(isDismissedToday);
@@ -46,12 +52,19 @@ export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      // Stejná cesta zápisu jako CheckoutSection. Předávka jde první, aby po selhání
+      // nezůstala v chatu zpráva bez dokončené předávky. Volný checklist chaty nemá
+      // strukturovaný protějšek, do checkoutState jde jen vzkaz; bez vzkazu zůstane
+      // případný už uložený stav beze změny.
+      const note = departureNote.trim();
+      await completeCheckout(reservationId, note ? { note } : undefined);
+
       let fullMessage = "**Odjezd z chaty:**\n";
       checklistItems.forEach((item, i) => {
         fullMessage += checkedItems[i] ? `- [x] ${item}\n` : `- [ ] ${item}\n`;
       });
-      if (departureNote.trim()) {
-        fullMessage += `\n**Vzkaz:** ${departureNote.trim()}`;
+      if (note) {
+        fullMessage += `\n**Vzkaz:** ${note}`;
       }
       await apiClient.post("/channels/messages", { message: fullMessage });
     },
@@ -61,6 +74,8 @@ export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
       setModalOpen(false);
       setSubmitError(null);
       showToast("Odjezdový protokol byl uložen.", "success");
+      // RESERVATIONS_KEY pokrývá kalendář i gate odjezdu na dashboardu
+      queryClient.invalidateQueries({ queryKey: RESERVATIONS_KEY });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       onRefresh();
     },
@@ -127,7 +142,7 @@ export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
       {/* Departure banner — inserted at top of dashboard grid */}
       <div id="departure-banner" className="departure-banner">
         <div className="departure-banner-content">
-          <div className="departure-banner-icon" aria-hidden="true">⚠</div>
+          <div className="departure-banner-icon" aria-hidden="true"><TriangleAlert className="w-5 h-5" /></div>
           <div className="departure-banner-text">
             <h3>Dnes odjíždíte!</h3>
             <p>Nezapomeňte vyplnit odjezdový protokol a nechat vzkaz.</p>

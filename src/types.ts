@@ -31,6 +31,7 @@ export interface Reservation {
   to: string;
   purpose: string;
   notes?: string;
+  /** Legacy "Vzkaz pro další" from the booking form — not the handover (`checkoutState`) nor the pinned board note */
   handoverNote?: string;
   status?: "primary" | "backup" | "soft";
   userColor?: string;
@@ -48,7 +49,7 @@ export interface ShoppingListItem {
   addedBy: string;
   addedById: string;
   createdAt: string;
-  purchased: boolean;
+  status: "pending" | "bring_from_home" | "purchased";
   purchasedBy?: string;
   purchasedById?: string;
   purchasedAt?: string;
@@ -126,4 +127,21 @@ export interface ReconstructionItem {
   createdBy: string;
   createdAt: string;
   status?: "pending" | "approved" | "done"; // Pro úkoly
+}
+
+// GET /api/signup-status – zda jde založit novou chatu (CABIN_SIGNUP_ENABLED)
+export interface SignupStatusResponse {
+  cabinSignupEnabled: boolean;
+}
+
+// GET /api/demo-accounts – fiktivní účty pro rychlé přihlášení, neprázdné jen na stagingu
+export interface DemoAccount {
+  username: string;
+  label: string;
+  role: string;
+  password: string;
+}
+
+export interface DemoAccountsResponse {
+  accounts: DemoAccount[];
 }

@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
+import { CircleCheck, CircleX } from 'lucide-react'
 import { apiClient } from '@/api/client'
 
 type VerifyState = 'loading' | 'success' | 'error' | 'no-token'
@@ -66,7 +67,7 @@ export function VerifyEmailPage() {
         <div style={{ marginBottom: '1.5rem' }}>
           <img src="/logo-icon.svg" alt="Logo" style={{ width: 48, height: 48 }} />
           <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.5rem' }}>
-            Chatačeskéstředohoří
+            Kdy na chatu
           </h1>
         </div>
 
@@ -79,7 +80,7 @@ export function VerifyEmailPage() {
 
         {state === 'success' && (
           <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✓</div>
+            <CircleCheck size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-success)' }} />
             <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               Ověření úspěšné
             </h2>
@@ -106,7 +107,7 @@ export function VerifyEmailPage() {
 
         {state === 'error' && (
           <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✕</div>
+            <CircleX size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-error)' }} />
             <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-danger, #dc2626)' }}>
               Ověření selhalo
             </h2>

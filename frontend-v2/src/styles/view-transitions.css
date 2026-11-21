@@ -12,12 +12,12 @@
 
 /* ── Persist nav during transitions — stays perfectly still ────────── */
 
-.app-nav {
-  view-transition-name: app-nav;
+.app-sidebar {
+  view-transition-name: app-sidebar;
 }
 
-::view-transition-old(app-nav),
-::view-transition-new(app-nav) {
+::view-transition-old(app-sidebar),
+::view-transition-new(app-sidebar) {
   animation: none;
 }
 

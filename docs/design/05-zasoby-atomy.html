@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="cs" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kdy na chatu — návrh #5: Zásoby a nákupy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: 244 247 245; --sheet: 255 253 250; --sheet-alt: 233 244 239; --rule: 223 228 223; --rule-soft: 233 237 232;
+  --ink: 30 41 59; --ink-2: 75 85 99; --ink-3: 148 155 163; --accent: 63 123 99;
+  --lc: 4 120 87; --on-lc: 255 255 255; --card-alpha: 1;
+  --low: 180 100 10; --empty: 205 45 45;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: 15 20 17; --sheet: 26 32 28; --sheet-alt: 31 41 35; --rule: 52 62 54; --rule-soft: 37 46 40;
+  --ink: 230 234 229; --ink-2: 150 160 150; --ink-3: 102 112 103; --accent: 94 186 134; --card-alpha: .88;
+  --low: 234 179 8; --empty: 248 113 113;
+  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background:
+    radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%),
+    linear-gradient(180deg, rgb(var(--page)), rgb(var(--page))); min-height: 100%; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); }
+.wrap { max-width: 1520px; margin: 0 auto; padding: 22px 28px 120px; }
+.display { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; letter-spacing: -.02em; }
+.top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.top h1 { margin: 0; font-size: 29px; font-weight: 800; letter-spacing: -.02em; }
+.top h1 span { font-size: 16px; font-weight: 400; color: rgb(var(--ink-2)); margin-left: 8px; }
+.seg { margin-left: auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.seg button { border: 0; background: none; color: rgb(var(--ink-2)); font: 500 13px/1 inherit; padding: 7px 13px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: rgb(var(--ink)); color: rgb(var(--page)); }
+.howto { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 16px; padding: 20px 24px; box-shadow: var(--lift); }
+.howto h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.08; }
+.howto p { margin: 0 0 8px; font-size: 14px; }
+.howto ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.howto li { margin-bottom: 6px; }
+.given { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgb(var(--sheet-alt)); border: 1px solid rgb(var(--rule-soft)); font-size: 12.5px; line-height: 1.5; }
+.given b { color: rgb(var(--ink)); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.toc a { font-size: 12.5px; text-decoration: none; color: rgb(var(--ink)); border: 1px solid rgb(var(--rule)); border-radius: 999px; padding: 3px 10px; background: rgb(var(--sheet)); }
+.toc a.done { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+.group-h { margin: 46px 2px 0; padding-top: 18px; border-top: 2px solid rgb(var(--ink)); }
+.group-h h2 { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.group-h p { margin: 6px 0 0; font-size: 14.5px; color: rgb(var(--ink-2)); max-width: 70em; }
+.sec { margin: 32px 0 0; scroll-margin-top: 16px; }
+.sec-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 2px 10px; }
+.sec-h h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+.sec-h .q { font-size: 14px; color: rgb(var(--ink-2)); }
+.sec-h .picked { margin-left: auto; font-size: 13px; color: rgb(var(--ink-2)); }
+.sec-h .picked b { color: rgb(var(--ink)); }
+.cols { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 14px; }
+.col { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: var(--lift); }
+.col.on { border-color: rgb(var(--lc)); box-shadow: 0 0 0 2px rgb(var(--lc)); }
+.col-h { display: flex; align-items: center; gap: 9px; }
+.col-h .lt { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgb(var(--sheet-alt)); font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 15px; flex-shrink: 0; }
+.col.on .col-h .lt { background: rgb(var(--lc)); color: rgb(var(--on-lc)); }
+.col-h .nm { font-size: 14px; font-weight: 600; line-height: 1.2; }
+.col-h .st { display: block; font-size: 11.5px; color: rgb(var(--ink-2)); font-weight: 400; }
+.col .idea { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.col .lab2 { font-size: 11.5px; color: rgb(var(--ink-2)); display: block; margin-bottom: 2px; }
+.col ul { margin: 0 0 4px; padding-left: 16px; font-size: 12.5px; line-height: 1.45; }
+.col .meta-c { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.col .meta-c .choose { margin-top: auto; }
+.choose { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid rgb(var(--rule)); cursor: pointer; font-weight: 600; font-size: 14px; background: rgb(var(--sheet-alt)); }
+.choose input { width: 18px; height: 18px; accent-color: rgb(var(--lc)); margin: 0; }
+.choose.on { border-color: rgb(var(--lc)); background: rgb(var(--lc) / .14); }
+.note { width: 100%; min-height: 48px; margin-top: 10px; resize: vertical; border-radius: 10px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); color: rgb(var(--ink)); font-family: inherit; font-size: 13px; line-height: 1.4; padding: 8px 10px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgb(var(--sheet) / .96); border-top: 1px solid rgb(var(--rule)); backdrop-filter: blur(6px); }
+.bar-in { max-width: 1520px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bar .sum { font-size: 13px; color: rgb(var(--ink-2)); flex: 1; min-width: 300px; }
+.bar .sum b { color: rgb(var(--ink)); }
+.bar .copied { font-size: 13px; color: rgb(var(--accent)); font-weight: 600; }
+.xbtn { border-radius: 999px; border: 1px solid rgb(var(--rule)); padding: 9px 16px; font: 600 13.5px/1 inherit; background: rgb(var(--sheet)); color: rgb(var(--ink)); cursor: pointer; }
+.xbtn.p { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+
+/* ---- rámečky: mobil + desktop ---- */
+.frames { display: flex; flex-direction: column; gap: 12px; }
+.frl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: rgb(var(--ink-3)); font-weight: 700; display: block; margin-bottom: 4px; }
+
+/* ---- telefon ---- */
+.pv { border: 1px solid rgb(var(--rule)); border-radius: 18px; background: rgb(var(--page)); overflow: hidden; display: flex; flex-direction: column; min-height: 240px; max-width: 230px; margin: 0 auto; }
+.pv-top { padding: 10px 12px 8px; font-weight: 700; font-size: 13.5px; border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 8px; }
+.pv-top small { font-weight: 400; color: rgb(var(--ink-3)); font-size: 10.5px; margin-left: auto; }
+.pv-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+.pv-nav { display: flex; align-items: flex-end; border-top: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.pv-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; font-size: 9px; color: rgb(var(--ink-2)); text-align: center; }
+.pv-tab .ic { font-size: 14px; line-height: 1; display: inline-flex; }
+.pv-tab.on { color: rgb(var(--accent)); font-weight: 700; }
+
+/* ---- obecné prvky ---- */
+.pv-card { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 10px; padding: 8px 9px; font-size: 11.5px; line-height: 1.35; }
+.pv-card .k { color: rgb(var(--ink-2)); font-size: 10.5px; }
+.pv-btn { background: rgb(var(--sheet)); border: 1px solid rgb(var(--accent)); color: rgb(var(--accent)); border-radius: 8px; text-align: center; padding: 6px; font-weight: 700; font-size: 10.5px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.pv-btn svg { width: 13px; height: 13px; }
+.pv-note2 { font-size: 9.5px; color: rgb(var(--ink-3)); padding: 2px; line-height: 1.35; }
+.pv-primary { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-radius: 9px; text-align: center; padding: 8px; font-weight: 700; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.pv-primary svg { width: 14px; height: 14px; }
+
+/* ---- přepínač zásoby/nákup ---- */
+.pv-switch { display: flex; gap: 3px; background: rgb(var(--sheet-alt)); border-radius: 999px; padding: 3px; }
+.pv-switch span { flex: 1; text-align: center; font-size: 9.5px; padding: 5px 4px; border-radius: 999px; color: rgb(var(--ink-2)); }
+.pv-switch span.on { background: rgb(var(--sheet)); font-weight: 700; color: rgb(var(--ink)); box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
+
+/* ---- filtr chips ---- */
+.pv-chips { display: flex; gap: 3px; flex-wrap: wrap; }
+.pv-chip { font-size: 8.5px; border: 1px solid rgb(var(--rule)); border-radius: 999px; padding: 3px 8px; background: rgb(var(--sheet)); color: rgb(var(--ink-2)); }
+.pv-chip.on { background: rgb(var(--accent) / .14); border-color: rgb(var(--accent)); color: rgb(var(--accent)); font-weight: 700; }
+.pv-chip.danger.on { background: rgb(var(--empty) / .14); border-color: rgb(var(--empty)); color: rgb(var(--empty)); }
+
+/* ---- kategorie hlavička ---- */
+.pv-cat { font-size: 8px; text-transform: uppercase; letter-spacing: .05em; color: rgb(var(--ink-3)); font-weight: 800; margin: 5px 0 1px; padding-left: 2px; }
+
+/* ---- řádek zásoby ---- */
+.pv-inv { display: flex; align-items: center; gap: 6px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 8px; padding: 6px 8px; font-size: 10.5px; }
+.pv-inv .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-inv .loc { font-size: 8px; color: rgb(var(--ink-3)); }
+.pv-badge { font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 999px; white-space: nowrap; }
+.pv-badge.ok { background: rgb(var(--accent) / .16); color: rgb(var(--accent)); }
+.pv-badge.low { background: rgb(var(--low) / .16); color: rgb(var(--low)); }
+.pv-badge.empty { background: rgb(var(--empty) / .16); color: rgb(var(--empty)); }
+.pv-badge.ghost { background: rgb(var(--sheet-alt)); color: rgb(var(--ink-3)); font-weight: 700; }
+.pv-add { width: 19px; height: 19px; border: 1px solid rgb(var(--accent)); border-radius: 6px; display: grid; place-items: center; color: rgb(var(--accent)); flex-shrink: 0; }
+.pv-add svg { width: 11px; height: 11px; }
+.pv-sdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pv-sdot.ok { background: rgb(var(--accent)); }
+.pv-sdot.low { background: rgb(var(--low)); }
+.pv-sdot.empty { background: rgb(var(--empty)); }
+
+/* ---- řádek nákup ---- */
+.pv-shop { display: flex; align-items: center; gap: 7px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 8px; padding: 6px 8px; font-size: 10.5px; }
+.pv-shop .nm { flex: 1; min-width: 0; }
+.pv-check { width: 15px; height: 15px; border: 1.5px solid rgb(var(--rule)); border-radius: 5px; flex-shrink: 0; display: grid; place-items: center; color: #fff; }
+.pv-check.on { background: rgb(var(--accent)); border-color: rgb(var(--accent)); }
+.pv-check svg { width: 10px; height: 10px; }
+.pv-done { text-decoration: line-through; color: rgb(var(--ink-3)); }
+.pv-star { color: rgb(var(--low)); display: inline-flex; }
+.pv-star svg { width: 12px; height: 12px; }
+.pv-tag { font-size: 7.5px; font-weight: 700; padding: 2px 5px; border-radius: 999px; background: rgb(var(--sheet-alt)); color: rgb(var(--ink-2)); white-space: nowrap; }
+.pv-ava { width: 16px; height: 16px; border-radius: 50%; background: rgb(var(--accent) / .2); color: rgb(var(--accent)); font-size: 8px; font-weight: 800; display: grid; place-items: center; flex-shrink: 0; }
+.pv-price { font-size: 9px; font-weight: 700; color: rgb(var(--ink-2)); white-space: nowrap; }
+
+/* ---- desktop rám ---- */
+.dv { border: 1px solid rgb(var(--rule)); border-radius: 12px; overflow: hidden; background: rgb(var(--page)); display: flex; flex-direction: column; box-shadow: var(--lift); }
+.dv-chrome { height: 16px; background: rgb(var(--sheet)); border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 4px; padding: 0 8px; flex-shrink: 0; }
+.dv-chrome i { width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--rule)); display: inline-block; }
+.dv-wrap { flex: 1; display: grid; min-height: 0; grid-template-columns: 92px 1fr; }
+.dv-side { border-right: 1px solid rgb(var(--rule-soft)); background: rgb(var(--sheet)); padding: 7px 5px; display: flex; flex-direction: column; gap: 2px; }
+.dv-brand { font-weight: 800; font-size: 9.5px; padding: 2px 4px 7px; display: flex; align-items: center; gap: 4px; }
+.dv-ni { display: flex; align-items: center; gap: 5px; font-size: 9px; padding: 4px 5px; border-radius: 6px; color: rgb(var(--ink-2)); white-space: nowrap; }
+.dv-ni.on { background: rgb(var(--accent) / .14); color: rgb(var(--accent)); font-weight: 700; }
+.dv-ni svg { width: 11px; height: 11px; flex-shrink: 0; }
+.dv-main { padding: 10px; overflow: hidden; min-width: 0; }
+.dv-main.calm { background: radial-gradient(360px 150px at 50% -24%, rgb(var(--sheet-alt)), transparent 72%); }
+.dv-cap { max-width: var(--cap, 80%); margin: 0 auto; display: flex; flex-direction: column; gap: 7px; }
+.dv-formh { font-weight: 800; font-size: 11px; margin-bottom: 2px; display: flex; align-items: center; justify-content: space-between; }
+.dv-cols { display: grid; gap: 10px; align-items: start; }
+.dv-colstack { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dv-colh { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--ink-2)); }
+svg.lucide { width: 1em; height: 1em; stroke-width: 2; vertical-align: middle; display: inline-block; }
+
+@media (max-width: 1100px) { .howto { grid-template-columns: 1fr; } .cols { grid-template-columns: 1fr !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="display">Kdy na chatu — Zásoby a nákupy<span>Fáze 4 · návrh #5 · poslední z V1 · 2026-11-21</span></h1>
+    <div class="seg" id="seg-t"><button data-v="light" aria-pressed="true">Světlé</button><button data-v="dark" aria-pressed="false">Tmavé</button></div>
+  </header>
+
+  <section class="howto">
+    <div>
+      <h2 class="display">Co dochází doma — a co koupit cestou.</h2>
+      <p>Poslední obrazovka V1: drží <b>dvě různé věci</b>, které spolu souvisí. <b>Zásoby na chatě</b> = trvalý stav spíže (co tam je / dochází / došlo). <b>Nákupní seznam</b> = co koupit cestou na chatu. Mezi nimi vede smyčka: co dojde → přidám do nákupu → koupím → zásoba se doplní.</p>
+      <p>Grounded v realitě (subagent zmapoval kód): jsou to <b>dva oddělené modely</b> (`InventoryItem` × `ShoppingListItem`), dnes v jedné obrazovce s přepínačem. Zásoba má tří-stav <b>Dostatek / Málo / Došlo</b> a kategorii; nákupní položka má <b>zaškrtnutí „koupeno"</b>, značku „z domova", „důležité" ★ a dělení útraty. Smyčku dělá tlačítko „Přidat do nákupu" (`linkedInventoryId`).</p>
+      <p>U každého dílu vidíš <b>mobil i desktop</b> a vybíráš <b>A / B / C</b> (A = nejjednodušší + doporučení).</p>
+      <div class="given"><b>Dané (nerozhoduje se tu):</b> zásoba i nákupní položka jsou oddělené modely, smyčka mezi nimi zůstává · „co dochází" krmí Přehled (widget + nudge) a příjezdovou kartu (#3) · hosté nevidí formuláře/mazání · real-time přes Socket.IO. Ikony Lucide, <b>bez emoji</b>.
+      <br><br>Legacy dluh pro Fázi 5 (mimo tenhle picker): mrtvý druhý „pantry" koncept (`ShoppingList.isPantry`), dva route soubory nákupu, redundantní `purchased` × `status`, <b>tři různé definice „co chybí/dochází"</b> (pantry = jen EMPTY, nudge = LOW+EMPTY, dashboard z nákupního seznamu), rozbitá diakritika v backend stringech.</div>
+      <nav class="toc" id="toc"></nav>
+    </div>
+    <ol>
+      <li>U každého dílu zaškrtni <b>„Tuhle chci"</b>. Můžeš zaškrtnout víc variant a do poznámky napsat, jak je spojit.</li>
+      <li>Díl, na kterém ti nezáleží, nech prázdný — postavím doporučenou <b>A</b>.</li>
+      <li>Volba se ukládá v prohlížeči, můžeš se vrátit. Nahoře přepínáš Světlé / Tmavé.</li>
+      <li>Nakonec dole <b>Zkopírovat volbu</b> a vlož mi ji do chatu (nebo <b>Stáhnout</b>).</li>
+    </ol>
+  </section>
+
+  <main id="sections"></main>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <div class="sum" id="sum"></div>
+  <span class="copied" id="copied"></span>
+  <button class="xbtn" id="copy">Zkopírovat volbu</button>
+  <button class="xbtn p" id="dl">Stáhnout volbu</button>
+</div></div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+(() => {
+const TITLE   = 'Kdy na chatu — návrh #5: Zásoby a nákupy';
+const KEY     = 'kdynachatu.design.05-zasoby';
+const DL_NAME = 'kdynachatu-05-zasoby-volba.txt';
+
+/* ---- pomůcky: telefon + desktop ---- */
+const TAB = (ic, l, on) => `<div class="pv-tab ${on ? 'on' : ''}"><span class="ic">${ic}</span>${l}</div>`;
+const NAVDEF = [['home','Přehled',false],['calendar-days','Kalendář',false],['key-round','Předávka',false],['shopping-cart','Zásoby',true],['more-horizontal','Víc',false]];
+const dnav = () => `<div class="pv-nav">${NAVDEF.map(t => TAB(`<i data-lucide="${t[0]}"></i>`, t[1], t[2])).join('')}</div>`;
+const phone = (top, body) => `<div class="pv"><div class="pv-top">${top}<small>náhled</small></div><div class="pv-body">${body}</div>${dnav()}</div>`;
+const SIDE = () => `<nav class="dv-side"><div class="dv-brand"><i data-lucide="trees"></i>Lípou</div>${NAVDEF.map(([i,l,on]) => `<div class="dv-ni ${on ? 'on' : ''}"><i data-lucide="${i}"></i>${l}</div>`).join('')}</nav>`;
+const deskMini = (body, title) => `<div class="dv"><div class="dv-chrome"><i></i><i></i><i></i></div><div class="dv-wrap">${SIDE()}<div class="dv-main calm"><div class="dv-cap">${title ? `<div class="dv-formh">${title}</div>` : ''}${body}</div></div></div></div>`;
+const deskSplit = (left, right, lh, rh) => `<div class="dv"><div class="dv-chrome"><i></i><i></i><i></i></div><div class="dv-wrap">${SIDE()}<div class="dv-main"><div class="dv-cap" style="--cap:97%"><div class="dv-formh"><span>Zásoby a nákupy · Pod Lípou</span></div><div class="dv-cols" style="grid-template-columns:1fr 1fr"><div class="dv-colstack"><div class="dv-colh">${lh}</div>${left}</div><div class="dv-colstack"><div class="dv-colh">${rh}</div>${right}</div></div></div></div></div></div>`;
+const dual = (top, body, opts = {}) => `<div class="frames"><div class="fr"><span class="frl">Mobil</span>${phone(top, body)}</div><div class="fr"><span class="frl">Desktop</span>${opts.desk || deskMini(body, 'Zásoby · Pod Lípou')}</div></div>`;
+
+/* ---- stavební díly ---- */
+const SWITCH = (mode) => `<div class="pv-switch"><span class="${mode === 'z' ? 'on' : ''}">Zásoby</span><span class="${mode === 'n' ? 'on' : ''}">Nákup · 4</span></div>`;
+const CHECK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+const invRow = (nm, status, opts = {}) => {
+  const L = { ok: 'Dostatek', low: 'Dochází', empty: 'Došlo' };
+  const badge = opts.dot
+    ? `<span class="pv-sdot ${status}"></span><span class="pv-badge ghost">${L[status]}</span>`
+    : `<span class="pv-badge ${status}">${opts.lab ? opts.lab[status] : L[status]}</span>`;
+  const add = (status !== 'ok') ? `<div class="pv-add"><i data-lucide="plus"></i></div>` : '';
+  return `<div class="pv-inv"><span class="nm">${nm}${opts.loc ? ` <span class="loc">· ${opts.loc}</span>` : ''}</span>${badge}${opts.noAdd ? '' : add}</div>`;
+};
+/* zásoby podle kategorie (A) */
+const INV_CAT = (o = {}) => `${o.noSwitch ? '' : SWITCH('z')}
+  <div class="pv-chips"><span class="pv-chip danger on">Chybí · 2</span><span class="pv-chip">Vše</span><span class="pv-chip">Do nákupu</span></div>
+  <div class="pv-cat">Trvanlivé</div>${invRow('Těstoviny', 'ok', o)}${invRow('Rýže', 'low', o)}
+  <div class="pv-cat">Nápoje</div>${invRow('Káva', 'empty', o)}
+  <div class="pv-cat">Hygiena</div>${invRow('Toaleťák', 'empty', o)}`;
+/* zásoby podle stavu (B) */
+const INV_STATUS = (o = {}) => `${o.noSwitch ? '' : SWITCH('z')}
+  <div class="pv-cat" style="color:rgb(var(--empty))">Došlo / dochází</div>${invRow('Káva', 'empty', o)}${invRow('Toaleťák', 'empty', o)}${invRow('Rýže', 'low', o)}
+  <div class="pv-cat">V pořádku</div>${invRow('Těstoviny', 'ok', o)}${invRow('Olej', 'ok', o)}`;
+/* zásoby plochý + filtr (C) */
+const INV_FLAT = (o = {}) => `${o.noSwitch ? '' : SWITCH('z')}
+  <div class="pv-chips"><span class="pv-chip danger on">Chybí</span><span class="pv-chip">Trvanlivé</span><span class="pv-chip">Nápoje</span><span class="pv-chip">Hygiena</span></div>
+  ${invRow('Káva', 'empty', o)}${invRow('Toaleťák', 'empty', o)}${invRow('Rýže', 'low', o)}`;
+
+const shopRow = (nm, o = {}) => `<div class="pv-shop"><span class="pv-check ${o.done ? 'on' : ''}">${o.done ? CHECK : ''}</span><span class="nm ${o.done ? 'pv-done' : ''}">${nm}</span>${o.star ? '<span class="pv-star"><i data-lucide="star"></i></span>' : ''}${o.fromHome ? '<span class="pv-tag">z domova</span>' : ''}${o.fromStock ? '<span class="pv-tag">ze zásob</span>' : ''}${o.price ? `<span class="pv-price">${o.price}</span>` : ''}${o.who ? `<span class="pv-ava">${o.who}</span>` : ''}</div>`;
+/* nákup bohatý (A) */
+const SHOP_A = (o = {}) => `${o.noSwitch ? '' : SWITCH('n')}
+  ${shopRow('Máslo', { done: true, who: 'J' })}
+  ${shopRow('Káva', { fromStock: true, star: true })}
+  ${shopRow('Pečivo', { fromHome: true })}
+  ${shopRow('Toaleťák', { star: true })}`;
+/* nákup minimal (B) */
+const SHOP_MIN = (o = {}) => `${o.noSwitch ? '' : SWITCH('n')}
+  ${shopRow('Máslo', { done: true })}
+  ${shopRow('Káva')}
+  ${shopRow('Pečivo')}
+  ${shopRow('Toaleťák')}`;
+/* nákup s cenou + dělení (C) */
+const SHOP_PRICE = (o = {}) => `${o.noSwitch ? '' : SWITCH('n')}
+  ${shopRow('Máslo', { done: true, who: 'J', price: '45 Kč' })}
+  ${shopRow('Káva', { price: '189 Kč' })}
+  ${shopRow('Pečivo', { price: '62 Kč' })}
+  <div class="pv-card" style="display:flex;justify-content:space-between"><span class="k">Útrata · dělí se 3</span><b style="font-size:11px">296 Kč</b></div>`;
+
+const SECS = [];
+const G = (name, p) => SECS.push({ group: name, p });
+const A = (s) => SECS.push(s);
+
+/* ---- ZDE OBSAH: sekce a varianty ---- */
+
+G('Zásoby a nákupy', 'Pět rozhodnutí o poslední obrazovce V1. Drží dvě různé věci — stav spíže na chatě a nákupní seznam — a smyčku mezi nimi. Grounded v dnešním kódu; pozor na tři různé definice „co chybí" (řeší se ve Fázi 5, ne tady).');
+
+A({ id: 'struktura', name: 'Zásoby × Nákup: jak je držet', q: 'Jak spolu obě věci na obrazovce žijí?', n: 3, v: [
+  { k: 'A', name: 'Přepínač dvou režimů', st: 'doporučeno · dnešní',
+    r: () => dual('Zásoby a nákupy', INV_CAT(),
+      { desk: deskSplit(INV_CAT({ noSwitch: true }), SHOP_A({ noSwitch: true }), 'Zásoby na chatě', 'Nákupní seznam') }),
+    idea: 'Nahoře přepínač „Zásoby / Nákup" (dnešní ViewSwitcher). Na desktopu se obojí vejde vedle sebe.',
+    plus: ['Jasně oddělí dvě role (stav spíže × co koupit)', 'Drží dnešní mentální model, nulové učení', 'Desktop ukáže obojí najednou'],
+    minus: ['Na mobilu vidíš jen jedno naráz — přepínání', 'Smyčka „dochází → koupit" překračuje přepínač'] },
+  { k: 'B', name: 'Jedna obrazovka', st: 'sjednocené',
+    r: () => dual('Zásoby a nákupy', `<div class="pv-cat" style="color:rgb(var(--empty))">Koupit cestou</div>${SHOP_MIN({ noSwitch: true })}<div class="pv-cat">Spíž</div>${invRow('Těstoviny', 'ok', {})}${invRow('Olej', 'ok', {})}`),
+    idea: 'Žádný přepínač: nahoře „co koupit" (nákup), pod tím „stav spíže". Smyčka je vidět pohromadě.',
+    plus: ['Smyčka dochází→koupit je na očích', 'Jeden scroll, žádné přepínání', 'Méně kliků'],
+    minus: ['Dlouhá obrazovka, může zahltit', 'Dvě různé logiky (stav × koupeno) blízko sebe mate'] },
+  { k: 'C', name: 'Nákup primární, spíž vedle', st: 'nákup napřed',
+    r: () => dual('Nákup', `${SHOP_A({ noSwitch: true })}<div class="pv-btn" style="margin-top:3px"><i data-lucide="package"></i> Stav spíže na chatě</div>`),
+    idea: 'Hlavní je nákupní seznam (to člověk dělá cestou); stav spíže je sekce na proklik.',
+    plus: ['Odpovídá tomu, co se dělá nejčastěji (nákup)', 'Nejkratší hlavní obrazovka'],
+    minus: ['Stav spíže schovaný — hůř se udržuje aktuální', '„Co dochází" je míň vidět'] },
+] });
+
+A({ id: 'stav', name: 'Jak se čte stav zásoby', q: 'Jak ukázat Dostatek / dochází / došlo?', n: 3, v: [
+  { k: 'A', name: 'Tři stavy slovy', st: 'doporučeno',
+    r: () => dual('Zásoby', INV_CAT()),
+    idea: 'Badge se slovem: Dostatek · Dochází · Došlo. (Dnešní „Málo" → „Dochází" — tvoje poznámka z příjezdu: tahle slova jsou čitelná.)',
+    plus: ['Slovo je jednoznačné, netřeba legendu', 'Navazuje na jazyk příjezdové karty', 'Barva jen podporuje, nenese význam sama'],
+    minus: ['Tři stavy chtějí od člověka rozlišit „dochází" vs „došlo" při zadávání'] },
+  { k: 'B', name: 'Dva stavy: Je / Dochází', st: 'nejjednodušší',
+    r: () => dual('Zásoby', INV_CAT({ lab: { ok: 'Je', low: 'Dochází', empty: 'Dochází' } })),
+    idea: 'Jen dva stavy — buď to je, nebo dochází/došlo (jedno). Míň rozhodování při zadávání.',
+    plus: ['Nejrychlejší zadání (jeden přepínač)', 'Méně stavů = méně omylů'],
+    minus: ['Ztratíš rozdíl „ještě trochu je" × „úplně došlo"', 'Hůř se plánuje, co je akutní', 'Velká změna modelu (dnes tří-stav)'] },
+  { k: 'C', name: 'Semafor: barva + slovo', st: 'vizuální',
+    r: () => dual('Zásoby', INV_CAT({ dot: true })),
+    idea: 'Barevná tečka (zelená/oranžová/červená) + slovo. Stav se pozná i periferně.',
+    plus: ['Rychlé skenování očima po barvě', 'Slovo zůstává kvůli přístupnosti'],
+    minus: ['Barva sama nestačí (G1 kontrast, barvoslepost) — slovo musí zůstat', 'Víc vizuálního šumu v seznamu'] },
+] });
+
+A({ id: 'cleneni', name: 'Jak se zásoby člení', q: 'Podle čeho řadit stav spíže?', n: 3, v: [
+  { k: 'A', name: 'Podle kategorie', st: 'doporučeno · dnešní',
+    r: () => dual('Zásoby', INV_CAT()),
+    idea: 'Skupiny Trvanlivé · Nápoje · Hygiena · Koření · Ostatní (dnešní), nahoře filtr „Chybí".',
+    plus: ['Odpovídá tomu, jak lidé přemýšlí o spíži', 'Dobré pro procházení a doplňování', 'Beze změny proti dnešku'],
+    minus: ['Co dochází je rozházené po kategoriích (řeší filtr „Chybí")'] },
+  { k: 'B', name: 'Podle stavu', st: 'akční',
+    r: () => dual('Zásoby', INV_STATUS()),
+    idea: 'Nahoře „Došlo / dochází", pod tím „v pořádku". Co řešit, je hned navrchu.',
+    plus: ['Akutní věci na očích bez filtrování', 'Dobré „co honem koupit"'],
+    minus: ['Horší pro procházení celé spíže', 'Pořadí skáče, jak se stavy mění'] },
+  { k: 'C', name: 'Plochý seznam + filtr', st: 'jednoduché',
+    r: () => dual('Zásoby', INV_FLAT()),
+    idea: 'Jeden plochý seznam, členění nahrazují filtr-chips (Chybí / kategorie).',
+    plus: ['Nejjednodušší struktura', 'Filtr řeší obojí (stav i kategorii)'],
+    minus: ['Bez skupin se dlouhý seznam hůř čte', 'Víc klikání do filtrů'] },
+] });
+
+A({ id: 'smycka', name: 'Z „dochází" do nákupu', q: 'Jak se to, co dochází, dostane na nákupní seznam?', n: 3, v: [
+  { k: 'A', name: 'Tlačítko u položky + „Vše do nákupu"', st: 'doporučeno · dnešní',
+    r: () => dual('Zásoby', `${INV_CAT()}`),
+    idea: 'U každé položky, co dochází/došla, je tlačítko „+ do nákupu"; nahoře „Vše do nákupu" pro hromadné přidání.',
+    plus: ['Člověk má kontrolu — přidá, co fakt chce', 'Drží dnešní smyčku (`linkedInventoryId`)', 'Hromadné pro rychlost'],
+    minus: ['Je to krok navíc (dochází → kliknout → koupit)', 'Dá se zapomenout přidat'] },
+  { k: 'B', name: 'Appka sama nabídne', st: 'poloautomat',
+    r: () => dual('Zásoby', `${SWITCH('z')}<div class="pv-card" style="border-color:rgb(var(--accent))"><span class="k">Došlo a není v nákupu</span><br><b style="font-size:11px">Káva · Toaleťák</b><div class="pv-btn" style="margin-top:4px"><i data-lucide="plus"></i> Přidat obojí do nákupu</div></div>${invRow('Rýže', 'low', {})}`),
+    idea: 'Když něco dojde a není v nákupu, appka nahoře nabídne „přidat do nákupu" jedním klikem.',
+    plus: ['Nic se nezapomene, ale rozhodnutí má člověk', 'Vede ke smyčce, netlačí'],
+    minus: ['Nabídka může otravovat, když ji ignoruju', 'Víc logiky na backendu'] },
+  { k: 'C', name: 'Plně automaticky', st: 'bez tření',
+    r: () => dual('Zásoby', `${SWITCH('z')}<div class="pv-note2">Co označíš „Došlo", skočí samo do nákupu.</div>${invRow('Káva', 'empty', { noAdd: true })}${invRow('Toaleťák', 'empty', { noAdd: true })}`),
+    idea: 'Jakmile označíš „Došlo", položka se sama objeví v nákupu. Žádné tlačítko.',
+    plus: ['Nejmíň kliků, nic se nezapomene', 'Stav spíže a nákup drží krok automaticky'],
+    minus: ['Nákup zaplavou věci, co zrovna koupit nechci', 'Těžší pochopit, proč tam věc je', 'Mazání z nákupu musí umět vrátit stav'] },
+] });
+
+A({ id: 'polozka', name: 'Nákupní položka', q: 'Co nabídne řádek v nákupu?', n: 3, v: [
+  { k: 'A', name: 'Koupeno + rychlé značky', st: 'doporučeno',
+    r: () => dual('Nákup', SHOP_A(),
+      { desk: deskSplit(SHOP_A({ noSwitch: true }), INV_CAT({ noSwitch: true }), 'Nákupní seznam', 'Stav spíže') }),
+    idea: 'Zaškrtnutí „koupeno", značka „z domova", „důležité" ★ a kdo koupil. „Ze zásob" ukáže, že položka přišla ze spíže.',
+    plus: ['Pokryje reálné potřeby (kdo veze, co je nutné)', 'Značky jsou drobné, nepřekáží', 'Drží dnešní pole'],
+    minus: ['Víc prvků na řádku — ohlídat, ať to není přeplácané'] },
+  { k: 'B', name: 'Jen koupeno + název', st: 'minimal',
+    r: () => dual('Nákup', SHOP_MIN()),
+    idea: 'Čistý seznam: zaškrtávátko a název, nic víc.',
+    plus: ['Nejklidnější, nejrychleji se odškrtává', 'Žádný šum'],
+    minus: ['Ztratí „z domova", „důležité" i kdo koupil', 'Míň užitku při reálném nákupu'] },
+  { k: 'C', name: '+ cena a dělení útraty', st: 'rozpočtové',
+    r: () => dual('Nákup', SHOP_PRICE()),
+    idea: 'K položce cena, dole součet útraty a dělení mezi rodiny (model `splits` existuje).',
+    plus: ['Vyřeší „kdo kolik dal" férově', 'Využije existující dělení útraty'],
+    minus: ['Peníze přidají tření do jednoduchého nákupu', 'Finance mají držet jen fakta (ADR-0005) — hlídat rozsah', 'Pro část rodin zbytečné'] },
+] });
+
+/* ---- /ZDE OBSAH ---- */
+
+const ATOMS = SECS.filter((s) => s.id);
+let state = { pick: {}, note: {} };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* prázdné */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* bez úložiště */ } };
+const picks = (id) => (state.pick[id] || []).slice().sort();
+const drawIcons = () => { if (window.lucide) window.lucide.createIcons(); };
+
+function renderSec(sec) {
+  const chosen = picks(sec.id);
+  const el = document.getElementById('s-' + sec.id);
+  el.innerHTML = `
+    <div class="sec-h"><h2 class="display">${sec.name}</h2><span class="q">${sec.q}</span><span class="picked">${chosen.length ? `Vybráno: <b>${chosen.join(' + ')}</b>` : 'Zatím nevybráno'}</span></div>
+    <div class="cols" style="--n:${sec.n}">${sec.v.map((v) => { const on = chosen.includes(v.k); return `
+      <div class="col ${on ? 'on' : ''}">
+        <div class="col-h"><span class="lt">${on ? '✓' : v.k}</span><span class="nm">${v.name}<span class="st">${v.st}</span></span></div>
+        ${v.r()}
+        <div class="meta-c">
+          <p class="idea">${v.idea}</p>
+          ${v.plus.length ? `<div><span class="lab2">Proč ano</span><ul>${v.plus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          ${v.minus.length ? `<div><span class="lab2">Proč ne</span><ul>${v.minus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          <label class="choose ${on ? 'on' : ''}"><input type="checkbox" data-pick="${sec.id}" data-v="${v.k}" ${on ? 'checked' : ''}> Tuhle chci</label>
+        </div>
+      </div>`; }).join('')}</div>
+    <textarea class="note" data-note="${sec.id}" placeholder="Poznámka (nepovinné), např. „A, ale nákupní řádek jako B z dílu Položka"">${state.note[sec.id] || ''}</textarea>`;
+}
+function renderToc() {
+  document.getElementById('toc').innerHTML = ATOMS.map((s) => { const p = picks(s.id); return `<a href="#s-${s.id}" class="${p.length ? 'done' : ''}">${s.name}${p.length ? ' · ' + p.join('+') : ''}</a>`; }).join('');
+}
+function renderSum() {
+  const done = ATOMS.filter((s) => picks(s.id).length);
+  document.getElementById('sum').innerHTML = `Vybráno <b>${done.length} z ${ATOMS.length}</b> dílů${done.length ? ' · ' + done.map((s) => `${s.name} <b>${picks(s.id).join('+')}</b>`).join(', ') : ' — u každého dílu zaškrtni „Tuhle chci"'}`;
+}
+function summaryText() {
+  const line = (s) => {
+    const p = picks(s.id);
+    const names = p.map((k) => `${k} — ${s.v.find((x) => x.k === k).name}`).join(' + ');
+    return `${s.name}: ${p.length ? names : 'nevybráno (postavím A)'}${state.note[s.id] ? `\n   poznámka: ${state.note[s.id].trim()}` : ''}`;
+  };
+  return `${TITLE} — volba dílů (${new Date().toLocaleString('cs-CZ')})\n\n${ATOMS.map(line).join('\n')}\n`;
+}
+
+document.getElementById('sections').innerHTML = SECS.map((s) => s.group
+  ? `<div class="group-h"><h2 class="display">${s.group}</h2><p>${s.p}</p></div>`
+  : `<section class="sec" id="s-${s.id}"></section>`).join('');
+ATOMS.forEach(renderSec); renderToc(); renderSum(); drawIcons();
+
+document.addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-pick]');
+  if (!cb) return;
+  const id = cb.dataset.pick;
+  const set = new Set(state.pick[id] || []);
+  if (cb.checked) set.add(cb.dataset.v); else set.delete(cb.dataset.v);
+  if (set.size) state.pick[id] = [...set]; else delete state.pick[id];
+  save(); renderSec(ATOMS.find((s) => s.id === id)); renderToc(); renderSum(); drawIcons();
+});
+document.addEventListener('input', (e) => {
+  const t = e.target.closest('[data-note]');
+  if (!t) return;
+  state.note[t.dataset.note] = t.value; save();
+});
+document.querySelectorAll('#seg-t button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#seg-t button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.documentElement.dataset.theme = b.dataset.v;
+}));
+const flash = (t) => { const c = document.getElementById('copied'); c.textContent = t; setTimeout(() => { c.textContent = ''; }, 2500); };
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(summaryText()); flash('Zkopírováno — vlož mi to do chatu.'); }
+  catch { flash('Kopírování nejde — použij Stáhnout.'); }
+});
+document.getElementById('dl').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([summaryText()], { type: 'text/plain;charset=utf-8' }));
+  a.download = DL_NAME;
+  a.click();
+  flash('Uloženo do Stažených — napiš mi, že je hotovo.');
+});
+})();
+</script>
+</body>
+</html>

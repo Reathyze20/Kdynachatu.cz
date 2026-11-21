@@ -7,6 +7,7 @@ import { showToast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { isoRangesOverlap } from "@/lib/dateUtils";
 import { Home, CalendarClock } from "lucide-react";
 
 interface Props {
@@ -81,14 +82,10 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   // Check for overlapping non-backup reservations
   useEffect(() => {
     if (!from || !to) { setBackupWarning(false); return; }
-    const f = new Date(from + "T00:00:00");
-    const t = new Date(to + "T00:00:00");
     const overlaps = allReservations.some((r) => {
       if (r.status === "backup") return false;
       if (isEdit && r.id === existing?.id) return false;
-      const rf = new Date(r.from + "T00:00:00");
-      const rt = new Date(r.to + "T00:00:00");
-      return rf <= t && rt >= f;
+      return isoRangesOverlap(from, to, r.from, r.to);
     });
     setBackupWarning(overlaps);
   }, [from, to, allReservations, isEdit, existing?.id]);
@@ -98,7 +95,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!from || !to) { showToast("Vyplňte datum příjezdu a odjezdu.", "error"); return; }
-    if (new Date(to) < new Date(from)) { showToast("Datum odjezdu nesmí být před příjezdem.", "error"); return; }
+    if (to < from) { showToast("Datum odjezdu nesmí být před příjezdem.", "error"); return; }
     const btn = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     if (btn) btn.disabled = true;
     setSubmitting(true);

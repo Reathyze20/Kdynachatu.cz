@@ -1,5 +1,5 @@
 param(
-    [string]$ServerHost = "89.221.217.81",
+    [string]$ServerHost = "62.83.119.156",
     [string]$ServerUser = "root",
     [string]$AppUser = "reathyze",
     [string]$AppPath = "/home/reathyze/chata",
@@ -8,7 +8,7 @@ param(
     [string]$Pm2ProcessName = "chata-app",
     [string]$LocalHealthUrl = "http://localhost:3000/api/health",
     [string]$LocalWebUrl = "http://localhost:3000/",
-    [string]$PublicBaseUrl = "https://chataceskestredohori.cz",
+    [string]$PublicBaseUrl = "https://kdynachatu.cz",
     [switch]$RequireOperationsMinimum,
     [switch]$SkipPublicChecks
 )
