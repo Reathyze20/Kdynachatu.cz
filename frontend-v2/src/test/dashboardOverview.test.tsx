@@ -46,7 +46,7 @@ function renderOverview(data: DashboardReservationsData, shopping: DashboardShop
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', shopping)
   responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
-  responses.set('/dashboard/reconstruction', { totalActiveCount: 0, items: [] })
+  if (!responses.has('/dashboard/reconstruction')) responses.set('/dashboard/reconstruction', { totalActiveCount: 0, items: [] })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={qc}>
@@ -196,5 +196,16 @@ describe('Přehled: „Dochází“ v bočním panelu (#172)', () => {
     await screen.findByRole('complementary', { name: 'Kontext chaty' })
     await screen.findByText('Chata je volná!')
     expect(screen.queryByRole('region', { name: 'Dochází' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Přehled: jen akce a stav chaty (#172)', () => {
+  it('Údržba na Přehledu není ani s otevřenými úkoly, žije v Rekonstrukci', async () => {
+    responses.set('/dashboard/reconstruction', { totalActiveCount: 1, items: [{ id: 'x', title: 'Okap', category: 'repair', status: 'approved', votesCount: 1, createdBy: 'Petr', deadline: null }] })
+    renderOverview(reservations())
+
+    await screen.findByText('Chata je volná!')
+    expect(screen.queryByText('Údržba')).not.toBeInTheDocument()
+    expect(screen.queryByText('Okap')).not.toBeInTheDocument()
   })
 })

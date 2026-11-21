@@ -226,8 +226,6 @@
   z-index: var(--z-above);
 }
 
-
-
 @media (max-width: 767px) {
   .glass-card::before {
     display: none;
@@ -641,8 +639,6 @@
 .status-card .card-body-full {
   overflow: visible;
 }
-
-
 
 /* Accent bar — disabled */
 .status-accent {
@@ -1716,19 +1712,6 @@
   white-space: nowrap;
 }
 
-.shopping-widget-more {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  padding: 8px 0 2px;
-  text-align: center;
-  font-weight: 500;
-  transition: color 0.15s ease;
-}
-
-.shopping-widget-more:hover {
-  color: var(--color-primary);
-}
-
 .shopping-done-msg {
   display: flex;
   align-items: center;
@@ -2684,8 +2667,6 @@
     gap: 12px;
   }
 
-
-
   .dashboard-notes-feed {
     flex-direction: column;
     gap: 8px;
@@ -3033,46 +3014,6 @@
    RECONSTRUCTION WIDGET
    ============================================================================ */
 
-.reconstruction-widget-count {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 4px;
-  margin-bottom: 4px;
-}
-
-.reconstruction-count-number {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary, #1e293b);
-  line-height: 1;
-}
-
-.reconstruction-count-label {
-  font-size: 0.82rem;
-  color: var(--text-muted, #64748b);
-}
-
-.reconstruction-widget-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.reconstruction-widget-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.reconstruction-widget-item:hover {
-  background: rgba(241, 245, 249, 0.8);
-}
-
 .reconstruction-item-icon {
   font-size: 1.1rem;
   flex-shrink: 0;
@@ -3140,13 +3081,6 @@
 
 .dashboard-compact-cta:hover {
   opacity: 0.7;
-}
-
-/* Stack prázdných (zkolabovaných) widgetů pod hlavní mřížkou */
-.dashboard-compact-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 /* ============================================================================
