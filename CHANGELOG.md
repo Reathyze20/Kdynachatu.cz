@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.3.0...v1.4.0) (2026-11-21)
+
+
+### Features
+
+* **auth:** quick demo-account login on staging ([#179](https://github.com/Reathyze20/Kdynachatu.cz/issues/179)) ([827bf77](https://github.com/Reathyze20/Kdynachatu.cz/commit/827bf772218cf6ac02e65ca7543536973738506d)), closes [#178](https://github.com/Reathyze20/Kdynachatu.cz/issues/178)
+* **nav:** desktop frame with left sidebar and readable content width ([#191](https://github.com/Reathyze20/Kdynachatu.cz/issues/191)) ([9640095](https://github.com/Reathyze20/Kdynachatu.cz/commit/96400959566547f31787449a60d846f82b17ac7f))
+* **nav:** mobile bottom bar by stay cycle with "Víc" sheet ([#188](https://github.com/Reathyze20/Kdynachatu.cz/issues/188)) ([5826e87](https://github.com/Reathyze20/Kdynachatu.cz/commit/5826e87271d873cf68f818d061e4d4e5ad952a9c))
+* **nav:** two-column layout slot and two-column overview ([#193](https://github.com/Reathyze20/Kdynachatu.cz/issues/193)) ([8f8935b](https://github.com/Reathyze20/Kdynachatu.cz/commit/8f8935bd64334997a5a188e64b44120dafba2fcf))
+* **seed:** fully populate staging demo cabin for manual testing ([#159](https://github.com/Reathyze20/Kdynachatu.cz/issues/159)) ([4c563c3](https://github.com/Reathyze20/Kdynachatu.cz/commit/4c563c3284ca684c38c50cd43baeefc5462d83e6))
+* **theme:** bridge design tokens to Tailwind/shadcn ([#177](https://github.com/Reathyze20/Kdynachatu.cz/issues/177)) ([8bb80c0](https://github.com/Reathyze20/Kdynachatu.cz/commit/8bb80c0ec032485fe1de69e21911eacecc072bbb))
+
+
+### Bug Fixes
+
+* **dashboard:** position the zen mode toggle above the mobile bar with safe area ([#198](https://github.com/Reathyze20/Kdynachatu.cz/issues/198)) ([b42148b](https://github.com/Reathyze20/Kdynachatu.cz/commit/b42148b4976ae3f8b18d5a7d77d5ebf526f72d08))
+* **gallery:** style the empty-state create album button ([#197](https://github.com/Reathyze20/Kdynachatu.cz/issues/197)) ([1f64e54](https://github.com/Reathyze20/Kdynachatu.cz/commit/1f64e5494587ebbac9755c8b007884dc5ebfe9e6)), closes [#195](https://github.com/Reathyze20/Kdynachatu.cz/issues/195)
+* **handover:** emit reservation:updated after PATCH /reservations/:id/checkout ([#190](https://github.com/Reathyze20/Kdynachatu.cz/issues/190)) ([f2cd09d](https://github.com/Reathyze20/Kdynachatu.cz/commit/f2cd09da122fceb53c6c16bbc50c6f8b21791488))
+* **nav:** keep the active tab highlight off the mobile bar edges ([#194](https://github.com/Reathyze20/Kdynachatu.cz/issues/194)) ([66f5fb5](https://github.com/Reathyze20/Kdynachatu.cz/commit/66f5fb548f2b55e00a7e926de502e9c9cdbd6801))
+
 ## [1.3.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.2.0...v1.3.0) (2026-11-20)
 
 
