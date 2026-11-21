@@ -417,6 +417,37 @@
   }
 }
 
+/* ── Boční panel Přehledu (#172): lehký kontext, karty v přirozené výšce ──
+   Vodorovně stejné odsazení jako hlavní sloupec (.nordic-dashboard). */
+.dashboard-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+
+@media (min-width: 769px) {
+  .dashboard-aside {
+    padding: 0 16px 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-aside {
+    padding: 12px 20px 12px 0;
+  }
+}
+
+.next-arrival-card {
+  gap: var(--space-sm);
+}
+
+.next-arrival-mine {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* ── Cards Grid Layout ───────────────────────────────────────────────── */
 
 .dashboard-grid {
@@ -674,45 +705,6 @@
   flex-direction: column;
   height: 100%;
   flex: 1;
-}
-
-/* Desktop hero: status card uses horizontal layout (tablet only) */
-@media (min-width: 768px) and (max-width: 1099px) {
-  .status-card .status-content {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr auto;
-    gap: 0 24px;
-    align-items: start;
-  }
-
-  .status-card .dashboard-date {
-    grid-column: 1 / -1;
-  }
-
-  .status-card .status-hero-row {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  .status-card .my-next-reservation-highlight {
-    grid-column: 1;
-    grid-row: 3;
-  }
-
-  .status-card .status-next-block {
-    grid-column: 2;
-    grid-row: 2 / 4;
-    align-self: center;
-    margin-top: 0;
-    padding: 0 0 0 24px;
-    border-top: none;
-    border-left: 1px solid var(--border-light, rgba(0, 0, 0, 0.06));
-  }
-
-  .status-card .status-cta-row {
-    grid-column: 1 / -1;
-  }
 }
 
 /* ── Date header ───────────────────────────────────────────────────── */

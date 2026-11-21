@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
-import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
+import type { DashboardReservationsData, LastStay } from "@/api/dashboard";
+import { formatWeekendRange, nightsBetween, getTodayFormatted, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
@@ -15,26 +15,6 @@ interface Props {
 function isValidReservation(r: { from: string; to: string } | null | undefined): boolean {
   if (!r) return false;
   return !!r.from && !!r.to;
-}
-
-function buildNextBlock(res: UpcomingReservation | null): React.ReactNode {
-  if (!res) return null;
-  const days = daysUntil(res.from);
-  const dLabel = days === 1 ? "den" : days >= 2 && days <= 4 ? "dny" : "dní";
-  const daysChip = days === 0 ? "dnes" : days === 1 ? "zítra" : `za ${days} ${dLabel}`;
-  return (
-    <div className="status-next-block">
-      <div className="status-next-avatar">
-        <AnimalAvatar icon={res.userAnimalIcon} username={res.username} color={res.userColor || undefined} size={36} />
-      </div>
-      <div className="status-next-info">
-        <div className="status-next-label">Další pobyt</div>
-        <div className="status-next-name">{res.username}</div>
-        <div className="status-next-date">{formatDateRange(res.from, res.to)}</div>
-      </div>
-      <span className="status-next-chip">{daysChip}</span>
-    </div>
-  );
 }
 
 const GAS_LABEL_CZ: Record<string, string> = { full: "plný", half: "půl", low: "dochází", empty: "prázdný" };
@@ -120,16 +100,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const formattedDate = getTodayFormatted();
   const active = data.activeReservation;
 
-  const validUpcoming = data.upcomingReservations.filter((r) => isValidReservation(r) && r.status === "primary");
-  const nextRes = active
-    ? (validUpcoming.find((r) => r.id !== active.id) ?? null)
-    : (validUpcoming[0] ?? null);
-
-  // Up to 3 upcoming reservations (excluding active)
-  const upcomingList = active
-    ? validUpcoming.filter((r) => r.id !== active.id).slice(0, 3)
-    : validUpcoming.slice(0, 3);
-
   const freeWeekendNode = data.nextFreeWeekend ? (
     <button 
       className="status-cta status-cta-smart" 
@@ -141,77 +111,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
 
   const dateNode = <div className="dashboard-date">{formattedDate}</div>;
   const hasCheckoutTasks = cabinDepartureChecklist && cabinDepartureChecklist.length > 0;
-
-  const myNext = data.myNextReservation;
-  const myNextDays = myNext ? daysUntil(myNext.from) : null;
-  const isMyNextSameAsNext = myNext && nextRes && myNext.from === nextRes.from && myNext.to === nextRes.to;
-  const isMyNextSameAsActive = myNext && active && myNext.from === active.from && myNext.to === active.to;
-
-  function buildCombinedNextBlock(): React.ReactNode {
-    if (!nextRes) return null;
-    const days = daysUntil(nextRes.from);
-    const daysChip = days === 0 ? "dnes" : days === 1 ? "zítra" : `za ${days} dní`;
-
-    if (isMyNextSameAsNext && myNext) {
-      const label = days === 0 ? "Váš pobyt začíná dnes" : days === 1 ? "Váš pobyt začíná zítra" : `Váš pobyt ${daysChip}`;
-      return (
-        <div className="status-next-block status-next-personal">
-          <div className="status-next-accent-line"></div>
-          <div className="status-next-avatar">
-            <AnimalAvatar icon={nextRes.userAnimalIcon} username={nextRes.username} color={nextRes.userColor || undefined} size={36} />
-          </div>
-          <div className="status-next-info">
-            <div className="status-next-label status-next-label-personal">{label}</div>
-            <div className="status-next-date">{formatDateRange(nextRes.from, nextRes.to)}{myNext.purpose ? ` · ${myNext.purpose}` : ""}</div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <>
-        {myNext && !isMyNextSameAsNext && !isMyNextSameAsActive && (() => {
-          const label = myNextDays === 0 ? "Váš pobyt začíná dnes" : myNextDays === 1 ? "Váš pobyt začíná zítra" : `Váš pobyt za ${myNextDays} dní`;
-          return (
-            <div className="status-next-block status-next-personal">
-              <div className="status-next-accent-line"></div>
-              <div className="status-next-info" style={{ marginLeft: 6 }}>
-                <div className="status-next-label status-next-label-personal">{label}</div>
-                <div className="status-next-date">{formatDateRange(myNext.from, myNext.to)} · {myNext.purpose}</div>
-              </div>
-            </div>
-          );
-        })()}
-        {buildNextBlock(nextRes)}
-      </>
-    );
-  }
-
-  function buildUpcomingList(): React.ReactNode {
-    if (upcomingList.length === 0) return null;
-    const rest = nextRes ? upcomingList.filter((r) => r.id !== nextRes.id) : upcomingList;
-    if (rest.length === 0) return null;
-
-    return (
-      <div className="status-upcoming-list">
-        {rest.map((r) => {
-          const days = daysUntil(r.from);
-          const daysChip = days === 0 ? "dnes" : days === 1 ? "zítra" : `za ${days} dní`;
-          const isMyRes = myNext && r.from === myNext.from && r.to === myNext.to;
-          return (
-            <div className={`status-upcoming-row${isMyRes ? " status-upcoming-mine" : ""}`} key={r.id}>
-              <AnimalAvatar icon={r.userAnimalIcon} username={r.username} color={r.userColor || undefined} size={28} />
-              <div className="status-upcoming-info">
-                <span className="status-upcoming-name">{r.username}</span>
-                <span className="status-upcoming-date">{formatDateRange(r.from, r.to)}</span>
-              </div>
-              <span className="status-upcoming-chip">{daysChip}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
 
   // ── Stav C: Occupied ─────────────────────────────────────────────────
   if (active && isValidReservation(active)) {
@@ -285,8 +184,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           {chainNode}
           {buildParticipantStack(active.participants)}
           {checkoutReminderNode}
-          {buildCombinedNextBlock()}
-          {buildUpcomingList()}
           <div className="status-cta-row">
             {freeWeekendNode}
             <button onClick={() => navigate("/reservations")} className="status-cta status-cta-neutral">
@@ -299,7 +196,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   }
 
   // ── Stav B: Free, but upcoming reservation exists ────────────────────
-  if (nextRes) {
+  if (data.upcomingReservations.some((r) => r.status === "primary" && isValidReservation(r))) {
     return (
       <div className="glass-card status-card is-free" id="dashboard-active-reservation">
         <div className="card-body-full status-content">
@@ -315,8 +212,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
             </div>
           </div>
           {chainNode}
-          {buildCombinedNextBlock()}
-          {buildUpcomingList()}
           {buildLastStayBlock(data.lastStay)}
           <div className="status-cta-row">
             {freeWeekendNode}
@@ -348,8 +243,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           </div>
         </div>
         {buildLastStayBlock(data.lastStay)}
-        {buildCombinedNextBlock()}
-        {buildUpcomingList()}
         <div className="status-cta-row">
           {freeWeekendNode}
           <button className="status-cta status-cta-primary" onClick={() => navigate("/reservations")}>

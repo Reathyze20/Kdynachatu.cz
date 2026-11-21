@@ -1,0 +1,53 @@
+/**
+ * NextArrivalCard — „Další příjezd“ v bočním panelu Přehledu (#172, lehký kontext).
+ * Další pevný pobyt po tom aktuálním; vlastní pobyt jako „Ty“. Když můj nejbližší pobyt
+ * není hned další, přidá řádek „Váš pobyt…“. Bez obojího se karta nevykreslí.
+ */
+import { useId } from "react";
+import type { DashboardReservationsData } from "@/api/dashboard";
+import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
+import { useAuth } from "@/context/AuthContext";
+import { daysUntil, formatDateRange } from "@/lib/dateUtils";
+
+function inDaysLabel(from: string): string {
+  const days = daysUntil(from);
+  if (days === 0) return "dnes";
+  if (days === 1) return "zítra";
+  return `za ${days} ${days <= 4 ? "dny" : "dní"}`;
+}
+
+export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
+  const headingId = useId();
+  const { user } = useAuth();
+  const active = data.activeReservation;
+  const next = data.upcomingReservations.find((r) => r.status === "primary" && !!r.from && !!r.to && r.id !== active?.id) ?? null;
+  const myNext = data.myNextReservation;
+  const isSameStay = (a: { from: string; to: string } | null | undefined) => !!a && !!myNext && a.from === myNext.from && a.to === myNext.to;
+  const showMyNext = !!myNext && !isSameStay(next) && !isSameStay(active);
+
+  if (!next && !showMyNext) return null;
+
+  return (
+    <section className="glass-card next-arrival-card" aria-labelledby={headingId} data-testid="dashboard-next-arrival">
+      <h2 id={headingId} className="dashboard-card-header-title">Další příjezd</h2>
+      {next && (
+        <div className="status-next-block">
+          <div className="status-next-avatar">
+            <AnimalAvatar icon={next.userAnimalIcon} username={next.username} color={next.userColor || undefined} size={36} />
+          </div>
+          <div className="status-next-info">
+            <div className="status-next-name">{next.username === user?.username ? "Ty" : next.username}</div>
+            <div className="status-next-date">{formatDateRange(next.from, next.to)}</div>
+          </div>
+          <span className="status-next-chip">{inDaysLabel(next.from)}</span>
+        </div>
+      )}
+      {showMyNext && myNext && (
+        <div className="next-arrival-mine">
+          <span className="status-next-label-personal">Váš pobyt {inDaysLabel(myNext.from)}</span>
+          <span className="status-next-date">{formatDateRange(myNext.from, myNext.to)}</span>
+        </div>
+      )}
+    </section>
+  );
+}
