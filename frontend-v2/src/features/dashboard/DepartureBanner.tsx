@@ -31,7 +31,7 @@ function dismissToday(): void {
 }
 
 interface Props {
-  /** My stay ending today whose handover is not done yet (from the dashboard gate) */
+  /** Můj dnes končící pobyt s nedokončenou předávkou (z gate dashboardu) */
   reservationId: string;
   departureChecklist: string[];
   onRefresh: () => void;
@@ -52,10 +52,10 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      // Same write path as CheckoutSection: complete the handover first, so a failed
-      // request never leaves a chat message behind. The free-form checklist has no
-      // structured counterpart, so only the note goes into checkoutState; without a
-      // note any state already stored stays untouched.
+      // Stejná cesta zápisu jako CheckoutSection. Předávka jde první, aby po selhání
+      // nezůstala v chatu zpráva bez dokončené předávky. Volný checklist chaty nemá
+      // strukturovaný protějšek, do checkoutState jde jen vzkaz; bez vzkazu zůstane
+      // případný už uložený stav beze změny.
       const note = departureNote.trim();
       await completeCheckout(reservationId, note ? { note } : undefined);
 
@@ -63,8 +63,8 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       checklistItems.forEach((item, i) => {
         fullMessage += checkedItems[i] ? `- [x] ${item}\n` : `- [ ] ${item}\n`;
       });
-      if (departureNote.trim()) {
-        fullMessage += `\n**Vzkaz:** ${departureNote.trim()}`;
+      if (note) {
+        fullMessage += `\n**Vzkaz:** ${note}`;
       }
       await apiClient.post("/channels/messages", { message: fullMessage });
     },
@@ -74,7 +74,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       setModalOpen(false);
       setSubmitError(null);
       showToast("Odjezdový protokol byl uložen.", "success");
-      // RESERVATIONS_KEY covers the calendar and the dashboard gate alike
+      // RESERVATIONS_KEY pokrývá kalendář i gate odjezdu na dashboardu
       queryClient.invalidateQueries({ queryKey: RESERVATIONS_KEY });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       onRefresh();

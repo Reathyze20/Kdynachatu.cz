@@ -21,8 +21,8 @@ interface Props {
 }
 
 /**
- * Pinned board note („Vzkaz“ / nástěnka, AppSettings.pinnedHandoverNote). Not the handover
- * of a stay (checkoutState) nor the per-reservation handoverNote from the booking form.
+ * Vzkaz na nástěnce (AppSettings.pinnedHandoverNote). Není to předávka pobytu
+ * (checkoutState) ani per-rezervační handoverNote z formuláře rezervace.
  */
 export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
   const { user } = useAuth();
