@@ -14,6 +14,8 @@ export interface ShoppingItem {
   addedById: string
   createdAt: string
   isEssential: boolean
+  /** Zásoba, ze které položka vznikla; `null` = přidaná ručně. */
+  linkedInventoryId?: string | null
   addedBy?: { id: string; username: string; animalIcon?: string | null }
   purchasedBy?: { id: string; username: string; animalIcon?: string | null } | null
 }

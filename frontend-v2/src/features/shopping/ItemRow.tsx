@@ -77,7 +77,7 @@ function ItemRowInner({ item, listCreatedById }: Props) {
         )}
       </span>
       <span className="detail-item-name">{item.name}</span>
-      {item.isEssential && <span className="from-inventory-badge">Ze zásob</span>}
+      {item.linkedInventoryId && <span className="from-inventory-badge">Ze zásob</span>}
       {isPurchased && item.purchasedBy && (
         <span
           className="purchased-by-badge"

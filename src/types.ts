@@ -50,6 +50,8 @@ export interface ShoppingListItem {
   addedById: string;
   createdAt: string;
   status: "pending" | "bring_from_home" | "purchased";
+  /** Inventory item this entry was added from; null when added by hand. */
+  linkedInventoryId?: string | null;
   purchasedBy?: string;
   purchasedById?: string;
   purchasedAt?: string;

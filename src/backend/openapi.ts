@@ -360,6 +360,7 @@ const schemas: Record<string, JsonSchema> = {
       name: { type: "string" },
       status: { type: "string", enum: ["pending", "bring_from_home", "purchased"] },
       isEssential: { type: "boolean" },
+      linkedInventoryId: { type: "string", format: "uuid", nullable: true },
       addedBy: ref("ShoppingUser"),
       purchasedBy: {
         allOf: [ref("ShoppingUser")],
