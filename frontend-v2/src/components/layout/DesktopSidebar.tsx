@@ -2,11 +2,13 @@
  * components/layout/DesktopSidebar.tsx
  * Levý sidebar desktopového rámu (redesign #1b, issue #171): ikona + popisek, stejný model jako dolní lišta.
  * Na desktopu je místa dost, takže doplňky z „Víc“ jsou vidět rovnou jako skupina pod hlavními sekcemi.
+ * Dole je nápověda (#205): na desktopu nahrazuje plovoucí tlačítko, které překrývalo obsah.
  */
 import { Link, useLocation } from 'react-router-dom'
 import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
+import { HelpFab } from '@/components/shared/HelpFab'
 
 export function DesktopSidebar() {
   const { user } = useAuth()
@@ -53,6 +55,10 @@ export function DesktopSidebar() {
           ) : null}
         </nav>
       ) : null}
+
+      <div className="app-sidebar-footer">
+        <HelpFab variant="sidebar" />
+      </div>
     </aside>
   )
 }
