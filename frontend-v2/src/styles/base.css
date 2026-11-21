@@ -77,9 +77,9 @@ textarea:focus::placeholder {
   color: transparent;
 }
 
+/* Po přihlášení lehké pozadí z tokenů, žádná fotka (C5a, #239): na 3G se nestahuje a text má kontrast. */
 body {
-  background: url("/bg-hero.jpg") center / cover no-repeat fixed;
-  background-image: var(--bg-image);
+  background: var(--bg-app-backdrop);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -90,18 +90,11 @@ body {
   z-index: 0;
 }
 
-body::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg,
-      rgba(253, 248, 240, 0.3) 0%,
-      rgba(0, 0, 0, 0.25) 60%,
-      rgba(0, 0, 0, 0.4) 100%);
-  z-index: -1;
+/* Fotka krajiny s jemným závojem jen na přihlašovacích obrazovkách (C5a). */
+.photo-backdrop {
+  background:
+    linear-gradient(180deg, rgba(253, 248, 240, 0.3) 0%, rgba(0, 0, 0, 0.25) 60%, rgba(0, 0, 0, 0.4) 100%) fixed,
+    var(--bg-image) center / cover no-repeat fixed;
 }
 
 .app-wrapper {
@@ -151,13 +144,12 @@ body::before {
   top: 8px;
 }
 
-/* ── Shared page-level card (glass effect) ─────────────────────────── */
+/* ── Shared page-level card — solid surface, no glass (C4a) ────────── */
 .page-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgb(var(--sheet));
+  border: 1px solid rgb(var(--rule-soft));
   border-radius: var(--radius-xl);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--lift);
   flex: 1;
   display: flex;
   flex-direction: column;

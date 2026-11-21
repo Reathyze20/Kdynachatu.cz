@@ -30,7 +30,7 @@ export function AuthPage() {
   }
 
   return (
-    <div className="app-wrapper" data-testid="auth-page" data-auth-view={view}>
+    <div className="app-wrapper photo-backdrop" data-testid="auth-page" data-auth-view={view}>
       {view === 'login' && (
         <LoginForm
           onShowForgotPassword={() => setView('forgot')}

@@ -15,7 +15,7 @@
 
 .diary-card {
   /* extends .page-card */
-  background: rgba(255, 255, 255, 0.95);
+  background: rgb(var(--sheet));
   border-radius: var(--radius-2xl, 16px);
   position: relative;
 }

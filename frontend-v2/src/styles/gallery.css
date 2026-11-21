@@ -12,8 +12,8 @@
 }
 
 .gallery-glass-card {
-  /* extends .page-card — gallery uses slightly higher opacity */
-  background: rgba(255, 255, 255, 0.95);
+  /* extends .page-card — solid surface (C4a, #239) */
+  background: rgb(var(--sheet));
   border-radius: var(--radius-2xl, 16px);
 }
 
