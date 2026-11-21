@@ -16,8 +16,9 @@ vi.mock('@/api/client', () => ({
   },
 }))
 vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(weather.current)) }))
+const { auth } = vi.hoisted(() => ({ auth: { isAdmin: false } }))
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'u-eva', cabinId: 'c-1', username: 'Eva' }, isAdmin: false }),
+  useAuth: () => ({ user: { id: 'u-eva', cabinId: 'c-1', username: 'Eva' }, isAdmin: auth.isAdmin }),
 }))
 
 const TODAY = '2026-12-10'
@@ -66,6 +67,7 @@ afterEach(() => {
   vi.useRealTimers()
   responses.clear()
   weather.current = null
+  auth.isAdmin = false
 })
 
 const NOVAKOVI_NOW = {
@@ -237,6 +239,23 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
     await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · −3 °C · Zataženo'))
     expect(within(hero).getByTestId('cabin-hero-media')).toBeInTheDocument()
     expect(screen.getByTestId('two-column-layout')).not.toContainElement(hero)
+  })
+
+  it('výstrahu na bouřku z dalších dnů ukáže pruh pod řádkem počasí', async () => {
+    weather.current = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    expect(await within(hero).findByText('Zítra: Bouřka')).toBeInTheDocument()
+  })
+
+  it('bez lokality počasí nabídne pruh správci odkaz do nastavení, členovi nic', async () => {
+    weather.current = 'EMPTY_LOCATION'
+    auth.isAdmin = true
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    expect(await within(hero).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
   })
 
   it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {

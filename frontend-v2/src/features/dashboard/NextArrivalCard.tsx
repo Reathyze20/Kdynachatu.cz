@@ -32,6 +32,7 @@ export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
   const showMyNext = !!myNext && !isMine(next) && !isMine(active);
 
   if (!next && !showMyNext) return null;
+  const nights = next ? nightsBetween(next.from, next.to) : 0;
 
   return (
     <section className="glass-card next-arrival-card" aria-labelledby={headingId} data-testid="dashboard-next-arrival">
@@ -50,7 +51,8 @@ export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
       )}
       {next && (
         <p className="next-arrival-meta">
-          {[next.purpose, `${nightsBetween(next.from, next.to)} ${nightsLabel(nightsBetween(next.from, next.to))}`].filter(Boolean).join(" · ")}
+          {next.purpose}
+          {nights > 0 && ` · ${nights} ${nightsLabel(nights)}`}
         </p>
       )}
       {next && <ParticipantStack participants={next.participants} />}
