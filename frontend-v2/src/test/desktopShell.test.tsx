@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
-import { TopBar } from '@/components/layout/TopBar'
 
 let features: Record<string, boolean> | null = null
 let auth: { user: { cabinId: string | null; username: string }; isAdmin: boolean; isSuperAdmin?: boolean } = {
@@ -192,22 +191,5 @@ describe('Profilové menu v sidebaru — desktop bez horní lišty (#205)', () =
     auth = { user: { cabinId: null, username: 'Eva' }, isAdmin: false }
     renderSidebar('/superadmin')
     expect(openMenuButton()).toBeInTheDocument()
-  })
-})
-
-describe('TopBar — po příchodu sidebaru jen profilové menu (#171)', () => {
-  it('nemá vlastní navigaci sekcí, administrace zůstává v profilovém menu', async () => {
-    features = null
-    auth = { user: { cabinId: 'c-1', username: 'Eva' }, isAdmin: true }
-    const user = userEvent.setup()
-    render(
-      <MemoryRouter initialEntries={['/dashboard']}>
-        <TopBar onOpenProfileDrawer={vi.fn()} />
-      </MemoryRouter>,
-    )
-    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
-
-    await user.click(screen.getByTestId('profile-menu-button'))
-    expect(within(screen.getByRole('menu')).getByRole('link', { name: 'Administrativa' })).toHaveAttribute('href', '/admin')
   })
 })

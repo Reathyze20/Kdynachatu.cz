@@ -170,7 +170,7 @@ App.tsx
 │   ├── InvitePage
 │   ├── OnboardingPage
 │   └── AppShell (layout wrapper)
-│       ├── TopBar
+│       ├── DesktopSidebar (navigace, nápověda, SidebarProfileMenu)
 │       ├── MobileHeader
 │       ├── MobileNav (bottom nav)
 │       ├── ProfileDrawer
@@ -188,8 +188,8 @@ App.tsx
 ```
 
 **Layout komponenty:** [frontend-v2/src/components/layout/](frontend-v2/src/components/layout/)
-- `AppShell.tsx` — hlavní layout s TopBar, MobileNav, Outlet
-- `TopBar.tsx` — desktop navigace
+- `AppShell.tsx` — hlavní layout s DesktopSidebar, MobileNav, Outlet (desktop nemá horní lištu, #205)
+- `DesktopSidebar.tsx` — desktop navigace, dole nápověda a `SidebarProfileMenu.tsx` (profilové menu)
 - `MobileHeader.tsx` — mobilní horní lišta
 - `MobileNav.tsx` — mobilní spodní navigace
 - `ProfileDrawer.tsx` — uživatelský profil slide-out

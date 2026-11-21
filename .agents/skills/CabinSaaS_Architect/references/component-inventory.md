@@ -32,8 +32,8 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Component | Purpose | Key Props |
 |---|---|---|
 | **AppShell** | Main wrapper — header + nav + `<Outlet>` with Framer Motion route transitions | — |
-| **TopBar** | Desktop bar with the profile dropdown (profile, admin, backoffice, logout); section nav lives in DesktopSidebar | `onOpenProfileDrawer` |
-| **DesktopSidebar** | Desktop left sidebar (frame #1b): cabin name + `PRIMARY_NAV` and a „Víc“ group with `MORE_NAV`, icon + label | — |
+| **DesktopSidebar** | Desktop left sidebar (frame #1b), a glass card: cabin name + `PRIMARY_NAV` and a „Víc“ group with `MORE_NAV`, icon + label; footer with help (`HelpFab variant="sidebar"`) and `SidebarProfileMenu`. Desktop has no top bar (#205) | `onOpenProfileDrawer` |
+| **SidebarProfileMenu** | Profile menu at the bottom of the desktop sidebar (profile, backoffice, admin, invites, diagnostics, logout); opens upward via portal, keyboard menu-button pattern; avatar only on the collapsed sidebar | `onOpenProfileDrawer` |
 | **TwoColumnLayout** | Page layout of frame #1b: main column + optional side panel (`<aside>`), side by side from 1024 px (1.5fr : 1fr), stacked on smaller screens; no side panel = nothing rendered, main takes full width. Side panel = light context only, never an action you must not miss | `children, aside?, asideLabel?, className?` |
 | **MobileHeader** | Mobile top bar with user avatar | `animalIcon, username, onOpenProfileDrawer` |
 | **MobileNav** | Bottom tab bar: `PRIMARY_NAV` (Přehled · Kalendář · Předávka · Zásoby) + „Víc“ sheet with `MORE_NAV` | — |

@@ -21,7 +21,7 @@ export function useUpdateCabinSettings() {
   return useMutation({
     mutationFn: (data: CabinConfigUpdate) => settingsApi.updateCabin(data),
     onSuccess: (updated) => {
-      // Update cache so nav (TopBar + MobileNav) re-renders with new feature flags
+      // Update cache so nav (DesktopSidebar + MobileNav) re-renders with new feature flags
       qc.setQueryData(QK, updated)
     },
     onError: handleMutationError('Nepodařilo se uložit nastavení'),
