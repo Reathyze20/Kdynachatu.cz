@@ -5,14 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import apiClient from "@/api/client";
 import { fetchWeather } from "@/api/dashboard";
-import type { CabinSettings, DashboardActivationData, DashboardReservationsData, DashboardShoppingData, DashboardNotesData, DashboardReconstructionData } from "@/api/dashboard";
-import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppingSchema, DashboardNotesSchema, DashboardReconstructionSchema } from "@/api/schemas";
+import type { CabinSettings, DashboardActivationData, DashboardReservationsData, DashboardShoppingData, DashboardNotesData } from "@/api/dashboard";
+import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppingSchema, DashboardNotesSchema } from "@/api/schemas";
 import { WeatherCard } from "./WeatherCard";
 import { ActiveReservation } from "./ActiveReservation";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
-import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
 import { NextArrivalCard } from "./NextArrivalCard";
 import { RunningLowCard } from "./RunningLowCard";
@@ -91,29 +90,6 @@ export function PinnedNoteSkeleton() {
           <div className="skeleton skeleton-text" style={{ width: "78%", height: 13 }} />
           <div className="skeleton skeleton-text medium" style={{ height: 13 }} />
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function ReconstructionSkeleton() {
-  return (
-    <div className="glass-card">
-      <div className="card-body-full">
-        <div className="dashboard-card-header">
-          <div className="skeleton skeleton-text" style={{ width: 70, height: 14 }} />
-          <div className="skeleton skeleton-text" style={{ width: 40, height: 13 }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-          <div className="skeleton" style={{ width: 40, height: 28, borderRadius: 8 }} />
-          <div className="skeleton skeleton-text" style={{ width: 100, height: 13 }} />
-        </div>
-        {[0, 1].map((i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-            <div className="skeleton" style={{ width: 24, height: 24, borderRadius: 6 }} />
-            <div className="skeleton skeleton-text" style={{ flex: 1, height: 13 }} />
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -241,43 +217,9 @@ export function DashboardPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const reconstructionQuery = useQuery<DashboardReconstructionData>({
-    queryKey: ["dashboard", "reconstruction"],
-    queryFn: async () => {
-      const { data } = await apiClient.get<DashboardReconstructionData>("/dashboard/reconstruction");
-      return DashboardReconstructionSchema.parse(data) as DashboardReconstructionData;
-    },
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 30_000,
-  });
-
   const cabinError = cabinQuery.isError;
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
-
-  // Prázdné widgety kolabují na kompaktní řádek a řadí se pod hlavní sloupec;
-  // během načítání (a při chybě) zůstávají na svém místě, aby layout neskákal.
-  const isReconstructionEmpty = reconstructionQuery.isSuccess && (reconstructionQuery.data?.totalActiveCount ?? 0) === 0;
-
-  const collapsibleWidgets = [
-    {
-      key: "reconstruction",
-      testId: "dashboard-reconstruction-widget",
-      isEmpty: isReconstructionEmpty,
-      node: reconstructionQuery.isLoading ? (
-        <ReconstructionSkeleton />
-      ) : reconstructionQuery.isError ? (
-        <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Údržbu se nepodařilo načíst" />}>
-          <FeatureErrorFallback title="Údržbu se nepodařilo načíst" error={reconstructionQuery.error as Error} resetErrorBoundary={() => reconstructionQuery.refetch()} />
-        </ErrorBoundary>
-      ) : reconstructionQuery.data ? (
-        <ReconstructionWidget data={reconstructionQuery.data} />
-      ) : null,
-    },
-  ];
-
-  const filledWidgets = collapsibleWidgets.filter((w) => !w.isEmpty);
-  const emptyWidgets = collapsibleWidgets.filter((w) => w.isEmpty);
 
   const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
@@ -334,31 +276,7 @@ export function DashboardPage() {
             <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} />
           ) : null}
         </motion.div>
-
-        {/* Údržba, když má obsah */}
-        {filledWidgets.map((w) => (
-          <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
-            {w.node}
-          </motion.div>
-        ))}
       </motion.div>
-
-      {/* Prázdné widgety — kompaktní řádky pod stackem */}
-      {emptyWidgets.length > 0 && (
-        <motion.div
-          className="dashboard-compact-stack"
-          variants={stackVariants}
-          initial="hidden"
-          animate="visible"
-          data-testid="dashboard-compact-stack"
-        >
-          {emptyWidgets.map((w) => (
-            <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
-              {w.node}
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
 
       {isAdmin && (activationQuery.isLoading ? (
         <motion.div variants={cardVariants} data-testid="dashboard-activation-widget">
