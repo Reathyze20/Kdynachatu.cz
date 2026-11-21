@@ -525,8 +525,10 @@
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
     justify-content: space-around;
     align-items: center;
-    padding: 4px 0;
-    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    gap: 4px;
+    /* Vodorovné odsazení drží zelené pozadí aktivní záložky od okrajů lišty (#192) */
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-nav-link {
