@@ -1,0 +1,62 @@
+/* ── Řetězec turnusu „teď → další → pak“ (TurnusChainLine, #172, sdílí kalendář #211) ──
+   Jeden textový řádek; na úzkém displeji se uzly zalomí (žádný vodorovný scroll),
+   dlouhá jména se zkrátí výpustkou. */
+.turnus-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-sm);
+  row-gap: var(--space-xs);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.turnus-chain__node {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.turnus-chain__name {
+  display: inline-block;
+  min-width: 0;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.turnus-chain__name--button {
+  /* Cíl dotyku ≥ 44 px bez zvětšení řádku */
+  padding: 12px 0;
+  margin: -12px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.turnus-chain__arrow {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--text-placeholder);
+}
+
+/* Na kartě „na chatě teď“ (Přehled) */
+.status-chain {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-light);
+}

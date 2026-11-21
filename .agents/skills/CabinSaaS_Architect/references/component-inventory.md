@@ -53,6 +53,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **HelpFab** | Floating help button + modal with app guide | — |
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
 | **ColorPicker** | Grid of 18 swatch colors for profile | `value, onChange` |
+| **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y po 14. 12. → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
 
 ---
 
@@ -216,6 +217,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `SWATCH_COLORS`, `MONTH_NAMES`, `DAY_NAMES` |
 | `dateUtils.ts` | `formatDateRange()`, `formatWeekendRange()`, `nightsBetween()`, `nightsLabel()`, `daysUntil()`, `getTodayFormatted()`, `getLocalTodayIso()` |
 | `toast.ts` | `showToast(message, type)` — dispatches window event |
+| `turnusChain.ts` | `buildTurnusChain(stays, today)` — nodes teď/další/pak from firm (`primary`) stays only, own stay `isMine` |
 | `navRoutes.ts` | `PRIMARY_NAV[]`, `MORE_NAV[]`, `visibleNavItems()`, `findActiveNavItem()` — global navigation model |
 | `networkError.ts` | `isNetworkError()`, `OFFLINE_TOAST_MSG` |
 
