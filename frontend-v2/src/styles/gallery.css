@@ -649,6 +649,11 @@ button.folder-context-item.folder-context-item--danger:hover {
   margin: 0;
 }
 
+/* CTA pod textem prázdného stavu; vzhled dává .btn .btn-primary .btn-lg */
+.gallery-empty-action {
+  margin-top: var(--space-md, 12px);
+}
+
 /* ── Upload modal ────────────────────────────────────────────────────────────── */
 .upload-dropzone {
   border: 2px dashed var(--border-strong, #e5e7eb);

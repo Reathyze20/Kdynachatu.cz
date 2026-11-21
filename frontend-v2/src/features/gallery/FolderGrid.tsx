@@ -166,7 +166,11 @@ export function FolderGrid({
             <p className="gallery-empty-title">Zatím nemáte žádná alba</p>
             <p className="gallery-empty-subtitle">Začněte nahrávat fotky z vaší chaty!</p>
             {!isGuest && (
-              <button className="btn-primary" onClick={onNewFolder} style={{ marginTop: 12 }}>
+              <button
+                className="btn btn-primary btn-lg gallery-empty-action"
+                onClick={onNewFolder}
+                data-testid="gallery-empty-create-folder-button"
+              >
                 <Plus size={16} /> Vytvořit první album
               </button>
             )}
