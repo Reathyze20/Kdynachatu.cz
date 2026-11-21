@@ -250,9 +250,8 @@
 
 /* ============================================================================
    Desktop Sidebar — rám #1b (#171): ikona + popisek, na mobilu skrytý.
-   Od #205 plovoucí karta se stejným povrchem jako karty obsahu: povrch
-   (rozmazaná fotka pod bílým závojem, rámeček, stín) sdílí s .glass-card
-   v dashboard.css. Prostředek (navigace) scrolluje, patička zůstává dole.
+   Od #205 plovoucí karta se stejným povrchem jako karty obsahu: plný povrch
+   (--sheet, linka, stín --lift, #239) sdílí s .glass-card v dashboard.css. Prostředek (navigace) scrolluje, patička zůstává dole.
    ============================================================================ */
 .app-sidebar {
   display: none;

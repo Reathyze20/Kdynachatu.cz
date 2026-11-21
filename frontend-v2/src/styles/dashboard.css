@@ -191,17 +191,17 @@
   }
 }
 
-/* ── Glassmorphism card base — JEDINÉ pravidlo pro vzhled ────────────── */
-/* Stejný povrch nese i desktopový sidebar (.app-sidebar, #205); jeho rozměry,
+/* ── Karta obsahu — JEDINÉ pravidlo pro vzhled ───────────────────────── */
+/* Plný povrch bez skla (C4a, #239); název .glass-card zůstává kvůli komponentám.
+   Stejný povrch nese i desktopový sidebar (.app-sidebar, #205); jeho rozměry,
    pozice a zobrazení jsou v nav.css. */
 
 .glass-card,
 .app-sidebar {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: rgb(var(--sheet));
+  border: 1px solid rgb(var(--rule-soft));
+  box-shadow: var(--lift);
 }
 
 .glass-card {
@@ -209,63 +209,11 @@
   flex-direction: column;
   padding: 16px;
   box-sizing: border-box;
-  background: transparent;
   gap: 0;
   transition:
     box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
-}
-
-/* Simulovaný backdrop-blur: zopakujeme bg image z body a rozmazáváme ji přímo */
-.glass-card::before,
-.app-sidebar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-base);
-  background: var(--bg-image) center / cover no-repeat fixed;
-  filter: blur(24px) saturate(1.8) brightness(1.05);
-  margin: -24px;
-  pointer-events: none;
-  border-radius: 0;
-}
-
-/* Bílý overlay přes rozmazané pozadí */
-.glass-card::after,
-.app-sidebar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-base);
-  background: rgba(255, 255, 255, 0.82);
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-/* Obsah karet musí být nad pseudo-elementy */
-.glass-card>*,
-.app-sidebar>* {
-  position: relative;
-  z-index: var(--z-above);
-}
-
-
-
-@media (max-width: 767px) {
-  .glass-card::before {
-    display: none;
-  }
-
-  .glass-card::after {
-    display: none;
-  }
-
-  .glass-card {
-    background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  }
 }
 
 /* ── Card body — vnitřní prostor, sjednocený ────────────────────────── */
@@ -1115,18 +1063,6 @@
   background: rgba(16, 185, 129, 0.05);
   border-color: rgba(16, 185, 129, 0.6);
 }
-
-/* ============================================================================
-   Karta 2: Počasí — tři vizuální zóny (Hero → Chart → Forecast)
-   ============================================================================ */
-
-/* Override card-body spacing for weather — more generous gaps between zones */
-
-/* ── ZONE 1: Hero — ikona, teplota, podmínky, slunce ──────────────── */
-
-/* ── ZONE 2: Chart — tabs + bars ──────────────────────────────────── */
-
-/* ── ZONE 3: Forecast — 5-day strip ──────────────────────────────── */
 
 /* ============================================================================
    Karta 3: K nakoupení — čistý seznam
