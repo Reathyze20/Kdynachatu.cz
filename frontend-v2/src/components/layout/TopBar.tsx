@@ -4,11 +4,11 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { NavLink, Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
-import { NAV_ROUTES } from '@/lib/navRoutes'
-import { useCabinFeatures, isFeatureEnabled } from '@/hooks/useCabinFeatures'
+import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems } from '@/lib/navRoutes'
+import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { ChevronDown, LogOut, ScrollText, Settings, Shield, User, UserPlus } from 'lucide-react'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 
@@ -19,6 +19,7 @@ interface TopBarProps {
 export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
   const { user, isAdmin, isSuperAdmin, logout } = useAuth()
   const { data: cabin } = useCabinFeatures()
+  const location = useLocation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -57,16 +58,10 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
     showToast('Odhlášení úspěšné', 'info')
   }
 
-  // Viditelné nav položky dle feature flags a role
-  const visibleRoutes = NAV_ROUTES.filter((r) => {
-    if (!user?.cabinId && isSuperAdmin && !r.superAdminOnly) return false
-    if (r.adminOnly) return isAdmin
-    if (r.superAdminOnly) return isSuperAdmin
-    if (r.featureKey) return isFeatureEnabled(cabin?.features, r.featureKey)
-    return true
-  })
-  // Admin obrazovky se zobrazují v dropdownu, ne v hlavní nav
-  const mainNavRoutes = visibleRoutes.filter((r) => !r.adminOnly && !r.superAdminOnly)
+  // Sekce chaty dle feature flags (bez chaty žádné); admin obrazovky jsou v dropdownu.
+  // Desktop zatím ukazuje hlavní sekce i doplňky v jedné řadě, sidebar přijde v dalším kroku #171.
+  const mainNavItems = user?.cabinId ? visibleNavItems([...PRIMARY_NAV, ...MORE_NAV], cabin?.features) : []
+  const activeItem = findActiveNavItem(mainNavItems, location)
 
   const username = user?.username ?? 'Uživatel'
 
@@ -77,17 +72,18 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
           <img src="/logo-icon.svg" alt="Kdy na chatu" className="nav-logo-icon" />
         </Link>
 
-        <nav id="app-nav" className="app-nav" data-testid="desktop-primary-nav">
-          {mainNavRoutes.map((route) => (
-            <NavLink
-              key={route.path}
-              to={route.path}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+        <nav id="app-nav" className="app-nav" aria-label="Hlavní navigace" data-testid="desktop-primary-nav">
+          {mainNavItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`nav-link${item === activeItem ? ' active' : ''}`}
+              aria-current={item === activeItem ? 'page' : undefined}
               data-testid="desktop-nav-link"
-              data-route={route.path}
+              data-route={item.to}
             >
-              {route.label}
-            </NavLink>
+              {item.label}
+            </Link>
           ))}
         </nav>
       </div>
