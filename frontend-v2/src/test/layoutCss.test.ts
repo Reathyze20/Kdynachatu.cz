@@ -96,6 +96,8 @@ describe('Přehled — karty v hlavním sloupci pod sebou (#172)', () => {
   })
 
   it.each([375, 800, 1100, 1440, 1920])('na šířce %i px jsou karty hlavního sloupce v jednom sloupci', (width) => {
+    const rules = rulesAt(dashboardCssRaw, '.dashboard-stack', width)
+    expect(rules.some((r) => /flex-direction\s*:\s*column/.test(r.body))).toBe(true)
     expect(columnsAt(dashboardCssRaw, '.dashboard-stack', width)).toBe(1)
   })
 

@@ -173,7 +173,7 @@ export function ActivationChecklistSkeleton() {
 
 // ─── Animation variants ───────────────────────────────────────────────
 
-const gridVariants = {
+const stackVariants = {
   hidden: {},
   visible: {
     transition: { staggerChildren: 0.07 },
@@ -318,7 +318,7 @@ export function DashboardPage() {
     },
   ];
 
-  const gridWidgets = collapsibleWidgets.filter((w) => !w.isEmpty);
+  const filledWidgets = collapsibleWidgets.filter((w) => !w.isEmpty);
   const emptyWidgets = collapsibleWidgets.filter((w) => w.isEmpty);
 
   const mainColumn = (
@@ -363,7 +363,7 @@ export function DashboardPage() {
       {/* Hlavní sloupec: prioritní stack karet (#172), karty se nenatahují do výšky sousedů */}
       <motion.div
         className="dashboard-stack"
-        variants={gridVariants}
+        variants={stackVariants}
         initial="hidden"
         animate="visible"
         data-testid="dashboard-stack"
@@ -382,18 +382,18 @@ export function DashboardPage() {
         </motion.div>
 
         {/* Widgety s obsahem, v pořadí: Nákupy | Údržba */}
-        {gridWidgets.map((w) => (
+        {filledWidgets.map((w) => (
           <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
             {w.node}
           </motion.div>
         ))}
       </motion.div>
 
-      {/* Prázdné widgety — kompaktní řádky pod mřížkou */}
+      {/* Prázdné widgety — kompaktní řádky pod stackem */}
       {emptyWidgets.length > 0 && (
         <motion.div
           className="dashboard-compact-stack"
-          variants={gridVariants}
+          variants={stackVariants}
           initial="hidden"
           animate="visible"
           data-testid="dashboard-compact-stack"
