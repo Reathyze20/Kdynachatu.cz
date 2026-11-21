@@ -30,9 +30,7 @@ interface Rule { file: string; media: string | null; selectors: string[]; body: 
 function rulesOf(file: string, css: string): Rule[] {
   const out: Rule[] = []
   const walk = (text: string, media: string | null) => {
-    let depth = 0
-    let start = 0
-    let preludeEnd = 0
+    let [depth, start, preludeEnd] = [0, 0, 0]
     for (let i = 0; i < text.length; i++) {
       if (text[i] === ';' && depth === 0) {
         start = i + 1 // příkaz bez těla (`@import …;`, `@custom-variant …;`)
@@ -82,22 +80,16 @@ describe('Design tokeny povrchů z mocku (C1)', () => {
   const variables = fileRules('variables.css')
   const tokensIn = (selector: string) => variables.filter((r) => r.selectors.includes(selector))
 
-  it.each([
-    ['--page', '244 247 245'],
-    ['--sheet', '255 253 250'],
-    ['--sheet-alt', '233 244 239'],
-    ['--rule', '223 228 223'],
-    ['--rule-soft', '233 237 232'],
-  ])('světlý režim: %s = %s', (token, value) => {
-    expect(lastDecl(tokensIn(':root'), token)).toBe(value)
-  })
+  const LIGHT = { '--page': '244 247 245', '--sheet': '255 253 250', '--sheet-alt': '233 244 239', '--rule': '223 228 223', '--rule-soft': '233 237 232' }
 
-  it.each(['--page', '--sheet', '--sheet-alt', '--rule', '--rule-soft', '--lift'])('tmavý režim (.dark) definuje %s', (token) => {
+  it.each(Object.entries(LIGHT))('světlý režim: %s = %s, tmavý (.dark) ho definuje taky', (token, value) => {
+    expect(lastDecl(tokensIn(':root'), token)).toBe(value)
     expect(lastDecl(tokensIn('.dark'), token)).toBeTruthy()
   })
 
-  it('jemný stín --lift a pozadí aplikace jsou tokeny', () => {
+  it('jemný stín --lift (světlý i tmavý) a pozadí aplikace jsou tokeny', () => {
     expect(lastDecl(tokensIn(':root'), '--lift')).toMatch(/rgb\(16 40 28/)
+    expect(lastDecl(tokensIn('.dark'), '--lift')).toBeTruthy()
     expect(lastDecl(tokensIn(':root'), '--bg-app-backdrop')).toMatch(/radial-gradient\([^;]*var\(--sheet-alt\)/)
   })
 })
@@ -122,11 +114,7 @@ describe('Lehké pozadí po přihlášení (C5a)', () => {
   it('přihlašovací obrazovka fotku má', async () => {
     vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { cabinSignupEnabled: false } } as Awaited<ReturnType<typeof apiClient.get>>)
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter><AuthPage /></MemoryRouter>
-      </QueryClientProvider>,
-    )
+    render(<QueryClientProvider client={queryClient}><MemoryRouter><AuthPage /></MemoryRouter></QueryClientProvider>)
     expect(screen.getByTestId('auth-page')).toHaveClass('photo-backdrop')
     vi.restoreAllMocks()
   })
@@ -151,13 +139,9 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
     expect(lastDecl(rules, 'box-shadow')).toBe('var(--lift)')
   })
 
-  it('levý panel Zásob (.shopping-master) je plný povrch --sheet', () => {
+  it('levý panel Zásob je plný a karty nesimulují sklo rozmazanou fotkou v pseudoelementech', () => {
     expect(lastDecl(rulesFor('shopping.css', '.shopping-master').filter((r) => r.media === null), 'background')).toBe('rgb(var(--sheet))')
-  })
-
-  it('karty už nesimulují sklo rozmazanou fotkou v pseudoelementech', () => {
-    const pseudo = ALL_RULES.filter((r) => r.selectors.some((s) => /^\.(glass-card|app-sidebar)::(before|after)$/.test(s)))
-    expect(pseudo).toEqual([])
+    expect(ALL_RULES.filter((r) => r.selectors.some((s) => /^\.(glass-card|app-sidebar)::(before|after)$/.test(s)))).toEqual([])
   })
 
   // Akcenty povolené pravidlem C4a: modály a overlaye, toasty, lišty; plus přihlášení nad fotkou.
@@ -183,13 +167,11 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
   })
 })
 
-/** WCAG relativní jas a kontrast. */
-function luminance([r, g, b]: number[]): number {
-  const lin = (c: number) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4 }
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-}
+/** WCAG kontrast dvou barev [r, g, b]. */
 function contrast(a: number[], b: number[]): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  const lin = (c: number) => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4 }
+  const lum = ([r, g, b]: number[]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x)
   return (hi + 0.05) / (lo + 0.05)
 }
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
