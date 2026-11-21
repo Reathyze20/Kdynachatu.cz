@@ -72,7 +72,6 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Component | Type | Status |
 |---|---|---|
 | DashboardPage | Page | ✅ Complete |
-| WeatherCard | Widget | ⚠️ no longer on the overview (#172, weather is a line in CabinHero); to be removed |
 | CabinHero | Header | ✅ Compact cabin strip above both columns: photo slot (Midjourney drop-in via `overviewAssets.ts`), cabin name, date + weather line (#172) |
 | ActiveReservation | Card | ✅ „Na chatě teď“: who is at the cabin now + turnus chain; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
 | NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay (own as „Ty“) with purpose, nights and co-travellers, plus „Váš pobyt“ when mine is not next (#172) |
