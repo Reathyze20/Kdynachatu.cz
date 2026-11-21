@@ -1,13 +1,15 @@
 /**
  * NextArrivalCard — „Další příjezd“ v bočním panelu Přehledu (#172, lehký kontext).
- * Další pevný pobyt po tom aktuálním; vlastní pobyt jako „Ty“. Když můj nejbližší pobyt
+ * Další pevný pobyt po tom aktuálním; vlastní pobyt jako „Ty“. Ukazuje i to, co řetězec turnusu
+ * neřekne: účel, počet nocí a kdo jede s ním. Když můj nejbližší pobyt
  * není hned další, přidá řádek „Váš pobyt…“. Jen pevné pobyty. Bez obojího se karta nevykreslí.
  */
 import { useId } from "react";
 import type { DashboardReservationsData } from "@/api/dashboard";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { useAuth } from "@/context/AuthContext";
-import { daysUntil, formatDateRange } from "@/lib/dateUtils";
+import { daysUntil, formatDateRange, nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { ParticipantStack } from "./ParticipantStack";
 import { pluralize } from "@/lib/utils";
 
 function inDaysLabel(from: string): string {
@@ -30,6 +32,7 @@ export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
   const showMyNext = !!myNext && !isMine(next) && !isMine(active);
 
   if (!next && !showMyNext) return null;
+  const nights = next ? nightsBetween(next.from, next.to) : 0;
 
   return (
     <section className="glass-card next-arrival-card" aria-labelledby={headingId} data-testid="dashboard-next-arrival">
@@ -46,6 +49,13 @@ export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
           <span className="status-next-chip">{inDaysLabel(next.from)}</span>
         </div>
       )}
+      {next && (
+        <p className="next-arrival-meta">
+          {next.purpose}
+          {nights > 0 && ` · ${nights} ${nightsLabel(nights)}`}
+        </p>
+      )}
+      {next && <ParticipantStack participants={next.participants} />}
       {showMyNext && myNext && (
         <div className="next-arrival-mine">
           <span className="status-next-label-personal">Váš pobyt {inDaysLabel(myNext.from)}</span>

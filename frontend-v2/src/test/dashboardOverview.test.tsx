@@ -16,8 +16,9 @@ vi.mock('@/api/client', () => ({
   },
 }))
 vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(weather.current)) }))
+const { auth } = vi.hoisted(() => ({ auth: { isAdmin: false } }))
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'u-eva', cabinId: 'c-1', username: 'Eva' }, isAdmin: false }),
+  useAuth: () => ({ user: { id: 'u-eva', cabinId: 'c-1', username: 'Eva' }, isAdmin: auth.isAdmin }),
 }))
 
 const TODAY = '2026-12-10'
@@ -66,6 +67,7 @@ afterEach(() => {
   vi.useRealTimers()
   responses.clear()
   weather.current = null
+  auth.isAdmin = false
 })
 
 const NOVAKOVI_NOW = {
@@ -125,6 +127,21 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(screen.getByTestId('dashboard-reservation-widget')).not.toHaveTextContent('Váš pobyt')
   })
 
+  it('další příjezd ukáže i to, co řetězec ne: účel, počet nocí a kdo jede s ním', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [{
+        ...upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-17'),
+        purpose: 'Řezání dřeva',
+        participants: [{ userId: 'u-petr', username: 'Petr', userColor: null, userAnimalIcon: null }],
+      }],
+    }))
+
+    const next = await screen.findByRole('region', { name: 'Další příjezd' })
+    expect(next).toHaveTextContent('Řezání dřeva · 3 noci')
+    expect(next).toHaveTextContent('Také jede')
+    expect(within(next).getAllByTitle('Petr').length).toBeGreaterThan(0)
+  })
+
   it('můj pobyt, který není hned další, ukáže boční panel zvlášť', async () => {
     renderOverview(reservations({
       upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'), upcoming('r-eva', 'Eva', '2026-12-28', '2026-12-30')],
@@ -146,12 +163,12 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 
-  it('počasí a vzkaz jsou v bočním panelu, bez dalšího pobytu karta příjezdu chybí', async () => {
+  it('vzkaz je v bočním panelu, celá karta počasí na Přehledu není, bez dalšího pobytu karta příjezdu chybí', async () => {
     renderOverview(reservations())
 
     const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
-    expect(within(aside).getByTestId('dashboard-weather-widget')).toBeInTheDocument()
     expect(within(aside).getByTestId('dashboard-handover-widget')).toBeInTheDocument()
+    expect(screen.queryByTestId('dashboard-weather-widget')).not.toBeInTheDocument()
     await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
@@ -222,6 +239,23 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
     await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · −3 °C · Zataženo'))
     expect(within(hero).getByTestId('cabin-hero-media')).toBeInTheDocument()
     expect(screen.getByTestId('two-column-layout')).not.toContainElement(hero)
+  })
+
+  it('výstrahu na bouřku z dalších dnů ukáže pruh pod řádkem počasí', async () => {
+    weather.current = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    expect(await within(hero).findByText('Zítra: Bouřka')).toBeInTheDocument()
+  })
+
+  it('bez lokality počasí nabídne pruh správci odkaz do nastavení, členovi nic', async () => {
+    weather.current = 'EMPTY_LOCATION'
+    auth.isAdmin = true
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    expect(await within(hero).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
   })
 
   it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {

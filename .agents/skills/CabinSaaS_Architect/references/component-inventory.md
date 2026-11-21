@@ -72,10 +72,11 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Component | Type | Status |
 |---|---|---|
 | DashboardPage | Page | ✅ Complete |
-| WeatherCard | Widget | ✅ (calls Open-Meteo directly) |
+| WeatherCard | Widget | ⚠️ no longer on the overview (#172, weather is a line in CabinHero); to be removed |
 | CabinHero | Header | ✅ Compact cabin strip above both columns: photo slot (Midjourney drop-in via `overviewAssets.ts`), cabin name, date + weather line (#172) |
 | ActiveReservation | Card | ✅ „Na chatě teď“: who is at the cabin now + turnus chain; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
-| NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay, own as „Ty“, plus „Váš pobyt“ when mine is not next (#172) |
+| NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay (own as „Ty“) with purpose, nights and co-travellers, plus „Váš pobyt“ when mine is not next (#172) |
+| ParticipantStack | Inline | ✅ „Také jede“ avatars of co-travellers (status card + next arrival) |
 | DepartureBanner | Banner | ✅ |
 | NudgeTray | Card | ✅ „Visí na vás“: nudges from `nudges.ts` as one action card, actionable first, first highlighted with a button, max 2 visible + „Zobrazit víc“; low supplies stay in RunningLowCard (#172) |
 | PinnedNote | Card | ✅ |

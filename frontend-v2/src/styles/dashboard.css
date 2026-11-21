@@ -498,6 +498,31 @@
   color: var(--text-muted);
 }
 
+.cabin-hero__alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  /* tmavý text kvůli kontrastu (G1), ikona v barvě varování */
+  color: var(--color-warning-text);
+}
+
+.cabin-hero__alert svg {
+  flex-shrink: 0;
+  color: var(--status-warning);
+}
+
+.cabin-hero__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
 /* ── Pozvánka, když se nic neděje (#172, návrh #1 díl 5 = A) ── */
 .overview-invite .status-content {
   align-items: center;
@@ -558,6 +583,12 @@
 
 .next-arrival-card {
   gap: var(--space-sm);
+}
+
+.next-arrival-meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
 
 .next-arrival-mine {

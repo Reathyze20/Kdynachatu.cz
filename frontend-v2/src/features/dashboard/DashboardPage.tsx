@@ -7,7 +7,6 @@ import apiClient from "@/api/client";
 import { fetchWeather } from "@/api/dashboard";
 import type { CabinSettings, DashboardActivationData, DashboardReservationsData, DashboardShoppingData, DashboardNotesData } from "@/api/dashboard";
 import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppingSchema, DashboardNotesSchema } from "@/api/schemas";
-import { WeatherCard } from "./WeatherCard";
 import { ActiveReservation } from "./ActiveReservation";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
@@ -39,39 +38,6 @@ export function StatusCardSkeleton() {
         <div className="status-cta-row" style={{ marginTop: 14, gap: 8 }}>
           <div className="skeleton skeleton-btn" style={{ width: 160 }} />
           <div className="skeleton skeleton-btn" style={{ width: 130 }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function WeatherSkeleton() {
-  return (
-    <div className="glass-card weather-card" id="dashboard-weather">
-      <div className="card-body-full">
-        <div className="weather-main">
-          <div className="weather-current" style={{ gap: 16 }}>
-            <div className="skeleton skeleton-weather-icon" />
-            <div className="weather-temp-box" style={{ gap: 8 }}>
-              <div className="skeleton skeleton-temp" />
-              <div className="skeleton skeleton-text" style={{ width: 90, height: 13 }} />
-            </div>
-          </div>
-          <div className="weather-details" style={{ gap: 8 }}>
-            <div className="skeleton skeleton-text" style={{ width: 80, height: 12 }} />
-            <div className="skeleton skeleton-text" style={{ width: 72, height: 12 }} />
-            <div className="skeleton skeleton-text" style={{ width: 88, height: 12 }} />
-          </div>
-        </div>
-        <div className="weather-divider" style={{ opacity: 0.4 }} />
-        <div className="weather-forecast">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="skeleton-forecast-col">
-              <div className="skeleton skeleton-text" style={{ width: 28, height: 11 }} />
-              <div className="skeleton" style={{ width: 22, height: 22, borderRadius: "50%" }} />
-              <div className="skeleton skeleton-text" style={{ width: 36, height: 13 }} />
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -293,7 +259,7 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, další příjezd, vzkaz, počasí).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, další příjezd, vzkaz). Počasí je jen řádek v pruhu nahoře (mock 01).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {shoppingQuery.isError ? (
@@ -319,15 +285,6 @@ export function DashboardPage() {
             }}
           />
         ) : null}
-      </div>
-      <div data-testid="dashboard-weather-widget">
-        {weatherQuery.isLoading || cabinQuery.isLoading ? (
-          <WeatherSkeleton />
-        ) : weatherQuery.isError ? (
-          <FeatureErrorFallback title="Počasí se nepodařilo načíst" error={weatherQuery.error as Error} resetErrorBoundary={() => weatherQuery.refetch()} />
-        ) : (
-          <WeatherCard weather={weatherQuery.data ?? null} />
-        )}
       </div>
     </div>
   );
