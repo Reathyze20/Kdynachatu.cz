@@ -275,7 +275,7 @@ Follow the established `frontend-v2/src/` layout exactly:
 api/          → Axios functions per domain (one file per backend route group)
 components/
   ui/         → shadcn/ui primitives (Button, Card, Input...)
-  layout/     → AppShell, TopBar, DesktopSidebar, MobileHeader, MobileNav, ProfileDrawer
+  layout/     → AppShell, DesktopSidebar, SidebarProfileMenu, MobileHeader, MobileNav, ProfileDrawer
   shared/     → Modal, Toast, HelpFab, OfflineBanner, FeatureErrorFallback...
 features/     → Domain-driven page modules (one folder per feature)
   <feature>/

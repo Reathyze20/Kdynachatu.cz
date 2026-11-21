@@ -199,9 +199,9 @@ page.getByTestId('register-submit-button')
 ### Shell Navigation
 ```typescript
 // Desktop
-page.getByTestId('desktop-topbar')
+page.getByTestId('desktop-sidebar')
 page.getByTestId('desktop-primary-nav')
-page.getByTestId('desktop-nav-link').filter({ hasText: 'Dashboard' })
+page.getByTestId('desktop-nav-link').filter({ hasText: 'Přehled' })
 page.getByTestId('profile-menu-button')
 page.getByTestId('profile-menu')
 

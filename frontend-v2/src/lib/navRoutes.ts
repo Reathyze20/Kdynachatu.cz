@@ -1,7 +1,7 @@
 /**
  * lib/navRoutes.ts — globální navigace (redesign #0, issue #171)
  * Hlavní sekce podle cyklu turnusu (Přehled · Kalendář · Předávka · Zásoby), doplňky pod „Víc“.
- * Admin a backoffice nejsou sekce chaty, žijí v profilovém menu (TopBar, ProfileDrawer).
+ * Admin a backoffice nejsou sekce chaty, žijí v profilovém menu (SidebarProfileMenu, ProfileDrawer).
  */
 import type { LucideIcon } from 'lucide-react'
 import { Home, CalendarDays, KeyRound, ShoppingCart, MessageCircle, Images, BookOpen, Hammer } from 'lucide-react'
