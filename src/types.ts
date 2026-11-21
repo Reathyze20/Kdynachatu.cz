@@ -132,3 +132,15 @@ export interface ReconstructionItem {
 export interface SignupStatusResponse {
   cabinSignupEnabled: boolean;
 }
+
+// GET /api/demo-accounts – fiktivní účty pro rychlé přihlášení, neprázdné jen na stagingu
+export interface DemoAccount {
+  username: string;
+  label: string;
+  role: string;
+  password: string;
+}
+
+export interface DemoAccountsResponse {
+  accounts: DemoAccount[];
+}
