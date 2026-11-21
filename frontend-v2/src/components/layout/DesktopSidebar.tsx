@@ -3,14 +3,20 @@
  * Levý sidebar desktopového rámu (redesign #1b, issue #171): ikona + popisek, stejný model jako dolní lišta.
  * Na desktopu je místa dost, takže doplňky z „Víc“ jsou vidět rovnou jako skupina pod hlavními sekcemi.
  * Dole je nápověda (#205): na desktopu nahrazuje plovoucí tlačítko, které překrývalo obsah.
+ * Pod ní profilové menu s administrací a odhlášením (#205): desktop nemá horní lištu.
  */
 import { Link, useLocation } from 'react-router-dom'
 import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
 import { HelpFab } from '@/components/shared/HelpFab'
+import { SidebarProfileMenu } from './SidebarProfileMenu'
 
-export function DesktopSidebar() {
+interface DesktopSidebarProps {
+  onOpenProfileDrawer: () => void
+}
+
+export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
   const { user } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
@@ -58,6 +64,7 @@ export function DesktopSidebar() {
 
       <div className="app-sidebar-footer">
         <HelpFab variant="sidebar" />
+        <SidebarProfileMenu onOpenProfileDrawer={onOpenProfileDrawer} />
       </div>
     </aside>
   )

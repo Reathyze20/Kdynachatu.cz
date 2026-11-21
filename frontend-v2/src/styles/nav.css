@@ -439,7 +439,7 @@
   outline-offset: -2px;
 }
 
-/* ── Patička sidebaru: nápověda (#205) ── */
+/* ── Patička sidebaru: nápověda a profilové menu (#205) ── */
 .app-sidebar-footer {
   display: flex;
   flex-direction: column;
@@ -450,8 +450,9 @@
   border-top: 1px solid var(--border-strong);
 }
 
-/* Nápověda je <button>, vzhled bere z .app-sidebar-link */
-.app-sidebar-help {
+/* Nápověda a profilové menu jsou <button>, vzhled berou z .app-sidebar-link */
+.app-sidebar-help,
+.app-sidebar-profile-trigger {
   width: 100%;
   border: none;
   background: transparent;
@@ -459,6 +460,64 @@
   font-weight: 500;
   text-align: left;
   cursor: pointer;
+}
+
+/* ── Profilové menu v patičce sidebaru (#205) ── */
+.app-sidebar-profile-trigger {
+  padding: 0 8px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.app-sidebar-profile-trigger[aria-expanded="true"] {
+  background: var(--color-primary-bg);
+}
+
+.app-sidebar-profile-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-sidebar-profile-arrow {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.app-sidebar-profile-trigger[aria-expanded="true"] .app-sidebar-profile-arrow {
+  transform: rotate(180deg);
+}
+
+/* Menu roste nahoru od tlačítka dole v sidebaru */
+.app-sidebar-profile-menu {
+  transform-origin: bottom left;
+  animation-name: dropdownFadeInUp;
+}
+
+@keyframes dropdownFadeInUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.nav-dropdown-item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar-profile-menu {
+    animation: none;
+  }
 }
 
 /* Úzký desktop: jen ikony, popisky zůstávají pro čtečky a v title */
