@@ -1,6 +1,7 @@
 /**
- * NudgeTray — „Visí na tobě“ na Přehledu (návrh #1 díl 3 = A, #172): výstup nudge enginu
- * jako jedna akční karta. První upozornění je zvýrazněné a jeho tlačítko vede rovnou do úkolu;
+ * NudgeTray — „Visí na vás“ na Přehledu (návrh #1 díl 3 = A, #172): výstup nudge enginu
+ * jako jedna akční karta. Upozornění s akcí jdou napřed; první je zvýrazněné a jeho tlačítko vede
+ * rovnou do úkolu;
  * nejvýš dvě jsou vidět, zbytek je za „Zobrazit víc“. Upozornění, která stojí za to poslat
  * rodině, mají „Kopírovat pro WhatsApp“ (zpráva + odkaz), dokud nepřijde bot (fáze 3).
  * Docházející zásoby tu nejsou: ukazuje je karta „Dochází“ v bočním panelu (bez duplicity).
@@ -47,8 +48,10 @@ export function NudgeTray({ reservations, shopping }: Props) {
   const [dismissed, setDismissed] = useState<string[]>(() => readDismissed(user?.username));
   const [expanded, setExpanded] = useState(false);
 
+  const hasAction = (n: Nudge) => n.href in ACTION_LABEL;
   const nudges = buildNudges({ reservations, shopping })
-    .filter((n) => !n.id.startsWith("supply-") && !dismissed.includes(n.id));
+    .filter((n) => !n.id.startsWith("supply-") && !dismissed.includes(n.id))
+    .sort((a, b) => Number(hasAction(b)) - Number(hasAction(a)));
   if (nudges.length === 0) return null;
   const visible = expanded ? nudges : nudges.slice(0, VISIBLE_COUNT);
   const hiddenCount = nudges.length - VISIBLE_COUNT;
@@ -76,7 +79,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
 
   return (
     <section className="glass-card your-tasks" aria-labelledby={headingId} data-testid="dashboard-nudge-tray">
-      <h2 id={headingId} className="dashboard-card-header-title">Visí na tobě</h2>
+      <h2 id={headingId} className="dashboard-card-header-title">Visí na vás</h2>
       <ul className="your-tasks__list">
         {visible.map(({ icon: Icon, ...n }, i) => {
           const action = ACTION_LABEL[n.href];

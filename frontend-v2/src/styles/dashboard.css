@@ -62,7 +62,7 @@
   color: var(--color-text, inherit);
 }
 
-/* ── „Visí na tobě“ (NudgeTray, #172): upozornění jako jedna akční karta ── */
+/* ── „Visí na vás“ (NudgeTray, #172): upozornění jako jedna akční karta ── */
 .your-tasks {
   gap: var(--space-sm);
 }
@@ -125,10 +125,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 0;
-  background: none;
-  border: none;
-  text-align: left;
 }
 
 .nudge-title {
