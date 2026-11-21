@@ -1,6 +1,6 @@
 {
   "name": "cabin_reservation_app",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "type": "module",
   "main": "index.js",
   "scripts": {
