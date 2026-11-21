@@ -13,7 +13,7 @@ vi.mock('@/context/AuthContext', () => ({
 }))
 
 describe('Přehled ve dvousloupcovém rozložení (#171, #172)', () => {
-  it('karty jsou v hlavním sloupci a počasí v bočním panelu', () => {
+  it('karty jsou v hlavním sloupci a vzkaz v bočním panelu', () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={qc}>
@@ -25,6 +25,6 @@ describe('Přehled ve dvousloupcovém rozložení (#171, #172)', () => {
 
     const layout = screen.getByTestId('two-column-layout')
     expect(within(layout).getByTestId('dashboard-page')).toContainElement(screen.getByTestId('dashboard-stack'))
-    expect(screen.getByRole('complementary', { name: 'Kontext chaty' })).toContainElement(screen.getByTestId('dashboard-weather-widget'))
+    expect(screen.getByRole('complementary', { name: 'Kontext chaty' })).toContainElement(screen.getByTestId('dashboard-handover-widget'))
   })
 })

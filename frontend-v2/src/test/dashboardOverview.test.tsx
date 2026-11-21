@@ -125,6 +125,21 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(screen.getByTestId('dashboard-reservation-widget')).not.toHaveTextContent('Váš pobyt')
   })
 
+  it('další příjezd ukáže i to, co řetězec ne: účel, počet nocí a kdo jede s ním', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [{
+        ...upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-17'),
+        purpose: 'Řezání dřeva',
+        participants: [{ userId: 'u-petr', username: 'Petr', userColor: null, userAnimalIcon: null }],
+      }],
+    }))
+
+    const next = await screen.findByRole('region', { name: 'Další příjezd' })
+    expect(next).toHaveTextContent('Řezání dřeva · 3 noci')
+    expect(next).toHaveTextContent('Také jede')
+    expect(within(next).getAllByTitle('Petr').length).toBeGreaterThan(0)
+  })
+
   it('můj pobyt, který není hned další, ukáže boční panel zvlášť', async () => {
     renderOverview(reservations({
       upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'), upcoming('r-eva', 'Eva', '2026-12-28', '2026-12-30')],
@@ -146,12 +161,12 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 
-  it('počasí a vzkaz jsou v bočním panelu, bez dalšího pobytu karta příjezdu chybí', async () => {
+  it('vzkaz je v bočním panelu, celá karta počasí na Přehledu není, bez dalšího pobytu karta příjezdu chybí', async () => {
     renderOverview(reservations())
 
     const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
-    expect(within(aside).getByTestId('dashboard-weather-widget')).toBeInTheDocument()
     expect(within(aside).getByTestId('dashboard-handover-widget')).toBeInTheDocument()
+    expect(screen.queryByTestId('dashboard-weather-widget')).not.toBeInTheDocument()
     await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })

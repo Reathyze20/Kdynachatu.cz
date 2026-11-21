@@ -6,6 +6,7 @@ import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
 import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
+import { ParticipantStack } from "./ParticipantStack";
 import { CalendarPlus, CircleCheck, DoorOpen, TriangleAlert } from "lucide-react";
 
 interface Props {
@@ -60,24 +61,6 @@ function buildLastStayBlock(lastStay: LastStay | null | undefined): React.ReactN
       </div>
       {buildArrivalBriefing(lastStay)}
     </>
-  );
-}
-
-type ParticipantLite = { userId: string; username: string; userColor: string | null; userAnimalIcon: string | null };
-
-function buildParticipantStack(participants: ParticipantLite[] | undefined): React.ReactNode {
-  if (!participants || participants.length === 0) return null;
-  return (
-    <div className="status-participants">
-      <span className="status-participants-label">Také jede</span>
-      <div className="status-participants-avatars">
-        {participants.map((p) => (
-          <span key={p.userId} className="status-participant" title={p.username}>
-            <AnimalAvatar icon={p.userAnimalIcon} username={p.username} color={p.userColor || undefined} size={24} />
-          </span>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -180,7 +163,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
             </div>
           </div>
           {chainNode}
-          {buildParticipantStack(active.participants)}
+          <ParticipantStack participants={active.participants} />
           {checkoutReminderNode}
           <div className="status-cta-row">
             {freeWeekendNode}
