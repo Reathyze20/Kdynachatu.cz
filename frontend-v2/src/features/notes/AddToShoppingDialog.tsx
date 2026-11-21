@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import apiClient from "@/api/client";
 import { useResolveNote } from "./hooks/useNotes";
 import { showToast } from "@/lib/toast";
 import { shoppingApi, type ShoppingList } from "@/api/shopping";
@@ -80,10 +79,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await apiClient.post(`/shopping-list/${selectedList}/items`, {
-        name,
-        sourceMessageId: noteId,
-      });
+      await shoppingApi.addItem(selectedList, name, noteId);
       void resolve.mutateAsync(noteId).catch(() => {
         showToast("Položka byla přidána, ale zprávu se nepodařilo označit jako vyřešenou.", "info");
       });

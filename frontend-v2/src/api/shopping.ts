@@ -67,9 +67,9 @@ export const shoppingApi = {
 
   // ─── Items ─────────────────────────────────────────────────────────────────
 
-  addItem: (listId: string, name: string): Promise<ShoppingItem> =>
+  addItem: (listId: string, name: string, sourceMessageId?: string): Promise<ShoppingItem> =>
     apiClient
-      .post<ShoppingItem>(`/shopping-list/${listId}/items`, { name, isEssential: false })
+      .post<ShoppingItem>(`/shopping-list/${listId}/items`, { name, isEssential: false, sourceMessageId })
       .then(r => r.data),
 
   toggleItemStatus: (itemId: string, status: ItemStatus): Promise<ShoppingItem> =>

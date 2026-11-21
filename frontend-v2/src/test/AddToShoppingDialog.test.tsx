@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import apiClient from '@/api/client'
 import { shoppingApi, type ShoppingList } from '@/api/shopping'
 import { AddToShoppingDialog } from '@/features/notes/AddToShoppingDialog'
 
@@ -35,5 +36,28 @@ describe('add-to-shopping dialog', () => {
 
     expect(await screen.findByRole('option', { name: 'Víkend (1 položek)' })).toBeTruthy()
     expect(getLists).toHaveBeenCalledTimes(1)
+  })
+
+  it('adds the item through the shopping API module and links it to the source message', async () => {
+    vi.spyOn(shoppingApi, 'getLists').mockResolvedValue([list])
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: {} })
+    vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: {} })
+    const onClose = vi.fn()
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AddToShoppingDialog open noteId="note-1" messageText="Koupit chleba" onClose={onClose} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByRole('option', { name: 'Víkend (1 položek)' })
+    fireEvent.click(screen.getByRole('button', { name: /Přidat/ }))
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
+    expect(post).toHaveBeenCalledWith('/shopping-list/list-1/items', {
+      name: 'Koupit chleba',
+      isEssential: false,
+      sourceMessageId: 'note-1',
+    })
   })
 })

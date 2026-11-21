@@ -23,6 +23,6 @@ describe("admin: system info", () => {
   test("an admin gets the counts of their own cabin", async () => {
     const res = await as(app, world.adminA).get("/api/admin/system");
     assert.equal(res.status, 200);
-    assert.equal(typeof res.body.userCount, "number");
+    assert.equal(res.body.userCount, 2); // správce A + člen A, uživatelé chaty B se nepočítají
   });
 });
