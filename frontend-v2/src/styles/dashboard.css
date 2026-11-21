@@ -405,6 +405,117 @@
   }
 }
 
+/* ── Kompaktní pruh chaty nad oběma sloupci (#172, návrh #1 díl 1 = A) ──
+   Slot na fotku chaty (Midjourney drop-in, heroAssets.ts), jméno a jeden řádek kontextu. */
+.dashboard-frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Obal drží vodorovné odsazení sloupců, karta pod textem drží kontrast i na fotce pozadí (G1) */
+.cabin-hero-wrap {
+  padding: 12px 12px 0;
+}
+
+@media (min-width: 769px) {
+  .cabin-hero-wrap {
+    padding: 16px 16px 0;
+  }
+}
+
+@media (min-width: 1100px) {
+  .cabin-hero-wrap {
+    padding: 12px 20px 0;
+  }
+}
+
+.glass-card.cabin-hero {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px 14px;
+}
+
+.cabin-hero__media,
+.overview-invite__media {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--text-on-primary);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-light));
+}
+
+.cabin-hero__media {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.cabin-hero__media img,
+.overview-invite__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cabin-hero__text {
+  min-width: 0;
+}
+
+.cabin-hero__name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cabin-hero__context {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ── Pozvánka, když se nic neděje (#172, návrh #1 díl 5 = A) ── */
+.overview-invite .status-content {
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+}
+
+.overview-invite__media {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+}
+
+.overview-invite__title {
+  margin: var(--space-sm) 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.overview-invite__text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.overview-invite .status-cta-row.overview-invite__actions {
+  align-self: stretch;
+  justify-content: center;
+}
+
 /* ── Přehled (#172): hlavní sloupec = prioritní stack, boční panel = lehký kontext ──
    Karty mají přirozenou výšku, nic se nenatahuje do výšky souseda. Boční panel má
    vodorovně stejné odsazení jako hlavní sloupec (.nordic-dashboard). */
@@ -654,17 +765,6 @@
   flex-direction: column;
   height: 100%;
   flex: 1;
-}
-
-/* ── Date header ───────────────────────────────────────────────────── */
-
-.dashboard-date {
-  font-size: 0.825rem;
-  font-weight: 600;
-  color: var(--text-muted, #64748b);
-  text-transform: none;
-  letter-spacing: 0.01em;
-  margin-bottom: 8px;
 }
 
 /* ── Status badge (pill) ───────────────────────────────────────────── */

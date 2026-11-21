@@ -15,6 +15,7 @@ import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
 import { NextArrivalCard } from "./NextArrivalCard";
 import { RunningLowCard } from "./RunningLowCard";
+import { CabinHero } from "./CabinHero";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
@@ -331,5 +332,11 @@ export function DashboardPage() {
     </div>
   );
 
-  return <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>;
+  // Kompaktní pruh chaty nad oběma sloupci (mock 01b: hero nad hlavním sloupcem i bočním panelem).
+  return (
+    <div className="dashboard-frame">
+      <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} />
+      <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
+    </div>
+  );
 }
