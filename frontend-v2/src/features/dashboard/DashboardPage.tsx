@@ -456,6 +456,6 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec; boční panel (další příjezd, dochází) doplní T2.
+  // Rám #1b: hlavní sloupec; boční panel (další příjezd, dochází) doplní redesign Přehledu (#172).
   return <TwoColumnLayout>{mainColumn}</TwoColumnLayout>;
 }

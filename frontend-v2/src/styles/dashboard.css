@@ -428,7 +428,6 @@
 @media (min-width: 768px) {
   .dashboard-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr 1fr;
     gap: 12px;
     align-items: stretch;
   }

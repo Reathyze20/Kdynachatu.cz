@@ -14,17 +14,12 @@ interface TwoColumnLayoutProps {
   aside?: ReactNode
   /** Přístupný název bočního panelu (landmark `complementary`). */
   asideLabel?: string
-  className?: string
 }
 
-export function TwoColumnLayout({ children, aside, asideLabel = 'Boční panel', className }: TwoColumnLayoutProps) {
+export function TwoColumnLayout({ children, aside, asideLabel = 'Boční panel' }: TwoColumnLayoutProps) {
   const hasAside = aside !== null && aside !== undefined && aside !== false
-  const classes = ['two-column-layout', hasAside && 'two-column-layout--with-aside', className]
-    .filter(Boolean)
-    .join(' ')
-
   return (
-    <div className={classes} data-testid="two-column-layout">
+    <div className={hasAside ? 'two-column-layout two-column-layout--with-aside' : 'two-column-layout'} data-testid="two-column-layout">
       <div className="two-column-layout__main">{children}</div>
       {hasAside && (
         <aside className="two-column-layout__aside" aria-label={asideLabel}>

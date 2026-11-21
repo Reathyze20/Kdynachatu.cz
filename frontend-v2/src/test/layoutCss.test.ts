@@ -34,12 +34,10 @@ function topLevelBlocks(css: string): CssBlock[] {
   return blocks
 }
 
-/** Počet stop v `grid-template-columns` (podporuje `minmax(…)` i `repeat(n, …)`). */
+/** Počet stop v `grid-template-columns` (podporuje `minmax(…)`). */
 function columnCount(declarations: string): number {
   const value = /grid-template-columns\s*:\s*([^;]+);/.exec(declarations)?.[1].trim()
   if (!value) return 1
-  const repeat = /^repeat\(\s*(\d+)/.exec(value)
-  if (repeat) return Number(repeat[1])
   return value.replace(/\([^)]*\)/g, '()').split(/\s+/).length
 }
 
@@ -58,21 +56,20 @@ function mediaAppliesAt(prelude: string, width: number): boolean {
   })
 }
 
-/** Počet sloupců, který pro `selector` vyjde na dané šířce (poslední platné pravidlo vyhrává). */
+/** Pravidla pro `selector` platná na dané šířce, v pořadí souboru (poslední vyhrává). */
+function rulesAt(css: string, selector: string, width: number): CssBlock[] {
+  const walk = (blocks: CssBlock[]): CssBlock[] => blocks.flatMap((b) => {
+    if (b.prelude.startsWith('@media')) return mediaAppliesAt(b.prelude, width) ? walk(topLevelBlocks(b.body)) : []
+    if (b.prelude.startsWith('@')) return []
+    return b.prelude.split(',').some((s) => s.trim() === selector) ? [b] : []
+  })
+  return walk(topLevelBlocks(stripComments(css)))
+}
+
+/** Počet sloupců, který pro `selector` vyjde na dané šířce. */
 function columnsAt(css: string, selector: string, width: number): number {
-  let columns = 1
-  const walk = (blocks: CssBlock[]) => {
-    for (const b of blocks) {
-      if (b.prelude.startsWith('@media')) {
-        if (mediaAppliesAt(b.prelude, width)) walk(topLevelBlocks(b.body))
-      } else if (!b.prelude.startsWith('@') && b.prelude.split(',').some((s) => s.trim() === selector)
-        && /grid-template-columns/.test(b.body)) {
-        columns = columnCount(b.body)
-      }
-    }
-  }
-  walk(topLevelBlocks(stripComments(css)))
-  return columns
+  const last = rulesAt(css, selector, width).filter((r) => /grid-template-columns/.test(r.body)).at(-1)
+  return last ? columnCount(last.body) : 1
 }
 
 describe('TwoColumnLayout — CSS (#171)', () => {
@@ -99,6 +96,12 @@ describe('Přehled — dva sloupce, ne tři (rozhodnutí #1b díl 2 = A, #171)',
 
   it.each([800, 1100, 1440, 1920])('na šířce %i px má mřížka karet dva sloupce', (width) => {
     expect(columnsAt(dashboardCssRaw, '.dashboard-grid', width)).toBe(2)
+  })
+
+  it.each([800, 1440])('na šířce %i px nemá mřížka pevné řádky, takže s málo kartami nevznikne prázdná mezera', (width) => {
+    const flexibleRows = rulesAt(dashboardCssRaw, '.dashboard-grid', width)
+      .filter((r) => /grid-template-rows\s*:[^;]*fr/.test(r.body))
+    expect(flexibleRows).toEqual([])
   })
 
   it('na mobilu má mřížka karet jeden sloupec', () => {

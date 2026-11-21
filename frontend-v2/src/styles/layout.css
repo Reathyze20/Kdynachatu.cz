@@ -339,7 +339,6 @@
 @media (min-width: 1024px) {
   .two-column-layout--with-aside {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-    align-items: start;
   }
 }
 
