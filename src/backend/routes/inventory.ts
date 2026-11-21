@@ -237,7 +237,7 @@ router.get("/missing-summary", protect, requireCabin, async (_req: Request, res:
       }),
       prisma.shoppingListItem.count({
         where: {
-          purchased: false,
+          status: { not: "purchased" },
           list: { isResolved: false, isPantry: false, cabinId },
         },
       }),

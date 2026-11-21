@@ -48,7 +48,7 @@ export interface ShoppingListItem {
   addedBy: string;
   addedById: string;
   createdAt: string;
-  purchased: boolean;
+  status: "pending" | "bring_from_home" | "purchased";
   purchasedBy?: string;
   purchasedById?: string;
   purchasedAt?: string;

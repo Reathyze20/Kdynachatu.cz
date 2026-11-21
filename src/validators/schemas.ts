@@ -88,12 +88,6 @@ export const createShoppingItemSchema = z.object({
   sourceMessageId: z.string().uuid().optional(),
 });
 
-export const updatePurchaseSchema = z.object({
-  purchased: z.boolean(),
-  price: z.number().positive().optional(),
-  splitWith: z.array(z.string().uuid()).optional(),
-});
-
 // Inventory validators
 export const createInventoryItemSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(100, "Maximální délka je 100 znaků"),
@@ -226,8 +220,7 @@ export const completeCheckoutSchema = z.object({
 
 // Shopping list item — status update
 export const updateItemStatusSchema = z.object({
-  status: z.enum(["pending", "bring_from_home", "purchased"]).optional(),
-  purchased: z.boolean().optional(),
+  status: z.enum(["pending", "bring_from_home", "purchased"]),
   price: z.coerce.number().positive().optional().nullable(),
   splitWith: z.array(z.string().uuid()).optional(),
 });

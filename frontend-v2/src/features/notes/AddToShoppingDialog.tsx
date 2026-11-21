@@ -39,7 +39,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
     setLoadError(null);
     setLoading(true);
     apiClient
-      .get<ShoppingList[]>("/shopping-lists?isPantry=false")
+      .get<ShoppingList[]>("/shopping-lists")
       .then((r) => {
         setLists(r.data);
         setSelectedList(r.data.length > 0 ? r.data[0].id : "");
@@ -159,7 +159,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
                   >
                     {lists.map((l) => (
                       <option key={l.id} value={l.id}>
-                        {l.name} ({l.items?.filter((i) => !i.purchased).length ?? 0} položek)
+                        {l.name} ({l.items?.filter((i) => i.status !== "purchased").length ?? 0} položek)
                       </option>
                     ))}
                   </select>

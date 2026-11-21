@@ -42,7 +42,7 @@ export interface NoteThread {
 export interface ShoppingList {
   id: string;
   name: string;
-  items?: { purchased: boolean }[];
+  items?: { status: 'pending' | 'bring_from_home' | 'purchased' }[];
 }
 
 export interface SendNotePayload {

@@ -11,7 +11,6 @@ export interface ShoppingItem {
   id: string
   name: string
   status: ItemStatus
-  purchased: boolean
   addedById: string
   createdAt: string
   isEssential: boolean
@@ -48,7 +47,7 @@ export interface NoteThread {
 
 export const shoppingApi = {
   getLists: (): Promise<ShoppingList[]> =>
-    apiClient.get<ShoppingList[]>('/shopping-lists?isPantry=false').then(r => r.data),
+    apiClient.get<ShoppingList[]>('/shopping-lists').then(r => r.data),
 
   createList: (name: string): Promise<ShoppingList> =>
     apiClient.post<ShoppingList>('/shopping-lists', { name }).then(r => r.data),

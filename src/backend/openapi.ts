@@ -369,13 +369,12 @@ const schemas: Record<string, JsonSchema> = {
   },
   ShoppingList: {
     type: "object",
-    required: ["id", "name", "createdAt", "isResolved", "isPantry", "items"],
+    required: ["id", "name", "createdAt", "isResolved", "items"],
     properties: {
       id: { type: "string", format: "uuid" },
       name: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
       isResolved: { type: "boolean" },
-      isPantry: { type: "boolean" },
       createdBy: ref("ShoppingUser"),
       items: {
         type: "array",
@@ -710,15 +709,6 @@ const paths: Record<string, OpenApiObject> = {
       tags: ["Shopping"],
       summary: "Seznam aktivnich nakupnich seznamu",
       security: bearerSecurity,
-      parameters: [
-        {
-          name: "isPantry",
-          in: "query",
-          required: false,
-          description: "true = jen spiz, false = bezne seznamy",
-          schema: { type: "string", enum: ["true", "false"] },
-        },
-      ],
       responses: {
         "200": jsonResponse({ type: "array", items: ref("ShoppingList") }, "Aktivni nakupni seznamy"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),

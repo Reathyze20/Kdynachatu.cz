@@ -205,19 +205,19 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
     const activeListFilter = { isResolved: false, isPantry: false, cabinId };
     const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems] = await Promise.all([
       prisma.shoppingListItem.findMany({
-        where: { purchased: false, status: { not: "purchased" }, list: activeListFilter },
+        where: { status: { not: "purchased" }, list: activeListFilter },
         include: { list: { select: { id: true, name: true } } },
         orderBy: [{ isEssential: "desc" }, { createdAt: "asc" }],
         take: 6,
       }),
       prisma.shoppingListItem.count({
-        where: { purchased: false, status: { not: "purchased" }, list: activeListFilter },
+        where: { status: { not: "purchased" }, list: activeListFilter },
       }),
       prisma.shoppingListItem.count({
         where: { list: activeListFilter },
       }),
       prisma.shoppingListItem.findMany({
-        where: { isEssential: true, purchased: false, status: { not: "purchased" }, list: activeListFilter },
+        where: { isEssential: true, status: { not: "purchased" }, list: activeListFilter },
         select: { id: true, name: true },
         take: 10,
       })
