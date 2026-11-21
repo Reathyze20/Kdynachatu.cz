@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import apiClient from "@/api/client";
 import { useResolveNote } from "./hooks/useNotes";
 import { showToast } from "@/lib/toast";
-import type { ShoppingList } from "@/api/notes";
+import { shoppingApi, type ShoppingList } from "@/api/shopping";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
 
@@ -38,11 +38,11 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
   const loadLists = useCallback(() => {
     setLoadError(null);
     setLoading(true);
-    apiClient
-      .get<ShoppingList[]>("/shopping-lists")
-      .then((r) => {
-        setLists(r.data);
-        setSelectedList(r.data.length > 0 ? r.data[0].id : "");
+    shoppingApi
+      .getLists()
+      .then((data) => {
+        setLists(data);
+        setSelectedList(data.length > 0 ? data[0].id : "");
       })
       .catch((error) => {
         setLists([]);
