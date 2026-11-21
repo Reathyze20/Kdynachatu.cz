@@ -47,18 +47,21 @@ const SEMANTIC_TOKENS = [
   'ring',
 ] as const
 
-/** Vrátí tělo prvního CSS bloku pro daný selektor (bez vnořených bloků). */
-function block(css: string, selector: string): string {
-  const start = css.indexOf(selector)
-  expect(start, `blok "${selector}" chybí`).toBeGreaterThanOrEqual(0)
-  const open = css.indexOf('{', start)
-  const close = css.indexOf('}', open)
-  return css.slice(open + 1, close)
+/**
+ * Vrátí tělo prvního CSS bloku, jehož prelude začíná na začátku řádku daným
+ * selektorem (`:root {`, `.dark {`, `@theme inline {`). Vnořené bloky nepodporuje.
+ */
+function firstBlockBody(css: string, selector: string): string {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = new RegExp(`^${escaped}\\s*\\{`, 'm').exec(css)
+  if (!match) throw new Error(`blok "${selector}" chybí`)
+  const open = match.index + match[0].length
+  return css.slice(open, css.indexOf('}', open))
 }
 
 describe('theme bridge — sémantické tokeny (light i dark)', () => {
-  const root = block(bridgeCss, ':root')
-  const dark = block(bridgeCss, '.dark')
+  const root = firstBlockBody(bridgeCss, ':root')
+  const dark = firstBlockBody(bridgeCss, '.dark')
 
   for (const token of SEMANTIC_TOKENS) {
     it(`definuje --${token} pro light i dark`, () => {
@@ -71,12 +74,12 @@ describe('theme bridge — sémantické tokeny (light i dark)', () => {
     expect(root).toMatch(/--primary\s*:\s*var\(--brand-primary\)/)
     expect(root).toMatch(/--background\s*:\s*var\(--bg-app\)/)
     expect(root).toMatch(/--foreground\s*:\s*var\(--text-main\)/)
-    expect(root).toMatch(/--ring\s*:\s*var\(--brand-primary\)/)
+    expect(root).toMatch(/--ring\s*:\s*var\(--primary\)/)
   })
 })
 
 describe('theme bridge — Tailwind utility most (@theme inline)', () => {
-  const theme = block(bridgeCss, '@theme inline')
+  const theme = firstBlockBody(bridgeCss, '@theme inline')
 
   for (const token of SEMANTIC_TOKENS) {
     it(`mapuje --color-${token} → var(--${token})`, () => {
@@ -96,7 +99,7 @@ describe('theme bridge — Tailwind utility most (@theme inline)', () => {
     // @theme inline blok se záměrně nepočítá: jeho --color-* jdou do @layer theme,
     // kde je nevrstvené aliasy z variables.css přebijí.
     const legacy = declaredProps(legacyCss)
-    const emitted = declaredProps(block(bridgeCss, ':root') + block(bridgeCss, '.dark'))
+    const emitted = declaredProps(firstBlockBody(bridgeCss, ':root') + firstBlockBody(bridgeCss, '.dark'))
     const overlap = [...emitted].filter((p) => legacy.has(p))
     expect(overlap).toEqual([])
   })
