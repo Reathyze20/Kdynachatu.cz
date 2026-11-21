@@ -10,7 +10,7 @@ let app: Express;
 let world: TestWorld;
 
 /** Pobyt, který končí dnes (místní den v Praze, stejně jako dashboard route). */
-async function createStayEndingToday(owner: TestUser, extra: { handoverNote?: string; status?: string } = {}): Promise<string> {
+async function createStayEndingToday(owner: TestUser, extra: { handoverNote?: string; status?: "primary" | "backup" | "soft" } = {}): Promise<string> {
   const today = new Date(calendarTodayIso(new Date()));
   const reservation = await prisma.reservation.create({
     data: {
