@@ -1,0 +1,111 @@
+/* ============================================================================
+   shadcn/ui ↔ Tailwind v4 token bridge  (ticket #164, redesign fáze 5 / T0)
+
+   PROČ: Primitiva v `src/components/ui/*` používají utility jako `bg-primary`,
+   `text-muted-foreground`, `border-input`, `ring-ring` … Ty v Tailwindu v4
+   vznikají jen z barev registrovaných přes `@theme`. Bez tohoto mostu žádný
+   z tokenů neexistoval a theming shadcn komponent byl rozbitý.
+
+   JAK: Níže definujeme sémantické shadcn tokeny (`--primary`, `--background`,
+   `--border` …). Light (`:root`) odkazuje přímo na sémantické tokeny palety
+   „Moderní Les" (emerald/slate) z `variables.css`, takže přepnutí palety přes
+   `[data-theme]` se propíše i do shadcn primitiv. Dark (`.dark`) má vlastní
+   hodnoty. Blok `@theme inline` je pak zpřístupní jako Tailwind utility.
+
+   ADITIVNÍ: `:root`/`.dark` používají nová jména bez prefixu `--color-*`,
+   takže zpětně kompatibilní aliasy `--color-*` z `variables.css` zůstávají
+   nedotčené a legacy obrazovky se vizuálně nemění. Viz poznámka u `@theme`.
+   ============================================================================ */
+
+:root {
+  /* Povrchy a text */
+  --background: var(--bg-app);
+  --foreground: var(--text-main);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-main);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-main);
+
+  /* Brand — šalvějová emerald */
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--text-on-primary);
+
+  /* Sekundární / tlumené / akcentní povrchy — slate z palety */
+  --secondary: var(--border-strong);
+  --secondary-foreground: var(--text-main);
+  --muted: var(--bg-hover);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--brand-primary-light);
+  --accent-foreground: var(--text-main);
+
+  /* Destruktivní */
+  --destructive: var(--status-error);
+  --destructive-foreground: var(--text-on-danger);
+
+  /* Rámečky, inputy, focus ring */
+  --border: var(--border-strong);
+  --input: var(--border-input);
+  --ring: var(--primary);
+}
+
+/* Dark varianta: variables.css zatím tmavou paletu nemá, proto vlastní hodnoty
+   ve stejných emerald/slate tónech. Aplikuje se třídou `.dark` (zatím ji appka
+   nikde nenastavuje, takže na legacy obrazovky nemá vliv). `dark:` utility se
+   řídí stejnou třídou, ne `prefers-color-scheme` (žádná je zatím nepoužívá). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --background: #141c18;
+  --foreground: #e8efe9;
+  --card: #1b2621;
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+
+  --primary: #4f9e7f;
+  --primary-foreground: #08140e;
+
+  --secondary: #273530;
+  --secondary-foreground: var(--foreground);
+  --muted: #222e29;
+  --muted-foreground: #9db0a7;
+  --accent: #2a3a33;
+  --accent-foreground: var(--foreground);
+
+  /* red-500 místo red-600: na tmavém pozadí potřebuje víc světlosti */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #2c3a34;
+  --input: #33433c;
+  --ring: var(--primary);
+}
+
+/* ── Most do Tailwind utility (bg-*, text-*, border-*, ring-*) ──────────────
+   `inline` = utility dostanou hodnotu přímo (`.bg-primary { background-color:
+   var(--primary) }`), ne přes `var(--color-primary)`. To je podstatné: legacy
+   `--color-primary` / `--color-border` … z variables.css mají jiný význam.
+   Tailwind sice jména, na která legacy CSS odkazuje přes var(), vypíše i do
+   `@layer theme { :root }`, ale nevrstvená deklarace z variables.css má
+   v kaskádě přednost, takže legacy hodnoty zůstávají beze změny.            */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
