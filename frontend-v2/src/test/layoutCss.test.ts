@@ -87,26 +87,24 @@ describe('TwoColumnLayout — CSS (#171)', () => {
   })
 })
 
-describe('Přehled — dva sloupce, ne tři (rozhodnutí #1b díl 2 = A, #171)', () => {
-  it('mřížka karet Přehledu nemá na žádné šířce víc než dva sloupce', () => {
-    const rules = allRules(stripComments(dashboardCssRaw))
-      .filter((r) => r.prelude.split(',').some((s) => s.trim() === '.dashboard-grid'))
-    expect(rules.length).toBeGreaterThan(0)
-    for (const rule of rules) expect(columnCount(rule.body)).toBeLessThanOrEqual(2)
+// Dva sloupce Přehledu (#1b díl 2 = A) od #172 dělá TwoColumnLayout: hlavní sloupec + boční panel
+// (CSS kontrakt výše). Karty uvnitř sloupce jsou prioritní stack pod sebou a nenatahují se do výšky souseda.
+describe('Přehled — karty v hlavním sloupci pod sebou (#172)', () => {
+  it('stará mřížka karet .dashboard-grid už v CSS není', () => {
+    const selectors = allRules(stripComments(dashboardCssRaw)).flatMap((r) => r.prelude.split(',').map((s) => s.trim()))
+    expect(selectors.some((s) => /\.dashboard-grid\b/.test(s))).toBe(false)
   })
 
-  it.each([800, 1100, 1440, 1920])('na šířce %i px má mřížka karet dva sloupce', (width) => {
-    expect(columnsAt(dashboardCssRaw, '.dashboard-grid', width)).toBe(2)
+  it.each([375, 800, 1100, 1440, 1920])('na šířce %i px jsou karty hlavního sloupce v jednom sloupci', (width) => {
+    const rules = rulesAt(dashboardCssRaw, '.dashboard-stack', width)
+    expect(rules.some((r) => /flex-direction\s*:\s*column/.test(r.body))).toBe(true)
+    expect(columnsAt(dashboardCssRaw, '.dashboard-stack', width)).toBe(1)
   })
 
-  it.each([800, 1440])('na šířce %i px nemá mřížka pevné řádky, takže s málo kartami nevznikne prázdná mezera', (width) => {
-    const flexibleRows = rulesAt(dashboardCssRaw, '.dashboard-grid', width)
+  it.each([800, 1440])('na šířce %i px nemá stack pevné řádky, takže s málo kartami nevznikne prázdná mezera', (width) => {
+    const flexibleRows = rulesAt(dashboardCssRaw, '.dashboard-stack', width)
       .filter((r) => /grid-template-rows\s*:[^;]*fr/.test(r.body))
     expect(flexibleRows).toEqual([])
-  })
-
-  it('na mobilu má mřížka karet jeden sloupec', () => {
-    expect(columnsAt(dashboardCssRaw, '.dashboard-grid', 375)).toBe(1)
   })
 })
 

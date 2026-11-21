@@ -143,11 +143,12 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 
-  it('počasí je v bočním panelu, bez dalšího pobytu karta příjezdu chybí', async () => {
+  it('počasí a vzkaz jsou v bočním panelu, bez dalšího pobytu karta příjezdu chybí', async () => {
     renderOverview(reservations())
 
     const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
     expect(within(aside).getByTestId('dashboard-weather-widget')).toBeInTheDocument()
+    expect(within(aside).getByTestId('dashboard-handover-widget')).toBeInTheDocument()
     await screen.findByText('Chata je volná!')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
