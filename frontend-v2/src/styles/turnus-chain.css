@@ -34,9 +34,11 @@
 }
 
 .turnus-chain__name--button {
-  /* Cíl dotyku ≥ 44 px bez zvětšení řádku */
-  padding: 12px 0;
-  margin: -12px 0;
+  /* Cíl dotyku ≥ 44 × 44 px bez zvětšení řádku */
+  min-width: 44px;
+  max-width: calc(12ch + 16px);
+  padding: 12px 8px;
+  margin: -12px -8px;
   border: 0;
   background: none;
   font: inherit;
@@ -49,8 +51,8 @@
 
 .turnus-chain__arrow {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   color: var(--text-placeholder);
 }
 

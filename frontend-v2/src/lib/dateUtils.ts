@@ -36,6 +36,12 @@ export function daysUntil(dateStr: string): number {
   return Math.max(0, Math.round((target.getTime() - today.getTime()) / 86400000));
 }
 
+/** Krátké datum „po 14. 12.“ (den v týdnu malým písmenem + den a měsíc). */
+export function formatShortDayDate(iso: string): string {
+  const d = new Date(iso + "T12:00:00");
+  return `${DAY_NAMES_SHORT_CZ[d.getDay()].toLowerCase()} ${d.getDate()}. ${d.getMonth() + 1}.`;
+}
+
 export function getTodayFormatted(): string {
   const today = new Date();
   const dayName = DAY_NAMES_CZ[today.getDay()];

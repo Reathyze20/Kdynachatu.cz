@@ -1,22 +1,15 @@
 /**
  * components/shared/TurnusChainLine.tsx — řetězec turnusu jako jeden textový řádek
- * „Teď: X → Další: Y po 14. 12. → Pak: Z pá 18. 12.“ (návrh #1 díl 4 = A, návrh #4 díl 3 = A).
+ * „Teď: X → Další: Y (po 14. 12.) → Pak: Z (pá 18. 12.)“ (návrh #1 díl 4 = A, návrh #4 díl 3 = A).
  * Prezentační komponenta sdílená Přehledem (#172) a kalendářem (#211); uzly počítá `buildTurnusChain`.
  * Prázdný řetězec = nic se nevykreslí. Řádek se na úzkém displeji zalomí, dlouhá jména se zkrátí.
  */
 import { Fragment } from 'react'
 import { ArrowRight } from 'lucide-react'
 import type { TurnusChainKind, TurnusChainNode } from '@/lib/turnusChain'
-import { isoDateToLocalNoon } from '@/lib/dateUtils'
+import { formatShortDayDate } from '@/lib/dateUtils'
 
 const KIND_LABEL: Record<TurnusChainKind, string> = { now: 'Teď', next: 'Další', later: 'Pak' }
-const DAY_SHORT_CZ = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so']
-
-/** Datum příjezdu „po 14. 12.“. */
-function formatArrival(iso: string): string {
-  const d = isoDateToLocalNoon(iso)
-  return `${DAY_SHORT_CZ[d.getDay()]} ${d.getDate()}. ${d.getMonth() + 1}.`
-}
 
 interface TurnusChainLineProps {
   nodes: TurnusChainNode[]
@@ -43,7 +36,7 @@ export function TurnusChainLine({ nodes, onSelect, className }: TurnusChainLineP
             {i > 0 && <ArrowRight className="turnus-chain__arrow" aria-hidden="true" />}
             <span className={`turnus-chain__node turnus-chain__node--${node.kind}`}>
               <span className="turnus-chain__label">{KIND_LABEL[node.kind]}:</span> {nameNode}
-              {node.kind !== 'now' && node.stay && <span className="turnus-chain__date"> {formatArrival(node.stay.from)}</span>}
+              {node.kind !== 'now' && node.stay && <span className="turnus-chain__date"> ({formatShortDayDate(node.stay.from)})</span>}
             </span>
           </Fragment>
         )

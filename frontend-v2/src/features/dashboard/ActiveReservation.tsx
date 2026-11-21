@@ -102,11 +102,12 @@ function buildParticipantStack(participants: ParticipantLite[] | undefined): Rea
 
 /** Řetězec teď → pak z dat Přehledu; aktivní pobyt API posílá jen pevný. Jméno je unikátní, vlastní pobyt = „Ty“. */
 function dashboardChainStays(data: DashboardReservationsData, myUsername: string | undefined): ChainStay[] {
+  const toChainStay = (r: { id: string; from: string; to: string; username: string }, status: string): ChainStay =>
+    ({ id: r.id, from: r.from, to: r.to, status, username: r.username, isMine: r.username === myUsername });
   const active = data.activeReservation;
-  const activeStay: ChainStay[] = active ? [{ id: active.id, from: active.from, to: active.to, status: "primary", username: active.username, isMine: active.username === myUsername }] : [];
   return [
-    ...activeStay,
-    ...data.upcomingReservations.map((r) => ({ id: r.id, from: r.from, to: r.to, status: r.status, username: r.username, isMine: r.username === myUsername })),
+    ...(active ? [toChainStay(active, "primary")] : []),
+    ...data.upcomingReservations.map((r) => toChainStay(r, r.status)),
   ];
 }
 

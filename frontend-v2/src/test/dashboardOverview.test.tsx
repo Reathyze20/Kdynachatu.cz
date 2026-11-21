@@ -82,8 +82,8 @@ describe('Přehled: řetězec turnusu teď → pak (#172)', () => {
     const chain = await screen.findByRole('group', { name: 'Řetězec turnusu' })
     expect(screen.getByTestId('dashboard-reservation-widget')).toContainElement(chain)
     expect(chain).toHaveTextContent('Teď: Novákovi')
-    expect(chain).toHaveTextContent('Další: Ty po 14. 12.')
-    expect(chain).toHaveTextContent('Pak: Jana po 28. 12.')
+    expect(chain).toHaveTextContent('Další: Ty (po 14. 12.)')
+    expect(chain).toHaveTextContent('Pak: Jana (po 28. 12.)')
     expect(within(chain).queryByText('Petr')).not.toBeInTheDocument()
   })
 
@@ -92,7 +92,7 @@ describe('Přehled: řetězec turnusu teď → pak (#172)', () => {
 
     const chain = await screen.findByRole('group', { name: 'Řetězec turnusu' })
     expect(chain).toHaveTextContent('Teď: Volno')
-    expect(chain).toHaveTextContent('Další: Jana po 28. 12.')
+    expect(chain).toHaveTextContent('Další: Jana (po 28. 12.)')
   })
 
   it('bez aktuálního i budoucího pobytu se řádek nevykreslí', async () => {
