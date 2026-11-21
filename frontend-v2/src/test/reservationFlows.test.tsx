@@ -142,7 +142,7 @@ describe('booking form: reservation type', () => {
   })
 
   it('a 409 when switching to firm shows the server message and keeps the form open', async () => {
-    const serverMessage = 'V tomto termínu už je jiná pevná rezervace. Nech rezervaci jako předběžnou, nebo změň termín.'
+    const serverMessage = 'V tomto termínu už je jiná pevná rezervace. Změňte termín, nebo rezervaci uložte jako předběžnou.'
     api.put.mockImplementationOnce(() =>
       Promise.reject(Object.assign(new Error('Request failed with status code 409'), {
         isAxiosError: true,

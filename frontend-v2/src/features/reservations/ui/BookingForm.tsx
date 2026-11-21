@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import type { Reservation } from "@/api/reservations";
-import { useCreateReservation, useUpdateReservation, useDeleteReservation, useUsers } from "../hooks/useReservations";
+import { useCreateReservation, useUpdateReservation, useDeleteReservation, useUsers, type BookingType } from "../hooks/useReservations";
 import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { showToast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { extractSupportErrorDetails } from "@/lib/errorDetails";
 import { isoRangesOverlap } from "@/lib/dateUtils";
 import { Home, CalendarClock } from "lucide-react";
 
@@ -20,8 +21,6 @@ interface Props {
   /** Called after successful create so parent can check inventory */
   onCreated?: (id: string) => void;
 }
-
-type BookingType = "primary" | "soft";
 
 /** Type the form starts with: a tentative stay stays tentative, anything else counts as firm. */
 const initialType = (existing?: Reservation | null): BookingType => (existing?.status === "soft" ? "soft" : "primary");
@@ -122,6 +121,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
         onClose();
       }
     } catch (error) {
+      const errorDetails = extractSupportErrorDetails(error);
       const validationErrors = (error as { response?: { data?: { errors?: { path: string; message: string }[] } } })
         ?.response?.data?.errors;
       if (Array.isArray(validationErrors)) {
@@ -130,8 +130,9 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
           newFieldErrors[err.path] = err.message;
         }
         setFieldErrors(newFieldErrors);
-      } else if (isConflict(error)) {
-        setSubmitError(error.response.data.message);
+      } else if (errorDetails.status === 409 && errorDetails.message) {
+        // Firm stay collides with another firm one: the server says what to do instead.
+        setSubmitError(errorDetails.message);
       } else {
         setSubmitError(
           getNetworkAwareActionMessage(
@@ -413,10 +414,4 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       />
     </Modal>
   );
-}
-
-/** 409 with a server message (firm stay collides with another firm one); the form shows the message as is. */
-function isConflict(error: unknown): error is { response: { status: 409; data: { message: string } } } {
-  const response = (error as { response?: { status?: number; data?: { message?: unknown } } })?.response;
-  return response?.status === 409 && typeof response.data?.message === "string";
 }
