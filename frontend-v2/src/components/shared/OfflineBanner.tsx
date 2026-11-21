@@ -4,7 +4,7 @@
  * Zobrazuje se top-of-page pro celý AppShell když uživatel ztratí připojení.
  * Ukazuje i počet změn čekajících v offline frontě (lib/offlineQueue).
  * Používá VÝHRADNĚ originální CSS třídu `.offline-banner` z skeleton.css.
- * Žádné Tailwind, žádné shadcn; ikona z lucide-react (#165).
+ * Layout jen z `.offline-banner`, žádné shadcn; ikona z lucide-react (#165).
  *
  * CSS: src/styles/skeleton.css → .offline-banner
  */

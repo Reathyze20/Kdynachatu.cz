@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GripVertical } from 'lucide-react'
+import { ArrowLeft, GripVertical, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useCabinSettings, useUpdateCabinSettings } from './hooks/useCabinSettings'
@@ -86,10 +86,11 @@ function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
               type="button"
               className="cs-checklist-remove"
               title="Odebrat"
+              aria-label="Odebrat"
               onClick={() => remove(i)}
               data-testid="cabin-settings-checklist-remove-button"
             >
-              ×
+              <X className="w-4 h-4 inline-block align-middle" aria-hidden="true" />
             </button>
           </div>
         ))}
@@ -289,10 +290,11 @@ export function CabinSettingsPanel({
               <button
                 className="cabin-settings-back"
                 title="Zpět na správu chaty"
+                aria-label="Zpět na správu chaty"
                 onClick={onBack}
                 data-testid="cabin-settings-back-button"
               >
-                ←
+                <ArrowLeft className="w-5 h-5 inline-block align-middle" aria-hidden="true" />
               </button>
             ) : null}
             <div>

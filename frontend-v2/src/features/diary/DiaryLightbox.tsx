@@ -3,6 +3,7 @@
  * Jednodušší než gallery lightbox – bez editace popisu a mazání
  */
 import { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import type { GalleryPhoto } from '@/api/gallery'
 
 interface Props {
@@ -40,7 +41,7 @@ export function DiaryLightbox({ photos, initialIndex, onClose }: Props) {
       data-photo-id={photo.id}
     >
       <div className="lightbox-content">
-        <button className="lightbox-close" onClick={onClose} aria-label="Zavřít" data-testid="diary-lightbox-close-button">×</button>
+        <button className="lightbox-close" onClick={onClose} aria-label="Zavřít" data-testid="diary-lightbox-close-button"><X className="w-5 h-5 inline-block align-middle" aria-hidden="true" /></button>
 
         {photos.length > 1 && (
           <>
