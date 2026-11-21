@@ -24,7 +24,7 @@ describe('Přehled ve dvousloupcovém rozložení (#171, #172)', () => {
     )
 
     const layout = screen.getByTestId('two-column-layout')
-    expect(within(layout).getByTestId('dashboard-page')).toContainElement(screen.getByTestId('dashboard-grid'))
+    expect(within(layout).getByTestId('dashboard-page')).toContainElement(screen.getByTestId('dashboard-stack'))
     expect(screen.getByRole('complementary', { name: 'Kontext chaty' })).toContainElement(screen.getByTestId('dashboard-weather-widget'))
   })
 })

@@ -278,10 +278,9 @@ export function DashboardPage() {
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
 
-  // Prázdné widgety kolabují na kompaktní řádek a řadí se pod mřížku;
-  // během načítání (a při chybě) zůstávají v mřížce, aby layout neskákal.
+  // Prázdné widgety kolabují na kompaktní řádek a řadí se pod hlavní sloupec;
+  // během načítání (a při chybě) zůstávají na svém místě, aby layout neskákal.
   const isShoppingEmpty = shoppingQuery.isSuccess && (shoppingQuery.data?.totalPendingShoppingCount ?? 0) === 0;
-  const isPinnedNoteEmpty = notesQuery.isSuccess && !(pinnedNote ?? "").trim();
   const isReconstructionEmpty = reconstructionQuery.isSuccess && (reconstructionQuery.data?.totalActiveCount ?? 0) === 0;
 
   const collapsibleWidgets = [
@@ -300,29 +299,6 @@ export function DashboardPage() {
           items={shoppingQuery.data.pendingShoppingItems}
           totalCount={shoppingQuery.data.totalPendingShoppingCount}
           totalItemsCount={shoppingQuery.data.totalItemsCount}
-        />
-      ) : null,
-    },
-    {
-      key: "handover",
-      testId: "dashboard-handover-widget",
-      isEmpty: isPinnedNoteEmpty,
-      node: notesQuery.isLoading ? (
-        <PinnedNoteSkeleton />
-      ) : notesQuery.isError ? (
-        <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nástěnku se nepodařilo načíst" />}>
-          <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
-        </ErrorBoundary>
-      ) : notesQuery.data ? (
-        <PinnedNote
-          note={pinnedNote}
-          author={pinnedNoteAuthor}
-          updatedAt={pinnedNoteUpdatedAt}
-          onNoteUpdate={(newNote, author, updatedAt) => {
-            setPinnedNote(newNote);
-            setPinnedNoteAuthor(author ?? null);
-            setPinnedNoteUpdatedAt(updatedAt ?? null);
-          }}
         />
       ) : null,
     },
@@ -384,13 +360,13 @@ export function DashboardPage() {
       {/* Nudge tray — timely coordination prompts derived from existing data */}
       <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />
 
-      {/* Main grid */}
+      {/* Hlavní sloupec: prioritní stack karet (#172), karty se nenatahují do výšky sousedů */}
       <motion.div
-        className="dashboard-grid"
+        className="dashboard-stack"
         variants={gridVariants}
         initial="hidden"
         animate="visible"
-        data-testid="dashboard-grid"
+        data-testid="dashboard-stack"
       >
         {/* Na chatě teď */}
         <motion.div variants={cardVariants} data-testid="dashboard-reservation-widget">
@@ -405,7 +381,7 @@ export function DashboardPage() {
           ) : null}
         </motion.div>
 
-        {/* Widgety s obsahem, v pořadí: Nákupy | Nástěnka | Údržba */}
+        {/* Widgety s obsahem, v pořadí: Nákupy | Údržba */}
         {gridWidgets.map((w) => (
           <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
             {w.node}
@@ -444,10 +420,28 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (další příjezd, počasí).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (další příjezd, vzkaz, počasí).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {reservationsQuery.data && <NextArrivalCard data={reservationsQuery.data} />}
+      <div data-testid="dashboard-handover-widget">
+        {notesQuery.isLoading ? (
+          <PinnedNoteSkeleton />
+        ) : notesQuery.isError ? (
+          <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
+        ) : notesQuery.data ? (
+          <PinnedNote
+            note={pinnedNote}
+            author={pinnedNoteAuthor}
+            updatedAt={pinnedNoteUpdatedAt}
+            onNoteUpdate={(newNote, author, updatedAt) => {
+              setPinnedNote(newNote);
+              setPinnedNoteAuthor(author ?? null);
+              setPinnedNoteUpdatedAt(updatedAt ?? null);
+            }}
+          />
+        ) : null}
+      </div>
       <div data-testid="dashboard-weather-widget">
         {weatherQuery.isLoading || cabinQuery.isLoading ? (
           <WeatherSkeleton />
