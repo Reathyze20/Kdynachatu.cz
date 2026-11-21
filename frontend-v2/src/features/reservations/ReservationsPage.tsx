@@ -26,19 +26,33 @@ import { useAuth } from "@/context/AuthContext";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { Modal } from "@/components/shared/Modal";
 import styles from "./Reservations.module.css";
-import { getLocalTodayIso, isIsoDateInRange, isoRangesOverlap, toIsoDate } from "@/lib/dateUtils";
+import { isIsoDateInRange } from "@/lib/dateUtils";
 
 /** Filter reservations that intersect with the given calendar month */
 function filterByMonth(reservations: Reservation[], month: number, year: number) {
-  const mStart = toIsoDate(new Date(year, month, 1));
-  const mEnd = toIsoDate(new Date(year, month + 1, 0));
-  return reservations.filter((r) => !!r.from && !!r.to && isoRangesOverlap(r.from, r.to, mStart, mEnd));
+  const mStart = Date.UTC(year, month, 1);
+  const mEndDate = new Date(year, month + 1, 0);
+  const mEnd = Date.UTC(mEndDate.getFullYear(), mEndDate.getMonth(), mEndDate.getDate());
+
+  return reservations.filter((r) => {
+    if (!r.from || !r.to) return false;
+    const [fy, fm, fd] = r.from.split("-").map(Number);
+    const [ty, tm, td] = r.to.split("-").map(Number);
+    const rFrom = Date.UTC(fy, fm - 1, fd);
+    const rTo   = Date.UTC(ty, tm - 1, td);
+    return rFrom <= mEnd && rTo >= mStart;
+  });
 }
 
 /** Filter reservations that haven't ended yet */
 function filterFuture(reservations: Reservation[]) {
-  const today = getLocalTodayIso();
-  return reservations.filter((r) => !!r.to && r.to >= today);
+  const now = new Date();
+  const todayTs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return reservations.filter((r) => {
+    if (!r.to) return false;
+    const [ty, tm, td] = r.to.split("-").map(Number);
+    return Date.UTC(ty, tm - 1, td) >= todayTs;
+  });
 }
 
 export function ReservationsPage() {

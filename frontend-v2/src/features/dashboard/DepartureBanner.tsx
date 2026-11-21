@@ -7,6 +7,7 @@ import { showToast } from "@/lib/toast";
 import { Modal } from "@/components/shared/Modal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { getLocalTodayIso } from "@/lib/dateUtils";
 
 const BANNER_KEY = "departure_dismissed_date";
 const DEFAULT_CHECKLIST = [
@@ -20,11 +21,11 @@ const DEFAULT_CHECKLIST = [
 function isDismissedToday(): boolean {
   const stored = sessionStorage.getItem(BANNER_KEY);
   if (!stored) return false;
-  return stored === new Date().toISOString().split("T")[0];
+  return stored === getLocalTodayIso();
 }
 
 function dismissToday(): void {
-  sessionStorage.setItem(BANNER_KEY, new Date().toISOString().split("T")[0]);
+  sessionStorage.setItem(BANNER_KEY, getLocalTodayIso());
 }
 
 interface Props {

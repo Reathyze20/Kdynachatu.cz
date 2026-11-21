@@ -15,9 +15,9 @@ import type {
 
 // ─── Query Keys ───────────────────────────────────────────────────────
 
-// Jediný zdroj pravdy pro rezervace v cache: vše, co z nich čte (kalendář,
-// dashboard, měsíční poznámka), visí pod RESERVATIONS_KEY. Invalidace
-// RESERVATIONS_KEY po mutaci nebo socket eventu tak obnoví kalendář i dashboard.
+// Single source of truth: every query reading reservations (calendar, dashboard,
+// monthly note) lives under RESERVATIONS_KEY, so invalidating it after a
+// mutation or socket event refreshes the calendar and the dashboard alike.
 export const RESERVATIONS_KEY = ["reservations"] as const;
 export const DASHBOARD_RESERVATIONS_KEY = [...RESERVATIONS_KEY, "dashboard"] as const;
 export const USERS_KEY = ["users"] as const;

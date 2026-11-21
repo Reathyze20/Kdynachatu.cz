@@ -1,6 +1,18 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
+import { calendarTodayIso, isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
+
+describe("calendarTodayIso (Europe/Prague)", () => {
+  test("after local midnight it is already the new day, although UTC is still on the previous one", () => {
+    assert.equal(calendarTodayIso(new Date("2027-07-09T21:59:00Z")), "2027-07-09");
+    assert.equal(calendarTodayIso(new Date("2027-07-09T22:30:00Z")), "2027-07-10");
+  });
+
+  test("around the switch to summer time (28 March 2027)", () => {
+    assert.equal(calendarTodayIso(new Date("2027-03-27T23:30:00Z")), "2027-03-28");
+    assert.equal(calendarTodayIso(new Date("2027-03-28T01:30:00Z")), "2027-03-28");
+  });
+});
 
 describe("isPrimaryCollisionBlocked", () => {
   test("primary over an overlapping primary is blocked (409)", () => {
