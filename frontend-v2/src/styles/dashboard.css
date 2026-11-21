@@ -226,6 +226,8 @@
   z-index: var(--z-above);
 }
 
+
+
 @media (max-width: 767px) {
   .glass-card::before {
     display: none;
@@ -639,6 +641,8 @@
 .status-card .card-body-full {
   overflow: visible;
 }
+
+
 
 /* Accent bar — disabled */
 .status-accent {
@@ -2667,6 +2671,8 @@
     gap: 12px;
   }
 
+
+
   .dashboard-notes-feed {
     flex-direction: column;
     gap: 8px;
@@ -3042,7 +3048,7 @@
   color: var(--text-muted, #64748b);
 }
 
-/* Compact empty state — společný pro Nákupy, Nástěnku a Údržbu */
+/* Compact empty state — pro prázdnou Nástěnku */
 .dashboard-card-compact .card-body-full {
   padding: 12px 16px;
 }
