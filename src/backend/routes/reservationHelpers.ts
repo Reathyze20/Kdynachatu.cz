@@ -29,6 +29,37 @@ export function calendarTodayIso(now: Date, timeZone: string = CABIN_TIME_ZONE):
   return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
+/** Den "YYYY-MM-DD" posunutý o `days`; počítá se v UTC, takže ho neposune zóna serveru ani letní čas. */
+function addDaysIso(day: string, days: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Nejbližší volný víkend (So–Ne) od `today` ("YYYY-MM-DD" z `calendarTodayIso`), nejvýš
+ * 26 víkendů dopředu. Dnešní sobota se počítá. `reservations` jsou `primary` rezervace chaty
+ * (`@db.Date`, tedy UTC půlnoc daného dne). Dny se porovnávají jako řetězce "YYYY-MM-DD".
+ */
+export function nextFreeWeekend(
+  today: string,
+  reservations: { dateFrom: Date; dateTo: Date }[],
+): { start: string; end: string } | null {
+  const stays = reservations.map((r) => ({
+    from: r.dateFrom.toISOString().slice(0, 10),
+    to: r.dateTo.toISOString().slice(0, 10),
+  }));
+  const daysToSaturday = (6 - new Date(`${today}T00:00:00Z`).getUTCDay() + 7) % 7;
+  let saturday = addDaysIso(today, daysToSaturday);
+  for (let i = 0; i < 26; i++) {
+    const sunday = addDaysIso(saturday, 1);
+    const occupied = stays.some((s) => s.from <= sunday && saturday <= s.to);
+    if (!occupied) return { start: saturday, end: sunday };
+    saturday = addDaysIso(saturday, 7);
+  }
+  return null;
+}
+
 /**
  * Gate odjezdového banneru na dashboardu: můj pobyt dnes končí a předávka
  * (`isCheckoutCompleted`) ještě není dokončená. Starý per-rezervační
