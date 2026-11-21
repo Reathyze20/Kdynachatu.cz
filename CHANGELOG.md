@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.4.0...v1.4.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* **gallery:** match the new album button shape to the standard button ([#201](https://github.com/Reathyze20/Kdynachatu.cz/issues/201)) ([1865bcf](https://github.com/Reathyze20/Kdynachatu.cz/commit/1865bcf3813f333e56eeef24863654d79563fe0a))
+* **styles:** let Tailwind spacing utilities win over the global reset ([#203](https://github.com/Reathyze20/Kdynachatu.cz/issues/203)) ([b45a739](https://github.com/Reathyze20/Kdynachatu.cz/commit/b45a7392a7070ceee213d847d881c0ffceb63690))
+
 ## [1.4.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.3.0...v1.4.0) (2026-11-21)
 
 
