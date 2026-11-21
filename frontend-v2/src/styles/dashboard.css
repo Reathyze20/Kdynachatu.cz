@@ -262,19 +262,6 @@
   display: none;
 }
 
-/* Scrollovatelný seznam uvnitř fixní karty */
-.list-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.list-content::-webkit-scrollbar {
-  display: none;
-}
-
 /* ── Card footer — JEDNO definitivní pravidlo ────────────────────────── */
 
 .card-footer {
@@ -2195,22 +2182,6 @@
 
 .shopping-quick-add button:active {
   transform: translateY(1px);
-}
-
-/* Legacy shopping widget items (for backwards compat) */
-.shopping-widget-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.shopping-widget-list::-webkit-scrollbar {
-  display: none;
 }
 
 .shopping-widget-item {
