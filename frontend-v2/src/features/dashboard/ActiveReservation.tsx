@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
-import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted } from "@/lib/dateUtils";
+import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { CalendarPlus, CircleCheck, TriangleAlert } from "lucide-react";
 
@@ -99,7 +99,7 @@ function buildParticipantStack(participants: ParticipantLite[] | undefined): Rea
 
 export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const navigate = useNavigate();
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getLocalTodayIso();
   const currentHour = new Date().getHours();
   const formattedDate = getTodayFormatted();
   const active = data.activeReservation;
@@ -241,7 +241,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
       const dLabel = nights === 1 ? "1 den" : nights >= 2 && nights <= 4 ? `${nights} dny` : `${nights} dní`;
       title = active.username;
       
-      const toDate = new Date(active.to);
+      const toDate = isoDateToLocalNoon(active.to);
       const formattedToObj = new Intl.DateTimeFormat("cs-CZ", { weekday: "long", day: "numeric", month: "numeric" }).format(toDate);
       const formattedTo = formattedToObj.split(' ').map(w => w === 'Zítra' ? w : w).join(' ');
 

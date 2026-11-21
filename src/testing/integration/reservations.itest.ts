@@ -55,6 +55,7 @@ for (const actor of ["memberA", "adminA"] as const) {
     const cases: [string, (user: TestUser) => Promise<{ status: number }>][] = [
       ["PUT /:id", (u) => as(app, u).put(`/api/reservations/${reservationB}`).send({ purpose: "Převzato", status: "backup" })],
       ["POST /delete", (u) => as(app, u).post("/api/reservations/delete").send({ id: reservationB })],
+      ["DELETE /:id", (u) => as(app, u).delete(`/api/reservations/${reservationB}`)],
       ["GET /:id/watch", (u) => as(app, u).get(`/api/reservations/${reservationB}/watch`)],
       ["POST /:id/watch", (u) => as(app, u).post(`/api/reservations/${reservationB}/watch`)],
       ["DELETE /:id/watch", (u) => as(app, u).delete(`/api/reservations/${reservationB}/watch`)],
@@ -127,6 +128,24 @@ describe("reservations: same-cabin flows still work (positive control)", () => {
       assert.deepEqual(res.body.participants.map((p: { userId: string }) => p.userId), [world.memberA.id]);
       assert.ok(recorder.emits.some((e) => e.event === "reservation:created"));
       assert.deepEqual([...new Set(recorder.emits.map((e) => e.room))], [`cabin:${world.cabinA.id}`]);
+    } finally {
+      recorder.restore();
+    }
+  });
+
+  test("DELETE /:id: member cannot delete someone else's stay (403), owner can (200, same realtime event as POST /delete)", async () => {
+    const id = await createReservation(world.adminA, "2027-07-01");
+    const denied = await as(app, world.memberA).delete(`/api/reservations/${id}`);
+    assert.equal(denied.status, 403);
+    assert.ok(await snapshot(id));
+
+    const recorder = recordRealtimeEmits();
+    try {
+      const res = await as(app, world.adminA).delete(`/api/reservations/${id}`);
+      assert.equal(res.status, 200);
+      assert.equal(await snapshot(id), null);
+      const deleted = recorder.emits.filter((e) => e.event === "reservation:deleted");
+      assert.deepEqual(deleted.map((e) => e.room), [`cabin:${world.cabinA.id}`]);
     } finally {
       recorder.restore();
     }

@@ -1,6 +1,7 @@
 
 import type { Reservation, UserAvailability } from "@/api/reservations";
 import styles from "../Reservations.module.css";
+import { isIsoDateInRange } from "@/lib/dateUtils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -87,32 +88,14 @@ export function CalendarCell({
     .join(" ");
 
   // ── Reservation bars for this date ────────────────────────────────
-  const ts = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const forDay = reservations.filter((r) => {
-    try {
-      const s = new Date(r.from + "T00:00:00Z").getTime();
-      const e = new Date(r.to + "T00:00:00Z").getTime();
-      return ts >= s && ts <= e;
-    } catch {
-      return false;
-    }
-  });
+  const forDay = reservations.filter((r) => isIsoDateInRange(dateStr, r.from, r.to));
 
   const maxVisible = 1;
   const visible = forDay.slice(0, maxVisible);
   const hiddenCount = forDay.length - visible.length;
 
   // ── Availability dots ─────────────────────────────────────────────
-  const availForDay = availabilities.filter((a) => {
-    try {
-      const s = new Date(a.startDate + "T00:00:00Z").getTime();
-      const e = new Date(a.endDate + "T00:00:00Z").getTime();
-      return ts >= s && ts <= e;
-    } catch {
-      return false;
-    }
-  });
+  const availForDay = availabilities.filter((a) => isIsoDateInRange(dateStr, a.startDate, a.endDate));
 
   // isMobile reserved for responsive adjustments
 
@@ -134,10 +117,8 @@ export function CalendarCell({
             <>
               {visible.map((r, index) => {
                 const c = r.userColor || "var(--text-muted)";
-                const rTs_s = new Date(r.from + "T00:00:00Z").getTime();
-                const rTs_e = new Date(r.to + "T00:00:00Z").getTime();
-                const isStart = ts === rTs_s;
-                const isEnd = ts === rTs_e;
+                const isStart = dateStr === r.from;
+                const isEnd = dateStr === r.to;
                 const isSingleDay = isStart && isEnd;
                 const isMiddle = !isStart && !isEnd;
                 const hasOverflowBadge = hiddenCount > 0 && index === visible.length - 1;
