@@ -408,6 +408,13 @@
   display: none !important;
 }
 
+/* Focus z klávesnice stejným prstencem jako tlačítka (buttons.css), i u odkazů v liště a ve „Víc“ (G2) */
+.mobile-nav-link:focus-visible,
+.drawer-quicklink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 @media (max-width: 768px) {
 
   /* ── Mobile Header — fixed top ─────────────────────────────── */

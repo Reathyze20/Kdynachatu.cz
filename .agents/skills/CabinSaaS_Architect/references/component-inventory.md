@@ -34,7 +34,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **AppShell** | Main wrapper — header + nav + `<Outlet>` with Framer Motion route transitions | — |
 | **TopBar** | Desktop navigation bar with cabin name, nav links, user dropdown | `onOpenProfileDrawer` |
 | **MobileHeader** | Mobile top bar with user avatar | `animalIcon, username, onOpenProfileDrawer` |
-| **MobileNav** | Bottom tab bar (5 items) from `MOBILE_NAV_ROUTES` | — |
+| **MobileNav** | Bottom tab bar: `PRIMARY_NAV` (Přehled · Kalendář · Předávka · Zásoby) + „Víc“ sheet with `MORE_NAV` | — |
 | **ProfileDrawer** | Right-side sheet with profile settings, avatar/color picker, password change, logout | `open, onClose` |
 
 ---
@@ -214,7 +214,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `SWATCH_COLORS`, `MONTH_NAMES`, `DAY_NAMES` |
 | `dateUtils.ts` | `formatDateRange()`, `formatWeekendRange()`, `nightsBetween()`, `nightsLabel()`, `daysUntil()`, `getTodayFormatted()`, `getLocalTodayIso()` |
 | `toast.ts` | `showToast(message, type)` — dispatches window event |
-| `navRoutes.ts` | `NAV_ROUTES[]`, `MOBILE_NAV_ROUTES[]` — route definitions |
+| `navRoutes.ts` | `PRIMARY_NAV[]`, `MORE_NAV[]`, `visibleNavItems()`, `findActiveNavItem()` — global navigation model |
 | `networkError.ts` | `isNetworkError()`, `OFFLINE_TOAST_MSG` |
 
 ---
