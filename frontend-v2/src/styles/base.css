@@ -144,7 +144,7 @@ body {
   top: 8px;
 }
 
-/* ── Shared page-level card — plný povrch (C4a) ────────────────────── */
+/* ── Shared page-level card — solid surface, no glass (C4a) ────────── */
 .page-card {
   background: rgb(var(--sheet));
   border: 1px solid rgb(var(--rule-soft));

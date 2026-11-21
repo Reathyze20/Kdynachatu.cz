@@ -14,7 +14,7 @@
 }
 
 .reconstruction-card {
-  /* extends .page-card — plná karta (C4a, #239) */
+  /* extends .page-card — solid card, no glass (C4a, #239) */
   background: rgb(var(--sheet));
   border-radius: var(--radius-2xl, 16px);
   height: 100%;

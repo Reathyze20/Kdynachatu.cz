@@ -176,7 +176,7 @@
   width: 300px;
   min-width: 260px;
   max-width: 300px;
-  /* Plný panel (C4a, #239) */
+  /* Solid panel, no glass (C4a, #239) */
   background: rgb(var(--sheet));
   border-right: 1px solid rgb(var(--rule-soft));
   display: flex;
@@ -1113,7 +1113,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  /* Plná karta (C4a, #239) */
+  /* Solid card, no glass (C4a, #239) */
   background: rgb(var(--sheet));
   border: 1px solid rgb(var(--rule-soft));
   border-radius: var(--radius-xl, 16px);

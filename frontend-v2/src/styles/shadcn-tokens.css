@@ -109,11 +109,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Povrchy redesignu (#239, C4a/C5a) z variables.css: bg-page, bg-sheet, border-rule-soft, shadow-lift … */
-  --color-page: rgb(var(--page));
+  /* Povrchy redesignu (#239, C4a) z variables.css: bg-sheet, border-rule-soft, shadow-lift */
   --color-sheet: rgb(var(--sheet));
-  --color-sheet-alt: rgb(var(--sheet-alt));
-  --color-rule: rgb(var(--rule));
   --color-rule-soft: rgb(var(--rule-soft));
   --shadow-lift: var(--lift);
 }
