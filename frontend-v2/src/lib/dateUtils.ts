@@ -44,10 +44,36 @@ export function getTodayFormatted(): string {
   return `${dayName} ${dayNum}. ${monthName}`;
 }
 
-export function getLocalTodayIso(): string {
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = String(today.getMonth() + 1).padStart(2, "0");
-  const d = String(today.getDate()).padStart(2, "0");
+// ─── Kalendářní datum rezervací ──────────────────────────────────────
+// Rezervace jsou celodenní: API posílá a přijímá "YYYY-MM-DD" bez času a zóny.
+// Jedna konvence pro celý frontend: datum je řetězec "YYYY-MM-DD" a porovnává
+// se jako řetězec. Date objekt vzniká jen z lokálních složek (nikdy přes
+// toISOString/UTC) a jen kvůli zobrazení.
+
+/** "YYYY-MM-DD" z lokálních složek data (ne z UTC). */
+export function toIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+/** Dnešní lokální kalendářní den. `new Date().toISOString()` by po půlnoci v Praze vrátil včerejšek. */
+export function getLocalTodayIso(): string {
+  return toIsoDate(new Date());
+}
+
+/** Leží den v uzavřeném intervalu [from, to]? */
+export function isIsoDateInRange(day: string, from: string, to: string): boolean {
+  return from <= day && day <= to;
+}
+
+/** Překrývají se dva uzavřené intervaly kalendářních dnů? */
+export function isoRangesOverlap(aFrom: string, aTo: string, bFrom: string, bTo: string): boolean {
+  return aFrom <= bTo && bFrom <= aTo;
+}
+
+/** Date v lokální poledne daného dne – jen pro zobrazení (den v týdnu, měsíc). */
+export function isoDateToLocalNoon(day: string): Date {
+  return new Date(day + "T12:00:00");
 }

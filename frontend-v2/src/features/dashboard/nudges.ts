@@ -8,7 +8,7 @@
  * bridge (the manual precursor to the Phase-3 bot).
  */
 import { Car, Flame, House, Luggage, ShoppingCart, type LucideIcon } from "lucide-react";
-import { daysUntil } from "@/lib/dateUtils";
+import { daysUntil, getLocalTodayIso } from "@/lib/dateUtils";
 import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
 
 export type NudgeTone = "info" | "action" | "warn";
@@ -37,7 +37,7 @@ interface BuildNudgesInput {
 
 export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge[] {
   const nudges: Nudge[] = [];
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getLocalTodayIso();
 
   // 1. Departure today — prompt the leaving occupant to fill the state.
   const active = reservations?.activeReservation;

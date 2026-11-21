@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { useSocket } from './useSocket'
+import { RESERVATIONS_KEY } from '@/features/reservations/hooks/useReservations'
 
 export function useRealtimeSync() {
   const { user } = useAuth()
@@ -17,7 +18,8 @@ export function useRealtimeSync() {
     if (!user) return
 
     function handleReservationChange() {
-      void qc.invalidateQueries({ queryKey: ['reservations'] })
+      // Pod RESERVATIONS_KEY visí kalendář i dashboard, obnoví se obojí
+      void qc.invalidateQueries({ queryKey: RESERVATIONS_KEY })
     }
 
     function handleMessageCreated(data: { threadId?: string | null }) {

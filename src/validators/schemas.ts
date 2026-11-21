@@ -209,6 +209,9 @@ export const deleteReservationSchema = z.object({
   id: z.string().uuid("Neplatné ID rezervace"),
 });
 
+// Reservation — DELETE /:id params (same shape as the POST /delete body)
+export const reservationIdParamsSchema = deleteReservationSchema;
+
 export const assignReservationSchema = z.object({
   newOwnerId: z.string().uuid("Neplatné ID uživatele"),
 });

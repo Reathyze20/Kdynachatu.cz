@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import { validate } from "../../validators/validate";
-import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema, assignReservationSchema } from "../../validators/schemas";
+import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema, reservationIdParamsSchema, assignReservationSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
 import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
@@ -664,9 +664,12 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
 // ============================================================================
 //                        DELETE RESERVATION
 // ============================================================================
-router.post("/delete", protect, requireCabin, validate(deleteReservationSchema), async (req: Request, res: Response) => {
-  const { id } = req.body;
-
+/**
+ * Společné jádro obou mazacích endpointů (POST /delete i DELETE /:id): stejná
+ * oprávnění (vlastník nebo admin), cizí chata = 404, stejný socket event
+ * i záznam do aktivity.
+ */
+async function deleteReservation(req: Request, res: Response, id: string) {
   try {
     const reservation = await prisma.reservation.findFirst({
       where: { id, cabinId: req.user!.cabinId },
@@ -710,7 +713,14 @@ router.post("/delete", protect, requireCabin, validate(deleteReservationSchema),
     logger.error("RESERVATIONS", "Delete reservation error", { error: String(error), id });
     res.status(500).json({ message: "Chyba." });
   }
-});
+}
+
+// Původní tvar, zůstává kvůli kompatibilitě (starší klienti, offline fronta).
+router.post("/delete", protect, requireCabin, validate(deleteReservationSchema), (req: Request, res: Response) =>
+  deleteReservation(req, res, req.body.id));
+
+router.delete("/:id", protect, requireCabin, validate(reservationIdParamsSchema, "params"), (req: Request, res: Response) =>
+  deleteReservation(req, res, req.params.id));
 
 // ============================================================================
 //        WATCH: GET /:id/watch — zjistit, zda aktuální user hlídá

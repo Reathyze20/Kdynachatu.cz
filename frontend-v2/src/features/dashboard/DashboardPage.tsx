@@ -16,6 +16,7 @@ import { EssentialWarning } from "./EssentialWarning";
 import { DepartureBanner } from "./DepartureBanner";
 import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
+import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { motion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
@@ -204,7 +205,7 @@ export function DashboardPage() {
 
   // Independent queries for each domain
   const reservationsQuery = useQuery<DashboardReservationsData>({
-    queryKey: ["dashboard", "reservations"],
+    queryKey: DASHBOARD_RESERVATIONS_KEY,
     queryFn: async () => {
       const { data } = await apiClient.get<DashboardReservationsData>("/dashboard/reservations");
       return DashboardReservationsSchema.parse(data) as DashboardReservationsData;
