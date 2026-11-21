@@ -2,6 +2,9 @@ import { useNavigate } from "react-router-dom";
 import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
 import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
+import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
+import { useAuth } from "@/context/AuthContext";
+import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
 import { CalendarPlus, CircleCheck, TriangleAlert } from "lucide-react";
 
 interface Props {
@@ -97,9 +100,22 @@ function buildParticipantStack(participants: ParticipantLite[] | undefined): Rea
   );
 }
 
+/** Řetězec teď → pak z dat Přehledu; aktivní pobyt API posílá jen pevný. Jméno je unikátní, vlastní pobyt = „Ty“. */
+function dashboardChainStays(data: DashboardReservationsData, myUsername: string | undefined): ChainStay[] {
+  const toChainStay = (r: { id: string; from: string; to: string; username: string }, status: string): ChainStay =>
+    ({ id: r.id, from: r.from, to: r.to, status, username: r.username, isMine: r.username === myUsername });
+  const active = data.activeReservation;
+  return [
+    ...(active ? [toChainStay(active, "primary")] : []),
+    ...data.upcomingReservations.map((r) => toChainStay(r, r.status)),
+  ];
+}
+
 export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const todayStr = getLocalTodayIso();
+  const chainNode = <TurnusChainLine nodes={buildTurnusChain(dashboardChainStays(data, user?.username), todayStr)} className="status-chain" />;
   const currentHour = new Date().getHours();
   const formattedDate = getTodayFormatted();
   const active = data.activeReservation;
@@ -266,6 +282,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
               </div>
             </div>
           </div>
+          {chainNode}
           {buildParticipantStack(active.participants)}
           {checkoutReminderNode}
           {buildCombinedNextBlock()}
@@ -297,6 +314,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
               </div>
             </div>
           </div>
+          {chainNode}
           {buildCombinedNextBlock()}
           {buildUpcomingList()}
           {buildLastStayBlock(data.lastStay)}
