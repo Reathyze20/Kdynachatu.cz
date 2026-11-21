@@ -167,12 +167,27 @@ describe('Přehled: „Dochází“ v bočním panelu (#172)', () => {
 
     const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
     const low = await within(aside).findByRole('region', { name: 'Dochází' })
-    expect(low).toHaveTextContent('Káva')
-    expect(low).toHaveTextContent('Sůl')
+    expect(low).toHaveTextContent('Káva · Sůl')
     expect(low).toHaveTextContent('Na nákupním seznamu čekají 3 položky')
     expect(within(low).getByRole('link', { name: 'Otevřít Zásoby' })).toHaveAttribute('href', '/shopping')
     expect(screen.queryByText('K nakoupení')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Otevřít nákupy' })).not.toBeInTheDocument()
+  })
+
+  it('víc než pět důležitých položek zkrátí na „a N dalších“, bez důležitých zůstane jen počet', async () => {
+    const names = ['Káva', 'Sůl', 'Cukr', 'Mýdlo', 'Sirky', 'Svíčky', 'Čaj']
+    renderOverview(reservations(), {
+      ...NO_SHOPPING, totalPendingShoppingCount: 7, essentialWarning: { count: 7, items: names.map((name) => ({ name })) },
+    })
+    const low = await screen.findByRole('region', { name: 'Dochází' })
+    expect(low).toHaveTextContent('Káva · Sůl · Cukr · Mýdlo · Sirky a 2 další')
+    expect(low).not.toHaveTextContent('Svíčky')
+  })
+
+  it('bez důležitých položek ukáže karta jen počet věcí k nakoupení', async () => {
+    renderOverview(reservations(), { ...NO_SHOPPING, totalPendingShoppingCount: 1 })
+    const low = await screen.findByRole('region', { name: 'Dochází' })
+    expect(low).toHaveTextContent('Na nákupním seznamu čeká 1 položka.')
   })
 
   it('když nic nedochází a nic se nekupuje, karta se nevykreslí', async () => {
