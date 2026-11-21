@@ -29,6 +29,21 @@ export function calendarTodayIso(now: Date, timeZone: string = CABIN_TIME_ZONE):
   return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
+/**
+ * Gate odjezdového banneru na dashboardu: můj pobyt dnes končí a předávka
+ * (`isCheckoutCompleted`) ještě není dokončená. Starý per-rezervační
+ * `handoverNote` („vzkaz pro další“ z formuláře rezervace) předávku neuzavírá.
+ * Banner dostane i ID rezervace, aby odeslal předávku stejnou cestou jako detail rezervace.
+ */
+export function departureGate(
+  departing: { id: string; isCheckoutCompleted: boolean } | null,
+): { departingToday: boolean; departingReservationId: string | null } {
+  if (!departing || departing.isCheckoutCompleted) {
+    return { departingToday: false, departingReservationId: null };
+  }
+  return { departingToday: true, departingReservationId: departing.id };
+}
+
 export interface CheckoutStateShape {
   gas?: "full" | "half" | "low" | "empty";
   heatingOff?: boolean;

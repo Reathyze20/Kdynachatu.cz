@@ -8,10 +8,10 @@ import type {
   ReservationUser,
   ReservationsApiResponse,
   MissingSummary,
-  CheckoutStatus,
   CheckoutState,
   UserAvailability,
 } from "@/api/reservations";
+import { completeCheckout } from "@/api/reservations";
 
 // ─── Query Keys ───────────────────────────────────────────────────────
 
@@ -107,13 +107,7 @@ export function useAssignReservation() {
 export function useCheckoutReservation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, state }: { id: string; state?: CheckoutState }) =>
-      apiClient
-        .patch<CheckoutStatus>(
-          `/reservations/${id}/checkout`,
-          state !== undefined ? { checkoutState: state } : undefined,
-        )
-        .then((r) => r.data),
+    mutationFn: ({ id, state }: { id: string; state?: CheckoutState }) => completeCheckout(id, state),
     onMutate: async ({ id, state }: { id: string; state?: CheckoutState }) => {
       await qc.cancelQueries({ queryKey: RESERVATIONS_KEY });
       const previous = qc.getQueryData<ReservationsApiResponse>(RESERVATIONS_KEY);

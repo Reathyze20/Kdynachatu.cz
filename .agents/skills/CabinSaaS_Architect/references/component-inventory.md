@@ -73,7 +73,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | ActiveReservation | Card | ✅ |
 | DepartureBanner | Banner | ✅ |
 | EssentialWarning | Alert | ✅ |
-| HandoverNote | Card | ✅ |
+| PinnedNote | Card | ✅ |
 | ShoppingWidget | Widget | ✅ |
 
 ### Reservations (`features/reservations/`)

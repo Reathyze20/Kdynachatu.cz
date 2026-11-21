@@ -716,6 +716,28 @@ const paths: Record<string, OpenApiObject> = {
       },
     },
   },
+  "/api/dashboard/reservations": {
+    get: {
+      tags: ["Dashboard"],
+      summary: "Rezervacni cast dashboardu (aktivni pobyt, nadchazejici, posledni pobyt, gate odjezdu)",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(
+          {
+            type: "object",
+            properties: {
+              departingToday: { type: "boolean", description: "Muj pobyt dnes konci a predavka (isCheckoutCompleted) jeste neni dokoncena" },
+              departingReservationId: { type: "string", nullable: true, description: "ID tohoto pobytu pro dokonceni predavky (PATCH /api/reservations/{id}/checkout), jinak null" },
+            },
+            additionalProperties: true,
+          },
+          "Data pro dashboard; zde jsou popsana jen pole gate odjezdu",
+        ),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+      },
+    },
+  },
   "/api/shopping-lists": {
     get: {
       tags: ["Shopping"],
@@ -909,6 +931,7 @@ export const openApiSpec = {
     { name: "Users", description: "Current user profile endpoints" },
     { name: "Cabin", description: "Cabin settings and shared configuration" },
     { name: "Reservations", description: "Reservation planning and availability" },
+    { name: "Dashboard", description: "Dashboard summaries" },
     { name: "Shopping", description: "Shopping lists" },
     { name: "Inventory", description: "Pantry and stock" },
     { name: "Channels", description: "Chat channels" },
