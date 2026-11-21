@@ -116,3 +116,60 @@ describe('Stará horní navigace je pryč (#171)', () => {
     expect(selectors.some((s) => /\.nav-left-group\b/.test(s))).toBe(false)
   })
 })
+
+const SIDES = ['top', 'right', 'bottom', 'left'] as const
+type Side = (typeof SIDES)[number]
+
+/** Poslední hodnota vlastnosti pro `selector` na dané šířce (bez `!important`). */
+function declarationsAt(css: string, selector: string, width: number): Map<string, string> {
+  const result = new Map<string, string>()
+  for (const rule of rulesAt(css, selector, width)) {
+    for (const decl of rule.body.split(';')) {
+      const i = decl.indexOf(':')
+      if (i < 0) continue
+      result.set(decl.slice(0, i).trim(), decl.slice(i + 1).replace('!important', '').trim())
+    }
+  }
+  return result
+}
+
+/** Součet px literálů v hodnotě, `env(…)` se nepočítá: `calc(6px + env(safe-area-inset-bottom, 0px))` → 6. */
+const sumPxIgnoringEnv = (value: string) =>
+  [...value.replace(/env\([^)]*\)/g, '').matchAll(/(\d+(?:\.\d+)?)px/g)].reduce((sum, m) => sum + Number(m[1]), 0)
+
+/** Výsledné odsazení (hodnoty jako v CSS) podle `padding` a `padding-*` (poslední vyhrává). */
+function paddingAt(css: string, selector: string, width: number): Record<Side, string> {
+  const padding: Record<Side, string> = { top: '0', right: '0', bottom: '0', left: '0' }
+  for (const [prop, value] of declarationsAt(css, selector, width)) {
+    if (prop === 'padding') {
+      const [t, r = t, b = t, l = r] = value.split(/\s+(?![^(]*\))/)
+      Object.assign(padding, { top: t, right: r, bottom: b, left: l })
+    } else {
+      const side = SIDES.find((s) => prop === `padding-${s}`)
+      if (side) padding[side] = value
+    }
+  }
+  return padding
+}
+
+describe('Spodní mobilní lišta — zvýraznění aktivní záložky (#192)', () => {
+  it.each([360, 375, 768])('na šířce %i px má lišta odstup od všech okrajů, takže zvýraznění nesahá na hranu', (width) => {
+    const padding = paddingAt(navCssRaw, '.mobile-nav', width)
+    for (const side of SIDES) {
+      expect(sumPxIgnoringEnv(padding[side]), side).toBeGreaterThanOrEqual(6)
+    }
+  })
+
+  it('bezpečná zóna dole zůstává v odsazení lišty', () => {
+    expect(paddingAt(navCssRaw, '.mobile-nav', 375).bottom).toMatch(/env\(safe-area-inset-bottom/)
+  })
+
+  it('záložky mají dotykovou plochu aspoň 44 px a mezi sebou mezeru', () => {
+    expect(sumPxIgnoringEnv(declarationsAt(navCssRaw, '.mobile-nav-link', 375).get('min-height') ?? '')).toBeGreaterThanOrEqual(44)
+    expect(sumPxIgnoringEnv(declarationsAt(navCssRaw, '.mobile-nav', 375).get('gap') ?? '')).toBeGreaterThan(0)
+  })
+
+  it('na desktopu zůstává lišta skrytá', () => {
+    expect(declarationsAt(navCssRaw, '.mobile-nav', 1024).get('display')).toBe('none')
+  })
+})
