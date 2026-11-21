@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.4.1...v1.4.2) (2026-11-21)
+
+
+### Bug Fixes
+
+* **nav:** give the desktop sidebar the card surface and move help into it ([#214](https://github.com/Reathyze20/Kdynachatu.cz/issues/214)) ([6e22cc0](https://github.com/Reathyze20/Kdynachatu.cz/commit/6e22cc0bf3fde8cca3dcbcfac47222c933a81afc))
+
 ## [1.4.1](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.4.0...v1.4.1) (2026-11-21)
 
 
