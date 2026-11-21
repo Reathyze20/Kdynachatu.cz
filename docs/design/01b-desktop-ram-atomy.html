@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="cs" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kdy na chatu — návrh #1b: Desktop rám</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: 244 247 245; --sheet: 255 253 250; --sheet-alt: 233 244 239; --rule: 223 228 223; --rule-soft: 233 237 232;
+  --ink: 30 41 59; --ink-2: 75 85 99; --ink-3: 148 155 163; --accent: 63 123 99;
+  --lc: 4 120 87; --on-lc: 255 255 255; --card-alpha: 1;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: 15 20 17; --sheet: 26 32 28; --sheet-alt: 31 41 35; --rule: 52 62 54; --rule-soft: 37 46 40;
+  --ink: 230 234 229; --ink-2: 150 160 150; --ink-3: 102 112 103; --accent: 94 186 134; --card-alpha: .88;
+  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background:
+    radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%),
+    linear-gradient(180deg, rgb(var(--page)), rgb(var(--page))); min-height: 100%; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); }
+.wrap { max-width: 1520px; margin: 0 auto; padding: 22px 28px 120px; }
+.display { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; letter-spacing: -.02em; }
+.top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.top h1 { margin: 0; font-size: 29px; font-weight: 800; letter-spacing: -.02em; }
+.top h1 span { font-size: 16px; font-weight: 400; color: rgb(var(--ink-2)); margin-left: 8px; }
+.seg { margin-left: auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.seg button { border: 0; background: none; color: rgb(var(--ink-2)); font: 500 13px/1 inherit; padding: 7px 13px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: rgb(var(--ink)); color: rgb(var(--page)); }
+.howto { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 16px; padding: 20px 24px; box-shadow: var(--lift); }
+.howto h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.08; }
+.howto p { margin: 0 0 8px; font-size: 14px; }
+.howto ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.howto li { margin-bottom: 6px; }
+.given { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgb(var(--sheet-alt)); border: 1px solid rgb(var(--rule-soft)); font-size: 12.5px; line-height: 1.5; }
+.given b { color: rgb(var(--ink)); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.toc a { font-size: 12.5px; text-decoration: none; color: rgb(var(--ink)); border: 1px solid rgb(var(--rule)); border-radius: 999px; padding: 3px 10px; background: rgb(var(--sheet)); }
+.toc a.done { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+.group-h { margin: 46px 2px 0; padding-top: 18px; border-top: 2px solid rgb(var(--ink)); }
+.group-h h2 { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.group-h p { margin: 6px 0 0; font-size: 14.5px; color: rgb(var(--ink-2)); max-width: 70em; }
+.sec { margin: 32px 0 0; scroll-margin-top: 16px; }
+.sec-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 2px 10px; }
+.sec-h h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+.sec-h .q { font-size: 14px; color: rgb(var(--ink-2)); }
+.sec-h .picked { margin-left: auto; font-size: 13px; color: rgb(var(--ink-2)); }
+.sec-h .picked b { color: rgb(var(--ink)); }
+.cols { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 14px; }
+.col { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: var(--lift); }
+.col.on { border-color: rgb(var(--lc)); box-shadow: 0 0 0 2px rgb(var(--lc)); }
+.col-h { display: flex; align-items: center; gap: 9px; }
+.col-h .lt { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgb(var(--sheet-alt)); font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 15px; flex-shrink: 0; }
+.col.on .col-h .lt { background: rgb(var(--lc)); color: rgb(var(--on-lc)); }
+.col-h .nm { font-size: 14px; font-weight: 600; line-height: 1.2; }
+.col-h .st { display: block; font-size: 11.5px; color: rgb(var(--ink-2)); font-weight: 400; }
+.col .idea { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.col .lab2 { font-size: 11.5px; color: rgb(var(--ink-2)); display: block; margin-bottom: 2px; }
+.col ul { margin: 0 0 4px; padding-left: 16px; font-size: 12.5px; line-height: 1.45; }
+.col .meta-c { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.col .meta-c .choose { margin-top: auto; }
+.choose { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid rgb(var(--rule)); cursor: pointer; font-weight: 600; font-size: 14px; background: rgb(var(--sheet-alt)); }
+.choose input { width: 18px; height: 18px; accent-color: rgb(var(--lc)); margin: 0; }
+.choose.on { border-color: rgb(var(--lc)); background: rgb(var(--lc) / .14); }
+.note { width: 100%; min-height: 48px; margin-top: 10px; resize: vertical; border-radius: 10px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); color: rgb(var(--ink)); font-family: inherit; font-size: 13px; line-height: 1.4; padding: 8px 10px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgb(var(--sheet) / .96); border-top: 1px solid rgb(var(--rule)); backdrop-filter: blur(6px); }
+.bar-in { max-width: 1520px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bar .sum { font-size: 13px; color: rgb(var(--ink-2)); flex: 1; min-width: 300px; }
+.bar .sum b { color: rgb(var(--ink)); }
+.bar .copied { font-size: 13px; color: rgb(var(--accent)); font-weight: 600; }
+.xbtn { border-radius: 999px; border: 1px solid rgb(var(--rule)); padding: 9px 16px; font: 600 13.5px/1 inherit; background: rgb(var(--sheet)); color: rgb(var(--ink)); cursor: pointer; }
+.xbtn.p { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+
+/* ---- sdílené náhledové prvky (karty) ---- */
+.pv-card { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 10px; padding: 8px 9px; font-size: 11.5px; line-height: 1.35; }
+.pv-card .k { color: rgb(var(--ink-2)); font-size: 10.5px; }
+.pv-card b { font-size: 12.5px; }
+.pv-card.hi { border-color: rgb(var(--accent)); background: rgb(var(--accent) / .08); }
+.pv-strip { display: flex; align-items: center; gap: 8px; padding: 2px 2px 6px; }
+.pv-strip .thm { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, rgb(var(--accent) / .55), rgb(var(--sheet-alt))); display: grid; place-items: center; flex-shrink: 0; color: rgb(var(--on-lc)); font-size: 14px; }
+.pv-strip b { font-size: 12px; display: block; line-height: 1.2; }
+.pv-strip .k { font-size: 10px; color: rgb(var(--ink-3)); }
+.pv-btn { margin-top: 5px; background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-radius: 7px; text-align: center; padding: 5px; font-weight: 700; font-size: 10.5px; }
+
+/* ---- desktop rám (#1b) ---- */
+.dv { border: 1px solid rgb(var(--rule)); border-radius: 12px; overflow: hidden; background: rgb(var(--page)); display: flex; flex-direction: column; min-height: 212px; box-shadow: var(--lift); }
+.dv-chrome { height: 18px; background: rgb(var(--sheet)); border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 4px; padding: 0 8px; flex-shrink: 0; }
+.dv-chrome i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--rule)); display: inline-block; }
+.dv-wrap { flex: 1; display: grid; min-height: 0; }
+.dv-wrap.side { grid-template-columns: 118px 1fr; }
+.dv-wrap.side-sm { grid-template-columns: 42px 1fr; }
+.dv-wrap.top { grid-template-rows: auto 1fr; }
+.dv-side { border-right: 1px solid rgb(var(--rule-soft)); background: rgb(var(--sheet)); padding: 8px 6px; display: flex; flex-direction: column; gap: 3px; }
+.dv-brand { font-weight: 800; font-size: 11px; padding: 2px 4px 8px; display: flex; align-items: center; gap: 5px; }
+.dv-ni { display: flex; align-items: center; gap: 6px; font-size: 10.5px; padding: 5px 6px; border-radius: 7px; color: rgb(var(--ink-2)); white-space: nowrap; }
+.dv-ni.on { background: rgb(var(--accent) / .14); color: rgb(var(--accent)); font-weight: 700; }
+.dv-ni svg { width: 13px; height: 13px; flex-shrink: 0; }
+.dv-ni.ico { justify-content: center; gap: 0; }
+.dv-topbar { border-bottom: 1px solid rgb(var(--rule-soft)); background: rgb(var(--sheet)); display: flex; align-items: center; gap: 10px; padding: 7px 12px; font-size: 10.5px; }
+.dv-topbar .b { font-weight: 800; font-size: 11px; display: flex; align-items: center; gap: 5px; margin-right: 6px; }
+.dv-topbar .ti { color: rgb(var(--ink-2)); }
+.dv-topbar .ti.on { color: rgb(var(--accent)); font-weight: 700; }
+.dv-main { padding: 10px; overflow: hidden; min-width: 0; }
+.dv-main.calm { background: radial-gradient(420px 170px at 50% -24%, rgb(var(--sheet-alt)), transparent 72%); }
+.dv-cap { max-width: var(--cap, none); margin: 0 auto; }
+.dv-cols { display: grid; gap: 8px; }
+.dv-cols.c2 { grid-template-columns: 1.5fr 1fr; }
+.dv-cols.c3 { grid-template-columns: 1fr 1fr 1fr; }
+.dv-cols.c1 { grid-template-columns: 1fr; max-width: 62%; margin: 0 auto; }
+.dv-colstack { display: flex; flex-direction: column; gap: 7px; }
+svg.lucide { width: 1em; height: 1em; stroke-width: 2; vertical-align: middle; display: inline-block; }
+
+@media (max-width: 1100px) { .howto { grid-template-columns: 1fr; } .cols { grid-template-columns: 1fr !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="display">Kdy na chatu — Desktop rám<span>Fáze 4 · návrh #1b · globální rám · 2026-11-21</span></h1>
+    <div class="seg" id="seg-t"><button data-v="light" aria-pressed="true">Světlé</button><button data-v="dark" aria-pressed="false">Tmavé</button></div>
+  </header>
+
+  <section class="howto">
+    <div>
+      <h2 class="display">Jak se mobilní appka roztáhne na širokou obrazovku.</h2>
+      <p>Appka je <b>mobil první</b>, ale ne mobil-only — plánuje se i u notebooku doma (smoke test je „desktop admin + mobilní člen"). Obsah a priority Přehledu jsou <b>už rozhodnuté</b> (návrh #1, všech 5 dílů = A) a <b>na desktopu se nemění</b>. Tady se rozhoduje jen <b>rám</b>: kam jde navigace a jak se obsah uspořádá v šířce. Rozhodne se <b>jednou globálně</b> — pak ho dědí všechny další obrazovky.</p>
+      <p>U každého dílu vyber <b>A / B / C</b>. Konvence: <b>A</b> je nejjednodušší a zároveň moje doporučení.</p>
+      <div class="given"><b>Dané (nerozhoduje se tu):</b> na mobilu zůstává dolní lišta a jeden sloupec (návrh #0/#1) · obsah a priority Přehledu = volba #1 (A) · klid, vzduch, čitelná šířka (A1, G1) · lehké lesní pozadí (C5a). Ikony <b>Lucide</b>.</p>
+      <nav class="toc" id="toc"></nav>
+    </div>
+    <ol>
+      <li>U každého dílu zaškrtni <b>„Tuhle chci"</b>. Můžeš zaškrtnout víc variant a do poznámky napsat, jak je spojit.</li>
+      <li>Díl, na kterém ti nezáleží, nech prázdný — postavím doporučenou <b>A</b>.</li>
+      <li>Volba se ukládá v prohlížeči, můžeš se vrátit. Nahoře přepínáš Světlé / Tmavé.</li>
+      <li>Nakonec dole <b>Zkopírovat volbu</b> a vlož mi ji do chatu (nebo <b>Stáhnout</b>).</li>
+    </ol>
+  </section>
+
+  <main id="sections"></main>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <div class="sum" id="sum"></div>
+  <span class="copied" id="copied"></span>
+  <button class="xbtn" id="copy">Zkopírovat volbu</button>
+  <button class="xbtn p" id="dl">Stáhnout volbu</button>
+</div></div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+(() => {
+const TITLE   = 'Kdy na chatu — návrh #1b: Desktop rám';
+const KEY     = 'kdynachatu.design.01b-desktop-ram';
+const DL_NAME = 'kdynachatu-01b-desktop-ram-volba.txt';
+
+/* ---- obsah Přehledu (shodný s volbou #1 = A), jen uspořádaný do desktop rámu ---- */
+const HERO    = `<div class="pv-strip"><span class="thm"><i data-lucide="trees"></i></span><div><b>Chata Pod Lípou</b><span class="k">−3 °C · zataženo</span></div></div>`;
+const C_TASK  = `<div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b><div class="pv-btn">Dopsat předávku</div></div>`;
+const C_NOW   = `<div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>`;
+const C_LOW   = `<div class="pv-card"><span class="k">dochází</span><br>Plyn · káva · toaleťák</div>`;
+const C_NEXT  = `<div class="pv-card"><span class="k">další příjezd</span><br><b>Ty</b> · so 14.12</div>`;
+const C_CHAIN = `<div class="pv-card"><span class="k">řetězec</span><br><b>Teď:</b> Novákovi → <b>pak:</b> ty</div>`;
+const stack = (...x) => `<div class="dv-colstack">${x.join('')}</div>`;
+
+/* ---- desktop rám ---- */
+const desk = (inner) => `<div class="dv"><div class="dv-chrome"><i></i><i></i><i></i></div>${inner}</div>`;
+const NAV = [['home','Přehled',true],['calendar-days','Kalendář',false],['key-round','Předávka',false],['shopping-cart','Zásoby',false],['more-horizontal','Víc',false]];
+const SIDE = (ico) => `<nav class="dv-side"><div class="dv-brand"><i data-lucide="trees"></i>${ico ? '' : 'Pod Lípou'}</div>${NAV.map(([i,l,on]) => `<div class="dv-ni ${on ? 'on' : ''} ${ico ? 'ico' : ''}"><i data-lucide="${i}"></i>${ico ? '' : l}</div>`).join('')}</nav>`;
+const TOPBAR = () => `<div class="dv-topbar"><span class="b"><i data-lucide="trees"></i>Pod Lípou</span>${NAV.map(([,l,on]) => `<span class="ti ${on ? 'on' : ''}">${l}</span>`).join('')}</div>`;
+
+/* dashboard uspořádání (obsah stejný, mění se mřížka) */
+const DASH2 = `${HERO}<div class="dv-cols c2" style="margin-top:8px">${stack(C_TASK, C_NOW)}${stack(C_LOW, C_NEXT, C_CHAIN)}</div>`;
+const DASH3 = `${HERO}<div class="dv-cols c3" style="margin-top:8px">${stack(C_TASK)}${stack(C_NOW, C_CHAIN)}${stack(C_LOW, C_NEXT)}</div>`;
+const DASH1 = `<div class="dv-cols c1">${HERO}${C_TASK}${C_NOW}${C_LOW}${C_NEXT}</div>`;
+
+const SECS = [];
+const G = (name, p) => SECS.push({ group: name, p });
+const A = (s) => SECS.push(s);
+
+/* ---- ZDE OBSAH: sekce a varianty ---- */
+
+G('Desktop rám: appka v šířce', 'Tři globální rozhodnutí. Obsah na nich je pořád tentýž Přehled z návrhu #1 (volba A) — mění se jen rám. Co se tu vybere, zdědí všechny obrazovky od návrhu #2 dál.');
+
+A({ id: 'dnav', name: 'Hlavní navigace v šířce', q: 'Kam jde navigace na velkém displeji?', n: 3, v: [
+  { k: 'A', name: 'Levý sidebar', st: 'doporučeno',
+    r: () => desk(`<div class="dv-wrap side">${SIDE(false)}<div class="dv-main">${DASH2}</div></div>`),
+    idea: 'Trvalá levá lišta s ikonou + názvem sekce. Desktopová obdoba dolní lišty z mobilu.',
+    plus: ['Pět sekcí se pohodlně vejde, názvy jsou čitelné', 'Zvyk z desktop aplikací (Linear, Notion, Slack)', 'Hlavní obsah má celou šířku vpravo'],
+    minus: ['Ukrojí kus šířky (na malém okně zvážit sbalení → viz C)'] },
+  { k: 'B', name: 'Horní lišta', st: 'blízko mobilu',
+    r: () => desk(`<div class="dv-wrap top">${TOPBAR()}<div class="dv-main">${DASH2}</div></div>`),
+    idea: 'Vodorovná navigace nahoře, obsah pod ní přes celou šířku.',
+    plus: ['Nejvíc místa na obsah do šířky', 'Blízko mobilní logice (lišta, jen nahoře)'],
+    minus: ['Vodorovně se vejde míň položek, hůř roste', 'Aktivní sekce méně výrazná než v sidebaru'] },
+  { k: 'C', name: 'Sbalený sidebar (jen ikony)', st: 'kompaktní',
+    r: () => desk(`<div class="dv-wrap side-sm">${SIDE(true)}<div class="dv-main">${DASH2}</div></div>`),
+    idea: 'Úzká lišta jen s ikonami, názvy naskočí po najetí / rozbalení.',
+    plus: ['Šetří místo, hodně prostoru obsahu', 'Čisté a moderní'],
+    minus: ['Ikona bez popisku je méně srozumitelná (A3 proti)', 'Potřebuje tooltip/rozbalení — víc práce a jemná past na přístupnost'] },
+] });
+
+A({ id: 'dgrid', name: 'Rozložení Přehledu v šířce', q: 'Jak uspořádat karty, když je místa dost?', n: 3, v: [
+  { k: 'A', name: 'Dva sloupce', st: 'doporučeno',
+    r: () => desk(`<div class="dv-wrap side">${SIDE(false)}<div class="dv-main">${DASH2}</div></div>`),
+    idea: 'Hlavní sloupec (co visí na tobě + stav) vlevo, boční panel (dochází, příjezd, řetězec) vpravo.',
+    plus: ['Priorita zůstává jasná jako na mobilu (A1)', 'Využije šířku, ale nerozsype pozornost', 'Přirozený přechod z mobilního stacku'],
+    minus: ['Je potřeba rozhodnout, co patří do hlavního a co do bočního sloupce'] },
+  { k: 'B', name: 'Tři sloupce', st: 'dashboard',
+    r: () => desk(`<div class="dv-wrap side">${SIDE(false)}<div class="dv-main">${DASH3}</div></div>`),
+    idea: 'Tři rovnocenné sloupce — vše na jeden pohled jako klasický dashboard.',
+    plus: ['Nejvíc naráz bez scrollu', 'Působí „plně"'],
+    minus: ['Rozmělní prioritu — úkol splyne se zbytkem (proti A1)', 'Na menších oknech se láme', 'Víc vizuálního šumu'] },
+  { k: 'C', name: 'Jeden centrovaný sloupec', st: 'klid',
+    r: () => desk(`<div class="dv-wrap side">${SIDE(false)}<div class="dv-main calm">${DASH1}</div></div>`),
+    idea: 'Na desktopu totéž co na mobilu, jen vycentrované do středu s klidem po stranách.',
+    plus: ['Jedna pravda, nulové riziko rozházené pozornosti (A1)', 'Levné — mobilní layout 1:1', 'Maximální čitelnost'],
+    minus: ['Na velkém monitoru působí prázdně po stranách', 'Nevyužije plochu, kterou desktop nabízí'] },
+] });
+
+A({ id: 'dwidth', name: 'Šířka obsahu', q: 'Má se obsah roztáhnout, nebo držet čitelnou šířku?', n: 2, v: [
+  { k: 'A', name: 'Omezená čitelná šířka', st: 'doporučeno',
+    r: () => desk(`<div class="dv-wrap side">${SIDE(false)}<div class="dv-main calm"><div class="dv-cap" style="--cap:78%">${DASH2}</div></div></div>`),
+    idea: 'Obsah má strop šířky a je vycentrovaný; po stranách zůstává klidné lesní pozadí (C5a).',
+    plus: ['Řádky i karty zůstanou čitelné i na širokém monitoru (G1)', 'Klid a vzduch (A1), osobnost přes jemné pozadí (C5a)', 'Konzistentní vzhled na 1280 i 2560 px'],
+    minus: ['Na ultrawide zůstane víc nevyužitého okraje (záměrně)'] },
+  { k: 'B', name: 'Full-width roztažené', st: 'maximální plocha',
+    r: () => desk(`<div class="dv-wrap side">${SIDE(false)}<div class="dv-main">${DASH3}</div></div>`),
+    idea: 'Obsah se roztáhne přes celou dostupnou šířku.',
+    plus: ['Využije celou plochu', 'Hodí se pro husté tabulky/data'],
+    minus: ['Dlouhé řádky se špatně čtou (proti G1)', 'Karty se nepřirozeně natáhnou, mizí klid (proti A1)', 'Jádro „Kdy na chatu" není datová tabulka — plocha není cíl'] },
+] });
+
+/* ---- /ZDE OBSAH ---- */
+
+const ATOMS = SECS.filter((s) => s.id);
+let state = { pick: {}, note: {} };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* prázdné */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* bez úložiště */ } };
+const picks = (id) => (state.pick[id] || []).slice().sort();
+const drawIcons = () => { if (window.lucide) window.lucide.createIcons(); };
+
+function renderSec(sec) {
+  const chosen = picks(sec.id);
+  const el = document.getElementById('s-' + sec.id);
+  el.innerHTML = `
+    <div class="sec-h"><h2 class="display">${sec.name}</h2><span class="q">${sec.q}</span><span class="picked">${chosen.length ? `Vybráno: <b>${chosen.join(' + ')}</b>` : 'Zatím nevybráno'}</span></div>
+    <div class="cols" style="--n:${sec.n}">${sec.v.map((v) => { const on = chosen.includes(v.k); return `
+      <div class="col ${on ? 'on' : ''}">
+        <div class="col-h"><span class="lt">${on ? '✓' : v.k}</span><span class="nm">${v.name}<span class="st">${v.st}</span></span></div>
+        ${v.r()}
+        <div class="meta-c">
+          <p class="idea">${v.idea}</p>
+          ${v.plus.length ? `<div><span class="lab2">Proč ano</span><ul>${v.plus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          ${v.minus.length ? `<div><span class="lab2">Proč ne</span><ul>${v.minus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          <label class="choose ${on ? 'on' : ''}"><input type="checkbox" data-pick="${sec.id}" data-v="${v.k}" ${on ? 'checked' : ''}> Tuhle chci</label>
+        </div>
+      </div>`; }).join('')}</div>
+    <textarea class="note" data-note="${sec.id}" placeholder="Poznámka (nepovinné), např. „A, ale sidebar sbalitelný na úzkém okně"">${state.note[sec.id] || ''}</textarea>`;
+}
+function renderToc() {
+  document.getElementById('toc').innerHTML = ATOMS.map((s) => { const p = picks(s.id); return `<a href="#s-${s.id}" class="${p.length ? 'done' : ''}">${s.name}${p.length ? ' · ' + p.join('+') : ''}</a>`; }).join('');
+}
+function renderSum() {
+  const done = ATOMS.filter((s) => picks(s.id).length);
+  document.getElementById('sum').innerHTML = `Vybráno <b>${done.length} z ${ATOMS.length}</b> dílů${done.length ? ' · ' + done.map((s) => `${s.name} <b>${picks(s.id).join('+')}</b>`).join(', ') : ' — u každého dílu zaškrtni „Tuhle chci"'}`;
+}
+function summaryText() {
+  const line = (s) => {
+    const p = picks(s.id);
+    const names = p.map((k) => `${k} — ${s.v.find((x) => x.k === k).name}`).join(' + ');
+    return `${s.name}: ${p.length ? names : 'nevybráno (postavím A)'}${state.note[s.id] ? `\n   poznámka: ${state.note[s.id].trim()}` : ''}`;
+  };
+  return `${TITLE} — volba dílů (${new Date().toLocaleString('cs-CZ')})\n\n${ATOMS.map(line).join('\n')}\n`;
+}
+
+document.getElementById('sections').innerHTML = SECS.map((s) => s.group
+  ? `<div class="group-h"><h2 class="display">${s.group}</h2><p>${s.p}</p></div>`
+  : `<section class="sec" id="s-${s.id}"></section>`).join('');
+ATOMS.forEach(renderSec); renderToc(); renderSum(); drawIcons();
+
+document.addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-pick]');
+  if (!cb) return;
+  const id = cb.dataset.pick;
+  const set = new Set(state.pick[id] || []);
+  if (cb.checked) set.add(cb.dataset.v); else set.delete(cb.dataset.v);
+  if (set.size) state.pick[id] = [...set]; else delete state.pick[id];
+  save(); renderSec(ATOMS.find((s) => s.id === id)); renderToc(); renderSum(); drawIcons();
+});
+document.addEventListener('input', (e) => {
+  const t = e.target.closest('[data-note]');
+  if (!t) return;
+  state.note[t.dataset.note] = t.value; save();
+});
+document.querySelectorAll('#seg-t button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#seg-t button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.documentElement.dataset.theme = b.dataset.v;
+}));
+const flash = (t) => { const c = document.getElementById('copied'); c.textContent = t; setTimeout(() => { c.textContent = ''; }, 2500); };
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(summaryText()); flash('Zkopírováno — vlož mi to do chatu.'); }
+  catch { flash('Kopírování nejde — použij Stáhnout.'); }
+});
+document.getElementById('dl').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([summaryText()], { type: 'text/plain;charset=utf-8' }));
+  a.download = DL_NAME;
+  a.click();
+  flash('Uloženo do Stažených — napiš mi, že je hotovo.');
+});
+})();
+</script>
+</body>
+</html>

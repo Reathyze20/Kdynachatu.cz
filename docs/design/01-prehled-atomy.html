@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="cs" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kdy na chatu — návrh #1: Přehled (stav chaty teď)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: 244 247 245; --sheet: 255 253 250; --sheet-alt: 233 244 239; --rule: 223 228 223; --rule-soft: 233 237 232;
+  --ink: 30 41 59; --ink-2: 75 85 99; --ink-3: 148 155 163; --accent: 63 123 99;
+  --lc: 4 120 87; --on-lc: 255 255 255; --card-alpha: 1;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: 15 20 17; --sheet: 26 32 28; --sheet-alt: 31 41 35; --rule: 52 62 54; --rule-soft: 37 46 40;
+  --ink: 230 234 229; --ink-2: 150 160 150; --ink-3: 102 112 103; --accent: 94 186 134; --card-alpha: .88;
+  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background:
+    radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%),
+    linear-gradient(180deg, rgb(var(--page)), rgb(var(--page))); min-height: 100%; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); }
+.wrap { max-width: 1520px; margin: 0 auto; padding: 22px 28px 120px; }
+.display { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; letter-spacing: -.02em; }
+.top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.top h1 { margin: 0; font-size: 29px; font-weight: 800; letter-spacing: -.02em; }
+.top h1 span { font-size: 16px; font-weight: 400; color: rgb(var(--ink-2)); margin-left: 8px; }
+.seg { margin-left: auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.seg button { border: 0; background: none; color: rgb(var(--ink-2)); font: 500 13px/1 inherit; padding: 7px 13px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: rgb(var(--ink)); color: rgb(var(--page)); }
+.howto { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 16px; padding: 20px 24px; box-shadow: var(--lift); }
+.howto h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.08; }
+.howto p { margin: 0 0 8px; font-size: 14px; }
+.howto ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.howto li { margin-bottom: 6px; }
+.given { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgb(var(--sheet-alt)); border: 1px solid rgb(var(--rule-soft)); font-size: 12.5px; line-height: 1.5; }
+.given b { color: rgb(var(--ink)); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.toc a { font-size: 12.5px; text-decoration: none; color: rgb(var(--ink)); border: 1px solid rgb(var(--rule)); border-radius: 999px; padding: 3px 10px; background: rgb(var(--sheet)); }
+.toc a.done { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+.group-h { margin: 46px 2px 0; padding-top: 18px; border-top: 2px solid rgb(var(--ink)); }
+.group-h h2 { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.group-h p { margin: 6px 0 0; font-size: 14.5px; color: rgb(var(--ink-2)); max-width: 70em; }
+.sec { margin: 32px 0 0; scroll-margin-top: 16px; }
+.sec-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 2px 10px; }
+.sec-h h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+.sec-h .q { font-size: 14px; color: rgb(var(--ink-2)); }
+.sec-h .picked { margin-left: auto; font-size: 13px; color: rgb(var(--ink-2)); }
+.sec-h .picked b { color: rgb(var(--ink)); }
+.cols { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 14px; }
+.col { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: var(--lift); }
+.col.on { border-color: rgb(var(--lc)); box-shadow: 0 0 0 2px rgb(var(--lc)); }
+.col-h { display: flex; align-items: center; gap: 9px; }
+.col-h .lt { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgb(var(--sheet-alt)); font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 15px; flex-shrink: 0; }
+.col.on .col-h .lt { background: rgb(var(--lc)); color: rgb(var(--on-lc)); }
+.col-h .nm { font-size: 14px; font-weight: 600; line-height: 1.2; }
+.col-h .st { display: block; font-size: 11.5px; color: rgb(var(--ink-2)); font-weight: 400; }
+.col .idea { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.col .lab2 { font-size: 11.5px; color: rgb(var(--ink-2)); display: block; margin-bottom: 2px; }
+.col ul { margin: 0 0 4px; padding-left: 16px; font-size: 12.5px; line-height: 1.45; }
+.col .meta-c { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.col .meta-c .choose { margin-top: auto; }
+.choose { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid rgb(var(--rule)); cursor: pointer; font-weight: 600; font-size: 14px; background: rgb(var(--sheet-alt)); }
+.choose input { width: 18px; height: 18px; accent-color: rgb(var(--lc)); margin: 0; }
+.choose.on { border-color: rgb(var(--lc)); background: rgb(var(--lc) / .14); }
+.note { width: 100%; min-height: 48px; margin-top: 10px; resize: vertical; border-radius: 10px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); color: rgb(var(--ink)); font-family: inherit; font-size: 13px; line-height: 1.4; padding: 8px 10px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgb(var(--sheet) / .96); border-top: 1px solid rgb(var(--rule)); backdrop-filter: blur(6px); }
+.bar-in { max-width: 1520px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bar .sum { font-size: 13px; color: rgb(var(--ink-2)); flex: 1; min-width: 300px; }
+.bar .sum b { color: rgb(var(--ink)); }
+.bar .copied { font-size: 13px; color: rgb(var(--accent)); font-weight: 600; }
+.xbtn { border-radius: 999px; border: 1px solid rgb(var(--rule)); padding: 9px 16px; font: 600 13.5px/1 inherit; background: rgb(var(--sheet)); color: rgb(var(--ink)); cursor: pointer; }
+.xbtn.p { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+
+/* ---- náhledové prvky (telefon mockup) ---- */
+.mk { border-radius: 12px; padding: 0; min-height: 0; }
+.pv { border: 1px solid rgb(var(--rule)); border-radius: 18px; background: rgb(var(--page)); overflow: hidden; display: flex; flex-direction: column; min-height: 248px; }
+.pv-top { padding: 10px 12px 8px; font-weight: 700; font-size: 13.5px; border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 8px; }
+.pv-top small { font-weight: 400; color: rgb(var(--ink-3)); font-size: 10.5px; margin-left: auto; }
+.pv-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+.pv-card { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 10px; padding: 8px 9px; font-size: 11.5px; line-height: 1.35; }
+.pv-card .k { color: rgb(var(--ink-2)); font-size: 10.5px; }
+.pv-card b { font-size: 12.5px; }
+.pv-card.hi { border-color: rgb(var(--accent)); background: rgb(var(--accent) / .08); }
+.pv-nav { display: flex; align-items: flex-end; border-top: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.pv-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; font-size: 9.5px; color: rgb(var(--ink-2)); text-align: center; }
+.pv-tab .ic { font-size: 15px; line-height: 1; }
+.pv-tab.on { color: rgb(var(--accent)); font-weight: 700; }
+.pv-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.pv-til { aspect-ratio: 1 / .92; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 9px; color: rgb(var(--ink-2)); }
+.pv-til .ic { font-size: 16px; }
+.pv-tl .row { display: grid; grid-template-columns: 16px 1fr; gap: 8px; font-size: 11px; align-items: start; }
+.pv-tl .dot { width: 9px; height: 9px; border-radius: 50%; margin: 3px auto 0; background: rgb(var(--rule)); }
+.pv-tl .dot.now { background: rgb(var(--lc)); box-shadow: 0 0 0 3px rgb(var(--lc) / .22); }
+.pv-tl .ln { width: 2px; background: rgb(var(--rule)); margin: 1px auto; height: 10px; }
+.pv-tl .c { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 8px; padding: 4px 7px; margin-bottom: 2px; }
+.pv-tl .c.now { border-color: rgb(var(--accent)); }
+
+/* ---- přidané pro Přehled (#1) ---- */
+.pv-strip { display: flex; align-items: center; gap: 8px; padding: 6px 2px; }
+.pv-strip .thm { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, rgb(var(--accent) / .55), rgb(var(--sheet-alt))); display: grid; place-items: center; flex-shrink: 0; color: rgb(var(--on-lc)); font-size: 15px; }
+.pv-strip b { font-size: 12px; display: block; line-height: 1.2; }
+.pv-strip .k { font-size: 10px; color: rgb(var(--ink-3)); }
+.pv-ph { border-radius: 10px; background: linear-gradient(135deg, rgb(var(--accent) / .45), rgb(var(--sheet-alt))); position: relative; padding: 8px 10px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 46px; }
+.pv-ph.big { min-height: 80px; }
+.pv-ph .pfx { position: absolute; top: 6px; left: 10px; font-size: 9px; color: rgb(var(--ink-2)); display: flex; align-items: center; gap: 4px; }
+.pv-ph .nm { font-weight: 800; font-size: 14px; color: rgb(var(--ink)); }
+.pv-band { border-radius: 10px; background: linear-gradient(120deg, rgb(var(--sheet-alt)), rgb(var(--accent) / .16)); padding: 12px 10px; }
+.pv-band .nm { font-weight: 800; font-size: 14px; display: block; }
+.pv-band .k { font-size: 10px; color: rgb(var(--ink-2)); }
+.pv-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pv-row { display: flex; align-items: center; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 8px; padding: 6px 9px; font-size: 11.5px; }
+.pv-row .tg { margin-left: auto; font-size: 10px; color: rgb(var(--on-lc)); background: rgb(var(--accent)); border-radius: 999px; padding: 0 7px; font-weight: 700; }
+.pv-btn { margin-top: 6px; background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-radius: 8px; text-align: center; padding: 6px; font-weight: 700; font-size: 11px; }
+.pv-ck { display: flex; align-items: center; gap: 7px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 8px; padding: 6px 9px; font-size: 11.5px; }
+.pv-ck svg { color: rgb(var(--accent)); width: 14px; height: 14px; }
+.pv-ck.done { color: rgb(var(--ink-3)); text-decoration: line-through; }
+.pv-ban { display: flex; gap: 7px; align-items: center; background: rgb(var(--accent) / .12); border: 1px solid rgb(var(--accent) / .4); border-radius: 8px; padding: 7px 9px; font-size: 11px; line-height: 1.3; }
+.pv-ban svg { color: rgb(var(--accent)); flex-shrink: 0; width: 14px; height: 14px; }
+.pv-note2 { font-size: 10px; color: rgb(var(--ink-3)); padding: 2px; }
+svg.lucide { width: 1em; height: 1em; stroke-width: 2; vertical-align: middle; display: inline-block; }
+.pv-tab .ic, .pv-til .ic, .pv-strip .thm, .pv-ph .pfx { display: inline-flex; }
+
+@media (max-width: 1100px) { .howto { grid-template-columns: 1fr; } .cols { grid-template-columns: 1fr !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="display">Kdy na chatu — Přehled (stav chaty teď)<span>Fáze 4 · návrh #1 · detail obrazovky · 2026-11-21</span></h1>
+    <div class="seg" id="seg-t"><button data-v="light" aria-pressed="true">Světlé</button><button data-v="dark" aria-pressed="false">Tmavé</button></div>
+  </header>
+
+  <section class="howto">
+    <div>
+      <h2 class="display">Jak vypadá první obrazovka: stav chaty teď.</h2>
+      <p>Role Přehledu je už rozhodnutá (návrh #0, volba <b>A „stav chaty teď"</b>): kdo je na chatě, co visí na mně, co dochází, kdy jedu. Tady se rozhoduje <b>detail</b> — jak moc je nahoře vidět konkrétní chata, co je na obrazovce a v jakém pořadí, jak vypadá „co visí na tobě", řetězec turnusu a první dojem při prázdnu.</p>
+      <p>U každého dílu vyber <b>A / B / C</b>. Konvence: <b>A</b> je nejjednodušší a zároveň moje doporučení.</p>
+      <div class="given"><b>Dané pravidly (nerozhoduje se tu):</b> sklo jen jako jemný akcent <i>(C4a)</i> · lehké pozadí v barvách lesa, fotka lesa jen na přihlášení/prázdnu <i>(C5a)</i> · jméno a <b>jedna</b> fotka chaty umírněně, hlavně na Přehledu <i>(H1a)</i> · každá obrazovka řeší 4 stavy, prázdno je pozvánka <i>(E1/E2)</i> · kontrast textu ≥ 4,5:1 <i>(G1)</i>. Ikony: <b>Lucide</b> (UI), ilustrace a hero: <b>Midjourney</b>.</p>
+      <nav class="toc" id="toc"></nav>
+    </div>
+    <ol>
+      <li>U každého dílu zaškrtni <b>„Tuhle chci"</b>. Můžeš zaškrtnout víc variant a do poznámky napsat, jak je spojit.</li>
+      <li>Díl, na kterém ti nezáleží, nech prázdný — postavím doporučenou <b>A</b>.</li>
+      <li>Volba se ukládá v prohlížeči, můžeš se vrátit. Nahoře přepínáš Světlé / Tmavé.</li>
+      <li>Nakonec dole <b>Zkopírovat volbu</b> a vlož mi ji do chatu (nebo <b>Stáhnout</b>).</li>
+    </ol>
+  </section>
+
+  <main id="sections"></main>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <div class="sum" id="sum"></div>
+  <span class="copied" id="copied"></span>
+  <button class="xbtn" id="copy">Zkopírovat volbu</button>
+  <button class="xbtn p" id="dl">Stáhnout volbu</button>
+</div></div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+(() => {
+const TITLE   = 'Kdy na chatu — návrh #1: Přehled (stav chaty teď)';
+const KEY     = 'kdynachatu.design.01-prehled';
+const DL_NAME = 'kdynachatu-01-prehled-volba.txt';
+
+const mk = (html) => `<div class="mk">${html}</div>`;
+/* náhledové pomůcky */
+const TAB = (ic, l, on) => `<div class="pv-tab ${on ? 'on' : ''}"><span class="ic">${ic}</span>${l}</div>`;
+const navOf = (tabs) => `<div class="pv-nav">${tabs.map(t => TAB(t[0], t[1], t[2])).join('')}</div>`;
+const phone = (top, body, nav) => `<div class="pv"><div class="pv-top">${top}<small>náhled</small></div><div class="pv-body">${body}</div>${nav || ''}</div>`;
+/* dolní navigace Přehledu (daná návrhem #0 / volbou A) */
+const dnav = () => navOf([['<i data-lucide="home"></i>','Přehled',true],['<i data-lucide="calendar-days"></i>','Kalendář',false],['<i data-lucide="key-round"></i>','Předávka',false],['<i data-lucide="shopping-cart"></i>','Zásoby',false],['<i data-lucide="more-horizontal"></i>','Víc',false]]);
+
+const SECS = [];
+const G = (name, p) => SECS.push({ group: name, p });
+const A = (s) => SECS.push(s);
+
+/* ---- ZDE OBSAH: sekce a varianty ---- */
+
+G('Přehled v detailu: „stav chaty teď"', 'Pět rozhodnutí, která z role obrazovky (návrh #0, volba A) udělají hotový layout. Všechna sedí pod pravidla A1 (klid) a E/G (stavy, přístupnost). Z toho pak vyjde první postavená obrazovka Fáze 5.');
+
+A({ id: 'hero', name: 'Hero chaty (osobnost H1a)', q: 'Jak moc je nahoře vidět konkrétní chata?', n: 3, v: [
+  { k: 'A', name: 'Kompaktní pruh', st: 'doporučeno',
+    r: () => phone('Přehled',
+      `<div class="pv-strip"><span class="thm"><i data-lucide="trees"></i></span><div><b>Chata Pod Lípou</b><span class="k">−3 °C · zataženo</span></div></div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>
+       <div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b></div>`,
+      dnav()),
+    idea: 'Tenký pruh nahoře: malá značka/ikona chaty + jméno + jeden řádek kontextu (počasí). Osobnost v detailu, ne přes půl obrazovky.',
+    plus: ['Klid a hodně vzduchu (A1) — stav je hned vidět', 'Jméno chaty jako kotva (H1a) bez ztráty místa', 'Rychlé i na 3G — žádná velká fotka (C5a)'],
+    minus: ['Míň „wow" než velká fotka'] },
+  { k: 'B', name: 'Velký fotohero', st: 'nejsilnější dojem',
+    r: () => phone('Přehled',
+      `<div class="pv-ph big"><span class="pfx"><i data-lucide="image"></i> fotka chaty · Midjourney</span><span class="nm">Chata Pod Lípou</span></div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>`,
+      dnav()),
+    idea: 'Fotka chaty přes celou šířku s jménem přes ni. „Dýchat tou chatou" naplno hned po otevření.',
+    plus: ['Nejsilnější první dojem a osobnost (H1a)', 'Emoce — „tohle je naše chata"'],
+    minus: ['Tahá velkou fotku na každé otevření — proti C5a (3G, kontrast)', 'Ubírá místo stavu, který je vlastní účel Přehledu (A1)', 'Text přes fotku ohlídat na kontrast (G1)'] },
+  { k: 'C', name: 'Bez fotky, barevný pruh', st: 'nejklidnější',
+    r: () => phone('Přehled',
+      `<div class="pv-band"><span class="nm">Chata Pod Lípou</span><span class="k">bez fotky · jen barvy lesa</span></div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>
+       <div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b></div>`,
+      dnav()),
+    idea: 'Jen jméno chaty na jemném gradientu v barvách lesa, žádná fotka.',
+    plus: ['Nejrychlejší a nejčistší', 'Nulové riziko kontrastu (G1)'],
+    minus: ['Nejmíň osobnosti — H1a slib „jedna fotka chaty" nevyužije'] },
+] });
+
+A({ id: 'layout', name: 'Co je na Přehledu a v jakém pořadí', q: 'Jak uspořádat stav, úkol, zásoby a příjezd?', n: 3, v: [
+  { k: 'A', name: 'Prioritní stack', st: 'doporučeno',
+    r: () => phone('Přehled',
+      `<div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b> z minulého pobytu</div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>
+       <div class="pv-card"><span class="k">dochází</span><br>Plyn · káva · toaleťák</div>
+       <div class="pv-card"><span class="k">další příjezd</span><br><b>Ty</b> · so 14.12</div>`,
+      dnav()),
+    idea: 'Svislý sloupec karet seřazený podle naléhavosti: co mám dořešit nahoře, pak stav, zásoby, příjezd.',
+    plus: ['To nejdůležitější pod palcem a první v očích (B1)', 'Jasná hierarchie, čte se shora dolů (A1)', 'Prázdné karty se skryjí — Přehled se nikdy netváří prázdně'],
+    minus: ['Když visí víc věcí, sloupec se prodlouží (chce limit + „zobrazit víc")'] },
+  { k: 'B', name: 'Mřížka 2×2', st: 'přehled naráz',
+    r: () => phone('Přehled',
+      `<div class="pv-grid2">
+         <div class="pv-card"><span class="k">na chatě</span><br><b>Novákovi</b></div>
+         <div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Předávka</b></div>
+         <div class="pv-card"><span class="k">dochází</span><br>Plyn · káva</div>
+         <div class="pv-card"><span class="k">příjezd</span><br><b>Ty</b> 14.12</div>
+       </div>`,
+      dnav()),
+    idea: 'Čtyři stejně velké dlaždice vedle sebe — čtyři otázky na jeden pohled.',
+    plus: ['Vše naráz bez scrollu', 'Symetrické, uklizené'],
+    minus: ['Nerozlišuje naléhavost — úkol vypadá stejně jako příjezd', 'Málo místa na text, dlouhé položky se ořežou', 'Jde proti „míň rozhodnutí na pohled" (A1)'] },
+  { k: 'C', name: 'Jedna velká + sbalené', st: 'maximální klid',
+    r: () => phone('Přehled',
+      `<div class="pv-card hi"><span class="k">stav teď</span><br><b>Chata je prázdná</b> · další: ty so 14.12</div>
+       <div class="pv-row">visí na tobě <span class="tg">1</span></div>
+       <div class="pv-row">dochází <span class="tg">3</span></div>`,
+      dnav()),
+    idea: 'Jedna velká karta „stav teď", zbytek jako sbalené řádky s počtem, rozbalí se klepnutím.',
+    plus: ['Nejklidnější, nejmíň na obrazovce (A1)', 'Dobré, když se zrovna nic neděje'],
+    minus: ['Úkol je schovaný za klepnutí — slabší „hned vím, co dořešit"', 'Víc kroků k akci (proti B1)'] },
+] });
+
+A({ id: 'ukol', name: '„Co visí na tobě"', q: 'Jak ukázat, co mám dořešit?', n: 3, v: [
+  { k: 'A', name: 'Akční karta s tlačítkem', st: 'doporučeno',
+    r: () => phone('Přehled',
+      `<div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b><br><span class="k">z pobytu Novákových</span>
+         <div class="pv-btn">Dopsat předávku</div></div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>`,
+      dnav()),
+    idea: 'Jedna zvýrazněná karta s konkrétní akcí a tlačítkem, které vede rovnou do úkolu. Max 1–2 věci, zbytek „zobrazit víc".',
+    plus: ['Jedna jasná další akce (A3) — appka ví, co po mně chce', 'Tlačítko = jeden klik k vyřešení (B1)', 'Aktivní hlas, jeden název akce skrz tok (F2)'],
+    minus: ['Při víc úkolech potřebuje pravidlo, co ukázat první'] },
+  { k: 'B', name: 'Checklist úkolů', st: 'víc věcí naráz',
+    r: () => phone('Přehled',
+      `<div class="pv-card"><span class="k">co visí na tobě</span></div>
+       <div class="pv-ck"><i data-lucide="square"></i> Dopiš předávku</div>
+       <div class="pv-ck"><i data-lucide="square"></i> Doplň plyn do zásob</div>
+       <div class="pv-ck done"><i data-lucide="check-square"></i> Zabrat termín</div>`,
+      dnav()),
+    idea: 'Seznam všeho, co na mně visí, s odškrtáváním rovnou z Přehledu.',
+    plus: ['Vidím všechno naráz', 'Odškrtnutí je uspokojivé (optimistická akce, D3)'],
+    minus: ['Snadno se přeplní a začne stresovat (proti A1 klid)', 'Odškrtnutí často vede jinam (dopsat předávku není „odškrtni")'] },
+  { k: 'C', name: 'Banner / nudge pruh', st: 'nenápadné',
+    r: () => phone('Přehled',
+      `<div class="pv-ban"><i data-lucide="bell"></i> Nezapomeň dopsat předávku z minulého pobytu.</div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>
+       <div class="pv-card"><span class="k">další příjezd</span><br><b>Ty</b> · so 14.12</div>`,
+      dnav()),
+    idea: 'Tenký upozorňovací pruh nad kartami, splývá s nudge systémem (E1).',
+    plus: ['Nenápadné, nekrade místo stavu', 'Sedí k existujícím nudge upozorněním'],
+    minus: ['Bannery se přehlíží („banner blindness")', 'Bez tlačítka — slabší vedení k akci (B1)'] },
+] });
+
+A({ id: 'retez', name: 'Řetězec turnusu na Přehledu', q: 'Má Přehled ukazovat, kdo byl přede mnou a kdo po mně?', n: 3, v: [
+  { k: 'A', name: 'Textový řádek teď → pak', st: 'doporučeno',
+    r: () => phone('Přehled',
+      `<div class="pv-card"><span class="k">řetězec</span><br><b>Teď:</b> Novákovi → <b>pak:</b> ty (so 14.12)</div>
+       <div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>
+       <div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b></div>`,
+      dnav()),
+    idea: 'Jeden řádek „teď kdo → pak kdo". Naznačí rotaci, ale nerozmělní Přehled.',
+    plus: ['Kontext rotace jednou větou (A2)', 'Klidné — žádný velký prvek navíc (A1)', 'Napojí předávku ↔ příjezd beze slov'],
+    minus: ['Neukáže celý řetězec dozadu/dopředu (to je práce Kalendáře)'] },
+  { k: 'B', name: 'Mini časová osa', st: 'nejnázornější',
+    r: () => phone('Přehled',
+      `<div class="pv-tl">
+         <div class="row"><div><div class="dot"></div><div class="ln"></div></div><div class="c">Novákovi · do 8.12</div></div>
+         <div class="row"><div><div class="dot now"></div><div class="ln"></div></div><div class="c now"><b>Teď prázdno</b> · chata čeká</div></div>
+         <div class="row"><div><div class="dot"></div></div><div class="c">Ty · 14.12</div></div>
+       </div>`,
+      dnav()),
+    idea: 'Svislá osa předchozí → teď → já, převzatá z varianty časové osy (návrh #0, C).',
+    plus: ['Nejlíp vysvětlí „kdo přede mnou a po mně" (A2)', 'Silná osobnost cyklu'],
+    minus: ['Zabere víc místa než stav, který je hlavní účel Přehledu', 'Riziko dvojí pravdy s Kalendářem (co kde patří)'] },
+  { k: 'C', name: 'Vynechat na Přehledu', st: 'nejklidnější',
+    r: () => phone('Přehled',
+      `<div class="pv-card"><span class="k">na chatě teď</span><br><b>Novákovi</b> · do ne 8.12</div>
+       <div class="pv-card hi"><span class="k">visí na tobě</span><br><b>Dopiš předávku</b></div>
+       <div class="pv-card"><span class="k">další příjezd</span><br><b>Ty</b> · so 14.12</div>
+       <div class="pv-note2">Řetězec „kdo přede mnou / po mně" žije v Kalendáři, Přehled zůstává klidný.</div>`,
+      dnav()),
+    idea: '„Teď" a „další příjezd" stačí; celý řetězec nechat Kalendáři (ten je od toho).',
+    plus: ['Nejmíň prvků, jedna pravda na jednom místě (A1)', 'Žádné překrytí s Kalendářem'],
+    minus: ['Pocit rotace je slabší — řetězec je jedna z emocí Fáze 1'] },
+] });
+
+A({ id: 'prazdno', name: 'První dojem / prázdný stav (X2, E2)', q: 'Co vidím, když se zrovna nic neděje nebo je chata nová?', n: 3, v: [
+  { k: 'A', name: 'Pozvánka + ilustrace', st: 'doporučeno',
+    r: () => phone('Přehled',
+      `<div class="pv-ph big"><span class="pfx"><i data-lucide="image"></i> ilustrace · Midjourney</span></div>
+       <div class="pv-card" style="text-align:center"><b>Chata zatím čeká</b><br><span class="k">Zaber první termín a rozjeď to.</span>
+         <div class="pv-btn">Zabrat termín</div></div>`,
+      dnav()),
+    idea: 'Prázdno jako pozvánka: jemná ilustrace lesa/chaty + jedna lidská věta + jedno tlačítko (E2). Tady je fotka/ilustrace v souladu s C5a.',
+    plus: ['Nikdy prázdná bílá (E1), prázdno zve k akci (E2)', 'Tady ilustrace patří — C5a ji povoluje na prázdnu', 'První dojem (X2) — appka vypadá hotově, ne jako prototyp'],
+    minus: ['Ilustraci je potřeba vyrobit (Midjourney) — malý jednorázový náklad'] },
+  { k: 'B', name: 'Co appka umí', st: 'naučí',
+    r: () => phone('Přehled',
+      `<div class="pv-card"><span class="k">vítej · co tady zvládneš</span></div>
+       <div class="pv-ck"><i data-lucide="calendar-days"></i> Zabereš si termín</div>
+       <div class="pv-ck"><i data-lucide="key-round"></i> Předáš chatu dál</div>
+       <div class="pv-ck"><i data-lucide="shopping-cart"></i> Zapíšeš, co dochází</div>`,
+      dnav()),
+    idea: 'Prázdno jako mini onboarding: tři věci, co appka umí, s ikonou.',
+    plus: ['Naučí nového uživatele', 'Konkrétní, akční'],
+    minus: ['Spíš návod než pozvánka — po pár dnech zbytečné', 'Víc textu, míň emoce než ilustrace'] },
+  { k: 'C', name: 'Minimal', st: 'nejstřízlivější',
+    r: () => phone('Přehled',
+      `<div class="pv-card" style="text-align:center;margin-top:34px"><b>Nic nevisí</b><br><span class="k">Chata je v klidu.</span>
+         <div class="pv-btn">Zabrat termín</div></div>`,
+      dnav()),
+    idea: 'Jen krátká věta a jedno tlačítko, žádná grafika.',
+    plus: ['Nejrychlejší, nic se nevyrábí', 'Čisté'],
+    minus: ['Slabší první dojem (X2) — může působit „nehotově"', 'Nevyužije osobnost chaty'] },
+] });
+
+/* ---- /ZDE OBSAH ---- */
+
+const ATOMS = SECS.filter((s) => s.id);
+let state = { pick: {}, note: {} };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* prázdné */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* bez úložiště */ } };
+const picks = (id) => (state.pick[id] || []).slice().sort();
+const drawIcons = () => { if (window.lucide) window.lucide.createIcons(); };
+
+function renderSec(sec) {
+  const chosen = picks(sec.id);
+  const el = document.getElementById('s-' + sec.id);
+  el.innerHTML = `
+    <div class="sec-h"><h2 class="display">${sec.name}</h2><span class="q">${sec.q}</span><span class="picked">${chosen.length ? `Vybráno: <b>${chosen.join(' + ')}</b>` : 'Zatím nevybráno'}</span></div>
+    <div class="cols" style="--n:${sec.n}">${sec.v.map((v) => { const on = chosen.includes(v.k); return `
+      <div class="col ${on ? 'on' : ''}">
+        <div class="col-h"><span class="lt">${on ? '✓' : v.k}</span><span class="nm">${v.name}<span class="st">${v.st}</span></span></div>
+        ${v.r()}
+        <div class="meta-c">
+          <p class="idea">${v.idea}</p>
+          ${v.plus.length ? `<div><span class="lab2">Proč ano</span><ul>${v.plus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          ${v.minus.length ? `<div><span class="lab2">Proč ne</span><ul>${v.minus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          <label class="choose ${on ? 'on' : ''}"><input type="checkbox" data-pick="${sec.id}" data-v="${v.k}" ${on ? 'checked' : ''}> Tuhle chci</label>
+        </div>
+      </div>`; }).join('')}</div>
+    <textarea class="note" data-note="${sec.id}" placeholder="Poznámka (nepovinné), např. „A, ale s řádkem řetězce z retez-A"">${state.note[sec.id] || ''}</textarea>`;
+}
+function renderToc() {
+  document.getElementById('toc').innerHTML = ATOMS.map((s) => { const p = picks(s.id); return `<a href="#s-${s.id}" class="${p.length ? 'done' : ''}">${s.name}${p.length ? ' · ' + p.join('+') : ''}</a>`; }).join('');
+}
+function renderSum() {
+  const done = ATOMS.filter((s) => picks(s.id).length);
+  document.getElementById('sum').innerHTML = `Vybráno <b>${done.length} z ${ATOMS.length}</b> dílů${done.length ? ' · ' + done.map((s) => `${s.name} <b>${picks(s.id).join('+')}</b>`).join(', ') : ' — u každého dílu zaškrtni „Tuhle chci"'}`;
+}
+function summaryText() {
+  const line = (s) => {
+    const p = picks(s.id);
+    const names = p.map((k) => `${k} — ${s.v.find((x) => x.k === k).name}`).join(' + ');
+    return `${s.name}: ${p.length ? names : 'nevybráno (postavím A)'}${state.note[s.id] ? `\n   poznámka: ${state.note[s.id].trim()}` : ''}`;
+  };
+  return `${TITLE} — volba dílů (${new Date().toLocaleString('cs-CZ')})\n\n${ATOMS.map(line).join('\n')}\n`;
+}
+
+document.getElementById('sections').innerHTML = SECS.map((s) => s.group
+  ? `<div class="group-h"><h2 class="display">${s.group}</h2><p>${s.p}</p></div>`
+  : `<section class="sec" id="s-${s.id}"></section>`).join('');
+ATOMS.forEach(renderSec); renderToc(); renderSum(); drawIcons();
+
+document.addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-pick]');
+  if (!cb) return;
+  const id = cb.dataset.pick;
+  const set = new Set(state.pick[id] || []);
+  if (cb.checked) set.add(cb.dataset.v); else set.delete(cb.dataset.v);
+  if (set.size) state.pick[id] = [...set]; else delete state.pick[id];
+  save(); renderSec(ATOMS.find((s) => s.id === id)); renderToc(); renderSum(); drawIcons();
+});
+document.addEventListener('input', (e) => {
+  const t = e.target.closest('[data-note]');
+  if (!t) return;
+  state.note[t.dataset.note] = t.value; save();
+});
+document.querySelectorAll('#seg-t button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#seg-t button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.documentElement.dataset.theme = b.dataset.v;
+}));
+const flash = (t) => { const c = document.getElementById('copied'); c.textContent = t; setTimeout(() => { c.textContent = ''; }, 2500); };
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(summaryText()); flash('Zkopírováno — vlož mi to do chatu.'); }
+  catch { flash('Kopírování nejde — použij Stáhnout.'); }
+});
+document.getElementById('dl').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([summaryText()], { type: 'text/plain;charset=utf-8' }));
+  a.download = DL_NAME;
+  a.click();
+  flash('Uloženo do Stažených — napiš mi, že je hotovo.');
+});
+})();
+</script>
+</body>
+</html>

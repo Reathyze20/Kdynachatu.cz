@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="cs" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kdy na chatu — návrh #3: Příjezdová karta (přivítání)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: 244 247 245; --sheet: 255 253 250; --sheet-alt: 233 244 239; --rule: 223 228 223; --rule-soft: 233 237 232;
+  --ink: 30 41 59; --ink-2: 75 85 99; --ink-3: 148 155 163; --accent: 63 123 99;
+  --lc: 4 120 87; --on-lc: 255 255 255; --card-alpha: 1;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: 15 20 17; --sheet: 26 32 28; --sheet-alt: 31 41 35; --rule: 52 62 54; --rule-soft: 37 46 40;
+  --ink: 230 234 229; --ink-2: 150 160 150; --ink-3: 102 112 103; --accent: 94 186 134; --card-alpha: .88;
+  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background:
+    radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%),
+    linear-gradient(180deg, rgb(var(--page)), rgb(var(--page))); min-height: 100%; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); }
+.wrap { max-width: 1520px; margin: 0 auto; padding: 22px 28px 120px; }
+.display { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; letter-spacing: -.02em; }
+.top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.top h1 { margin: 0; font-size: 29px; font-weight: 800; letter-spacing: -.02em; }
+.top h1 span { font-size: 16px; font-weight: 400; color: rgb(var(--ink-2)); margin-left: 8px; }
+.seg { margin-left: auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.seg button { border: 0; background: none; color: rgb(var(--ink-2)); font: 500 13px/1 inherit; padding: 7px 13px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: rgb(var(--ink)); color: rgb(var(--page)); }
+.howto { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 16px; padding: 20px 24px; box-shadow: var(--lift); }
+.howto h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.08; }
+.howto p { margin: 0 0 8px; font-size: 14px; }
+.howto ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.howto li { margin-bottom: 6px; }
+.given { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgb(var(--sheet-alt)); border: 1px solid rgb(var(--rule-soft)); font-size: 12.5px; line-height: 1.5; }
+.given b { color: rgb(var(--ink)); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.toc a { font-size: 12.5px; text-decoration: none; color: rgb(var(--ink)); border: 1px solid rgb(var(--rule)); border-radius: 999px; padding: 3px 10px; background: rgb(var(--sheet)); }
+.toc a.done { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+.group-h { margin: 46px 2px 0; padding-top: 18px; border-top: 2px solid rgb(var(--ink)); }
+.group-h h2 { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.group-h p { margin: 6px 0 0; font-size: 14.5px; color: rgb(var(--ink-2)); max-width: 70em; }
+.sec { margin: 32px 0 0; scroll-margin-top: 16px; }
+.sec-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 2px 10px; }
+.sec-h h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+.sec-h .q { font-size: 14px; color: rgb(var(--ink-2)); }
+.sec-h .picked { margin-left: auto; font-size: 13px; color: rgb(var(--ink-2)); }
+.sec-h .picked b { color: rgb(var(--ink)); }
+.cols { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 14px; }
+.col { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: var(--lift); }
+.col.on { border-color: rgb(var(--lc)); box-shadow: 0 0 0 2px rgb(var(--lc)); }
+.col-h { display: flex; align-items: center; gap: 9px; }
+.col-h .lt { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgb(var(--sheet-alt)); font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 15px; flex-shrink: 0; }
+.col.on .col-h .lt { background: rgb(var(--lc)); color: rgb(var(--on-lc)); }
+.col-h .nm { font-size: 14px; font-weight: 600; line-height: 1.2; }
+.col-h .st { display: block; font-size: 11.5px; color: rgb(var(--ink-2)); font-weight: 400; }
+.col .idea { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.col .lab2 { font-size: 11.5px; color: rgb(var(--ink-2)); display: block; margin-bottom: 2px; }
+.col ul { margin: 0 0 4px; padding-left: 16px; font-size: 12.5px; line-height: 1.45; }
+.col .meta-c { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.col .meta-c .choose { margin-top: auto; }
+.choose { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid rgb(var(--rule)); cursor: pointer; font-weight: 600; font-size: 14px; background: rgb(var(--sheet-alt)); }
+.choose input { width: 18px; height: 18px; accent-color: rgb(var(--lc)); margin: 0; }
+.choose.on { border-color: rgb(var(--lc)); background: rgb(var(--lc) / .14); }
+.note { width: 100%; min-height: 48px; margin-top: 10px; resize: vertical; border-radius: 10px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); color: rgb(var(--ink)); font-family: inherit; font-size: 13px; line-height: 1.4; padding: 8px 10px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgb(var(--sheet) / .96); border-top: 1px solid rgb(var(--rule)); backdrop-filter: blur(6px); }
+.bar-in { max-width: 1520px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bar .sum { font-size: 13px; color: rgb(var(--ink-2)); flex: 1; min-width: 300px; }
+.bar .sum b { color: rgb(var(--ink)); }
+.bar .copied { font-size: 13px; color: rgb(var(--accent)); font-weight: 600; }
+.xbtn { border-radius: 999px; border: 1px solid rgb(var(--rule)); padding: 9px 16px; font: 600 13.5px/1 inherit; background: rgb(var(--sheet)); color: rgb(var(--ink)); cursor: pointer; }
+.xbtn.p { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+
+/* ---- rámečky: mobil + desktop ---- */
+.frames { display: flex; flex-direction: column; gap: 12px; }
+.frl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: rgb(var(--ink-3)); font-weight: 700; display: block; margin-bottom: 4px; }
+
+/* ---- telefon ---- */
+.pv { border: 1px solid rgb(var(--rule)); border-radius: 18px; background: rgb(var(--page)); overflow: hidden; display: flex; flex-direction: column; min-height: 240px; max-width: 230px; margin: 0 auto; }
+.pv-top { padding: 10px 12px 8px; font-weight: 700; font-size: 13.5px; border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 8px; }
+.pv-top small { font-weight: 400; color: rgb(var(--ink-3)); font-size: 10.5px; margin-left: auto; }
+.pv-body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+.pv-nav { display: flex; align-items: flex-end; border-top: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.pv-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; font-size: 9px; color: rgb(var(--ink-2)); text-align: center; }
+.pv-tab .ic { font-size: 14px; line-height: 1; display: inline-flex; }
+.pv-tab.on { color: rgb(var(--accent)); font-weight: 700; }
+
+/* ---- karty a prvky ---- */
+.pv-card { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 10px; padding: 8px 9px; font-size: 11.5px; line-height: 1.35; }
+.pv-card .k { color: rgb(var(--ink-2)); font-size: 10.5px; }
+.pv-card b { font-size: 12.5px; }
+.pv-card.hi { border-color: rgb(var(--accent)); background: rgb(var(--accent) / .08); }
+.pv-btn { background: rgb(var(--sheet)); border: 1px solid rgb(var(--accent)); color: rgb(var(--accent)); border-radius: 8px; text-align: center; padding: 6px; font-weight: 700; font-size: 10.5px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.pv-btn svg { width: 13px; height: 13px; }
+.pv-note2 { font-size: 9.5px; color: rgb(var(--ink-3)); padding: 2px; line-height: 1.35; }
+.pv-primary { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-radius: 9px; text-align: center; padding: 8px; font-weight: 700; font-size: 11.5px; }
+.pv-seg { display: flex; gap: 3px; }
+.pv-seg span { flex: 1; text-align: center; font-size: 9px; padding: 4px 2px; border: 1px solid rgb(var(--rule)); border-radius: 6px; background: rgb(var(--sheet)); }
+.pv-seg span.on { background: rgb(var(--accent) / .14); border-color: rgb(var(--accent)); color: rgb(var(--accent)); font-weight: 700; }
+.pv-ck { display: flex; align-items: center; gap: 7px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 8px; padding: 7px 9px; font-size: 10.5px; }
+.pv-ck svg { color: rgb(var(--accent)); width: 14px; height: 14px; flex-shrink: 0; }
+.pv-prev { background: rgb(var(--accent) / .07); border: 1px dashed rgb(var(--accent) / .5); border-radius: 8px; padding: 8px 9px; font-size: 10px; line-height: 1.45; }
+.pv-prev .k { font-size: 8.5px; color: rgb(var(--accent)); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
+/* ---- specifické pro příjezd ---- */
+.pv-welcome { background: linear-gradient(135deg, rgb(var(--accent) / .20), rgb(var(--sheet-alt))); border: 1px solid rgb(var(--rule-soft)); border-radius: 10px; padding: 10px; }
+.pv-welcome b { font-size: 13px; display: block; }
+.pv-welcome .sub { font-size: 10px; color: rgb(var(--ink-2)); }
+.pv-quote { border-left: 3px solid rgb(var(--accent)); padding: 3px 0 3px 9px; font-style: italic; font-size: 10.5px; line-height: 1.4; color: rgb(var(--ink)); }
+.pv-quote .qa { display: block; font-style: normal; font-size: 9px; color: rgb(var(--ink-3)); margin-top: 2px; }
+
+/* ---- desktop rám (zamčený: sidebar + čitelná šířka) ---- */
+.dv { border: 1px solid rgb(var(--rule)); border-radius: 12px; overflow: hidden; background: rgb(var(--page)); display: flex; flex-direction: column; box-shadow: var(--lift); }
+.dv-chrome { height: 16px; background: rgb(var(--sheet)); border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 4px; padding: 0 8px; flex-shrink: 0; }
+.dv-chrome i { width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--rule)); display: inline-block; }
+.dv-wrap { flex: 1; display: grid; min-height: 0; grid-template-columns: 92px 1fr; }
+.dv-side { border-right: 1px solid rgb(var(--rule-soft)); background: rgb(var(--sheet)); padding: 7px 5px; display: flex; flex-direction: column; gap: 2px; }
+.dv-brand { font-weight: 800; font-size: 9.5px; padding: 2px 4px 7px; display: flex; align-items: center; gap: 4px; }
+.dv-ni { display: flex; align-items: center; gap: 5px; font-size: 9px; padding: 4px 5px; border-radius: 6px; color: rgb(var(--ink-2)); white-space: nowrap; }
+.dv-ni.on { background: rgb(var(--accent) / .14); color: rgb(var(--accent)); font-weight: 700; }
+.dv-ni svg { width: 11px; height: 11px; flex-shrink: 0; }
+.dv-main { padding: 10px; overflow: hidden; min-width: 0; }
+.dv-main.calm { background: radial-gradient(360px 150px at 50% -24%, rgb(var(--sheet-alt)), transparent 72%); }
+.dv-cap { max-width: var(--cap, 80%); margin: 0 auto; display: flex; flex-direction: column; gap: 7px; }
+.dv-formh { font-weight: 800; font-size: 11px; margin-bottom: 2px; }
+.dv-cols { display: grid; gap: 8px; }
+.dv-cols.c2 { grid-template-columns: 1.4fr 1fr; }
+.dv-colstack { display: flex; flex-direction: column; gap: 7px; }
+svg.lucide { width: 1em; height: 1em; stroke-width: 2; vertical-align: middle; display: inline-block; }
+
+@media (max-width: 1100px) { .howto { grid-template-columns: 1fr; } .cols { grid-template-columns: 1fr !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="display">Kdy na chatu — Příjezdová karta (přivítání)<span>Fáze 4 · návrh #3 · druhý konec klínu · 2026-11-21</span></h1>
+    <div class="seg" id="seg-t"><button data-v="light" aria-pressed="true">Světlé</button><button data-v="dark" aria-pressed="false">Tmavé</button></div>
+  </header>
+
+  <section class="howto">
+    <div>
+      <h2 class="display">Druhý konec: co čtu, když přijíždím.</h2>
+      <p>Příjezdová karta je <b>zrcadlo Předávky</b>. Z toho, co předchozí při odjezdu zapsal, poskládá <b>přivítání</b>: v jakém stavu chatu najdeš, co dochází a vzkaz pro tebe. Dnes to dělá „arrival briefing" na dashboardu (čte poslední <code>checkoutState</code>) — redesign z toho udělá klidnou, lidskou kartu.</p>
+      <p>Ukazuje tatáž pole jako Předávka, jen <b>read-only</b>: plyn · topení · voda · rozbité · co předchozí nechal · vzkaz. „Co dochází" se propojí se Zásobami. (Praktická orientace typu wifi/jak zatopit je návod na techniku — spíš V2.)</p>
+      <p>U každého dílu vidíš <b>mobil i desktop</b> a vybíráš <b>A / B / C</b> (A = nejjednodušší + doporučení).</p>
+      <div class="given"><b>Dané (nerozhoduje se tu):</b> karta žije hlavně na Přehledu (#0/#1) a je to kanonické „od minule", které přebírá i tab Předávka · drží fakta z předávky, nic si nevymýšlí · čtyři stavy vč. „první pobyt, žádná předávka" (E1) · kontrast ≥ 4,5:1 (G1). Ikony Lucide, <b>bez emoji</b>.</div>
+      <nav class="toc" id="toc"></nav>
+    </div>
+    <ol>
+      <li>U každého dílu zaškrtni <b>„Tuhle chci"</b>. Můžeš zaškrtnout víc variant a do poznámky napsat, jak je spojit.</li>
+      <li>Díl, na kterém ti nezáleží, nech prázdný — postavím doporučenou <b>A</b>.</li>
+      <li>Volba se ukládá v prohlížeči, můžeš se vrátit. Nahoře přepínáš Světlé / Tmavé.</li>
+      <li>Nakonec dole <b>Zkopírovat volbu</b> a vlož mi ji do chatu (nebo <b>Stáhnout</b>).</li>
+    </ol>
+  </section>
+
+  <main id="sections"></main>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <div class="sum" id="sum"></div>
+  <span class="copied" id="copied"></span>
+  <button class="xbtn" id="copy">Zkopírovat volbu</button>
+  <button class="xbtn p" id="dl">Stáhnout volbu</button>
+</div></div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+(() => {
+const TITLE   = 'Kdy na chatu — návrh #3: Příjezdová karta (přivítání)';
+const KEY     = 'kdynachatu.design.03-prijezd';
+const DL_NAME = 'kdynachatu-03-prijezd-volba.txt';
+
+/* ---- pomůcky: telefon + desktop ---- */
+const TAB = (ic, l, on) => `<div class="pv-tab ${on ? 'on' : ''}"><span class="ic">${ic}</span>${l}</div>`;
+const NAVDEF = [['home','Přehled',true],['calendar-days','Kalendář',false],['key-round','Předávka',false],['shopping-cart','Zásoby',false],['more-horizontal','Víc',false]];
+const dnav = () => `<div class="pv-nav">${NAVDEF.map(t => TAB(`<i data-lucide="${t[0]}"></i>`, t[1], t[2])).join('')}</div>`;
+const phone = (top, body) => `<div class="pv"><div class="pv-top">${top}<small>náhled</small></div><div class="pv-body">${body}</div>${dnav()}</div>`;
+const SIDE = () => `<nav class="dv-side"><div class="dv-brand"><i data-lucide="trees"></i>Lípou</div>${NAVDEF.map(([i,l,on]) => `<div class="dv-ni ${on ? 'on' : ''}"><i data-lucide="${i}"></i>${l}</div>`).join('')}</nav>`;
+const deskMini = (body, title) => `<div class="dv"><div class="dv-chrome"><i></i><i></i><i></i></div><div class="dv-wrap">${SIDE()}<div class="dv-main calm"><div class="dv-cap">${title ? `<div class="dv-formh">${title}</div>` : ''}${body}</div></div></div></div>`;
+const dual = (top, body, opts = {}) => `<div class="frames"><div class="fr"><span class="frl">Mobil</span>${phone(top, body)}</div><div class="fr"><span class="frl">Desktop</span>${opts.desk || deskMini(body, 'Přehled · Pod Lípou')}</div></div>`;
+
+/* ---- stavební díly (zrcadlo předávky, read-only) ---- */
+const WELCOME = `<div class="pv-welcome"><b>Vítej zpátky na chatě</b><span class="sub">Pod Lípou · tvůj pobyt 14.–20.12</span></div>`;
+const FROM = `<div class="pv-prev"><span class="k">Od minule · Novákovi</span><div class="pv-seg" style="margin-top:4px"><span>Plný</span><span class="on">Půl</span><span>Dochází</span><span>Prázdný</span></div><div style="margin-top:4px">Topení vyp · voda otevřená · <b>kape kohoutek v koupelně</b></div></div>`;
+const QUOTE = `<div class="pv-quote">„Užijte si to! Dřevo je u kamen, kafe ve skříňce."<span class="qa">— Jana Nováková</span></div>`;
+const LOW = `<div class="pv-card"><span class="k">dochází</span><br>Plyn · kafe · toaleťák<div class="pv-btn" style="margin-top:5px"><i data-lucide="shopping-cart"></i> Mrknout do Zásob</div></div>`;
+const CTA = `<div class="pv-primary">Potvrdit příjezd</div>`;
+
+const SECS = [];
+const G = (name, p) => SECS.push({ group: name, p });
+const A = (s) => SECS.push(s);
+
+/* ---- ZDE OBSAH: sekce a varianty ---- */
+
+G('Příjezdová karta: „přivítání"', 'Pět rozhodnutí, jak vypadá uvítání při příjezdu. Čte se z poslední předávky (zrcadlo #2) a drží pár D1→B1 — předávka na jedné straně, přivítání na druhé.');
+
+A({ id: 'kde', name: 'Kde a kdy se objeví', q: 'Kdy přivítání uvidím?', n: 3, v: [
+  { k: 'A', name: 'Hero na Přehledu', st: 'doporučeno',
+    r: () => dual('Přehled', `${WELCOME}${FROM}${LOW}`,
+      { desk: `<div class="dv"><div class="dv-chrome"><i></i><i></i><i></i></div><div class="dv-wrap">${SIDE()}<div class="dv-main calm"><div class="dv-formh">Přehled · Pod Lípou</div>${WELCOME}<div class="dv-cols c2" style="margin-top:7px"><div class="dv-colstack">${FROM}${QUOTE}</div><div class="dv-colstack">${LOW}</div></div></div></div></div>` }),
+    idea: 'V den a den před příjezdem je přivítání hero kartou nahoře na Přehledu, pak se stáhne. Žádná nová obrazovka.',
+    plus: ['Objeví se přesně včas, pak nepřekáží (A1)', 'Nultý klik — vidím ho hned po otevření', 'Sedí na „Přehled = stav chaty teď" (#1)'],
+    minus: ['Musí mít jasné pravidlo, kdy se zobrazí a kdy zmizí'] },
+  { k: 'B', name: 'Samostatná uvítací obrazovka', st: 'obřadnější',
+    r: () => dual('Příjezd', `${WELCOME}${FROM}${QUOTE}${CTA}`),
+    idea: 'Při prvním otevření v den příjezdu se ukáže celá uvítací obrazovka, odbavíš ji a jdeš dál.',
+    plus: ['Silný moment „jsi tady", nejvíc emoce', 'Nic nepřehlédneš'],
+    minus: ['Takeover obrazovka otravuje, když ji vidím podruhé', 'Víc práce (vlastní route + stav „viděno")'] },
+  { k: 'C', name: 'Řádek + detail na proklik', st: 'nenápadné',
+    r: () => dual('Přehled', `<div class="pv-card hi"><span class="k">vítej</span><br><b>Stav od minule</b> — mrkni, co tě čeká<div class="pv-btn" style="margin-top:5px"><i data-lucide="chevron-right"></i> Otevřít přivítání</div></div><div class="pv-card"><span class="k">na chatě teď</span><br>Prázdno · jedeš ty</div>`),
+    idea: 'Na Přehledu je jen řádek „stav od minule", detail se otevře klepnutím.',
+    plus: ['Nejklidnější Přehled', 'Detail na vyžádání'],
+    minus: ['Přivítání schované za klik — přehlédne se', 'Oslabí nejhezčí moment appky'] },
+] });
+
+A({ id: 'obsah', name: 'Co karta ukazuje', q: 'Kolik informací na přivítání patří?', n: 3, v: [
+  { k: 'A', name: 'Stav + vzkaz + co dochází', st: 'doporučeno',
+    r: () => dual('Přehled', `${WELCOME}${QUOTE}${FROM}${LOW}`),
+    idea: 'Vítej → vzkaz → stav od minule → co dochází (s odkazem do Zásob). Tři věci, které po příjezdu reálně řeším.',
+    plus: ['Pokryje „v jakém stavu to je a co hned řešit"', 'Napojí příjezd na Zásoby (klín C1)', 'Nic zbytečného navíc'],
+    minus: ['Při plné předávce delší karta — ohlídat hierarchii'] },
+  { k: 'B', name: 'Jen vzkaz + stav', st: 'minimal',
+    r: () => dual('Přehled', `${WELCOME}${QUOTE}${FROM}`),
+    idea: 'Jen to nejlidštější: vzkaz a stav od minule. „Co dochází" žije v Zásobách.',
+    plus: ['Nejklidnější, rychle přečtu', 'Žádné rozhodnutí navíc'],
+    minus: ['„Co dochází" je po příjezdu důležité — škoda ho vynechat', 'Míň akční'] },
+  { k: 'C', name: 'Plný briefing', st: 'odvážné (část V2)',
+    r: () => dual('Přehled', `${WELCOME}${QUOTE}${FROM}${LOW}<div class="pv-card"><span class="k">orientace</span><br>Wifi heslo · jak zatopit · kde jsou klíče<span style="font-size:9px;color:rgb(var(--ink-3))"> · V2</span></div>`),
+    idea: 'Ke stavu přidá praktickou orientaci (wifi, jak zatopit, klíče).',
+    plus: ['Nejužitečnější pro hosta / poprvé na chatě', 'Vše na jednom místě'],
+    minus: ['Orientace = návody na techniku (M1/M2), nová oblast → V2', 'Dlouhé, ubírá klid přivítání'] },
+] });
+
+A({ id: 'stav', name: 'Jak ukazuje „stav od minule"', q: 'Jakou formou podat, co předchozí nechal?', n: 3, v: [
+  { k: 'A', name: 'Zrcadlo předávky (read-only)', st: 'doporučeno',
+    r: () => dual('Přehled', `${WELCOME}${FROM}`),
+    idea: 'Stejný vizuální jazyk jako Předávka (segmenty plynu, stav topení/vody), jen nejde editovat.',
+    plus: ['Konzistence — co zapíšu v Předávce, přečtu stejně v příjezdu', 'Rychlé, strukturované, srovnatelné pobyt od pobytu', 'Nulové učení navíc'],
+    minus: ['Působí „datově" — vzkaz (díl 4) to musí zlidštit'] },
+  { k: 'B', name: 'Vyprávěcí věta', st: 'lidské',
+    r: () => dual('Přehled', `${WELCOME}<div class="pv-prev"><span class="k">Od minule · Novákovi</span><br>Nechali plyn na půl a topení vypnuté, voda zůstala otevřená. Pozor, kape kohoutek v koupelně.</div>`),
+    idea: 'Appka z polí složí jednu lidskou větu.',
+    plus: ['Nejpřívětivější tón', 'Čte se jako vzkaz, ne formulář'],
+    minus: ['Hůř se skenuje očima, horší pobyt-od-pobytu srovnání', 'Generovaná věta může znít kostrbatě'] },
+  { k: 'C', name: 'Zkontroluj při příjezdu', st: 'akční',
+    r: () => dual('Přehled', `${WELCOME}<div class="pv-ck"><i data-lucide="square"></i> Zkontroluj plyn (bylo: půl)</div><div class="pv-ck"><i data-lucide="square"></i> Pusť vodu, zatop</div><div class="pv-ck"><i data-lucide="square"></i> Kape kohoutek — mrkni</div>`),
+    idea: 'Stav od minule jako odškrtávací „co po příjezdu zkontrolovat".',
+    plus: ['Nejvíc akční — rovnou vím, co udělat', 'Dobré pro závady a rizika'],
+    minus: ['Mění pasivní info na úkoly — může tlačit', 'Ne vše je akce (vzkaz není checkbox)'] },
+] });
+
+A({ id: 'vzkaz', name: 'Vzkaz od předchozího', q: 'Jak moc vzkaz vytáhnout?', n: 3, v: [
+  { k: 'A', name: 'Osobní citace nahoře', st: 'doporučeno',
+    r: () => dual('Přehled', `${WELCOME}${QUOTE}${FROM}`),
+    idea: 'Vzkaz jako citace hned pod uvítáním, se jménem autora. Nejlidštější prvek celé appky.',
+    plus: ['Drží emoci „dýchat tou chatou" (H1a)', 'Osobní tón — appka není jen databáze', 'Motivuje psát vzkazy i při předávce'],
+    minus: ['Když nikdo nic nenapsal, nesmí zůstat prázdné místo (skrýt)'] },
+  { k: 'B', name: 'V řadě s fakty', st: 'rovnocenné',
+    r: () => dual('Přehled', `${WELCOME}${FROM}<div class="pv-card"><span class="k">vzkaz</span><br>Užijte si to! Dřevo je u kamen.</div>`),
+    idea: 'Vzkaz je jedna karta mezi ostatními fakty.',
+    plus: ['Klidná, jednotná mřížka', 'Vše stejně důležité'],
+    minus: ['Vzkaz splyne, ztratí osobní náboj', 'Nejhezčí věc vypadá jako poznámka'] },
+  { k: 'C', name: 'Pod „víc"', st: 'skryté',
+    r: () => dual('Přehled', `${WELCOME}${FROM}<div class="pv-ck"><i data-lucide="chevron-down"></i> Vzkaz od Novákových</div>`),
+    idea: 'Vzkaz je sbalený, rozbalí se klepnutím.',
+    plus: ['Nejkratší karta'],
+    minus: ['Schová to nejcennější — skoro nikdo nerozklikne', 'Jde proti smyslu přivítání'] },
+] });
+
+A({ id: 'akce', name: 'Co karta nabídne dál', q: 'Končí přivítání akcí, nebo jen informuje?', n: 3, v: [
+  { k: 'A', name: 'Potvrdit příjezd + Zásoby', st: 'doporučeno',
+    r: () => dual('Přehled', `${WELCOME}${FROM}${CTA}<div class="pv-note2">Když něco dochází, hned vedle odkaz „Mrknout do Zásob".</div>`),
+    idea: 'Lehké „Potvrdit příjezd" (dám vědět, že jsem dorazil) a když něco dochází, odkaz do Zásob.',
+    plus: ['Uzavře cyklus — rodina ví, že jsi tam (napojí na Přehled „kdo je na chatě")', 'Přirozený můstek do Zásob (klín C1)', 'Akce je nabídka, ne povinnost'],
+    minus: ['„Potvrdit příjezd" chce jasně říct, k čemu je (ať to není prázdné tlačítko)'] },
+  { k: 'B', name: 'Jen informace', st: 'bez tření',
+    r: () => dual('Přehled', `${WELCOME}${QUOTE}${FROM}<div class="pv-note2">Jen pro přehled — nic nepotvrzuješ.</div>`),
+    idea: 'Karta jen informuje, žádné tlačítko.',
+    plus: ['Nulové tření, čistě ke čtení', 'Nejjednodušší'],
+    minus: ['Nevyužije moment k „jsem tady" ani k nákupu', 'Appka neví, že jsi dorazil'] },
+  { k: 'C', name: '„Nahlásit problém" prominentně', st: 'závadová',
+    r: () => dual('Přehled', `${WELCOME}${FROM}<div class="pv-btn" style="margin-top:2px"><i data-lucide="triangle-alert"></i> Něco nesedí? Nahlásit problém</div>`),
+    idea: 'Hlavní akce je nahlásit, že něco při příjezdu nesedí.',
+    plus: ['Dobré, když je po příjezdu něco špatně', 'Rychlá cesta k nápravě'],
+    minus: ['Negativní první dojem — appka čeká průšvih', 'Problémy jsou výjimka, ne pravidlo'] },
+] });
+
+/* ---- /ZDE OBSAH ---- */
+
+const ATOMS = SECS.filter((s) => s.id);
+let state = { pick: {}, note: {} };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* prázdné */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* bez úložiště */ } };
+const picks = (id) => (state.pick[id] || []).slice().sort();
+const drawIcons = () => { if (window.lucide) window.lucide.createIcons(); };
+
+function renderSec(sec) {
+  const chosen = picks(sec.id);
+  const el = document.getElementById('s-' + sec.id);
+  el.innerHTML = `
+    <div class="sec-h"><h2 class="display">${sec.name}</h2><span class="q">${sec.q}</span><span class="picked">${chosen.length ? `Vybráno: <b>${chosen.join(' + ')}</b>` : 'Zatím nevybráno'}</span></div>
+    <div class="cols" style="--n:${sec.n}">${sec.v.map((v) => { const on = chosen.includes(v.k); return `
+      <div class="col ${on ? 'on' : ''}">
+        <div class="col-h"><span class="lt">${on ? '✓' : v.k}</span><span class="nm">${v.name}<span class="st">${v.st}</span></span></div>
+        ${v.r()}
+        <div class="meta-c">
+          <p class="idea">${v.idea}</p>
+          ${v.plus.length ? `<div><span class="lab2">Proč ano</span><ul>${v.plus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          ${v.minus.length ? `<div><span class="lab2">Proč ne</span><ul>${v.minus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          <label class="choose ${on ? 'on' : ''}"><input type="checkbox" data-pick="${sec.id}" data-v="${v.k}" ${on ? 'checked' : ''}> Tuhle chci</label>
+        </div>
+      </div>`; }).join('')}</div>
+    <textarea class="note" data-note="${sec.id}" placeholder="Poznámka (nepovinné), např. „A, ale vzkaz jako citace z vzkaz-A"">${state.note[sec.id] || ''}</textarea>`;
+}
+function renderToc() {
+  document.getElementById('toc').innerHTML = ATOMS.map((s) => { const p = picks(s.id); return `<a href="#s-${s.id}" class="${p.length ? 'done' : ''}">${s.name}${p.length ? ' · ' + p.join('+') : ''}</a>`; }).join('');
+}
+function renderSum() {
+  const done = ATOMS.filter((s) => picks(s.id).length);
+  document.getElementById('sum').innerHTML = `Vybráno <b>${done.length} z ${ATOMS.length}</b> dílů${done.length ? ' · ' + done.map((s) => `${s.name} <b>${picks(s.id).join('+')}</b>`).join(', ') : ' — u každého dílu zaškrtni „Tuhle chci"'}`;
+}
+function summaryText() {
+  const line = (s) => {
+    const p = picks(s.id);
+    const names = p.map((k) => `${k} — ${s.v.find((x) => x.k === k).name}`).join(' + ');
+    return `${s.name}: ${p.length ? names : 'nevybráno (postavím A)'}${state.note[s.id] ? `\n   poznámka: ${state.note[s.id].trim()}` : ''}`;
+  };
+  return `${TITLE} — volba dílů (${new Date().toLocaleString('cs-CZ')})\n\n${ATOMS.map(line).join('\n')}\n`;
+}
+
+document.getElementById('sections').innerHTML = SECS.map((s) => s.group
+  ? `<div class="group-h"><h2 class="display">${s.group}</h2><p>${s.p}</p></div>`
+  : `<section class="sec" id="s-${s.id}"></section>`).join('');
+ATOMS.forEach(renderSec); renderToc(); renderSum(); drawIcons();
+
+document.addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-pick]');
+  if (!cb) return;
+  const id = cb.dataset.pick;
+  const set = new Set(state.pick[id] || []);
+  if (cb.checked) set.add(cb.dataset.v); else set.delete(cb.dataset.v);
+  if (set.size) state.pick[id] = [...set]; else delete state.pick[id];
+  save(); renderSec(ATOMS.find((s) => s.id === id)); renderToc(); renderSum(); drawIcons();
+});
+document.addEventListener('input', (e) => {
+  const t = e.target.closest('[data-note]');
+  if (!t) return;
+  state.note[t.dataset.note] = t.value; save();
+});
+document.querySelectorAll('#seg-t button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#seg-t button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  document.documentElement.dataset.theme = b.dataset.v;
+}));
+const flash = (t) => { const c = document.getElementById('copied'); c.textContent = t; setTimeout(() => { c.textContent = ''; }, 2500); };
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(summaryText()); flash('Zkopírováno — vlož mi to do chatu.'); }
+  catch { flash('Kopírování nejde — použij Stáhnout.'); }
+});
+document.getElementById('dl').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([summaryText()], { type: 'text/plain;charset=utf-8' }));
+  a.download = DL_NAME;
+  a.click();
+  flash('Uloženo do Stažených — napiš mi, že je hotovo.');
+});
+})();
+</script>
+</body>
+</html>
