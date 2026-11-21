@@ -6,7 +6,7 @@
 import { Trees } from "lucide-react";
 import type { WeatherResult } from "@/api/dashboard";
 import { getTodayFormatted } from "@/lib/dateUtils";
-import { CABIN_HERO_IMAGE } from "./heroAssets";
+import { CABIN_HERO_IMAGE } from "./overviewAssets";
 
 interface CabinHeroProps {
   cabinName: string | undefined;
@@ -14,7 +14,10 @@ interface CabinHeroProps {
 }
 
 export function CabinHero({ cabinName, weather }: CabinHeroProps) {
-  const weatherLine = weather && typeof weather === "object" ? `${Math.round(weather.temp)} °C · ${weather.description}` : null;
+  const temp = weather && typeof weather === "object" ? Math.round(weather.temp) : null;
+  const weatherLine = temp !== null && weather && typeof weather === "object"
+    ? `${temp < 0 ? "−" : ""}${Math.abs(temp)} °C · ${weather.description}`
+    : null;
   return (
     <header className="cabin-hero-wrap" data-testid="cabin-hero">
       <div className="glass-card cabin-hero">

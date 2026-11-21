@@ -219,7 +219,7 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
 
     const hero = await screen.findByTestId('cabin-hero')
     expect(await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })).toBeInTheDocument()
-    await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · -3 °C · Zataženo'))
+    await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · −3 °C · Zataženo'))
     expect(within(hero).getByTestId('cabin-hero-media')).toBeInTheDocument()
     expect(screen.getByTestId('two-column-layout')).not.toContainElement(hero)
   })

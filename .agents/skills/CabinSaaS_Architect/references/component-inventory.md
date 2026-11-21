@@ -73,7 +73,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | DashboardPage | Page | ✅ Complete |
 | WeatherCard | Widget | ✅ (calls Open-Meteo directly) |
-| CabinHero | Header | ✅ Compact cabin strip above both columns: photo slot (Midjourney drop-in via `heroAssets.ts`), cabin name, date + weather line (#172) |
+| CabinHero | Header | ✅ Compact cabin strip above both columns: photo slot (Midjourney drop-in via `overviewAssets.ts`), cabin name, date + weather line (#172) |
 | ActiveReservation | Card | ✅ „Na chatě teď“: who is at the cabin now + turnus chain; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
 | NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay, own as „Ty“, plus „Váš pobyt“ when mine is not next (#172) |
 | DepartureBanner | Banner | ✅ |

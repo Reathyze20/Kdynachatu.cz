@@ -406,7 +406,7 @@
 }
 
 /* ── Kompaktní pruh chaty nad oběma sloupci (#172, návrh #1 díl 1 = A) ──
-   Slot na fotku chaty (Midjourney drop-in, heroAssets.ts), jméno a jeden řádek kontextu. */
+   Slot na fotku chaty (Midjourney drop-in, overviewAssets.ts), jméno a jeden řádek kontextu. */
 .dashboard-frame {
   display: flex;
   flex-direction: column;
@@ -446,7 +446,7 @@
   flex-shrink: 0;
   overflow: hidden;
   color: var(--text-on-primary);
-  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-light));
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
 }
 
 .cabin-hero__media {
@@ -479,6 +479,9 @@
 
 .cabin-hero__context {
   margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text-muted);

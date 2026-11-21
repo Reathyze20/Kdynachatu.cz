@@ -5,7 +5,7 @@ import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
-import { OVERVIEW_INVITE_ILLUSTRATION } from "./heroAssets";
+import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
 import { CalendarPlus, CircleCheck, DoorOpen, TriangleAlert } from "lucide-react";
 
 interface Props {
