@@ -31,6 +31,7 @@ export interface Reservation {
   to: string;
   purpose: string;
   notes?: string;
+  /** Legacy "Vzkaz pro další" from the booking form — not the handover (`checkoutState`) nor the pinned board note */
   handoverNote?: string;
   status?: "primary" | "backup" | "soft";
   userColor?: string;

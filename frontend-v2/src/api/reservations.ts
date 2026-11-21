@@ -1,4 +1,5 @@
 // Types matching src/types.ts — duplicated here to avoid cross-project imports
+import apiClient from "./client";
 
 export interface ReservationParticipant {
   userId: string;
@@ -25,6 +26,7 @@ export interface Reservation {
   to: string;    // YYYY-MM-DD
   purpose: string;
   notes?: string;
+  /** Legacy "Vzkaz pro další" from the booking form — not the handover (`checkoutState`) nor the pinned board note */
   handoverNote?: string;
   status?: "primary" | "backup" | "soft";
   userColor?: string;
@@ -73,4 +75,16 @@ export interface CheckoutStatus {
   checkoutCompletedByUsername: string | null;
   checkoutCompletedAt: string | null;
   checkoutState?: CheckoutState | null;
+}
+
+/**
+ * Completes the handover (předávka) of a stay: marks the checkout done and, when given,
+ * stores the structured state of the cabin. The single write path shared by
+ * CheckoutSection (reservation detail) and DepartureBanner (dashboard).
+ * `state === undefined` keeps any previously stored state untouched.
+ */
+export function completeCheckout(id: string, state?: CheckoutState): Promise<CheckoutStatus> {
+  return apiClient
+    .patch<CheckoutStatus>(`/reservations/${id}/checkout`, state !== undefined ? { checkoutState: state } : undefined)
+    .then((r) => r.data);
 }

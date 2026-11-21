@@ -82,6 +82,7 @@ export const DashboardReservationsSchema = z.object({
     .nullable()
     .optional(),
   departingToday: z.boolean(),
+  departingReservationId: z.string().nullable().optional(),
   nextFreeWeekend: z
     .object({ start: z.string(), end: z.string() })
     .nullable()

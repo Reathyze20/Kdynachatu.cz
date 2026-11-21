@@ -3,7 +3,7 @@ import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
-import { calendarTodayIso } from "./reservationHelpers";
+import { calendarTodayIso, departureGate } from "./reservationHelpers";
 
 const router = Router();
 
@@ -91,7 +91,9 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
       }),
       prisma.reservation.findFirst({
         where: { cabinId, userId: req.user.userId, dateTo: new Date(todayStr), status: "primary" },
-        select: { handoverNote: true }
+        // My stay ending today; an unfinished handover wins if there are two
+        orderBy: { isCheckoutCompleted: "asc" },
+        select: { id: true, isCheckoutCompleted: true },
       }),
       prisma.reservation.findFirst({
         where: { cabinId, userId: req.user.userId, dateFrom: { gte: new Date(todayStr) } },
@@ -168,7 +170,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         to: myNextReservation.dateTo.toISOString().split("T")[0],
         purpose: myNextReservation.purpose,
       } : null,
-      departingToday: departingTodayReservation !== null && !departingTodayReservation.handoverNote,
+      ...departureGate(departingTodayReservation),
       nextFreeWeekend,
       lastStay: lastStayReservation ? {
         username: lastStayReservation.user.username,

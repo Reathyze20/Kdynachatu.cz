@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { calendarTodayIso, isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
+import { calendarTodayIso, departureGate, isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
 
 describe("calendarTodayIso (Europe/Prague)", () => {
   test("after local midnight it is already the new day, although UTC is still on the previous one", () => {
@@ -97,5 +97,25 @@ describe("sanitizeCheckoutState", () => {
     assert.equal(out?.broken?.length, 1000);
     assert.equal(out?.leftBehind?.length, 1000);
     assert.equal(out?.note?.length, 1000);
+  });
+});
+
+describe("departureGate", () => {
+  test("no stay of mine ends today → no banner", () => {
+    assert.deepEqual(departureGate(null), { departingToday: false, departingReservationId: null });
+  });
+
+  test("my stay ends today and the handover is not done → banner with the reservation id", () => {
+    assert.deepEqual(departureGate({ id: "r-1", isCheckoutCompleted: false }), {
+      departingToday: true,
+      departingReservationId: "r-1",
+    });
+  });
+
+  test("handover completed (from the banner or the reservation detail) → no banner", () => {
+    assert.deepEqual(departureGate({ id: "r-1", isCheckoutCompleted: true }), {
+      departingToday: false,
+      departingReservationId: null,
+    });
   });
 });

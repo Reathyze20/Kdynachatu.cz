@@ -65,7 +65,10 @@ export interface DashboardReservationsData {
   activeReservation: ActiveReservation | null;
   upcomingReservations: UpcomingReservation[];
   myNextReservation: { from: string; to: string; purpose: string } | null;
+  /** My stay ends today and its handover (isCheckoutCompleted) is not done yet */
   departingToday: boolean;
+  /** ID of that stay, so the departure banner can complete its handover */
+  departingReservationId?: string | null;
   nextFreeWeekend: { start: string; end: string } | null;
   lastStay: LastStay | null;
   stats: {
