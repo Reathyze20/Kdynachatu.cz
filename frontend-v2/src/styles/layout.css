@@ -248,10 +248,8 @@
     overflow: visible;
   }
 
+  /* Odsazení od pevné hlavičky a spodní lišty je v nav.css (#196) */
   #page-container {
-    padding-top: 64px !important;
-    /* 56px mobile header + 8px breathing room */
-    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
     overflow: visible;
     flex-grow: 0;
   }

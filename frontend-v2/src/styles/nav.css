@@ -514,8 +514,9 @@
 
   /* ── Mobile Bottom Nav — Core 5 ────────────────────────────── */
   /* Jediný zdroj výšky lišty bez bezpečné zóny (#196): 6 px odsazení nahoře
-     i dole + 1 px rámeček + záložka asi 53 px. Používá ji offset obsahu
-     (#page-container) i přepínač zen módu (ZenMode.css). */
+     i dole + 1 px rámeček + záložka asi 53 px (změřeno 66 px). Lišta je
+     aspoň takto vysoká (min-height níže); při větším písmu může narůst.
+     Používá ji offset obsahu (#page-container) i přepínač zen módu (ZenMode.css). */
   :root {
     --mobile-nav-height: 66px;
   }
@@ -565,6 +566,7 @@
   }
 
   /* ── Content offset — fixed header + fixed bottom nav ──────── */
+  /* 56 px hlavička + 8 px; dole lišta + 10 px */
   #page-container {
     padding-top: 64px !important;
     padding-bottom: calc(var(--mobile-nav-height) + 10px + env(safe-area-inset-bottom, 0px)) !important;

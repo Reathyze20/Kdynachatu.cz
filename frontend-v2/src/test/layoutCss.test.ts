@@ -204,6 +204,10 @@ describe('Výška spodní mobilní lišty — jeden zdroj pravdy (#196)', () => 
     expect(bottom).toMatch(/env\(safe-area-inset-bottom/)
   })
 
+  it('odsazení obsahu od lišty je jen v nav.css, layout.css ho nepřebíjí ani neduplikuje', () => {
+    expect(declarationsAt(layoutCssRaw, '#page-container', 375).has('padding-bottom')).toBe(false)
+  })
+
   it('na desktopu zůstává přepínač zen módu na původním místě', () => {
     expect(declarationsAt(zenModeCssRaw, '.zen-mode-toggle', 1024).get('bottom')).toBe('var(--space-xl, 24px)')
     expect(declarationsAt(zenModeCssRaw, '.zen-mode-toggle', 1024).get('left')).toBe('var(--space-xl, 24px)')
