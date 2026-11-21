@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { TriangleAlert } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/api/client";
+import { completeCheckout } from "@/api/reservations";
+import { RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { showToast } from "@/lib/toast";
 import { Modal } from "@/components/shared/Modal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -29,11 +31,13 @@ function dismissToday(): void {
 }
 
 interface Props {
+  /** Můj dnes končící pobyt s nedokončenou předávkou (z gate dashboardu) */
+  reservationId: string;
   departureChecklist: string[];
   onRefresh: () => void;
 }
 
-export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
+export function DepartureBanner({ reservationId, departureChecklist, onRefresh }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dismissed, setDismissed] = useState(isDismissedToday);
@@ -48,12 +52,19 @@ export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      // Stejná cesta zápisu jako CheckoutSection. Předávka jde první, aby po selhání
+      // nezůstala v chatu zpráva bez dokončené předávky. Volný checklist chaty nemá
+      // strukturovaný protějšek, do checkoutState jde jen vzkaz; bez vzkazu zůstane
+      // případný už uložený stav beze změny.
+      const note = departureNote.trim();
+      await completeCheckout(reservationId, note ? { note } : undefined);
+
       let fullMessage = "**Odjezd z chaty:**\n";
       checklistItems.forEach((item, i) => {
         fullMessage += checkedItems[i] ? `- [x] ${item}\n` : `- [ ] ${item}\n`;
       });
-      if (departureNote.trim()) {
-        fullMessage += `\n**Vzkaz:** ${departureNote.trim()}`;
+      if (note) {
+        fullMessage += `\n**Vzkaz:** ${note}`;
       }
       await apiClient.post("/channels/messages", { message: fullMessage });
     },
@@ -63,6 +74,8 @@ export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
       setModalOpen(false);
       setSubmitError(null);
       showToast("Odjezdový protokol byl uložen.", "success");
+      // RESERVATIONS_KEY pokrývá kalendář i gate odjezdu na dashboardu
+      queryClient.invalidateQueries({ queryKey: RESERVATIONS_KEY });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       onRefresh();
     },

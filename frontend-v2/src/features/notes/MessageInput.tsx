@@ -23,7 +23,7 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
   const [handoverChecks, setHandoverChecks] = useState<Record<string, boolean>>(
     Object.fromEntries(HANDOVER_ITEMS.map((i) => [i.key, true])),
   );
-  const [handoverNote, setHandoverNote] = useState("");
+  const [protocolNote, setProtocolNote] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sendNote = useSendNote();
@@ -85,9 +85,9 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
       const checked = handoverChecks[item.key] ?? true;
       lines.push(`${checked ? "[x]" : "[ ]"} ${item.label}`);
     });
-    if (handoverNote.trim()) {
+    if (protocolNote.trim()) {
       lines.push("");
-      lines.push(`Poznámka: ${handoverNote.trim()}`);
+      lines.push(`Poznámka: ${protocolNote.trim()}`);
     }
     const existing = message.trimEnd();
     const text = existing.length > 0
@@ -96,7 +96,7 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
     setSendError(null);
     setMessage(text);
     setHandoverOpen(false);
-    setHandoverNote("");
+    setProtocolNote("");
     setHandoverChecks(Object.fromEntries(HANDOVER_ITEMS.map((i) => [i.key, true])));
     // Focus textarea
     setTimeout(() => {
@@ -184,10 +184,10 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
               id="handover-note-input"
               placeholder="Poznámka (volitelná)..."
               autoComplete="off"
-              value={handoverNote}
+              value={protocolNote}
               onChange={(e) => {
                 if (sendError) setSendError(null);
-                setHandoverNote(e.target.value);
+                setProtocolNote(e.target.value);
               }}
             />
           </div>
