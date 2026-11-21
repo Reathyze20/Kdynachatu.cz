@@ -34,6 +34,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **AppShell** | Main wrapper — header + nav + `<Outlet>` with Framer Motion route transitions | — |
 | **TopBar** | Desktop bar with the profile dropdown (profile, admin, backoffice, logout); section nav lives in DesktopSidebar | `onOpenProfileDrawer` |
 | **DesktopSidebar** | Desktop left sidebar (frame #1b): cabin name + `PRIMARY_NAV` and a „Víc“ group with `MORE_NAV`, icon + label | — |
+| **TwoColumnLayout** | Page layout of frame #1b: main column + optional side panel (`<aside>`), side by side from 1024 px (1.5fr : 1fr), stacked on smaller screens; no side panel = nothing rendered, main takes full width. Side panel = light context only, never an action you must not miss | `children, aside?, asideLabel?, className?` |
 | **MobileHeader** | Mobile top bar with user avatar | `animalIcon, username, onOpenProfileDrawer` |
 | **MobileNav** | Bottom tab bar: `PRIMARY_NAV` (Přehled · Kalendář · Předávka · Zásoby) + „Víc“ sheet with `MORE_NAV` | — |
 | **ProfileDrawer** | Right-side sheet with profile settings, avatar/color picker, password change, logout | `open, onClose` |
