@@ -9,6 +9,8 @@ import tailwindCssRaw from 'tailwindcss/index.css?raw'
  * potichu vypínal `mt-*`, `p-*`, `space-y-*`. Test zkompiluje skutečný vstup `src/index.css`
  * stejným Tailwind kompilátorem jako build a pro prvek v jsdom vybere vítězné pravidlo podle
  * kaskády (vrstva → specificita → pořadí). jsdom kaskádu s vrstvami sám nepočítá.
+ * Zjednodušení: pravidla v `@media`/`@supports`, `!important` a pseudoelementy se ignorují,
+ * takže test hlídá jen výchozí (mobilní) kaskádu bez `!important`.
  */
 
 // `?raw` místo node:fs (není v typech tsconfig.app); klíče jsou relativní k tomuto souboru.
@@ -130,7 +132,7 @@ function compareKeys(a: number[], b: number[]): number {
 /** Vítězná deklarace pro `el` mezi vlastnostmi, které nastavují danou hodnotu (longhand i zkratky). */
 function winningDecl(css: ReturnType<typeof parseCss>, el: Element, props: string[]) {
   const rank = (layer: string | null) => (layer === null ? Infinity : css.layerOrder.indexOf(layer))
-  let best: { selector: string; value: string; key: number[] } | null = null
+  let best: { selector: string; value: string; cascadeKey: number[] } | null = null
   for (const rule of css.rules) {
     const prop = [...props].reverse().find((p) => rule.decls.has(p))
     if (!prop) continue
@@ -139,8 +141,8 @@ function winningDecl(css: ReturnType<typeof parseCss>, el: Element, props: strin
       let matches = false
       try { matches = el.matches(selector) } catch { /* selektor, který jsdom nezná */ }
       if (!matches) continue
-      const key = [rank(rule.layer), ...specificity(selector), rule.order]
-      if (!best || compareKeys(key, best.key) > 0) best = { selector, value: rule.decls.get(prop)!, key }
+      const cascadeKey = [rank(rule.layer), ...specificity(selector), rule.order]
+      if (!best || compareKeys(cascadeKey, best.cascadeKey) > 0) best = { selector, value: rule.decls.get(prop)!, cascadeKey }
     }
   }
   return best
