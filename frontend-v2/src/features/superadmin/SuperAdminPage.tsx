@@ -254,7 +254,7 @@ export function SuperAdminPage() {
 
   if (!isSuperAdmin) {
     return (
-      <div className="main-content-admin pb-20 md:pb-0" data-testid="superadmin-page" data-superadmin-state="denied">
+      <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="denied">
         <div className="page-card admin-page-card admin-denied-card">
           <span className="admin-kicker">Backoffice</span>
           <h1 className="admin-page-title">Přístup odepřen</h1>
@@ -265,7 +265,7 @@ export function SuperAdminPage() {
   }
 
   return (
-    <div className="main-content-admin pb-20 md:pb-0" data-testid="superadmin-page" data-superadmin-state="ready">
+    <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="ready">
       <section className="page-card admin-page-card admin-overview-card superadmin-overview-card">
         <div className="admin-overview-header">
           <div className="admin-overview-copy">

@@ -921,7 +921,7 @@ export function AdminPage() {
   // Guard
   if (!isAdmin) {
     return (
-      <div className="main-content-admin pb-20 md:pb-0" data-testid="admin-page" data-admin-state="denied">
+      <div className="main-content-admin" data-testid="admin-page" data-admin-state="denied">
         <div className="page-card admin-page-card admin-denied-card">
           <span className="admin-kicker">Administrace</span>
           <h1 className="admin-page-title">Přístup odepřen</h1>
@@ -968,7 +968,7 @@ export function AdminPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="main-content-admin pb-20 md:pb-0" data-testid="admin-page" data-admin-state="ready" data-admin-workspace={activeWorkspace}>
+    <div className="main-content-admin" data-testid="admin-page" data-admin-state="ready" data-admin-workspace={activeWorkspace}>
       <section className="page-card admin-page-card admin-shell-card">
         <div className="admin-shell-topbar">
           <div className="admin-shell-copy">
