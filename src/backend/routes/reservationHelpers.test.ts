@@ -1,6 +1,6 @@
-import { test, describe } from "node:test";
+import { test, describe, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { calendarTodayIso, departureGate, isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
+import { calendarTodayIso, departureGate, isPrimaryCollisionBlocked, nextFreeWeekend, sanitizeCheckoutState } from "./reservationHelpers";
 
 describe("calendarTodayIso (Europe/Prague)", () => {
   test("after local midnight it is already the new day, although UTC is still on the previous one", () => {
@@ -12,6 +12,55 @@ describe("calendarTodayIso (Europe/Prague)", () => {
     assert.equal(calendarTodayIso(new Date("2027-03-27T23:30:00Z")), "2027-03-28");
     assert.equal(calendarTodayIso(new Date("2027-03-28T01:30:00Z")), "2027-03-28");
   });
+});
+
+describe("nextFreeWeekend", () => {
+  // Výsledek nesmí záviset na zóně serveru: produkce může běžet v UTC i v Europe/Prague.
+  const originalTz = process.env.TZ;
+  afterEach(() => {
+    if (originalTz === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTz;
+  });
+
+  const day = (iso: string) => new Date(iso); // @db.Date z Prismy = UTC půlnoc
+  const stay = (from: string, to: string) => ({ dateFrom: day(from), dateTo: day(to) });
+
+  for (const tz of ["UTC", "Europe/Prague"]) {
+    describe(`server in ${tz}`, () => {
+      beforeEach(() => {
+        process.env.TZ = tz;
+      });
+
+      test("Saturday 00:30 in Prague (UTC still Friday): this weekend", () => {
+        assert.deepEqual(nextFreeWeekend(new Date("2027-07-09T22:30:00Z"), []), { start: "2027-07-10", end: "2027-07-11" });
+      });
+
+      test("Sunday 00:30 in Prague (UTC still Saturday): next weekend, not the one already half over", () => {
+        assert.deepEqual(nextFreeWeekend(new Date("2027-07-10T22:30:00Z"), []), { start: "2027-07-17", end: "2027-07-18" });
+      });
+
+      test("an occupied weekend is skipped", () => {
+        assert.deepEqual(
+          nextFreeWeekend(new Date("2027-07-07T10:00:00Z"), [stay("2027-07-09", "2027-07-10")]),
+          { start: "2027-07-17", end: "2027-07-18" },
+        );
+      });
+
+      test("around the switch to summer time (28 March 2027)", () => {
+        // Ne 28. 3. 01:30 v Praze, ještě před přechodem; víkend 3.–4. 4. je obsazený.
+        assert.deepEqual(
+          nextFreeWeekend(new Date("2027-03-28T00:30:00Z"), [stay("2027-04-04", "2027-04-04")]),
+          { start: "2027-04-10", end: "2027-04-11" },
+        );
+        // Pá 26. 3. ve 23:30 v Praze: víkend přes přechod je volný.
+        assert.deepEqual(nextFreeWeekend(new Date("2027-03-26T22:30:00Z"), []), { start: "2027-03-27", end: "2027-03-28" });
+      });
+
+      test("returns null when the next 26 weekends are taken", () => {
+        assert.equal(nextFreeWeekend(new Date("2027-07-07T10:00:00Z"), [stay("2027-07-01", "2028-02-01")]), null);
+      });
+    });
+  }
 });
 
 describe("isPrimaryCollisionBlocked", () => {
