@@ -26,7 +26,7 @@ export function MobileNav() {
   // V sekci schované pod „Víc“ má záložka ikonu té sekce, popisek zůstává „Víc“ (úzké displeje).
   const MoreIcon = activeMore?.icon ?? MoreHorizontal
 
-  const navLink = (item: NavItem, className: string, onClick?: () => void) => (
+  const renderNavLink = (item: NavItem, className: string, onClick?: () => void) => (
     <Link
       key={item.to}
       to={item.to}
@@ -44,7 +44,7 @@ export function MobileNav() {
   return (
     <>
       <nav id="mobile-nav" className="mobile-nav" aria-label="Hlavní navigace" data-testid="mobile-nav">
-        {tabs.map((item) => navLink(item, 'mobile-nav-link'))}
+        {tabs.map((item) => renderNavLink(item, 'mobile-nav-link'))}
 
         {more.length > 0 ? (
           <button
@@ -64,7 +64,7 @@ export function MobileNav() {
 
       <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} title="Víc">
         <div className="drawer-quicklinks" data-testid="mobile-nav-more-sheet">
-          {more.map((item) => navLink(item, 'button-secondary drawer-quicklink', () => setMoreOpen(false)))}
+          {more.map((item) => renderNavLink(item, 'button-secondary drawer-quicklink', () => setMoreOpen(false)))}
         </div>
       </Modal>
     </>

@@ -18,7 +18,8 @@ export interface NavItem {
 
 /**
  * Předávka a Zásoby zatím nemají vlastní obrazovku (T3b, T6b). Do té doby vedou na dnešní ekvivalent:
- * předávka = formulář odjezdu v detailu rezervace, zásoby = Nákupy se spíží.
+ * Předávka na stránku rezervací (formulář odjezdu je v detailu pobytu), Zásoby na Nákupy (se spíží).
+ * `?sekce=predavka` stránka nečte, jen odliší aktivní tab od Kalendáře.
  */
 export const PRIMARY_NAV: NavItem[] = [
   { to: '/dashboard',                   label: 'Přehled',  icon: Home },

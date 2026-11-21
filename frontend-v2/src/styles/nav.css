@@ -408,6 +408,13 @@
   display: none !important;
 }
 
+/* Focus z klávesnice stejným prstencem jako tlačítka (buttons.css), i u odkazů v liště a ve „Víc“ (G2) */
+.mobile-nav-link:focus-visible,
+.drawer-quicklink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 @media (max-width: 768px) {
 
   /* ── Mobile Header — fixed top ─────────────────────────────── */
@@ -498,13 +505,6 @@
     color: var(--color-primary);
     font-weight: 600;
     background: var(--color-primary-bg);
-  }
-
-  /* base.css ruší outline u odkazů — focus z klávesnice musí být vidět (G2) */
-  .mobile-nav-link:focus-visible,
-  .drawer-quicklink:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: -2px;
   }
 
   /* ── Content offset — fixed header + fixed bottom nav ──────── */
