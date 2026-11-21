@@ -85,11 +85,9 @@ for (const actor of ["memberA", "adminA"] as const) {
     const cases: [string, (u: TestUser, t: { id: string; listId: string }) => Promise<{ status: number }>][] = [
       ["PUT /shopping-list/:itemId/purchase", (u, t) => as(app, u).put(`/api/shopping-list/${t.id}/purchase`).send({ status: "purchased", price: 1 })],
       ["PUT /shopping-list/:listId/items/:itemId/purchase", (u, t) => as(app, u).put(`/api/shopping-list/${t.listId}/items/${t.id}/purchase`).send({ status: "pending" })],
-      ["POST /shopping-list/:itemId/move-from-pantry", (u, t) => as(app, u).post(`/api/shopping-list/${t.id}/move-from-pantry`)],
       ["PATCH /shopping-list/:itemId/toggle-essential", (u, t) => as(app, u).patch(`/api/shopping-list/${t.id}/toggle-essential`)],
       ["DELETE /shopping-list/:itemId", (u, t) => as(app, u).delete(`/api/shopping-list/${t.id}`)],
       ["DELETE /shopping-list/:listId/items/:itemId", (u, t) => as(app, u).delete(`/api/shopping-list/${t.listId}/items/${t.id}`)],
-      ["PUT /shopping-lists/:listId/items/:itemId", (u, t) => as(app, u).put(`/api/shopping-lists/${t.listId}/items/${t.id}`).send({ purchased: false })],
     ];
 
     for (const [name, call] of cases) {
@@ -115,7 +113,6 @@ describe("shopping items: a list and an item from different cabins → 404, noth
   const cases: [string, (listId: string, itemId: string) => Promise<{ status: number }>][] = [
     ["PUT /shopping-list/:listId/items/:itemId/purchase", (l, i) => as(app, world.memberA).put(`/api/shopping-list/${l}/items/${i}/purchase`).send({ status: "purchased" })],
     ["DELETE /shopping-list/:listId/items/:itemId", (l, i) => as(app, world.memberA).delete(`/api/shopping-list/${l}/items/${i}`)],
-    ["PUT /shopping-lists/:listId/items/:itemId", (l, i) => as(app, world.memberA).put(`/api/shopping-lists/${l}/items/${i}`).send({ purchased: true })],
   ];
 
   for (const [name, call] of cases) {
@@ -134,7 +131,7 @@ describe("shopping splits: splitting with a cabin B user → 404, nothing is cre
   const cases: [string, Call][] = [
     ["only a cabin B user", (u) => as(app, u).put(`/api/shopping-list/${itemA}/purchase`).send({ status: "purchased", price: 50, splitWith: [world.memberB.id] })],
     ["cabin A and cabin B users", (u) => as(app, u).put(`/api/shopping-list/${itemA}/purchase`).send({ status: "purchased", price: 50, splitWith: [world.adminA.id, world.memberB.id] })],
-    ["legacy path", (u) => as(app, u).put(`/api/shopping-list/${listA}/items/${itemA}/purchase`).send({ purchased: true, splitWith: [world.adminB.id] })],
+    ["legacy path", (u) => as(app, u).put(`/api/shopping-list/${listA}/items/${itemA}/purchase`).send({ status: "purchased", splitWith: [world.adminB.id] })],
   ];
 
   for (const [name, call] of cases) {
@@ -153,7 +150,7 @@ describe("shopping: lists for cabin A contain nothing from cabin B", () => {
     world.memberB.username, world.adminB.username, CABIN_B_NAME_PREFIX,
   ];
 
-  for (const path of ["/api/shopping-lists", "/api/shopping-lists?isPantry=true", "/api/shopping-lists/pantry", "/api/shopping-list"]) {
+  for (const path of ["/api/shopping-lists", "/api/shopping-lists?isPantry=true", "/api/shopping-list"]) {
     test(`GET ${path}`, async () => {
       const res = await as(app, world.memberA).get(path);
       assert.equal(res.status, 200);
@@ -186,9 +183,6 @@ describe("shopping: same-cabin flows still work (positive control)", () => {
   test("legacy routes with the item's own list → 200", async () => {
     const purchase = await as(app, world.memberA).put(`/api/shopping-list/${listA}/items/${itemA}/purchase`).send({ status: "pending" });
     assert.equal(purchase.status, 200);
-    const toggle = await as(app, world.memberA).put(`/api/shopping-lists/${listA}/items/${itemA}`).send({ purchased: true });
-    assert.equal(toggle.status, 200);
-    assert.equal((await itemSnapshot(itemA))?.purchased, true);
     const extra = await createItem(world.memberA, listA, "Máslo A");
     const removed = await as(app, world.memberA).delete(`/api/shopping-list/${listA}/items/${extra}`);
     assert.equal(removed.status, 200);
@@ -198,6 +192,69 @@ describe("shopping: same-cabin flows still work (positive control)", () => {
   test("member A cannot rename a list created by admin A (403 stays inside the cabin)", async () => {
     const res = await as(app, world.memberA).patch(`/api/shopping-lists/${listA}/rename`).send({ name: "Moje" });
     assert.equal(res.status, 403);
+    assert.equal(res.body.error, "Nemáte oprávnění přejmenovat tento seznam");
     assert.equal((await listSnapshot(listA))?.name, "Nákup A");
+  });
+});
+
+describe("shopping: status is the only purchase state and the pantry concept is gone", () => {
+  test("GET /api/shopping-lists hides a legacy pantry list and exposes neither isPantry nor purchased", async () => {
+    const pantryA = await createList(world.adminA, "Spíž A", true);
+    try {
+      const res = await as(app, world.memberA).get("/api/shopping-lists");
+      assert.equal(res.status, 200);
+      assert.deepEqual(res.body.map((l: { id: string }) => l.id), [listA]);
+      assert.equal("isPantry" in res.body[0], false);
+      assert.equal("purchased" in res.body[0].items[0], false);
+    } finally {
+      await prisma.shoppingList.delete({ where: { id: pantryA } });
+    }
+  });
+
+  test("removed pantry and duplicate endpoints answer 404 inside the own cabin and change nothing", async () => {
+    const listCount = await prisma.shoppingList.count();
+    const before = await itemSnapshot(itemA);
+    assert.equal((await as(app, world.memberA).get("/api/shopping-lists/pantry")).status, 404);
+    assert.equal((await as(app, world.memberA).post(`/api/shopping-list/${itemA}/move-from-pantry`)).status, 404);
+    assert.equal((await as(app, world.memberA).put(`/api/shopping-lists/${listA}/items/${itemA}`).send({ status: "purchased" })).status, 404);
+    assert.equal(await prisma.shoppingList.count(), listCount);
+    assert.deepEqual(await itemSnapshot(itemA), before);
+  });
+
+  test("adding an item and changing its status speak status only; the legacy purchased body is rejected", async () => {
+    const added = await as(app, world.memberA).post(`/api/shopping-list/${listA}/items`).send({ name: "Mléko A" });
+    assert.equal(added.status, 201);
+    assert.equal(added.body.status, "pending");
+    assert.equal("purchased" in added.body, false);
+    try {
+      const legacy = await as(app, world.memberA).put(`/api/shopping-list/${added.body.id}/purchase`).send({ purchased: true });
+      assert.equal(legacy.status, 400);
+
+      const bought = await as(app, world.memberA).put(`/api/shopping-list/${added.body.id}/purchase`).send({ status: "purchased" });
+      assert.equal(bought.status, 200);
+      assert.equal(bought.body.status, "purchased");
+      assert.equal("purchased" in bought.body, false);
+      assert.equal((await itemSnapshot(added.body.id))?.status, "purchased");
+    } finally {
+      await prisma.shoppingListItem.delete({ where: { id: added.body.id } });
+    }
+  });
+
+  test("dashboard and missing-summary count pending items by status alone", async () => {
+    // Sloupec purchased zůstává na výchozím false – nákup určuje jen status.
+    const bought = await prisma.shoppingListItem.create({
+      data: { name: "Koupené A", listId: listA, addedById: world.memberA.id, status: "purchased" },
+    });
+    try {
+      const pending = await prisma.shoppingListItem.count({ where: { listId: listA, status: { not: "purchased" } } });
+      const dashboard = await as(app, world.memberA).get("/api/dashboard/shopping");
+      assert.equal(dashboard.status, 200);
+      assert.equal(dashboard.body.totalPendingShoppingCount, pending);
+      assert.equal(dashboard.body.pendingShoppingItems.some((i: { id: string }) => i.id === bought.id), false);
+      const summary = await as(app, world.memberA).get("/api/inventory/missing-summary");
+      assert.equal(summary.body.pendingShoppingCount, pending);
+    } finally {
+      await prisma.shoppingListItem.delete({ where: { id: bought.id } });
+    }
   });
 });

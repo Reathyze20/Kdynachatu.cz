@@ -123,7 +123,6 @@ export function useToggleItemStatus() {
               ? {
                   ...item,
                   status,
-                  purchased: status === 'purchased',
                 } satisfies ShoppingItem
               : item,
           ),

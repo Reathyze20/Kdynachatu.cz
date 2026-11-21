@@ -36,7 +36,6 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
       addedById: item.addedById,
       createdAt: item.createdAt.toISOString(),
       status: item.status,
-      purchased: item.purchased,
       purchasedBy: item.purchasedBy?.username,
       purchasedById: item.purchasedById,
       purchasedAt: item.purchasedAt?.toISOString(),
@@ -92,7 +91,7 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
       addedBy: newItem.addedBy.username,
       addedById: newItem.addedById,
       createdAt: newItem.createdAt.toISOString(),
-      purchased: newItem.purchased,
+      status: newItem.status,
       isEssential: newItem.isEssential,
     };
     emitToCabin(req.user!.cabinId!, "shopping:item:added", itemPayload);
@@ -116,19 +115,8 @@ function findCabinItem(cabinId: string, itemId: string, listId?: string) {
 // ============================================================================
 async function handlePurchaseItem(req: Request, res: Response) {
   const { itemId } = req.params;
-  // Accept either new `status` enum or legacy boolean `purchased`
-  let { status, purchased, price, splitWith } = req.body;
-
-  // Map legacy boolean → enum
-  if (status === undefined && purchased !== undefined) {
-    status = purchased ? "purchased" : "pending";
-  }
-
-  const validStatuses = ["pending", "bring_from_home", "purchased"];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ message: "Neplatný status položky." });
-  }
-
+  const { status, price } = req.body;
+  let { splitWith } = req.body;
   const isPurchased = status === "purchased";
 
   try {
@@ -154,7 +142,6 @@ async function handlePurchaseItem(req: Request, res: Response) {
         where: { id: itemId },
         data: {
           status,
-          purchased: isPurchased,
           ...(isPurchased
             ? {
               purchasedById: req.user!.userId,
@@ -204,7 +191,6 @@ async function handlePurchaseItem(req: Request, res: Response) {
       addedById: updated.addedById,
       createdAt: updated.createdAt.toISOString(),
       status: updated.status,
-      purchased: updated.purchased,
       purchasedBy: updated.purchasedBy?.username,
       purchasedById: updated.purchasedById,
       purchasedAt: updated.purchasedAt?.toISOString(),
@@ -224,57 +210,6 @@ router.put("/:itemId/purchase", protect, requireCabin, validate(updateItemStatus
 
 // Legacy path — Express sets req.params.itemId from the named segment, handler is identical
 router.put("/:listId/items/:itemId/purchase", protect, requireCabin, validate(updateItemStatusSchema), handlePurchaseItem);
-
-// ============================================================================
-//                 MOVE ITEM FROM PANTRY TO LATEST SHOPPING LIST
-// ============================================================================
-router.post("/:itemId/move-from-pantry", protect, requireCabin, async (req: Request, res: Response) => {
-  const { itemId } = req.params;
-
-  try {
-    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
-    if (!item) {
-      return res.status(404).json({ message: "Položka nenalezena." });
-    }
-
-    // Najdi nejnovějĹˇí normální (ne-pantry) nákupní seznam v rámci cabin
-    let targetList = await prisma.shoppingList.findFirst({
-      where: { isResolved: false, isPantry: false, cabinId: req.user!.cabinId },
-      orderBy: { createdAt: "desc" }
-    });
-
-    if (!targetList) {
-      // Vytvoř nový, pokud žádný není
-      targetList = await prisma.shoppingList.create({
-        data: {
-          name: "Aktuální nákup",
-          createdById: req.user!.userId,
-          cabinId: req.user!.cabinId!,
-        }
-      });
-    }
-
-    const updated = await prisma.shoppingListItem.update({
-      where: { id: itemId },
-      data: {
-        listId: targetList.id,
-        status: "pending",
-        purchased: false,
-        purchasedById: null,
-        purchasedAt: null,
-        price: null,
-      },
-      include: { addedBy: { select: { username: true } } },
-    });
-
-    await prisma.shoppingItemSplit.deleteMany({ where: { itemId } });
-
-    res.json({ message: "Přesunuto", listId: targetList.id });
-  } catch (error) {
-    logger.error("SHOPPING", "Move from pantry error", { error: String(error), itemId });
-    res.status(500).json({ message: "Chyba" });
-  }
-});
 
 // ============================================================================
 //                 TOGGLE isEssential ON SHOPPING ITEM

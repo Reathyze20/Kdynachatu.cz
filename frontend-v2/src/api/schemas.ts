@@ -161,7 +161,6 @@ const ShoppingItemSchema = z.object({
   id: z.string(),
   name: z.string(),
   status: z.enum(['pending', 'bring_from_home', 'purchased']),
-  purchased: z.boolean(),
   addedById: z.string(),
   createdAt: z.string(),
   isEssential: z.boolean(),

@@ -14,30 +14,19 @@ const router = Router();
 // ============================================================================
 router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
     try {
-        const { isPantry } = req.query;
-        const cabinId = req.user!.cabinId!;
-
-        const whereClause: any = {
-            isResolved: false,
-            cabinId,
-        };
-
-        if (isPantry === 'true') {
-            whereClause.isPantry = true;
-        } else if (isPantry === 'false') {
-            whereClause.isPantry = false;
-        }
-
         const lists = await prisma.shoppingList.findMany({
-            where: whereClause,
+            // Legacy pantry lists from the old UI stay hidden until the contract migration removes them.
+            where: { isResolved: false, isPantry: false, cabinId: req.user!.cabinId! },
             orderBy: {
                 createdAt: "desc",
             },
+            omit: { isPantry: true },
             include: {
                 createdBy: {
                     select: { id: true, username: true, color: true, animalIcon: true },
                 },
                 items: {
+                    omit: { purchased: true },
                     include: {
                         addedBy: {
                             select: { id: true, username: true, color: true, animalIcon: true },
@@ -73,6 +62,7 @@ router.post("/", protect, requireCabin, validate(createShoppingListSchema), asyn
                 createdById: userId,
                 cabinId: req.user!.cabinId!,
             },
+            omit: { isPantry: true },
             include: {
                 createdBy: {
                     select: { id: true, username: true, color: true },
@@ -86,61 +76,6 @@ router.post("/", protect, requireCabin, validate(createShoppingListSchema), asyn
     } catch (error) {
         logger.error("SHOPPING_LISTS", "Failed to create shopping list", error);
         res.status(500).json({ message: "Nepodařilo se vytvořit seznam" });
-    }
-});
-
-// ============================================================================
-//                           GET OR CREATE PANTRY LIST
-// ============================================================================
-router.get("/pantry", protect, requireCabin, async (req: Request, res: Response) => {
-    try {
-        const cabinId = req.user!.cabinId!;
-        let pantry = await prisma.shoppingList.findFirst({
-            where: { isPantry: true, cabinId },
-            include: {
-                items: {
-                    include: {
-                        addedBy: {
-                            select: { id: true, username: true, color: true, animalIcon: true },
-                        },
-                        purchasedBy: {
-                            select: { id: true, username: true, color: true, animalIcon: true },
-                        },
-                        splits: true,
-                    }
-                }
-            }
-        });
-
-        if (!pantry) {
-            const userId = req.user!.userId;
-            pantry = await prisma.shoppingList.create({
-                data: {
-                    name: "ZĂˇsoby (SpiĹľĂ­rna)",
-                    createdById: userId,
-                    isPantry: true,
-                    cabinId,
-                },
-                include: {
-                    items: {
-                        include: {
-                            addedBy: {
-                                select: { id: true, username: true, color: true, animalIcon: true },
-                            },
-                            purchasedBy: {
-                                select: { id: true, username: true, color: true, animalIcon: true },
-                            },
-                            splits: true,
-                        }
-                    }
-                }
-            });
-        }
-
-        res.json(pantry);
-    } catch (error) {
-        logger.error("SHOPPING_LISTS", "Failed to fetch or create pantry", error);
-        res.status(500).json({ message: "Nepodařilo se načíst spíž" });
     }
 });
 
@@ -160,22 +95,20 @@ router.patch("/:id/rename", protect, requireCabin, validate(renameShoppingListSc
             return res.status(404).json({ message: "Seznam nenalezen" });
         }
 
-        if (list.isPantry) {
-            return res.status(400).json({ error: "SpĂ­Ĺľ nelze pĹ™ejmenovat" });
-        }
-
         if (list.createdById !== req.user!.userId && req.user!.role !== "admin") {
-            return res.status(403).json({ error: "NemĂˇte oprĂˇvnÄ›nĂ­ pĹ™ejmenovat tento seznam" });
+            return res.status(403).json({ error: "Nemáte oprávnění přejmenovat tento seznam" });
         }
 
         const updated = await prisma.shoppingList.update({
             where: { id },
             data: { name: name.trim() },
+            omit: { isPantry: true },
             include: {
                 createdBy: {
                     select: { id: true, username: true, color: true, animalIcon: true },
                 },
                 items: {
+                    omit: { purchased: true },
                     include: {
                         addedBy: {
                             select: { id: true, username: true, color: true, animalIcon: true },
@@ -193,7 +126,7 @@ router.patch("/:id/rename", protect, requireCabin, validate(renameShoppingListSc
         res.json(updated);
     } catch (error) {
         logger.error("SHOPPING_LISTS", "Failed to rename shopping list", error);
-        res.status(500).json({ error: "NepodaĹ™ilo se pĹ™ejmenovat seznam" });
+        res.status(500).json({ error: "Nepodařilo se přejmenovat seznam" });
     }
 });
 
@@ -271,7 +204,8 @@ router.patch("/:id/resolve", protect, requireCabin, async (req: Request, res: Re
             where: { id },
             data: {
                 isResolved: Boolean(isResolved)
-            }
+            },
+            omit: { isPantry: true },
         });
 
         emitToCabin(req.user!.cabinId!, "shopping:list:changed", { id: updatedList.id });
@@ -279,59 +213,6 @@ router.patch("/:id/resolve", protect, requireCabin, async (req: Request, res: Re
     } catch (error) {
         logger.error("SHOPPING_LISTS", "Failed to resolve shopping list", error);
         res.status(500).json({ message: "Nepodařilo se archivovat seznam" });
-    }
-});
-
-// ============================================================================
-//                    TOGGLE ITEM PURCHASED (with inventory loop-closure)
-// PUT /:listId/items/:itemId  { purchased: boolean }
-// When purchased=true and the item has a linkedInventoryId,
-// auto-update the InventoryItem to { status: "OK", inCart: false }
-// ============================================================================
-router.put("/:listId/items/:itemId", protect, requireCabin, async (req: Request, res: Response) => {
-    try {
-        const { listId, itemId } = req.params;
-        const { purchased } = req.body;
-
-        const userId = req.user!.userId;
-
-        const item = await prisma.shoppingListItem.findFirst({
-            where: { id: itemId, listId, list: { cabinId: req.user!.cabinId } },
-        });
-
-        if (!item) {
-            return res.status(404).json({ message: "Položka v seznamu nenalezena" });
-        }
-
-        const newPurchased = Boolean(purchased);
-
-        const updatedItem = await prisma.$transaction(async (tx) => {
-            const updated = await tx.shoppingListItem.update({
-                where: { id: itemId },
-                data: {
-                    purchased: newPurchased,
-                    status: newPurchased ? "purchased" : "pending",
-                    purchasedById: newPurchased ? userId : null,
-                    purchasedAt: newPurchased ? new Date() : null,
-                },
-            });
-
-            // Loop-closure: if this item was linked to an inventory entry, restock it
-            if (newPurchased && updated.linkedInventoryId) {
-                await tx.inventoryItem.update({
-                    where: { id: updated.linkedInventoryId },
-                    data: { status: "OK", inCart: false },
-                });
-            }
-
-            return updated;
-        });
-
-        emitToCabin(req.user!.cabinId!, "shopping:item:updated", updatedItem);
-        res.json(updatedItem);
-    } catch (error) {
-        logger.error("SHOPPING_LISTS", "Failed to update item purchased status", error);
-        res.status(500).json({ message: "Nepodařilo se aktualizovat položku" });
     }
 });
 

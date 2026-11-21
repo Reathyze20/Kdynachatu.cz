@@ -192,7 +192,7 @@ async function seedShopping(tx: Tx, cabinId: string, u: DemoUserIds) {
   const weekend = await tx.shoppingList.create({ data: { cabinId, name: "Nákup na víkend", createdById: u.petr } });
   const paid = await tx.shoppingListItem.create({
     data: {
-      listId: weekend.id, name: "Dřevěné uhlí", addedById: u.petr, status: "purchased", purchased: true,
+      listId: weekend.id, name: "Dřevěné uhlí", addedById: u.petr, status: "purchased",
       purchasedById: u.jana, purchasedAt: day(-8), price: "189.00",
     },
   });
@@ -209,12 +209,10 @@ async function seedShopping(tx: Tx, cabinId: string, u: DemoUserIds) {
   const done = await tx.shoppingList.create({ data: { cabinId, name: "Nákup minulý týden", createdById: u.jana, isResolved: true } });
   await tx.shoppingListItem.createMany({
     data: [
-      { listId: done.id, name: "Toaletní papír", addedById: u.jana, status: "purchased", purchased: true, purchasedById: u.jana, purchasedAt: day(-9), price: "79.90" },
-      { listId: done.id, name: "Houbička na nádobí", addedById: u.jana, status: "purchased", purchased: true, purchasedById: u.jana, purchasedAt: day(-9), price: "24.90" },
+      { listId: done.id, name: "Toaletní papír", addedById: u.jana, status: "purchased", purchasedById: u.jana, purchasedAt: day(-9), price: "79.90" },
+      { listId: done.id, name: "Houbička na nádobí", addedById: u.jana, status: "purchased", purchasedById: u.jana, purchasedAt: day(-9), price: "24.90" },
     ],
   });
-  // Stálá spíž (pantry) – trvalý seznam zásob.
-  await tx.shoppingList.create({ data: { cabinId, name: "Spíž (stálý seznam)", createdById: u.admin, isPantry: true } });
 }
 
 async function seedInventory(tx: Tx, cabinId: string, u: DemoUserIds) {
