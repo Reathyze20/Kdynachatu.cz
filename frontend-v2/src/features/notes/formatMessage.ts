@@ -8,6 +8,14 @@
  */
 const CHECK_RE = /^(?:[-*]\s+)?\[([ x])\]\s*(.*)$/i
 
+/** Lucide `check` / `circle` jako inline SVG — výstup je HTML string, ne React (#165). */
+const svgIcon = (body: string) =>
+  '<svg class="msg-cb-icon" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"'
+  + ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
+  + ` aria-hidden="true">${body}</svg>`
+export const CHECK_DONE_ICON = svgIcon('<path d="M20 6 9 17l-5-5"/>')
+export const CHECK_TODO_ICON = svgIcon('<circle cx="12" cy="12" r="10"/>')
+
 function formatInline(line: string): string {
   return line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 }
@@ -28,8 +36,8 @@ export function formatMessage(escaped: string): string {
     if (check) {
       const done = check[1].toLowerCase() === 'x'
       return done
-        ? `<span class="msg-cb msg-cb-done">✓ <span>${formatInline(check[2])}</span></span>`
-        : `<span class="msg-cb msg-cb-todo">○ <span>${formatInline(check[2])}</span></span>`
+        ? `<span class="msg-cb msg-cb-done">${CHECK_DONE_ICON}<span>${formatInline(check[2])}</span></span>`
+        : `<span class="msg-cb msg-cb-todo">${CHECK_TODO_ICON}<span>${formatInline(check[2])}</span></span>`
     }
     return line === ''
       ? `<span class="msg-spacer"></span>`

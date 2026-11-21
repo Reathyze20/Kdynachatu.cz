@@ -4,6 +4,7 @@
  */
 import { memo } from 'react'
 import { motion } from 'framer-motion'
+import { Star } from 'lucide-react'
 import type { ShoppingItem, ItemStatus } from '@/api/shopping'
 import { useToggleItemStatus, useDeleteItem, useToggleItemEssential } from './hooks/useShoppingLists'
 import { useAuth } from '@/context/AuthContext'
@@ -113,10 +114,16 @@ function ItemRowInner({ item, listCreatedById }: Props) {
             disabled={toggleEssential.isPending}
             data-testid="shopping-item-essential-button"
           >
-            <span className={`critical-badge${item.isEssential ? ' is-active' : ''}`}>★</span>
+            <span className={`critical-badge${item.isEssential ? ' is-active' : ''}`} aria-hidden="true">
+              <Star className="w-4 h-4" fill={item.isEssential ? 'currentColor' : 'none'} />
+            </span>
           </button>
         ) : (
-          item.isEssential ? <span className="critical-badge is-active">★</span> : null
+          item.isEssential ? (
+            <span className="critical-badge is-active" role="img" aria-label="Důležité" title="Důležité">
+              <Star className="w-4 h-4" fill="currentColor" aria-hidden="true" />
+            </span>
+          ) : null
         )}
 
         {/* Smazat */}

@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { GripVertical } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useCabinSettings, useUpdateCabinSettings } from './hooks/useCabinSettings'
@@ -71,7 +72,7 @@ function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
       <div id="cs-checklist-container" className="cs-checklist" data-testid="cabin-settings-checklist-list">
         {items.map((item, i) => (
           <div key={i} className="cs-checklist-item" data-index={i} data-testid="cabin-settings-checklist-item">
-            <span className="cs-checklist-drag">⠿</span>
+            <span className="cs-checklist-drag" aria-hidden="true"><GripVertical className="w-4 h-4" /></span>
             <input
               type="text"
               className="cs-checklist-input"

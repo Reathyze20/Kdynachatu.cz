@@ -7,7 +7,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Mail } from 'lucide-react'
 
 const REGISTER_SWATCH_COLORS = [
   '#2d6a4f', '#40916c', '#52b788',
@@ -158,7 +158,7 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
     return (
       <div id="register-section" className="login-container card" data-testid="register-email-sent-screen">
         <div style={{ textAlign: 'center', padding: '40px 24px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px', color: 'var(--color-primary)' }}>✉</div>
+          <Mail size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 16px', color: 'var(--color-primary)' }} />
           <h2 style={{ margin: '0 0 12px', color: 'var(--text-main, #1a2721)' }}>Zkontrolujte svůj e-mail</h2>
           <p style={{ color: 'var(--text-muted, #6b7280)', lineHeight: 1.6, margin: '0 0 24px' }}>
             Děkujeme za registraci!<br />

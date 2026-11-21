@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { Check } from 'lucide-react'
 import type { Note } from "@/api/notes";
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar';
 import { ReactionBar } from './ReactionBar';
@@ -92,8 +93,8 @@ export function MessageBubble({
   }, [note, onContextMenu]);
 
   const resolvedBadge = resolved ? (
-    <span className="message-resolved-badge" title="Převedeno na úkol">
-      ✓
+    <span className="message-resolved-badge" title="Převedeno na úkol" role="img" aria-label="Převedeno na úkol">
+      <Check className="w-3 h-3" aria-hidden="true" />
     </span>
   ) : null;
 

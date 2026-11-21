@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import type { DashboardReservationsData, UpcomingReservation, LastStay } from "@/api/dashboard";
 import { formatDateRange, formatWeekendRange, nightsBetween, daysUntil, getTodayFormatted } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, CircleCheck, TriangleAlert } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
@@ -219,8 +219,8 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
       );
       if (hasCheckoutTasks) {
         checkoutReminderNode = active.isCheckoutCompleted
-          ? <div className="checkout-reminder checkout-reminder-done">✓ Odjezdový checklist splněn</div>
-          : <div className="checkout-reminder checkout-reminder-missed">⚠ Odjezdový checklist nebyl vyplněn</div>;
+          ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
+          : <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>;
       }
     } else if (departingToday) {
       title = active.username;

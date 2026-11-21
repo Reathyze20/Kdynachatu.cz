@@ -2,6 +2,7 @@
  * PrivacyPage.tsx — Ochrana osobních údajů (GDPR / Privacy Policy)
  */
 import { Link } from 'react-router-dom'
+import { Download, Pencil, Scale, Trash2 } from 'lucide-react'
 import '@/styles/legal.css'
 
 export function PrivacyPage() {
@@ -79,28 +80,28 @@ export function PrivacyPage() {
           <h2>Co můžete udělat se svými daty</h2>
           <div className="legal-rights-grid">
             <div className="legal-right-item">
-              <span className="legal-right-icon">↓</span>
+              <span className="legal-right-icon" aria-hidden="true"><Download className="w-5 h-5" /></span>
               <div>
                 <strong>Stáhnout si je</strong>
                 <span>V nastavení profilu tlačítkem „Exportovat moje data"</span>
               </div>
             </div>
             <div className="legal-right-item">
-              <span className="legal-right-icon">✎</span>
+              <span className="legal-right-icon" aria-hidden="true"><Pencil className="w-5 h-5" /></span>
               <div>
                 <strong>Upravit je</strong>
                 <span>E-mail, jméno a profil můžete kdykoli změnit</span>
               </div>
             </div>
             <div className="legal-right-item">
-              <span className="legal-right-icon">×</span>
+              <span className="legal-right-icon" aria-hidden="true"><Trash2 className="w-5 h-5" /></span>
               <div>
                 <strong>Smazat vše</strong>
                 <span>V nastavení profilu můžete smazat celý účet</span>
               </div>
             </div>
             <div className="legal-right-item">
-              <span className="legal-right-icon">→</span>
+              <span className="legal-right-icon" aria-hidden="true"><Scale className="w-5 h-5" /></span>
               <div>
                 <strong>Podat stížnost</strong>
                 <span>U Úřadu pro ochranu osobních údajů (uoou.gov.cz)</span>

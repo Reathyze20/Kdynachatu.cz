@@ -4,11 +4,12 @@
  * Zobrazuje se top-of-page pro celý AppShell když uživatel ztratí připojení.
  * Ukazuje i počet změn čekajících v offline frontě (lib/offlineQueue).
  * Používá VÝHRADNĚ originální CSS třídu `.offline-banner` z skeleton.css.
- * Žádné Tailwind, žádné shadcn, žádné Lucide ikony.
+ * Žádné Tailwind, žádné shadcn; ikona z lucide-react (#165).
  *
  * CSS: src/styles/skeleton.css → .offline-banner
  */
 import { useSyncExternalStore } from 'react'
+import { WifiOff } from 'lucide-react'
 import { useOnline } from '@/hooks/useOnline'
 import { getQueueLength } from '@/lib/offlineQueue'
 
@@ -25,8 +26,7 @@ export function OfflineBanner() {
 
   return (
     <div className="offline-banner" role="alert" aria-live="polite" data-testid="offline-banner">
-      {/* Unicode symbol — bez závislosti na icon knihovně */}
-      <span aria-hidden="true">⚡</span>
+      <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
       <span>
         {pendingCount > 0
           ? `Jste offline — ${pendingCount === 1 ? '1 změna čeká' : `${pendingCount} změny/změn čeká`} na odeslání. Po obnovení připojení se uloží automaticky.`

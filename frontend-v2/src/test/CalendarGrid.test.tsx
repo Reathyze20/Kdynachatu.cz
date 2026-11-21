@@ -82,4 +82,15 @@ describe('CalendarGrid', () => {
     expect(props.onRangeStartSet).toHaveBeenCalledWith('2026-05-10')
     expect(props.onRangeComplete).not.toHaveBeenCalled()
   })
+
+  it('month navigation icon buttons have accessible names', () => {
+    const props = createProps()
+    const { getByRole } = render(<CalendarGrid {...props} />)
+
+    getByRole('button', { name: 'Předchozí měsíc' }).click()
+    getByRole('button', { name: 'Další měsíc' }).click()
+
+    expect(props.onGoToPrev).toHaveBeenCalledTimes(1)
+    expect(props.onGoToNext).toHaveBeenCalledTimes(1)
+  })
 })

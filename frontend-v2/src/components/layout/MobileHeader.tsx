@@ -3,6 +3,7 @@
  * Překlad: header.mobile-header z index.html + mobile menu btn logika z main.ts
  */
 import { Link } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { isAvatarId } from '@/lib/avatars'
 
@@ -32,7 +33,7 @@ export function MobileHeader({ animalIcon, username, onOpenProfileDrawer }: Mobi
         {hasAvatar ? (
           <AnimalAvatar icon={animalIcon} username={username} size={32} />
         ) : (
-          <span className="mobile-menu-avatar" id="mobile-menu-icon">☰</span>
+          <span className="mobile-menu-avatar" id="mobile-menu-icon"><Menu className="w-5 h-5" aria-hidden="true" /></span>
         )}
       </button>
     </header>

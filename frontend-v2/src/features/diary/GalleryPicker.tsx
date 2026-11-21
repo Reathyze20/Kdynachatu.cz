@@ -3,6 +3,7 @@
  * Dvouúrovňový: Složky → Fotky (multi-select)
  */
 import { useState } from 'react'
+import { Check } from 'lucide-react'
 import {
   useGalleryFolders,
   useGalleryPhotos,
@@ -141,8 +142,8 @@ export function GalleryPicker({ currentEntryPhotoIds, onConfirm, onClose }: Prop
                       data-photo-id={photo.id}
                     >
                       <img src={photo.thumb ?? photo.src} alt={photo.description ?? ''} />
-                      {isSelected && <span className="picker-check-overlay">✓</span>}
-                      {isAlreadyAdded && <span className="picker-added-overlay">✓</span>}
+                      {isSelected && <span className="picker-check-overlay"><Check className="w-4 h-4" aria-hidden="true" /></span>}
+                      {isAlreadyAdded && <span className="picker-added-overlay"><Check className="w-4 h-4" aria-hidden="true" /></span>}
                     </div>
                   )
                 })}

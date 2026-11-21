@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { TriangleAlert } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/api/client";
 import { showToast } from "@/lib/toast";
@@ -127,7 +128,7 @@ export function DepartureBanner({ departureChecklist, onRefresh }: Props) {
       {/* Departure banner — inserted at top of dashboard grid */}
       <div id="departure-banner" className="departure-banner">
         <div className="departure-banner-content">
-          <div className="departure-banner-icon" aria-hidden="true">⚠</div>
+          <div className="departure-banner-icon" aria-hidden="true"><TriangleAlert className="w-5 h-5" /></div>
           <div className="departure-banner-text">
             <h3>Dnes odjíždíte!</h3>
             <p>Nezapomeňte vyplnit odjezdový protokol a nechat vzkaz.</p>
