@@ -168,6 +168,17 @@
 }
 
 /* ── Glassmorphism card base — JEDINÉ pravidlo pro vzhled ────────────── */
+/* Stejný povrch nese i desktopový sidebar (.app-sidebar, #205); jeho rozměry,
+   pozice a zobrazení jsou v nav.css. */
+
+.glass-card,
+.app-sidebar {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
 
 .glass-card {
   display: flex;
@@ -175,11 +186,6 @@
   padding: 16px;
   box-sizing: border-box;
   background: transparent;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
   gap: 0;
   transition:
     box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -188,7 +194,8 @@
 }
 
 /* Simulovaný backdrop-blur: zopakujeme bg image z body a rozmazáváme ji přímo */
-.glass-card::before {
+.glass-card::before,
+.app-sidebar::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -201,7 +208,8 @@
 }
 
 /* Bílý overlay přes rozmazané pozadí */
-.glass-card::after {
+.glass-card::after,
+.app-sidebar::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -212,7 +220,8 @@
 }
 
 /* Obsah karet musí být nad pseudo-elementy */
-.glass-card>* {
+.glass-card>*,
+.app-sidebar>* {
   position: relative;
   z-index: var(--z-above);
 }

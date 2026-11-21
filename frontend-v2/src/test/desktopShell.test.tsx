@@ -72,6 +72,17 @@ describe('DesktopSidebar — desktop rám #1b (#171)', () => {
     auth = { user: { cabinId: null, username: 'Eva' }, isAdmin: false }
     expect(renderSidebar('/dashboard')).toBeNull()
   })
+
+  it('nápověda je na desktopu dole v sidebaru, ne jako plovoucí tlačítko přes obsah (#205)', async () => {
+    const user = userEvent.setup()
+    renderSidebar('/reservations')
+    const sidebar = screen.getByTestId('desktop-sidebar')
+    expect(within(sidebar).queryByRole('button', { name: 'Potřebujete poradit?' })).not.toBeInTheDocument()
+
+    await user.click(within(sidebar).getByRole('button', { name: 'Nápověda' }))
+    expect(await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).toBeInTheDocument()
+    expect(screen.getByText(/Správa pobytů na chatě/)).toBeInTheDocument()
+  })
 })
 
 describe('TopBar — po příchodu sidebaru jen profilové menu (#171)', () => {
