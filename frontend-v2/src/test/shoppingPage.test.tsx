@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
+import type { ShoppingItem } from '@/api/shopping'
 import { ShoppingPage } from '@/features/shopping/ShoppingPage'
 
 // Seam celé stránky Zásoby a nákupy (#176): API klient a auth jsou namockované, zbytek je skutečný.
@@ -19,7 +20,7 @@ vi.mock('@/api/client', () => ({ default: api }))
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { userId: 'u-me', role: 'member' } }) }))
 
-const item = (overrides: Record<string, unknown>) => ({
+const item = (overrides: Pick<ShoppingItem, 'id' | 'name'> & Partial<ShoppingItem>): ShoppingItem => ({
   status: 'pending',
   addedById: 'u-me',
   createdAt: '2027-01-01T00:00:00.000Z',
@@ -28,7 +29,7 @@ const item = (overrides: Record<string, unknown>) => ({
   ...overrides,
 })
 
-function renderPage(items: unknown[]) {
+function renderPage(items: ShoppingItem[]) {
   api.get.mockImplementation((url: string) =>
     Promise.resolve({
       data: url === '/shopping-lists'
