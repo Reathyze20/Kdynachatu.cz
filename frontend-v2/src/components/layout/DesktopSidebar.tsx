@@ -44,7 +44,7 @@ export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
 
   return (
     <aside className="app-sidebar" data-testid="desktop-sidebar">
-      <Link to={homeTo} className="app-sidebar-brand" data-testid="desktop-home-link">
+      <Link to={homeTo} className="app-sidebar-brand" data-testid="desktop-home-link" title={cabin?.name ?? 'Kdy na chatu'}>
         <img src="/logo-icon.svg" alt="" className="nav-logo-icon" />
         <span className="app-sidebar-label">{cabin?.name ?? 'Kdy na chatu'}</span>
       </Link>

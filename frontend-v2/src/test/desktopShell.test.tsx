@@ -6,11 +6,14 @@ import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { TopBar } from '@/components/layout/TopBar'
 
 let features: Record<string, boolean> | null = null
-let auth = { user: { cabinId: 'c-1' as string | null, username: 'Eva' }, isAdmin: false }
+let auth: { user: { cabinId: string | null; username: string }; isAdmin: boolean; isSuperAdmin?: boolean } = {
+  user: { cabinId: 'c-1', username: 'Eva' },
+  isAdmin: false,
+}
 const logout = vi.fn()
 
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ ...auth, isSuperAdmin: false, logout }),
+  useAuth: () => ({ isSuperAdmin: false, ...auth, logout }),
 }))
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 vi.mock('@/hooks/useCabinFeatures', async (importOriginal) => ({
@@ -117,6 +120,24 @@ describe('Profilové menu v sidebaru — desktop bez horní lišty (#205)', () =
     expect(within(screen.getByRole('menu')).getAllByRole('menuitem').map((el) => el.textContent)).toEqual([
       'Osobní profil', 'Odhlásit',
     ])
+  })
+
+  it('správce platformy má v menu i Backoffice', async () => {
+    auth = { user: { cabinId: null, username: 'Eva' }, isAdmin: false, isSuperAdmin: true }
+    const user = userEvent.setup()
+    renderSidebar('/superadmin')
+    await user.click(openMenuButton())
+    expect(screen.getByRole('menuitem', { name: 'Backoffice' })).toHaveAttribute('href', '/superadmin')
+  })
+
+  it('mezerník aktivuje i položky, které jsou odkazy', async () => {
+    const user = userEvent.setup()
+    renderSidebar('/dashboard')
+    openMenuButton().focus()
+    await user.keyboard('{Enter}{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: 'Administrativa' })).toHaveFocus()
+    await user.keyboard(' ')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
   it('„Osobní profil“ otevře profilový panel a „Odhlásit“ odhlásí', async () => {

@@ -497,6 +497,10 @@
   animation-name: dropdownFadeInUp;
 }
 
+.app-sidebar-profile-menu .nav-dropdown-item {
+  min-height: 44px;
+}
+
 @keyframes dropdownFadeInUp {
   from {
     opacity: 0;

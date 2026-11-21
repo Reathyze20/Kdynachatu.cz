@@ -79,13 +79,17 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
   function handleMenuKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const items = menuItems()
     const current = items.indexOf(document.activeElement as HTMLElement)
-    const target = { ArrowDown: current + 1, ArrowUp: current - 1, Home: 0, End: items.length - 1 }[e.key]
-    if (target !== undefined) {
+    const nextIndex = { ArrowDown: current + 1, ArrowUp: current - 1, Home: 0, End: items.length - 1 }[e.key]
+    if (nextIndex !== undefined) {
       e.preventDefault()
-      items[(target + items.length) % items.length]?.focus()
+      items[(nextIndex + items.length) % items.length]?.focus()
     } else if (e.key === 'Escape' || e.key === 'Tab') {
       e.preventDefault()
       closeMenu(true)
+    } else if (e.key === ' ' && document.activeElement instanceof HTMLAnchorElement) {
+      // Položky menu se aktivují i mezerníkem; tlačítka to umí sama, odkazy ne
+      e.preventDefault()
+      document.activeElement.click()
     }
   }
 
