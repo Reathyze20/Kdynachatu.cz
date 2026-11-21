@@ -55,23 +55,25 @@ function renderOverview(data: DashboardReservationsData) {
   )
 }
 
-describe('Přehled: řetězec turnusu teď → pak (#172)', () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date(`${TODAY}T10:00:00`))
-    localStorage.clear()
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-    responses.clear()
-  })
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(`${TODAY}T10:00:00`))
+  localStorage.clear()
+})
+afterEach(() => {
+  vi.useRealTimers()
+  responses.clear()
+})
 
+const NOVAKOVI_NOW = {
+  id: 'r-now', username: 'Novákovi', userColor: null, userAnimalIcon: null,
+  from: '2026-12-08', to: '2026-12-12', purpose: 'Víkend', handoverNote: null, isCheckoutCompleted: false,
+}
+
+describe('Přehled: řetězec turnusu teď → pak (#172)', () => {
   it('karta „na chatě teď“ ukazuje řádek se dvěma dalšími pevnými pobyty, vlastní jako „Ty“', async () => {
     renderOverview(reservations({
-      activeReservation: {
-        id: 'r-now', username: 'Novákovi', userColor: null, userAnimalIcon: null,
-        from: '2026-12-08', to: '2026-12-12', purpose: 'Víkend', handoverNote: null, isCheckoutCompleted: false,
-      },
+      activeReservation: NOVAKOVI_NOW,
       upcomingReservations: [
         upcoming('r-eva', 'Eva', '2026-12-14', '2026-12-16'),
         upcoming('r-backup', 'Petr', '2026-12-20', '2026-12-22', 'backup'),
@@ -101,5 +103,52 @@ describe('Přehled: řetězec turnusu teď → pak (#172)', () => {
     await screen.findByTestId('dashboard-reservation-widget')
     await screen.findByText('Chata je volná!')
     expect(screen.queryByRole('group', { name: 'Řetězec turnusu' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
+  it('další příjezd je v bočním panelu, vlastní pobyt jako „Ty“, a karta stavu ho už neopakuje', async () => {
+    renderOverview(reservations({
+      activeReservation: NOVAKOVI_NOW,
+      upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-14', '2026-12-16'), upcoming('r-jana', 'Jana', '2026-12-28', '2026-12-30')],
+      myNextReservation: { from: '2026-12-14', to: '2026-12-16', purpose: 'Víkend' },
+    }))
+
+    const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
+    const next = await within(aside).findByRole('region', { name: 'Další příjezd' })
+    expect(next).toHaveTextContent('Ty')
+    expect(next).toHaveTextContent('14. – 16. prosince 2026')
+    expect(next).toHaveTextContent('za 4 dny')
+    expect(screen.getByTestId('dashboard-reservation-widget')).not.toHaveTextContent('Váš pobyt')
+  })
+
+  it('můj pobyt, který není hned další, ukáže boční panel zvlášť', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'), upcoming('r-eva', 'Eva', '2026-12-28', '2026-12-30')],
+      myNextReservation: { from: '2026-12-28', to: '2026-12-30', purpose: 'Víkend' },
+    }))
+
+    const next = await screen.findByRole('region', { name: 'Další příjezd' })
+    expect(next).toHaveTextContent('Jana')
+    expect(next).toHaveTextContent('Váš pobyt za 18 dní')
+  })
+
+  it('můj záložní pobyt se jako příjezd neukáže, počítají se jen pevné', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-14', '2026-12-16', 'backup')],
+      myNextReservation: { from: '2026-12-14', to: '2026-12-16', purpose: 'Víkend' },
+    }))
+
+    await screen.findByText('Chata je volná!')
+    expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
+  })
+
+  it('počasí je v bočním panelu, bez dalšího pobytu karta příjezdu chybí', async () => {
+    renderOverview(reservations())
+
+    const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
+    expect(within(aside).getByTestId('dashboard-weather-widget')).toBeInTheDocument()
+    await screen.findByText('Chata je volná!')
+    expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 })

@@ -16,6 +16,7 @@ import { EssentialWarning } from "./EssentialWarning";
 import { DepartureBanner } from "./DepartureBanner";
 import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
+import { NextArrivalCard } from "./NextArrivalCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
@@ -391,7 +392,7 @@ export function DashboardPage() {
         animate="visible"
         data-testid="dashboard-grid"
       >
-        {/* Row 1, Col 1: Reservation Card */}
+        {/* Na chatě teď */}
         <motion.div variants={cardVariants} data-testid="dashboard-reservation-widget">
           {reservationsQuery.isLoading ? (
             <StatusCardSkeleton />
@@ -402,19 +403,6 @@ export function DashboardPage() {
           ) : reservationsQuery.data ? (
             <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} />
           ) : null}
-        </motion.div>
-
-        {/* Row 1, Col 2: Weather Card */}
-        <motion.div variants={cardVariants} data-testid="dashboard-weather-widget">
-          {weatherQuery.isLoading || cabinQuery.isLoading ? (
-            <WeatherSkeleton />
-          ) : weatherQuery.isError ? (
-            <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Počasí se nepodařilo načíst" />}>
-              <FeatureErrorFallback title="Počasí se nepodařilo načíst" error={weatherQuery.error as Error} resetErrorBoundary={() => weatherQuery.refetch()} />
-            </ErrorBoundary>
-          ) : (
-            <WeatherCard weather={weatherQuery.data ?? null} />
-          )}
         </motion.div>
 
         {/* Widgety s obsahem, v pořadí: Nákupy | Nástěnka | Údržba */}
@@ -456,6 +444,21 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec; boční panel (další příjezd, dochází) doplní redesign Přehledu (#172).
-  return <TwoColumnLayout>{mainColumn}</TwoColumnLayout>;
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (další příjezd, počasí).
+  const aside = (
+    <div className="dashboard-aside" data-testid="dashboard-aside">
+      {reservationsQuery.data && <NextArrivalCard data={reservationsQuery.data} />}
+      <div data-testid="dashboard-weather-widget">
+        {weatherQuery.isLoading || cabinQuery.isLoading ? (
+          <WeatherSkeleton />
+        ) : weatherQuery.isError ? (
+          <FeatureErrorFallback title="Počasí se nepodařilo načíst" error={weatherQuery.error as Error} resetErrorBoundary={() => weatherQuery.refetch()} />
+        ) : (
+          <WeatherCard weather={weatherQuery.data ?? null} />
+        )}
+      </div>
+    </div>
+  );
+
+  return <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>;
 }

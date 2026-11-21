@@ -335,6 +335,22 @@
   overflow-y: auto;
 }
 
+/* Pod sebou: oba sloupce mají přirozenou výšku a stránka se posouvá jako celek
+   (jinak by boční panel pod hlavním sloupcem ten hlavní stlačil, #172). */
+@media (max-width: 1023px) {
+  .two-column-layout--with-aside {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .two-column-layout--with-aside > .two-column-layout__main,
+  .two-column-layout--with-aside > .two-column-layout__aside {
+    flex: none;
+    overflow: visible;
+  }
+}
+
 @media (min-width: 1024px) {
   .two-column-layout--with-aside {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
