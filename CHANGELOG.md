@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.4.2...v1.5.0) (2026-11-21)
+
+
+### Features
+
+* **dashboard:** show the turnus chain line on the overview ([#231](https://github.com/Reathyze20/Kdynachatu.cz/issues/231)) ([54cc2b2](https://github.com/Reathyze20/Kdynachatu.cz/commit/54cc2b232cddc9f4136260070b4085a2abde4e6a))
+
+
+### Bug Fixes
+
+* **nav:** move the profile menu into the desktop sidebar and drop the top bar ([#228](https://github.com/Reathyze20/Kdynachatu.cz/issues/228)) ([10d2678](https://github.com/Reathyze20/Kdynachatu.cz/commit/10d2678d1666dae97209cf337994198316e43162))
+
 ## [1.4.2](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.4.1...v1.4.2) (2026-11-21)
 
 
