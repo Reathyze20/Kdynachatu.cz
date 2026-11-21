@@ -526,7 +526,7 @@
     justify-content: space-around;
     align-items: center;
     gap: 4px;
-    /* Vodorovné odsazení drží zelené pozadí aktivní záložky od okrajů lišty (#192) */
+    /* Odsazení drží zelené pozadí aktivní záložky od všech okrajů lišty (#192) */
     padding: 6px 8px;
     padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   }

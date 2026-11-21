@@ -117,7 +117,8 @@ describe('Stará horní navigace je pryč (#171)', () => {
   })
 })
 
-type Side = 'top' | 'right' | 'bottom' | 'left'
+const SIDES = ['top', 'right', 'bottom', 'left'] as const
+type Side = (typeof SIDES)[number]
 
 /** Poslední hodnota vlastnosti pro `selector` na dané šířce (bez `!important`). */
 function declarationsAt(css: string, selector: string, width: number): Map<string, string> {
@@ -132,20 +133,19 @@ function declarationsAt(css: string, selector: string, width: number): Map<strin
   return result
 }
 
-/** Pixely v hodnotě bez `env(…)`: `calc(6px + env(safe-area-inset-bottom, 0px))` → 6. */
-const pxWithoutEnv = (value: string) =>
+/** Součet px literálů v hodnotě, `env(…)` se nepočítá: `calc(6px + env(safe-area-inset-bottom, 0px))` → 6. */
+const sumPxIgnoringEnv = (value: string) =>
   [...value.replace(/env\([^)]*\)/g, '').matchAll(/(\d+(?:\.\d+)?)px/g)].reduce((sum, m) => sum + Number(m[1]), 0)
 
-/** Výsledné odsazení podle `padding` a `padding-*` (poslední vyhrává). */
+/** Výsledné odsazení (hodnoty jako v CSS) podle `padding` a `padding-*` (poslední vyhrává). */
 function paddingAt(css: string, selector: string, width: number): Record<Side, string> {
-  const sides: Side[] = ['top', 'right', 'bottom', 'left']
   const padding: Record<Side, string> = { top: '0', right: '0', bottom: '0', left: '0' }
   for (const [prop, value] of declarationsAt(css, selector, width)) {
     if (prop === 'padding') {
       const [t, r = t, b = t, l = r] = value.split(/\s+(?![^(]*\))/)
       Object.assign(padding, { top: t, right: r, bottom: b, left: l })
     } else {
-      const side = sides.find((s) => prop === `padding-${s}`)
+      const side = SIDES.find((s) => prop === `padding-${s}`)
       if (side) padding[side] = value
     }
   }
@@ -155,8 +155,8 @@ function paddingAt(css: string, selector: string, width: number): Record<Side, s
 describe('Spodní mobilní lišta — zvýraznění aktivní záložky (#192)', () => {
   it.each([360, 375, 768])('na šířce %i px má lišta odstup od všech okrajů, takže zvýraznění nesahá na hranu', (width) => {
     const padding = paddingAt(navCssRaw, '.mobile-nav', width)
-    for (const side of ['top', 'right', 'bottom', 'left'] as const) {
-      expect(pxWithoutEnv(padding[side]), side).toBeGreaterThanOrEqual(6)
+    for (const side of SIDES) {
+      expect(sumPxIgnoringEnv(padding[side]), side).toBeGreaterThanOrEqual(6)
     }
   })
 
@@ -165,8 +165,8 @@ describe('Spodní mobilní lišta — zvýraznění aktivní záložky (#192)', 
   })
 
   it('záložky mají dotykovou plochu aspoň 44 px a mezi sebou mezeru', () => {
-    expect(pxWithoutEnv(declarationsAt(navCssRaw, '.mobile-nav-link', 375).get('min-height') ?? '')).toBeGreaterThanOrEqual(44)
-    expect(pxWithoutEnv(declarationsAt(navCssRaw, '.mobile-nav', 375).get('gap') ?? '')).toBeGreaterThan(0)
+    expect(sumPxIgnoringEnv(declarationsAt(navCssRaw, '.mobile-nav-link', 375).get('min-height') ?? '')).toBeGreaterThanOrEqual(44)
+    expect(sumPxIgnoringEnv(declarationsAt(navCssRaw, '.mobile-nav', 375).get('gap') ?? '')).toBeGreaterThan(0)
   })
 
   it('na desktopu zůstává lišta skrytá', () => {
