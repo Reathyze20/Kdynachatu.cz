@@ -137,6 +137,12 @@ stáhne) · ukazuje stav od minule + vzkaz + co dochází · stav od minule jako
 > **čeho** se úroveň týká (plynová bomba), a zvážit, zda „Plný/Půl" vůbec ukazovat zvlášť, nebo
 > sjednotit na „v pořádku" vs. „dochází/došlo" (akční stavy). Zrcadlí se v Předávce i v příjezdu.
 
+> **Rozhodnuto 2026-11-21 (#166 = A):** popisek **„Plynová bomba"** a tři stavy slovy
+> **Dostatek · Dochází · Došlo** — stejný slovník jako Zásoby. Mapování z modelu: `full` i `half` →
+> Dostatek, `low` → Dochází, `empty` → Došlo; v Předávce se zapisují jen tři hodnoty (`full`/`low`/
+> `empty`), staré `half` se jen čte jako Dostatek. Bez migrace (`gas` leží v JSON `checkoutState`).
+> Platí pro Předávku #2, příjezdovou kartu #3 i nudge.
+
 ### Pravidlo „co patří na dashboard" (z poznámky uživatele u dvou sloupců)
 
 Uživatel: *„být hodně opatrný s tím, co kam dát a jestli to má opravdu užitek mít na dashboardu."*
@@ -228,6 +234,13 @@ Tři carry-forward poznámky do Fáze 5:
 > (nebo grilling) jen na **systém značek nákupní položky** — sjednotit, co které značky znamenají
 > (`ze zásob` = `linkedInventoryId`, `z domova` = `bring_from_home`, ★ = `isEssential`, kdo koupil),
 > jak se chovají, kde se zobrazují a priorita/pořadí, aby měly jednotnou mechaniku.
+
+> **Rozhodnuto 2026-11-21 (#167 = A):** vlevo **stav nákupní položky se třemi hodnotami — Koupit /
+> Přivezu z domova / Koupeno**; u „Přivezu z domova" i „Koupeno" avatar toho, kdo to zařídil.
+> **★ (`isEssential`) je jediný signál důležitosti.** „Ze zásob" = tichý štítek podle
+> `linkedInventoryId` (ne podle ★). „Přivezu z domova" se počítá jako vyřešené: propojená zásoba se
+> přepne na Dostatek už při slibu (ne až po přivezení) a položka s ★ přestane svítit ve varování na
+> Přehledu. Bez migrace. Podklad a varianty: komentář v #167.
 
 Legacy dluh k vyřešení ve Fázi 5: **mrtvý druhý „pantry" koncept** (`ShoppingList.isPantry` +
 `/shopping-lists/pantry` + `move-from-pantry` — UI je nepoužívá, čte `InventoryItem`); **dva route
