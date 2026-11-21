@@ -15,7 +15,11 @@ import type {
 
 // ─── Query Keys ───────────────────────────────────────────────────────
 
+// Single source of truth: every query reading reservations (calendar, dashboard,
+// monthly note) lives under RESERVATIONS_KEY, so invalidating it after a
+// mutation or socket event refreshes the calendar and the dashboard alike.
 export const RESERVATIONS_KEY = ["reservations"] as const;
+export const DASHBOARD_RESERVATIONS_KEY = [...RESERVATIONS_KEY, "dashboard"] as const;
 export const USERS_KEY = ["users"] as const;
 
 // ─── Data hooks ───────────────────────────────────────────────────────
@@ -76,7 +80,7 @@ export function useDeleteReservation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.post("/reservations/delete", { id }).then((r) => r.data),
+      apiClient.delete(`/reservations/${id}`).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
       showToast("Rezervace smazána.", "success");

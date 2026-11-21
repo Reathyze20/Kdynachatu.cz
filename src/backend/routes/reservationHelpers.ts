@@ -21,6 +21,14 @@ export function isPrimaryCollisionBlocked(
   return effectiveStatus === "primary" && hasOverlappingPrimary;
 }
 
+/** Zóna, ve které se počítá „dnes“ pro rezervace (rodiny jsou v Česku), ne UTC serveru. */
+export const CABIN_TIME_ZONE = "Europe/Prague";
+
+/** Dnešní kalendářní den "YYYY-MM-DD"; `toISOString()` by po půlnoci v Praze vrátil včerejšek. */
+export function calendarTodayIso(now: Date, timeZone: string = CABIN_TIME_ZONE): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
 export interface CheckoutStateShape {
   gas?: "full" | "half" | "low" | "empty";
   heatingOff?: boolean;

@@ -3,6 +3,7 @@ import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
+import { calendarTodayIso } from "./reservationHelpers";
 
 const router = Router();
 
@@ -68,7 +69,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
 
   try {
     const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+    const todayStr = calendarTodayIso(now);
     const cabinId = req.user!.cabinId!;
 
     const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth] = await Promise.all([

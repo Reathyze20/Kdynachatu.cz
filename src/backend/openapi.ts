@@ -684,6 +684,18 @@ const paths: Record<string, OpenApiObject> = {
         "409": jsonResponse(ref("ErrorResponse"), "Kolize s potvrzenou rezervaci"),
       },
     },
+    delete: {
+      tags: ["Reservations"],
+      summary: "Smaz rezervaci (vlastnik nebo admin); stejne jako puvodni POST /api/reservations/delete",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {
+        "200": jsonResponse(ref("MessageResponse"), "Rezervace byla smazana"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatne ID"),
+        "403": jsonResponse(ref("ErrorResponse"), "Cizi rezervace v ramci chaty a uzivatel neni admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Rezervace neni v chate uzivatele"),
+      },
+    },
   },
   "/api/reservations/{reservationId}/assign": {
     post: {
