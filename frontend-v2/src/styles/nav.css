@@ -348,9 +348,9 @@
 
 /* ============================================================================
    Desktop Sidebar — rám #1b (#171): ikona + popisek, na mobilu skrytý.
-   Od #205 plovoucí karta se stejným povrchem jako .glass-card (dashboard.css):
-   rozmazaná fotka pozadí pod bílým závojem, takže sidebar a karty obsahu
-   mluví stejným jazykem. Prostředek (navigace) scrolluje, patička zůstává dole.
+   Od #205 plovoucí karta se stejným povrchem jako karty obsahu: povrch
+   (rozmazaná fotka pod bílým závojem, rámeček, stín) sdílí s .glass-card
+   v dashboard.css. Prostředek (navigace) scrolluje, patička zůstává dole.
    ============================================================================ */
 .app-sidebar {
   display: none;
@@ -370,38 +370,6 @@
     margin: 20px 0 20px 20px;
     padding: 16px 12px;
     overflow: hidden;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  }
-
-  /* Simulovaný backdrop-blur stejně jako .glass-card */
-  .app-sidebar::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: var(--z-base);
-    background: var(--bg-image) center / cover no-repeat fixed;
-    filter: blur(24px) saturate(1.8) brightness(1.05);
-    margin: -24px;
-    pointer-events: none;
-  }
-
-  .app-sidebar::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: var(--z-base);
-    background: rgba(255, 255, 255, 0.82);
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
-  .app-sidebar > * {
-    position: relative;
-    z-index: var(--z-above);
   }
 }
 
