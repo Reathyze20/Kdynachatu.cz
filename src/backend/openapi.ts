@@ -200,6 +200,25 @@ const schemas: Record<string, JsonSchema> = {
       cabinSignupEnabled: { type: "boolean", example: false },
     },
   },
+  DemoAccountsResponse: {
+    type: "object",
+    required: ["accounts"],
+    properties: {
+      accounts: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["username", "label", "role", "password"],
+          properties: {
+            username: { type: "string", example: "demo-jana" },
+            label: { type: "string", example: "Jana" },
+            role: { type: "string", example: "user" },
+            password: { type: "string" },
+          },
+        },
+      },
+    },
+  },
   CabinSettings: {
     type: "object",
     required: ["id", "name", "subdomain", "weatherLocation", "isWinterized", "features", "createdAt"],
@@ -539,6 +558,15 @@ const paths: Record<string, OpenApiObject> = {
       summary: "Verejny stav registrace novych chat (CABIN_SIGNUP_ENABLED)",
       responses: {
         "200": jsonResponse(ref("SignupStatusResponse"), "Zda jde zalozit novou chatu"),
+      },
+    },
+  },
+  "/api/demo-accounts": {
+    get: {
+      tags: ["Auth"],
+      summary: "Fiktivni demo ucty pro rychle prihlaseni (neprazdne jen na stagingu)",
+      responses: {
+        "200": jsonResponse(ref("DemoAccountsResponse"), "Seznam demo uctu, mimo staging prazdny"),
       },
     },
   },

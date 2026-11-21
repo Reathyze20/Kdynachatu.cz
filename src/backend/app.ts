@@ -44,6 +44,7 @@ import workspaceRoutes from "./routes/workspace";
 import invitesRoutes from "./routes/invites";
 import cabinRoutes from "./routes/cabin";
 import wallpapersRoutes from "./routes/wallpapers";
+import { demoAccountsHandler, resolveDemoAccounts } from "./routes/demoAccounts";
 
 export interface CreateAppOptions {
   /** Rate limitery; vypíná je jen testovací harness (jeden klient by narážel na limity). */
@@ -251,6 +252,9 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   app.use("/api/reset-password", authLimiter);
   app.use("/api/reset-password-token", authLimiter);
   app.use("/api", authRoutes);
+
+  // Rychlé přihlášení demo účty – neprázdné jen na stagingu (viz routes/demoAccounts.ts)
+  app.get("/api/demo-accounts", demoAccountsHandler(resolveDemoAccounts(process.env)));
 
   // API routes
   app.use("/api/dashboard", dashboardRoutes);

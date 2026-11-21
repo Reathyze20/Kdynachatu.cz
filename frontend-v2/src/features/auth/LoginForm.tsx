@@ -8,12 +8,15 @@ import { useAuth } from '@/context/AuthContext'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { Eye, EyeOff } from 'lucide-react'
+import type { DemoAccount } from '@/api/auth'
 
 interface LoginFormProps {
   onShowForgotPassword: () => void
   /** Bez handleru (registrace chat uzavřená) se odkaz na registraci nezobrazí. */
   onShowRegister?: () => void
   onShowVerify: (username: string, prefillCode?: string) => void
+  /** Fiktivní účty ze seedu – backend je posílá jen na stagingu; prázdné = sekce se nezobrazí. */
+  demoAccounts?: DemoAccount[]
 }
 
 interface LoginResponse {
@@ -34,7 +37,7 @@ interface AuthErrorResponse {
   testCode?: string
 }
 
-export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify }: LoginFormProps) {
+export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, demoAccounts = [] }: LoginFormProps) {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState<{ text: string; testCode?: string } | null>(null)
@@ -49,6 +52,13 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify }
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [])
+
+  function fillDemoAccount(account: DemoAccount) {
+    usernameRef.current!.value = account.username
+    passwordRef.current!.value = account.password
+    setError(null)
+    passwordRef.current!.focus()
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -202,6 +212,25 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify }
           </p>
         )}
       </form>
+
+      {demoAccounts.length > 0 && (
+        <div className="demo-accounts" data-testid="login-demo-accounts">
+          <p className="demo-accounts-title">Testovací účty (staging) – kliknutím se vyplní přihlášení:</p>
+          <div className="demo-accounts-list">
+            {demoAccounts.map((account) => (
+              <button
+                key={account.username}
+                type="button"
+                className="demo-account-chip"
+                onClick={() => fillDemoAccount(account)}
+                data-testid={`login-demo-account-${account.username}`}
+              >
+                {account.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {onShowRegister && (
         <p className="toggle-form-text">

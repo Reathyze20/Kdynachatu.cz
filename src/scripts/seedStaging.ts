@@ -17,17 +17,12 @@ import { PrismaClient } from "../generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/password";
-import { resolveSeedConfig, resolveUploadsPath } from "./seedStagingConfig";
+import { DEMO_USERS, resolveSeedConfig, resolveUploadsPath } from "./seedStagingConfig";
 import { cleanSeedFiles, writeSeedImage, SEED_FILE_PREFIX, type SeedColor } from "./seedStagingFiles";
 
 dotenv.config();
 
 const DEMO_SUBDOMAIN = "demo";
-const DEMO_USERS = [
-  { key: "admin", username: "demo-spravce", email: "demo-spravce@example.invalid", role: "admin", color: "#AB47BC", animalIcon: "liska" },
-  { key: "jana", username: "demo-jana", email: "demo-jana@example.invalid", role: "user", color: "#42A5F5", animalIcon: "veverka" },
-  { key: "petr", username: "demo-petr", email: "demo-petr@example.invalid", role: "user", color: "#66BB6A", animalIcon: "jezek" },
-] as const;
 
 type Tx = Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
 type DemoUserIds = Record<(typeof DEMO_USERS)[number]["key"], string>;

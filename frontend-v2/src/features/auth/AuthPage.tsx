@@ -9,6 +9,7 @@ import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
 import { VerifyForm } from './VerifyForm'
 import { useCabinSignup } from './hooks/useCabinSignup'
+import { useDemoAccounts } from './hooks/useDemoAccounts'
 
 type AuthView = 'login' | 'register' | 'verify' | 'forgot'
 
@@ -21,6 +22,7 @@ export function AuthPage() {
   const [view, setView] = useState<AuthView>('login')
   const [verifyState, setVerifyState] = useState<VerifyState>({ username: '' })
   const { signupEnabled } = useCabinSignup()
+  const demoAccounts = useDemoAccounts()
 
   function showVerify(username: string, prefillCode?: string) {
     setVerifyState({ username, prefillCode })
@@ -34,6 +36,7 @@ export function AuthPage() {
           onShowForgotPassword={() => setView('forgot')}
           onShowRegister={signupEnabled ? () => setView('register') : undefined}
           onShowVerify={showVerify}
+          demoAccounts={demoAccounts}
         />
       )}
       {view === 'register' && signupEnabled && (

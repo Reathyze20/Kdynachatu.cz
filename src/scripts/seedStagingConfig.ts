@@ -17,6 +17,14 @@ export interface SeedConfig {
 
 type Env = Record<string, string | undefined>;
 
+/** Fiktivní účty demo chaty. Sdílí je seed a přihlašovací rychlovolba na stagingu
+ * (src/backend/routes/demoAccounts.ts); admin má STAGING_SEED_ADMIN_PASSWORD, ostatní MEMBER. */
+export const DEMO_USERS = [
+  { key: "admin", username: "demo-spravce", email: "demo-spravce@example.invalid", role: "admin", color: "#AB47BC", animalIcon: "liska" },
+  { key: "jana", username: "demo-jana", email: "demo-jana@example.invalid", role: "user", color: "#42A5F5", animalIcon: "veverka" },
+  { key: "petr", username: "demo-petr", email: "demo-petr@example.invalid", role: "user", color: "#66BB6A", animalIcon: "jezek" },
+] as const;
+
 const MIN_PASSWORD_LENGTH = 12;
 
 /** Cesta uploadů pro seed – z UPLOADS_PATH, jinak default `data/uploads` (shodně s config.ts).
