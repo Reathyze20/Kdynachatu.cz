@@ -3,14 +3,20 @@
  * Levý sidebar desktopového rámu (redesign #1b, issue #171): ikona + popisek, stejný model jako dolní lišta.
  * Na desktopu je místa dost, takže doplňky z „Víc“ jsou vidět rovnou jako skupina pod hlavními sekcemi.
  * Dole je nápověda (#205): na desktopu nahrazuje plovoucí tlačítko, které překrývalo obsah.
+ * Pod ní profilové menu s administrací a odhlášením (#205): desktop nemá horní lištu.
  */
 import { Link, useLocation } from 'react-router-dom'
 import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
 import { HelpFab } from '@/components/shared/HelpFab'
+import { SidebarProfileMenu } from './SidebarProfileMenu'
 
-export function DesktopSidebar() {
+interface DesktopSidebarProps {
+  onOpenProfileDrawer: () => void
+}
+
+export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
   const { user } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
@@ -38,7 +44,7 @@ export function DesktopSidebar() {
 
   return (
     <aside className="app-sidebar" data-testid="desktop-sidebar">
-      <Link to={homeTo} className="app-sidebar-brand" data-testid="desktop-home-link">
+      <Link to={homeTo} className="app-sidebar-brand" data-testid="desktop-home-link" title={cabin?.name ?? 'Kdy na chatu'}>
         <img src="/logo-icon.svg" alt="" className="nav-logo-icon" />
         <span className="app-sidebar-label">{cabin?.name ?? 'Kdy na chatu'}</span>
       </Link>
@@ -58,6 +64,7 @@ export function DesktopSidebar() {
 
       <div className="app-sidebar-footer">
         <HelpFab variant="sidebar" />
+        <SidebarProfileMenu onOpenProfileDrawer={onOpenProfileDrawer} />
       </div>
     </aside>
   )

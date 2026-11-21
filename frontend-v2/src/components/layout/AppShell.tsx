@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
-import { TopBar } from './TopBar'
 import { DesktopSidebar } from './DesktopSidebar'
 import { MobileHeader } from './MobileHeader'
 import { MobileNav } from './MobileNav'
@@ -72,13 +71,11 @@ export function AppShell() {
           onOpenProfileDrawer={() => setProfileDrawerOpen(true)}
         />
 
-        {/* Desktop rám #1b: levý sidebar + obsah s omezenou čitelnou šířkou (na mobilu display: contents) */}
-        <DesktopSidebar />
+        {/* Desktop rám #1b: levý sidebar s profilovým menu (bez horní lišty, #205)
+            + obsah s omezenou čitelnou šířkou (na mobilu display: contents) */}
+        <DesktopSidebar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
         <div className="app-shell-body">
         <OfflineBanner />
-
-        {/* Desktop top bar (profilové menu) */}
-        <TopBar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
 
         {/* Page content with route transitions */}
         <main id="page-container" data-testid="app-shell-main">
