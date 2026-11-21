@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -238,5 +238,45 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
 
     await screen.findByRole('group', { name: 'Řetězec turnusu' })
     expect(screen.queryByRole('region', { name: 'Chata zatím čeká' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
+  const lastStay = (daysEmpty: number, gas: 'low' | 'empty' | null = null) => ({
+    username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-10', to: '2026-11-12',
+    isCheckoutCompleted: true, daysEmpty, checkoutState: gas ? { gas } : null,
+  })
+
+  it('upozornění je v hlavním sloupci jako karta, první má tlačítko, které vede rovnou do úkolu', async () => {
+    renderOverview(reservations({ lastStay: lastStay(20) }))
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(screen.getByTestId('dashboard-page')).toContainElement(card)
+    expect(card).toHaveTextContent('Chata je prázdná 20 dní')
+    expect(within(card).getByRole('button', { name: 'Otevřít kalendář' })).toBeInTheDocument()
+  })
+
+  it('vidět jsou nejvýš dvě upozornění, zbytek je za „Zobrazit víc“, docházející zásoby jen v kartě „Dochází“', async () => {
+    renderOverview(
+      reservations({ myNextReservation: { from: '2026-12-11', to: '2026-12-13', purpose: 'Víkend' }, lastStay: lastStay(20, 'empty') }),
+      { ...NO_SHOPPING, totalPendingShoppingCount: 1, essentialWarning: { count: 1, items: [{ name: 'Káva' }] } },
+    )
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(within(card).getAllByRole('listitem')).toHaveLength(2)
+    expect(card).toHaveTextContent('Zítra jedeš na chatu')
+    expect(card).not.toHaveTextContent('Na chatě dochází')
+    fireEvent.click(within(card).getByRole('button', { name: 'Zobrazit víc (1)' }))
+    expect(within(card).getAllByRole('listitem')).toHaveLength(3)
+    expect(card).toHaveTextContent('Chata je prázdná 20 dní')
+    expect(within(card).getByRole('button', { name: 'Zobrazit méně' })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('skryté upozornění zmizí a když nic nevisí, karta se nevykreslí', async () => {
+    renderOverview(reservations({ lastStay: lastStay(20) }))
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Skrýt' }))
+    expect(screen.queryByRole('region', { name: 'Visí na tobě' })).not.toBeInTheDocument()
   })
 })
