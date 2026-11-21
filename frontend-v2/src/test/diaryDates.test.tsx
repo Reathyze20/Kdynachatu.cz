@@ -8,10 +8,10 @@ import type { DiaryEntry, DiaryFolder } from '@/api/diary'
 // Deník staví dny přes `new Date('YYYY-MM-DD')` + setHours(0) + toISOString(). V Europe/Prague
 // je proto klíč každého dne (data-date, `date` při uložení) o den dřív než zobrazený den,
 // a to celý den, ne jen kolem půlnoci. Zápisky uložené z frontend-v2 tak v DB leží pod
-// „zobrazený den − 1“, zatímco starý frontend (před dubnem 2026) ukládal správné datum.
-// Samotná oprava klíčů by v UI posunula existující zápisky o den (zápisek z prvního dne by
-// zmizel), takže čeká na rozhodnutí o opravě dat. Tento test hlídá, aby se mapování
-// klíč ↔ den nezměnilo potichu, bez té opravy.
+// „zobrazený den − 1“, starý frontend (před dubnem 2026) ukládal správné datum. Data jsou
+// tedy smíšená a samotná oprava klíčů by posunula jinou skupinu zápisků. Oprava čeká na
+// rozhodnutí o opravě dat (viz #185). Test hlídá, aby se mapování klíč ↔ den nezměnilo
+// potichu, bez té opravy.
 
 const { api } = vi.hoisted(() => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn() } }))
 vi.mock('@/api/client', () => ({ default: api }))
@@ -71,7 +71,7 @@ describe('diary dates in Europe/Prague (characterization, #185)', () => {
     expect(cards.some(c => c.textContent?.includes('Odjezd'))).toBe(false)
   })
 
-  it('saving from a card writes the same key the card reads from, so existing entries stay put', async () => {
+  it('saving from a card writes the same key the card reads from', async () => {
     api.post.mockResolvedValue({ data: entry('2027-03-26', 'Dorazili jsme') })
     const cards = await openFolder([])
     fireEvent.click(cards[0])

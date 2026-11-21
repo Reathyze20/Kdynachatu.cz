@@ -37,19 +37,18 @@ function addDaysIso(day: string, days: number): string {
 }
 
 /**
- * Nejbližší volný víkend (So–Ne) od dnešního dne v `CABIN_TIME_ZONE`, nejvýš 26 víkendů
- * dopředu. Dnešní sobota se počítá. `reservations` jsou `primary` rezervace chaty
+ * Nejbližší volný víkend (So–Ne) od `today` ("YYYY-MM-DD" z `calendarTodayIso`), nejvýš
+ * 26 víkendů dopředu. Dnešní sobota se počítá. `reservations` jsou `primary` rezervace chaty
  * (`@db.Date`, tedy UTC půlnoc daného dne). Dny se porovnávají jako řetězce "YYYY-MM-DD".
  */
 export function nextFreeWeekend(
-  now: Date,
+  today: string,
   reservations: { dateFrom: Date; dateTo: Date }[],
 ): { start: string; end: string } | null {
   const stays = reservations.map((r) => ({
     from: r.dateFrom.toISOString().slice(0, 10),
     to: r.dateTo.toISOString().slice(0, 10),
   }));
-  const today = calendarTodayIso(now);
   const daysToSaturday = (6 - new Date(`${today}T00:00:00Z`).getUTCDay() + 7) % 7;
   let saturday = addDaysIso(today, daysToSaturday);
   for (let i = 0; i < 26; i++) {

@@ -8,12 +8,12 @@ import { calendarTodayIso, departureGate, nextFreeWeekend } from "./reservationH
 const router = Router();
 
 // ─── Helper: Find next free weekend (Sat–Sun) ─────────────────────────
-async function findNextFreeWeekend(cabinId: string, now: Date): Promise<{ start: string; end: string } | null> {
+async function findNextFreeWeekend(cabinId: string, todayStr: string): Promise<{ start: string; end: string } | null> {
   const futureReservations = await prisma.reservation.findMany({
-    where: { cabinId, status: "primary", dateTo: { gte: new Date(calendarTodayIso(now)) } },
+    where: { cabinId, status: "primary", dateTo: { gte: new Date(todayStr) } },
     select: { dateFrom: true, dateTo: true },
   });
-  return nextFreeWeekend(now, futureReservations);
+  return nextFreeWeekend(todayStr, futureReservations);
 }
 
 // ============================================================================
@@ -58,7 +58,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         where: { cabinId, userId: req.user.userId, dateFrom: { gte: new Date(todayStr) } },
         orderBy: { dateFrom: "asc" },
       }),
-      findNextFreeWeekend(cabinId, now),
+      findNextFreeWeekend(cabinId, todayStr),
       // Last completed stay (ended before today)
       prisma.reservation.findFirst({
         where: { cabinId, dateTo: { lt: new Date(todayStr) }, status: "primary" },

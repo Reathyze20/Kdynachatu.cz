@@ -22,6 +22,7 @@ describe("nextFreeWeekend", () => {
     else process.env.TZ = originalTz;
   });
 
+  const todayAt = (instant: string) => calendarTodayIso(new Date(instant));
   const day = (iso: string) => new Date(iso); // @db.Date z Prismy = UTC půlnoc
   const stay = (from: string, to: string) => ({ dateFrom: day(from), dateTo: day(to) });
 
@@ -32,16 +33,16 @@ describe("nextFreeWeekend", () => {
       });
 
       test("Saturday 00:30 in Prague (UTC still Friday): this weekend", () => {
-        assert.deepEqual(nextFreeWeekend(new Date("2027-07-09T22:30:00Z"), []), { start: "2027-07-10", end: "2027-07-11" });
+        assert.deepEqual(nextFreeWeekend(todayAt("2027-07-09T22:30:00Z"), []), { start: "2027-07-10", end: "2027-07-11" });
       });
 
       test("Sunday 00:30 in Prague (UTC still Saturday): next weekend, not the one already half over", () => {
-        assert.deepEqual(nextFreeWeekend(new Date("2027-07-10T22:30:00Z"), []), { start: "2027-07-17", end: "2027-07-18" });
+        assert.deepEqual(nextFreeWeekend(todayAt("2027-07-10T22:30:00Z"), []), { start: "2027-07-17", end: "2027-07-18" });
       });
 
       test("an occupied weekend is skipped", () => {
         assert.deepEqual(
-          nextFreeWeekend(new Date("2027-07-07T10:00:00Z"), [stay("2027-07-09", "2027-07-10")]),
+          nextFreeWeekend(todayAt("2027-07-07T10:00:00Z"), [stay("2027-07-09", "2027-07-10")]),
           { start: "2027-07-17", end: "2027-07-18" },
         );
       });
@@ -49,15 +50,15 @@ describe("nextFreeWeekend", () => {
       test("around the switch to summer time (28 March 2027)", () => {
         // Ne 28. 3. 01:30 v Praze, ještě před přechodem; víkend 3.–4. 4. je obsazený.
         assert.deepEqual(
-          nextFreeWeekend(new Date("2027-03-28T00:30:00Z"), [stay("2027-04-04", "2027-04-04")]),
+          nextFreeWeekend(todayAt("2027-03-28T00:30:00Z"), [stay("2027-04-04", "2027-04-04")]),
           { start: "2027-04-10", end: "2027-04-11" },
         );
         // Pá 26. 3. ve 23:30 v Praze: víkend přes přechod je volný.
-        assert.deepEqual(nextFreeWeekend(new Date("2027-03-26T22:30:00Z"), []), { start: "2027-03-27", end: "2027-03-28" });
+        assert.deepEqual(nextFreeWeekend(todayAt("2027-03-26T22:30:00Z"), []), { start: "2027-03-27", end: "2027-03-28" });
       });
 
       test("returns null when the next 26 weekends are taken", () => {
-        assert.equal(nextFreeWeekend(new Date("2027-07-07T10:00:00Z"), [stay("2027-07-01", "2028-02-01")]), null);
+        assert.equal(nextFreeWeekend(todayAt("2027-07-07T10:00:00Z"), [stay("2027-07-01", "2028-02-01")]), null);
       });
     });
   }
