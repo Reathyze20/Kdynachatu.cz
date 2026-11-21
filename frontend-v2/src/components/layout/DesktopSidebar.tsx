@@ -27,9 +27,10 @@ export function DesktopSidebar() {
       aria-current={item === active ? 'page' : undefined}
       data-testid="desktop-nav-link"
       data-route={item.to}
+      title={item.label}
     >
-      <item.icon size={18} aria-hidden="true" />
-      <span>{item.label}</span>
+      <item.icon size={20} aria-hidden="true" />
+      <span className="app-sidebar-label">{item.label}</span>
     </Link>
   )
 
@@ -37,7 +38,7 @@ export function DesktopSidebar() {
     <aside className="app-sidebar" data-testid="desktop-sidebar">
       <Link to={homeTo} className="app-sidebar-brand" data-testid="desktop-home-link">
         <img src="/logo-icon.svg" alt="" className="nav-logo-icon" />
-        <span className="truncate">{cabin?.name ?? 'Kdy na chatu'}</span>
+        <span className="app-sidebar-label">{cabin?.name ?? 'Kdy na chatu'}</span>
       </Link>
 
       {hasCabin ? (
@@ -45,8 +46,8 @@ export function DesktopSidebar() {
           {primary.map(renderLink)}
 
           {more.length > 0 ? (
-            <div role="group" aria-labelledby="app-sidebar-more" className="app-sidebar-group mt-3">
-              <span id="app-sidebar-more" className="px-3 py-1 text-sm font-semibold text-muted-foreground">Víc</span>
+            <div role="group" aria-labelledby="app-sidebar-more" className="app-sidebar-group">
+              <span id="app-sidebar-more" className="app-sidebar-heading app-sidebar-label">Víc</span>
               {more.map(renderLink)}
             </div>
           ) : null}
