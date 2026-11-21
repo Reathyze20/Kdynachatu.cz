@@ -56,6 +56,8 @@ export const createReservationSchema = z.object({
   purpose: z.string().min(1, "Účel je povinný").max(100, "Maximální délka je 100 znaků"),
   notes: z.string().max(1000, "Maximální délka je 1000 znaků").optional(),
   handoverNote: z.string().max(1000, "Maximální délka je 1000 znaků").optional(),
+  // Requested type; the server stores "backup" on its own when the stay collides with a primary one.
+  status: z.enum(["primary", "soft"], { message: "Neplatný typ rezervace" }).optional(),
   participantIds: z.array(z.string().uuid("Neplatné ID účastníka")).max(50).optional(),
 }).refine(data => new Date(data.to) >= new Date(data.from), {
   message: "Datum odjezdu nesmí být před příjezdem",

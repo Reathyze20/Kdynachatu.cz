@@ -330,7 +330,11 @@ const schemas: Record<string, JsonSchema> = {
       purpose: { type: "string", example: "Vikend na chate" },
       notes: { type: "string", nullable: true },
       handoverNote: { type: "string", nullable: true },
-      status: { type: "string", enum: ["primary", "soft"], nullable: true },
+      status: {
+        type: "string",
+        enum: ["primary", "soft"],
+        description: "Pozadovany typ (vychozi primary); pri kolizi s pevnou rezervaci server ulozi backup",
+      },
       participantIds: {
         type: "array",
         items: { type: "string", format: "uuid" },

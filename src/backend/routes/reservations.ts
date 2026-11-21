@@ -617,7 +617,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
       : false;
     if (isPrimaryCollisionBlocked(effectiveStatus, hasOverlappingPrimary)) {
       return res.status(409).json({
-        message: "V tomto termínu již existuje potvrzená rezervace. Nastav stav jako záložní.",
+        message: "V tomto termínu už je jiná pevná rezervace. Změňte termín, nebo rezervaci uložte jako předběžnou.",
       });
     }
 

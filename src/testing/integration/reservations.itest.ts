@@ -158,3 +158,65 @@ describe("reservations: same-cabin flows still work (positive control)", () => {
     assert.equal(ok.status, 200);
   });
 });
+
+describe("reservations: tentative type (status) on create and edit", () => {
+  const listIds = async (user: TestUser) =>
+    (await as(app, user).get("/api/reservations")).body.reservations as { id: string; status: string }[];
+
+  test("create with status soft and no collision → 201 soft, listed as soft in A and absent from B", async () => {
+    const res = await as(app, world.memberA).post("/api/reservations")
+      .send({ from: "2027-08-02", to: "2027-08-04", purpose: "Možná víkend", status: "soft" });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.status, "soft");
+
+    const listedA = (await listIds(world.memberA)).find((r) => r.id === res.body.id);
+    assert.equal(listedA?.status, "soft");
+    assert.equal((await listIds(world.memberB)).some((r) => r.id === res.body.id), false);
+  });
+
+  for (const status of ["soft", "primary"] as const) {
+    test(`create with status ${status} over a primary stay → 201 backup`, async () => {
+      // reservationA (memberA, primary) covers 2027-01-10 – 2027-01-12
+      const res = await as(app, world.adminA).post("/api/reservations")
+        .send({ from: "2027-01-11", to: "2027-01-13", purpose: "Taky bych jel", status });
+      assert.equal(res.status, 201);
+      assert.equal(res.body.status, "backup");
+    });
+  }
+
+  for (const status of ["backup", "xyz"]) {
+    test(`create with status ${status} → 400 validation error, nothing created`, async () => {
+      const countBefore = await prisma.reservation.count();
+      const res = await as(app, world.memberA).post("/api/reservations")
+        .send({ from: "2027-08-20", to: "2027-08-22", purpose: "Neplatný typ", status });
+      assert.equal(res.status, 400);
+      assert.equal(res.body.message, "Chyba validace");
+      assert.ok(res.body.errors.some((e: { path: string }) => e.path === "status"));
+      assert.equal(await prisma.reservation.count(), countBefore);
+    });
+  }
+
+  test("PUT soft → primary without a collision → 200 primary", async () => {
+    const created = await as(app, world.memberA).post("/api/reservations")
+      .send({ from: "2027-09-06", to: "2027-09-08", purpose: "Zatím předběžně", status: "soft" });
+    assert.equal(created.body.status, "soft");
+
+    const res = await as(app, world.memberA).put(`/api/reservations/${created.body.id}`).send({ status: "primary" });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.status, "primary");
+    assert.equal((await listIds(world.memberA)).find((r) => r.id === created.body.id)?.status, "primary");
+  });
+
+  test("PUT soft → primary over another primary stay → 409, reservation unchanged", async () => {
+    const created = await as(app, world.adminA).post("/api/reservations")
+      .send({ from: "2027-10-04", to: "2027-10-06", purpose: "Předběžně", status: "soft" });
+    await createReservation(world.memberA, "2027-10-05");
+    const before = await snapshot(created.body.id);
+
+    const res = await as(app, world.adminA).put(`/api/reservations/${created.body.id}`).send({ status: "primary" });
+    assert.equal(res.status, 409);
+    assert.equal(typeof res.body.message, "string");
+    assert.deepEqual(await snapshot(created.body.id), before);
+    assert.equal(before?.status, "soft");
+  });
+});

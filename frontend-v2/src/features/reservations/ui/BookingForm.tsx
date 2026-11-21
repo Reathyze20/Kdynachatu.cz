@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import type { Reservation } from "@/api/reservations";
-import { useCreateReservation, useUpdateReservation, useDeleteReservation, useUsers } from "../hooks/useReservations";
+import { useCreateReservation, useUpdateReservation, useDeleteReservation, useUsers, type BookingType } from "../hooks/useReservations";
 import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { showToast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { extractSupportErrorDetails } from "@/lib/errorDetails";
 import { isoRangesOverlap } from "@/lib/dateUtils";
 import { Home, CalendarClock } from "lucide-react";
 
@@ -21,15 +22,21 @@ interface Props {
   onCreated?: (id: string) => void;
 }
 
+/** Type the form starts with: a tentative stay stays tentative, anything else counts as firm. */
+const initialType = (existing?: Reservation | null): BookingType => (existing?.status === "soft" ? "soft" : "primary");
+
 export function BookingForm({ open, onClose, fromDate, toDate, existing, allReservations, onCreated }: Props) {
   const isEdit = !!existing;
+  // Backup is assigned by the server on a collision; the user cannot pick it or switch away from it here.
+  const isBackup = existing?.status === "backup";
 
   const [from, setFrom] = useState(fromDate ?? "");
   const [to, setTo] = useState(toDate ?? "");
   const [purpose, setPurpose] = useState("");
   const [notes, setNotes] = useState("");
   const [handover, setHandover] = useState("");
-  const [soft, setSoft] = useState(false);
+  const [bookingType, setBookingType] = useState<BookingType>("primary");
+  const soft = bookingType === "soft";
   const [participantIds, setParticipantIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -62,7 +69,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       setPurpose(existing.purpose ?? "");
       setNotes(existing.notes ?? "");
       setHandover(existing.handoverNote ?? "");
-      setSoft(existing.status === "soft");
+      setBookingType(initialType(existing));
       setParticipantIds(existing.participants?.map((p) => p.userId) ?? []);
     } else {
       setFrom(fromDate ?? "");
@@ -70,7 +77,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       setPurpose("");
       setNotes("");
       setHandover("");
-      setSoft(false);
+      setBookingType("primary");
       setParticipantIds([]);
     }
     setBackupWarning(false);
@@ -102,16 +109,19 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
     setSubmitError(null);
     setFieldErrors({});
     try {
-      const payload = { from, to, purpose, notes, handoverNote: handover, soft, participantIds };
+      const payload = { from, to, purpose, notes, handoverNote: handover, participantIds };
       if (isEdit && existing) {
-        await update.mutateAsync({ id: existing.id, payload });
+        // Send the type only when the user changed it, so an unrelated edit never re-checks collisions.
+        const typeChanged = !isBackup && bookingType !== initialType(existing);
+        await update.mutateAsync({ id: existing.id, payload: typeChanged ? { ...payload, status: bookingType } : payload });
         onClose();
       } else {
-        const res = await create.mutateAsync(payload);
+        const res = await create.mutateAsync({ ...payload, status: bookingType });
         onCreated?.(res.id);
         onClose();
       }
     } catch (error) {
+      const errorDetails = extractSupportErrorDetails(error);
       const validationErrors = (error as { response?: { data?: { errors?: { path: string; message: string }[] } } })
         ?.response?.data?.errors;
       if (Array.isArray(validationErrors)) {
@@ -120,6 +130,9 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
           newFieldErrors[err.path] = err.message;
         }
         setFieldErrors(newFieldErrors);
+      } else if (errorDetails.status === 409 && errorDetails.message) {
+        // Firm stay collides with another firm one: the server says what to do instead.
+        setSubmitError(errorDetails.message);
       } else {
         setSubmitError(
           getNetworkAwareActionMessage(
@@ -329,53 +342,57 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
 
           <div className="space-y-3 mb-6 mt-4">
             <label className="block text-sm font-medium text-slate-700">Typ rezervace</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  if (submitError) setSubmitError(null);
-                  setSoft(false);
-                }}
-                className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
-                  !soft
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
-                  !soft ? "bg-emerald-200 text-emerald-800" : "bg-slate-100 text-slate-500"
-                }`}>
-                  <Home size={18} />
-                </div>
-                <div>
-                  <div className={`font-semibold text-sm ${!soft ? "text-emerald-900" : "text-slate-700"}`}>Pevná</div>
-                  <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-emerald-700" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
-                </div>
-              </button>
+            {isBackup ? (
+              <p className="text-sm text-slate-600">Záložní – přidělil systém kvůli kolizi</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (submitError) setSubmitError(null);
+                    setBookingType("primary");
+                  }}
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
+                    !soft
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-slate-200 bg-white hover:bg-slate-50"
+                  }`}
+                >
+                  <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
+                    !soft ? "bg-emerald-200 text-emerald-800" : "bg-slate-100 text-slate-500"
+                  }`}>
+                    <Home size={18} />
+                  </div>
+                  <div>
+                    <div className={`font-semibold text-sm ${!soft ? "text-emerald-900" : "text-slate-700"}`}>Pevná</div>
+                    <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-emerald-700" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
+                  </div>
+                </button>
               
-              <button
-                type="button"
-                onClick={() => {
-                  if (submitError) setSubmitError(null);
-                  setSoft(true);
-                }}
-                className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
-                  soft
-                    ? "border-amber-500 bg-amber-50"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
-                }`}
-              >
-                <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
-                  soft ? "bg-amber-200 text-amber-800" : "bg-slate-100 text-slate-500"
-                }`}>
-                  <CalendarClock size={18} />
-                </div>
-                <div>
-                  <div className={`font-semibold text-sm ${soft ? "text-amber-900" : "text-slate-700"}`}>Předběžná</div>
-                  <div className={`text-[10px] leading-tight mt-0.5 ${soft ? "text-amber-700" : "text-slate-500"}`}>Zatím blokuji termín</div>
-                </div>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (submitError) setSubmitError(null);
+                    setBookingType("soft");
+                  }}
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
+                    soft
+                      ? "border-amber-500 bg-amber-50"
+                      : "border-slate-200 bg-white hover:bg-slate-50"
+                  }`}
+                >
+                  <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
+                    soft ? "bg-amber-200 text-amber-800" : "bg-slate-100 text-slate-500"
+                  }`}>
+                    <CalendarClock size={18} />
+                  </div>
+                  <div>
+                    <div className={`font-semibold text-sm ${soft ? "text-amber-900" : "text-slate-700"}`}>Předběžná</div>
+                    <div className={`text-[10px] leading-tight mt-0.5 ${soft ? "text-amber-700" : "text-slate-500"}`}>Zatím blokuji termín</div>
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
           {submitError ? (
             <div className="error-message show" role="alert">{submitError}</div>

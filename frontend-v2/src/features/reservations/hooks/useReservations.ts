@@ -42,13 +42,16 @@ export function useUsers() {
 
 // ─── Booking mutations ────────────────────────────────────────────────
 
+/** Type a member can pick; "backup" is assigned only by the server on a collision. */
+export type BookingType = "primary" | "soft";
+
 interface BookingPayload {
   from: string;
   to: string;
   purpose: string;
   notes?: string;
   handoverNote?: string;
-  status?: "primary" | "soft";
+  status?: BookingType;
   /** IDs of co-occupants going on this stay (organizer excluded) */
   participantIds?: string[];
 }
