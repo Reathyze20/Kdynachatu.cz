@@ -84,10 +84,8 @@ for (const actor of ["memberA", "adminA"] as const) {
     ];
     const cases: [string, (u: TestUser, t: { id: string; listId: string }) => Promise<{ status: number }>][] = [
       ["PUT /shopping-list/:itemId/purchase", (u, t) => as(app, u).put(`/api/shopping-list/${t.id}/purchase`).send({ status: "purchased", price: 1 })],
-      ["PUT /shopping-list/:listId/items/:itemId/purchase", (u, t) => as(app, u).put(`/api/shopping-list/${t.listId}/items/${t.id}/purchase`).send({ status: "pending" })],
       ["PATCH /shopping-list/:itemId/toggle-essential", (u, t) => as(app, u).patch(`/api/shopping-list/${t.id}/toggle-essential`)],
       ["DELETE /shopping-list/:itemId", (u, t) => as(app, u).delete(`/api/shopping-list/${t.id}`)],
-      ["DELETE /shopping-list/:listId/items/:itemId", (u, t) => as(app, u).delete(`/api/shopping-list/${t.listId}/items/${t.id}`)],
     ];
 
     for (const [name, call] of cases) {
@@ -105,33 +103,10 @@ for (const actor of ["memberA", "adminA"] as const) {
   });
 }
 
-describe("shopping items: a list and an item from different cabins → 404, nothing changes", () => {
-  const combos = () => [
-    { label: "list A + item B", listId: listA, itemId: itemB },
-    { label: "list B + item A", listId: listB, itemId: itemA },
-  ];
-  const cases: [string, (listId: string, itemId: string) => Promise<{ status: number }>][] = [
-    ["PUT /shopping-list/:listId/items/:itemId/purchase", (l, i) => as(app, world.memberA).put(`/api/shopping-list/${l}/items/${i}/purchase`).send({ status: "purchased" })],
-    ["DELETE /shopping-list/:listId/items/:itemId", (l, i) => as(app, world.memberA).delete(`/api/shopping-list/${l}/items/${i}`)],
-  ];
-
-  for (const [name, call] of cases) {
-    test(name, async () => {
-      for (const combo of combos()) {
-        const before = await itemSnapshot(combo.itemId);
-        const res = await call(combo.listId, combo.itemId);
-        assert.equal(res.status, 404, `${combo.label}: status`);
-        assert.deepEqual(await itemSnapshot(combo.itemId), before, `${combo.label}: changed`);
-      }
-    });
-  }
-});
-
 describe("shopping splits: splitting with a cabin B user → 404, nothing is created", () => {
   const cases: [string, Call][] = [
     ["only a cabin B user", (u) => as(app, u).put(`/api/shopping-list/${itemA}/purchase`).send({ status: "purchased", price: 50, splitWith: [world.memberB.id] })],
     ["cabin A and cabin B users", (u) => as(app, u).put(`/api/shopping-list/${itemA}/purchase`).send({ status: "purchased", price: 50, splitWith: [world.adminA.id, world.memberB.id] })],
-    ["legacy path", (u) => as(app, u).put(`/api/shopping-list/${listA}/items/${itemA}/purchase`).send({ status: "purchased", splitWith: [world.adminB.id] })],
   ];
 
   for (const [name, call] of cases) {
@@ -150,7 +125,7 @@ describe("shopping: lists for cabin A contain nothing from cabin B", () => {
     world.memberB.username, world.adminB.username, CABIN_B_NAME_PREFIX,
   ];
 
-  for (const path of ["/api/shopping-lists", "/api/shopping-lists?isPantry=true", "/api/shopping-list"]) {
+  for (const path of ["/api/shopping-lists", "/api/shopping-lists?isPantry=true"]) {
     test(`GET ${path}`, async () => {
       const res = await as(app, world.memberA).get(path);
       assert.equal(res.status, 200);
@@ -178,15 +153,6 @@ describe("shopping: same-cabin flows still work (positive control)", () => {
     } finally {
       recorder.restore();
     }
-  });
-
-  test("legacy routes with the item's own list → 200", async () => {
-    const purchase = await as(app, world.memberA).put(`/api/shopping-list/${listA}/items/${itemA}/purchase`).send({ status: "pending" });
-    assert.equal(purchase.status, 200);
-    const extra = await createItem(world.memberA, listA, "Máslo A");
-    const removed = await as(app, world.memberA).delete(`/api/shopping-list/${listA}/items/${extra}`);
-    assert.equal(removed.status, 200);
-    assert.equal(await itemSnapshot(extra), null);
   });
 
   test("member A cannot rename a list created by admin A (403 stays inside the cabin)", async () => {
@@ -256,5 +222,29 @@ describe("shopping: status is the only purchase state and the pantry concept is 
     } finally {
       await prisma.shoppingListItem.delete({ where: { id: bought.id } });
     }
+  });
+});
+
+describe("shopping: legacy item routes the frontend never called are gone", () => {
+  test("GET/POST /api/shopping-list, list-scoped purchase/delete and the \"default\" list answer 404 inside the own cabin and change nothing", async () => {
+    const itemCount = await prisma.shoppingListItem.count();
+    const listCount = await prisma.shoppingList.count();
+    const before = await itemSnapshot(itemA);
+    const u = world.memberA;
+    assert.equal((await as(app, u).get("/api/shopping-list")).status, 404);
+    assert.equal((await as(app, u).post("/api/shopping-list").send({ name: "Nový" })).status, 404);
+    assert.equal((await as(app, u).put(`/api/shopping-list/${listA}/items/${itemA}/purchase`).send({ status: "purchased" })).status, 404);
+    assert.equal((await as(app, u).delete(`/api/shopping-list/${listA}/items/${itemA}`)).status, 404);
+    assert.equal((await as(app, u).post("/api/shopping-list/default/items").send({ name: "Bez seznamu" })).status, 404);
+    assert.equal(await prisma.shoppingListItem.count(), itemCount);
+    assert.equal(await prisma.shoppingList.count(), listCount);
+    assert.deepEqual(await itemSnapshot(itemA), before);
+  });
+
+  test("an item of the own cabin is still removed through DELETE /api/shopping-list/:itemId", async () => {
+    const extra = await createItem(world.memberA, listA, "Máslo A");
+    const removed = await as(app, world.memberA).delete(`/api/shopping-list/${extra}`);
+    assert.equal(removed.status, 200);
+    assert.equal(await itemSnapshot(extra), null);
   });
 });

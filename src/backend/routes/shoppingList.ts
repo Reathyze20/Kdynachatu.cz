@@ -10,55 +10,6 @@ import { emitToCabin } from "../../utils/socket";
 const router = Router();
 
 // ============================================================================
-//                      GET SHOPPING LISTS
-// ============================================================================
-router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
-  try {
-    const items = await prisma.shoppingListItem.findMany({
-      where: {
-        list: { cabinId: req.user!.cabinId },
-      },
-      include: {
-        addedBy: { select: { username: true } },
-        purchasedBy: { select: { username: true } },
-        splits: {
-          include: {
-            user: { select: { id: true, username: true } },
-          },
-        },
-      },
-    });
-
-    const formatted = items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      addedBy: item.addedBy.username,
-      addedById: item.addedById,
-      createdAt: item.createdAt.toISOString(),
-      status: item.status,
-      purchasedBy: item.purchasedBy?.username,
-      purchasedById: item.purchasedById,
-      purchasedAt: item.purchasedAt?.toISOString(),
-      price: item.price ? parseFloat(item.price.toString()) : undefined,
-      splitWith: item.splits.map((s) => s.userId),
-      isEssential: item.isEssential,
-    }));
-
-    res.json([{ id: "default", name: "Hlavní seznam", items: formatted }]);
-  } catch (error) {
-    logger.error("SHOPPING", "Get shopping list error", { error: String(error) });
-    res.status(500).json({ message: "Chyba" });
-  }
-});
-
-// ============================================================================
-//                      CREATE SHOPPING LIST
-// ============================================================================
-router.post("/", protect, requireCabin, async (req: Request, res: Response) => {
-  res.status(200).json({ id: "default", name: "Hlavní seznam", items: [] });
-});
-
-// ============================================================================
 //                        ADD ITEM TO LIST
 // ============================================================================
 router.post("/:listId/items", protect, requireCabin, validate(createShoppingItemSchema), async (req: Request, res: Response) => {
@@ -67,16 +18,14 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
 
   try {
     // Verify list belongs to user's cabin
-    if (listId !== "default") {
-      const list = await prisma.shoppingList.findFirst({ where: { id: listId, cabinId: req.user!.cabinId } });
-      if (!list) return res.status(404).json({ message: "Seznam nenalezen." });
-    }
+    const list = await prisma.shoppingList.findFirst({ where: { id: listId, cabinId: req.user!.cabinId } });
+    if (!list) return res.status(404).json({ message: "Seznam nenalezen." });
 
     const newItem = await prisma.shoppingListItem.create({
       data: {
         name,
         addedById: req.user!.userId,
-        listId: listId === "default" ? null : listId, // For legacy / transition
+        listId,
         isEssential: Boolean(isEssential ?? false),
         sourceMessageId: sourceMessageId || null,
       },
@@ -102,11 +51,10 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
   }
 });
 
-// Item of the caller's cabin; when the route has :listId, the item must sit in that list.
-// An item without a list belongs to no cabin → 404, same as a foreign one.
-function findCabinItem(cabinId: string, itemId: string, listId?: string) {
+// Item of the caller's cabin. An item without a list belongs to no cabin → 404, same as a foreign one.
+function findCabinItem(cabinId: string, itemId: string) {
   return prisma.shoppingListItem.findFirst({
-    where: { id: itemId, ...(listId ? { listId } : {}), list: { cabinId } },
+    where: { id: itemId, list: { cabinId } },
   });
 }
 
@@ -121,7 +69,7 @@ async function handlePurchaseItem(req: Request, res: Response) {
 
   try {
     // Verify item's list belongs to user's cabin
-    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
+    const item = await findCabinItem(req.user!.cabinId!, itemId);
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
@@ -208,9 +156,6 @@ async function handlePurchaseItem(req: Request, res: Response) {
 
 router.put("/:itemId/purchase", protect, requireCabin, validate(updateItemStatusSchema), handlePurchaseItem);
 
-// Legacy path — Express sets req.params.itemId from the named segment, handler is identical
-router.put("/:listId/items/:itemId/purchase", protect, requireCabin, validate(updateItemStatusSchema), handlePurchaseItem);
-
 // ============================================================================
 //                 TOGGLE isEssential ON SHOPPING ITEM
 // ============================================================================
@@ -222,7 +167,7 @@ router.patch("/:itemId/toggle-essential", protect, requireCabin, async (req: Req
       return res.status(403).json({ message: "Hosté nemohou měnit kritické položky." });
     }
 
-    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
+    const item = await findCabinItem(req.user!.cabinId!, itemId);
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });
     }
@@ -246,7 +191,7 @@ async function deleteItem(req: Request, res: Response) {
   const { itemId } = req.params;
   try {
     // Fetch the item and verify it belongs to user's cabin
-    const item = await findCabinItem(req.user!.cabinId!, itemId, req.params.listId);
+    const item = await findCabinItem(req.user!.cabinId!, itemId);
 
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena" });
@@ -274,9 +219,6 @@ async function deleteItem(req: Request, res: Response) {
 }
 
 router.delete("/:itemId", protect, requireCabin, deleteItem);
-
-// Legacy endpoint — same handler, just different path pattern
-router.delete("/:listId/items/:itemId", protect, requireCabin, deleteItem);
 
 export default router;
 

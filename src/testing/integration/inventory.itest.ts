@@ -146,3 +146,19 @@ describe("inventory: same-cabin flows still work (positive control)", () => {
     assert.deepEqual(await itemSnapshot(itemA), before);
   });
 });
+
+describe("inventory: error messages are readable Czech", () => {
+  test("404 on a cabin B item and 409 on a second add-to-cart carry the Czech text", async () => {
+    const missing = await as(app, world.memberA).delete(`/api/inventory/${itemB}`);
+    assert.equal(missing.status, 404);
+    assert.equal(missing.body.message, "Položka nenalezena.");
+
+    const id = await createItem(world.memberA, "Cukr A", { status: "LOW" });
+    const first = await as(app, world.memberA).post(`/api/inventory/${id}/add-to-cart`).send({ newListName: "Cukr" });
+    assert.equal(first.status, 200);
+    assert.equal(first.body.message, "Přidáno do nákupního seznamu.");
+    const second = await as(app, world.memberA).post(`/api/inventory/${id}/add-to-cart`).send({ newListName: "Cukr" });
+    assert.equal(second.status, 409);
+    assert.equal(second.body.message, "Položka je již přidána do nákupu.");
+  });
+});
