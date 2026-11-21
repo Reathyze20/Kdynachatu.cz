@@ -15,7 +15,7 @@ const router = Router();
 router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
     try {
         const lists = await prisma.shoppingList.findMany({
-            // Staré „spíž“ seznamy z dřívějšího UI zůstávají skryté, dokud je neodstraní contract migrace.
+            // Legacy pantry lists from the old UI stay hidden until the contract migration removes them.
             where: { isResolved: false, isPantry: false, cabinId: req.user!.cabinId! },
             orderBy: {
                 createdAt: "desc",

@@ -1,4 +1,5 @@
 // Types for the Notes / Chat module
+import type { ItemStatus } from './shopping';
 
 export interface NoteReaction {
   emoji: string;
@@ -42,7 +43,7 @@ export interface NoteThread {
 export interface ShoppingList {
   id: string;
   name: string;
-  items?: { status: 'pending' | 'bring_from_home' | 'purchased' }[];
+  items?: { status: ItemStatus }[];
 }
 
 export interface SendNotePayload {
