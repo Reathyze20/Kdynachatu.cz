@@ -134,7 +134,7 @@ await expect(page.getByTestId('dashboard-page')).toBeVisible();
 await expect(page.getByTestId('reservations-page')).toBeVisible();
 
 // Navigation
-await page.getByTestId('desktop-nav-link').filter({ hasText: 'Rezervace' }).click();
+await page.getByTestId('desktop-nav-link').filter({ hasText: 'Kalendář' }).click();
 ```
 
 **Why use this:** Stable, doesn't break when text changes or UI is redesigned.
@@ -271,7 +271,7 @@ test('create reservation', async ({ page }) => {
 ```typescript
 // Navigate to a page
 await page.getByTestId('desktop-nav-link')
-  .filter({ hasText: 'Rezervace' })
+  .filter({ hasText: 'Kalendář' })
   .click();
 
 // Wait for page to load
@@ -372,7 +372,7 @@ test.describe('Reservations', () => {
     
     // Navigate to reservations
     await page.getByTestId('desktop-nav-link')
-      .filter({ hasText: 'Rezervace' })
+      .filter({ hasText: 'Kalendář' })
       .click();
     await expect(page.getByTestId('reservations-page')).toBeVisible();
     
