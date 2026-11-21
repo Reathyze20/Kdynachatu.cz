@@ -76,9 +76,8 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | ActiveReservation | Card | ✅ „Na chatě teď“: who is at the cabin now + turnus chain (#172) |
 | NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay, own as „Ty“, plus „Váš pobyt“ when mine is not next (#172) |
 | DepartureBanner | Banner | ✅ |
-| EssentialWarning | Alert | ✅ |
 | PinnedNote | Card | ✅ |
-| ShoppingWidget | Widget | ✅ |
+| RunningLowCard | Card | ✅ Side panel „Dochází“: essential (★) items waiting to be bought + shopping-list count, link to Zásoby; nothing to say = no card (#172) |
 
 ### Reservations (`features/reservations/`)
 | Component | Type | Status |

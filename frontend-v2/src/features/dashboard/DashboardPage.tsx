@@ -10,13 +10,12 @@ import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppi
 import { WeatherCard } from "./WeatherCard";
 import { ActiveReservation } from "./ActiveReservation";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
-import { ShoppingWidget } from "./ShoppingWidget";
 import { PinnedNote } from "./PinnedNote";
-import { EssentialWarning } from "./EssentialWarning";
 import { DepartureBanner } from "./DepartureBanner";
 import { ReconstructionWidget } from "./ReconstructionWidget";
 import { NudgeTray } from "./NudgeTray";
 import { NextArrivalCard } from "./NextArrivalCard";
+import { RunningLowCard } from "./RunningLowCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
@@ -71,28 +70,6 @@ export function WeatherSkeleton() {
               <div className="skeleton skeleton-text" style={{ width: 28, height: 11 }} />
               <div className="skeleton" style={{ width: 22, height: 22, borderRadius: "50%" }} />
               <div className="skeleton skeleton-text" style={{ width: 36, height: 13 }} />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function ShoppingSkeleton() {
-  return (
-    <div className="glass-card">
-      <div className="card-body-full" id="dashboard-shopping">
-        <div className="dashboard-card-header">
-          <div className="skeleton skeleton-text" style={{ width: 100, height: 14 }} />
-          <div className="skeleton skeleton-text" style={{ width: 70, height: 13 }} />
-        </div>
-        <div className="list-content" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div className="skeleton skeleton-avatar-sm" />
-              <div className="skeleton skeleton-text" style={{ height: 13, flex: 1 }} />
-              <div className="skeleton skeleton-badge" />
             </div>
           ))}
         </div>
@@ -280,28 +257,9 @@ export function DashboardPage() {
 
   // Prázdné widgety kolabují na kompaktní řádek a řadí se pod hlavní sloupec;
   // během načítání (a při chybě) zůstávají na svém místě, aby layout neskákal.
-  const isShoppingEmpty = shoppingQuery.isSuccess && (shoppingQuery.data?.totalPendingShoppingCount ?? 0) === 0;
   const isReconstructionEmpty = reconstructionQuery.isSuccess && (reconstructionQuery.data?.totalActiveCount ?? 0) === 0;
 
   const collapsibleWidgets = [
-    {
-      key: "shopping",
-      testId: "dashboard-shopping-widget",
-      isEmpty: isShoppingEmpty,
-      node: shoppingQuery.isLoading ? (
-        <ShoppingSkeleton />
-      ) : shoppingQuery.isError ? (
-        <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Nákupy se nepodařilo načíst" />}>
-          <FeatureErrorFallback title="Nákupy se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
-        </ErrorBoundary>
-      ) : shoppingQuery.data ? (
-        <ShoppingWidget
-          items={shoppingQuery.data.pendingShoppingItems}
-          totalCount={shoppingQuery.data.totalPendingShoppingCount}
-          totalItemsCount={shoppingQuery.data.totalItemsCount}
-        />
-      ) : null,
-    },
     {
       key: "reconstruction",
       testId: "dashboard-reconstruction-widget",
@@ -345,10 +303,6 @@ export function DashboardPage() {
       )}
 
       {/* Warnings & Banners */}
-      {shoppingQuery.isSuccess && shoppingQuery.data?.essentialWarning && (
-        <EssentialWarning warning={shoppingQuery.data.essentialWarning} />
-      )}
-
       {reservationsQuery.isSuccess && reservationsQuery.data?.departingToday && reservationsQuery.data.departingReservationId && (
         <DepartureBanner
           reservationId={reservationsQuery.data.departingReservationId}
@@ -381,7 +335,7 @@ export function DashboardPage() {
           ) : null}
         </motion.div>
 
-        {/* Widgety s obsahem, v pořadí: Nákupy | Údržba */}
+        {/* Údržba, když má obsah */}
         {filledWidgets.map((w) => (
           <motion.div key={w.key} variants={cardVariants} data-testid={w.testId}>
             {w.node}
@@ -420,9 +374,14 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (další příjezd, vzkaz, počasí).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, další příjezd, vzkaz, počasí).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
+      {shoppingQuery.isError ? (
+        <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
+      ) : shoppingQuery.data ? (
+        <RunningLowCard data={shoppingQuery.data} />
+      ) : null}
       {reservationsQuery.data && <NextArrivalCard data={reservationsQuery.data} />}
       <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
