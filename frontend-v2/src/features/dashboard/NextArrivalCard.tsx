@@ -1,29 +1,33 @@
 /**
  * NextArrivalCard — „Další příjezd“ v bočním panelu Přehledu (#172, lehký kontext).
  * Další pevný pobyt po tom aktuálním; vlastní pobyt jako „Ty“. Když můj nejbližší pobyt
- * není hned další, přidá řádek „Váš pobyt…“. Bez obojího se karta nevykreslí.
+ * není hned další, přidá řádek „Váš pobyt…“. Jen pevné pobyty. Bez obojího se karta nevykreslí.
  */
 import { useId } from "react";
 import type { DashboardReservationsData } from "@/api/dashboard";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { daysUntil, formatDateRange } from "@/lib/dateUtils";
+import { pluralize } from "@/lib/utils";
 
 function inDaysLabel(from: string): string {
   const days = daysUntil(from);
   if (days === 0) return "dnes";
   if (days === 1) return "zítra";
-  return `za ${days} ${days <= 4 ? "dny" : "dní"}`;
+  return `za ${days} ${pluralize(days, "den", "dny", "dní")}`;
 }
 
 export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
   const headingId = useId();
   const { user } = useAuth();
   const active = data.activeReservation;
-  const next = data.upcomingReservations.find((r) => r.status === "primary" && !!r.from && !!r.to && r.id !== active?.id) ?? null;
-  const myNext = data.myNextReservation;
-  const isSameStay = (a: { from: string; to: string } | null | undefined) => !!a && !!myNext && a.from === myNext.from && a.to === myNext.to;
-  const showMyNext = !!myNext && !isSameStay(next) && !isSameStay(active);
+  const firmUpcoming = data.upcomingReservations.filter((r) => r.status === "primary" && !!r.from && !!r.to);
+  const next = firmUpcoming.find((r) => r.id !== active?.id) ?? null;
+  // `myNextReservation` z API nefiltruje stav; ukáže se jen můj pevný pobyt.
+  const mine = data.myNextReservation;
+  const isMine = (r: { from: string; to: string } | null | undefined) => !!r && !!mine && r.from === mine.from && r.to === mine.to;
+  const myNext = firmUpcoming.find(isMine) ?? null;
+  const showMyNext = !!myNext && !isMine(next) && !isMine(active);
 
   if (!next && !showMyNext) return null;
 

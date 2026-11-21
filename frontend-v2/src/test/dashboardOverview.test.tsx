@@ -133,6 +133,16 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(next).toHaveTextContent('Váš pobyt za 18 dní')
   })
 
+  it('můj záložní pobyt se jako příjezd neukáže, počítají se jen pevné', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-14', '2026-12-16', 'backup')],
+      myNextReservation: { from: '2026-12-14', to: '2026-12-16', purpose: 'Víkend' },
+    }))
+
+    await screen.findByText('Chata je volná!')
+    expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
+  })
+
   it('počasí je v bočním panelu, bez dalšího pobytu karta příjezdu chybí', async () => {
     renderOverview(reservations())
 

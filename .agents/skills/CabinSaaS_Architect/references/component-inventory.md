@@ -73,7 +73,8 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | DashboardPage | Page | ✅ Complete |
 | WeatherCard | Widget | ✅ (calls Open-Meteo directly) |
-| ActiveReservation | Card | ✅ |
+| ActiveReservation | Card | ✅ „Na chatě teď“: who is at the cabin now + turnus chain (#172) |
+| NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay, own as „Ty“, plus „Váš pobyt“ when mine is not next (#172) |
 | DepartureBanner | Banner | ✅ |
 | EssentialWarning | Alert | ✅ |
 | PinnedNote | Card | ✅ |
