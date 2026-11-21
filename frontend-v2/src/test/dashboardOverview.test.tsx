@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import type { DashboardReservationsData, UpcomingReservation } from '@/api/dashboard'
+import type { DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
 const { responses } = vi.hoisted(() => ({ responses: new Map<string, unknown>() }))
@@ -39,10 +39,12 @@ function reservations(overrides: Partial<DashboardReservationsData> = {}): Dashb
   }
 }
 
-function renderOverview(data: DashboardReservationsData) {
+const NO_SHOPPING: DashboardShoppingData = { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null }
+
+function renderOverview(data: DashboardReservationsData, shopping: DashboardShoppingData = NO_SHOPPING) {
   responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [] })
   responses.set('/dashboard/reservations', data)
-  responses.set('/dashboard/shopping', { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null })
+  responses.set('/dashboard/shopping', shopping)
   responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
   responses.set('/dashboard/reconstruction', { totalActiveCount: 0, items: [] })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -151,5 +153,48 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     expect(within(aside).getByTestId('dashboard-handover-widget')).toBeInTheDocument()
     await screen.findByText('Chata je volná!')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Přehled: „Dochází“ v bočním panelu (#172)', () => {
+  it('důležité položky a počet k nakoupení jsou v bočním panelu s odkazem do Zásob, banner ani widget nákupu nezůstaly', async () => {
+    renderOverview(reservations(), {
+      pendingShoppingItems: [{ id: 's1', name: 'Káva', listId: 'l1', listName: 'Nákup', isEssential: true }],
+      totalPendingShoppingCount: 3,
+      totalItemsCount: 5,
+      essentialWarning: { count: 2, items: [{ name: 'Káva' }, { name: 'Sůl' }] },
+    })
+
+    const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
+    const low = await within(aside).findByRole('region', { name: 'Dochází' })
+    expect(low).toHaveTextContent('Káva · Sůl')
+    expect(low).toHaveTextContent('Na nákupním seznamu čekají 3 položky')
+    expect(within(low).getByRole('link', { name: 'Otevřít Zásoby' })).toHaveAttribute('href', '/shopping')
+    expect(screen.queryByText('K nakoupení')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Otevřít nákupy' })).not.toBeInTheDocument()
+  })
+
+  it('víc než pět důležitých položek zkrátí na „a N dalších“, bez důležitých zůstane jen počet', async () => {
+    const names = ['Káva', 'Sůl', 'Cukr', 'Mýdlo', 'Sirky', 'Svíčky', 'Čaj']
+    renderOverview(reservations(), {
+      ...NO_SHOPPING, totalPendingShoppingCount: 7, essentialWarning: { count: 7, items: names.map((name) => ({ name })) },
+    })
+    const low = await screen.findByRole('region', { name: 'Dochází' })
+    expect(low).toHaveTextContent('Káva · Sůl · Cukr · Mýdlo · Sirky a 2 další')
+    expect(low).not.toHaveTextContent('Svíčky')
+  })
+
+  it('bez důležitých položek ukáže karta jen počet věcí k nakoupení', async () => {
+    renderOverview(reservations(), { ...NO_SHOPPING, totalPendingShoppingCount: 1 })
+    const low = await screen.findByRole('region', { name: 'Dochází' })
+    expect(low).toHaveTextContent('Na nákupním seznamu čeká 1 položka.')
+  })
+
+  it('když nic nedochází a nic se nekupuje, karta se nevykreslí', async () => {
+    renderOverview(reservations())
+
+    await screen.findByRole('complementary', { name: 'Kontext chaty' })
+    await screen.findByText('Chata je volná!')
+    expect(screen.queryByRole('region', { name: 'Dochází' })).not.toBeInTheDocument()
   })
 })

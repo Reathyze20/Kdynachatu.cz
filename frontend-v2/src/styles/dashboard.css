@@ -441,6 +441,12 @@
   gap: 2px;
 }
 
+.running-low-card { gap: var(--space-sm); }
+.running-low-items { margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--text-main); }
+.running-low-more { font-weight: 500; color: var(--text-muted); }
+.running-low-summary { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
+.running-low-link { display: inline-flex; align-items: center; align-self: flex-start; min-height: 44px; font-size: 0.875rem; font-weight: 600; color: var(--brand-primary); }
+
 /* ── Standardizovaná hlavička karet ──────────────────────────────────── */
 
 .dashboard-card-header {
