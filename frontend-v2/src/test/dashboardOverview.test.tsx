@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -7,7 +7,7 @@ import apiClient from '@/api/client'
 import type { DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
-const { responses } = vi.hoisted(() => ({ responses: new Map<string, unknown>() }))
+const { responses, weather } = vi.hoisted(() => ({ responses: new Map<string, unknown>(), weather: { current: null as unknown } }))
 vi.mock('@/api/client', () => ({
   default: {
     get: vi.fn((url: string) =>
@@ -15,7 +15,7 @@ vi.mock('@/api/client', () => ({
     ),
   },
 }))
-vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(null)) }))
+vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(weather.current)) }))
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'u-eva', cabinId: 'c-1', username: 'Eva' }, isAdmin: false }),
 }))
@@ -65,6 +65,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   responses.clear()
+  weather.current = null
 })
 
 const NOVAKOVI_NOW = {
@@ -103,7 +104,7 @@ describe('Přehled: řetězec turnusu teď → pak (#172)', () => {
     renderOverview(reservations())
 
     await screen.findByTestId('dashboard-reservation-widget')
-    await screen.findByText('Chata je volná!')
+    await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('group', { name: 'Řetězec turnusu' })).not.toBeInTheDocument()
   })
 })
@@ -141,7 +142,7 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
       myNextReservation: { from: '2026-12-14', to: '2026-12-16', purpose: 'Víkend' },
     }))
 
-    await screen.findByText('Chata je volná!')
+    await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 
@@ -151,7 +152,7 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
     expect(within(aside).getByTestId('dashboard-weather-widget')).toBeInTheDocument()
     expect(within(aside).getByTestId('dashboard-handover-widget')).toBeInTheDocument()
-    await screen.findByText('Chata je volná!')
+    await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 })
@@ -194,7 +195,7 @@ describe('Přehled: „Dochází“ v bočním panelu (#172)', () => {
     renderOverview(reservations())
 
     await screen.findByRole('complementary', { name: 'Kontext chaty' })
-    await screen.findByText('Chata je volná!')
+    await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Dochází' })).not.toBeInTheDocument()
   })
 })
@@ -204,9 +205,38 @@ describe('Přehled: jen akce a stav chaty (#172)', () => {
     responses.set('/dashboard/reconstruction', { totalActiveCount: 1, items: [{ id: 'x', title: 'Okap', category: 'repair', status: 'approved', votesCount: 1, createdBy: 'Petr', deadline: null }] })
     renderOverview(reservations())
 
-    await screen.findByText('Chata je volná!')
+    await screen.findByText('Chata zatím čeká')
     expect(screen.queryByText('Údržba')).not.toBeInTheDocument()
     expect(screen.queryByText('Okap')).not.toBeInTheDocument()
     expect(vi.mocked(apiClient.get).mock.calls.map(([url]) => url)).not.toContain('/dashboard/reconstruction')
+  })
+})
+
+describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
+  it('pruh nahoře ukazuje jméno chaty, dnešní datum a počasí a má slot na fotku', async () => {
+    weather.current = { temp: -3.4, description: 'Zataženo' }
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    expect(await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })).toBeInTheDocument()
+    await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · −3 °C · Zataženo'))
+    expect(within(hero).getByTestId('cabin-hero-media')).toBeInTheDocument()
+    expect(screen.getByTestId('two-column-layout')).not.toContainElement(hero)
+  })
+
+  it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {
+    renderOverview(reservations())
+
+    const invite = await screen.findByRole('region', { name: 'Chata zatím čeká' })
+    expect(within(invite).getByText('Zaberte termín a rozjeďte to.')).toBeInTheDocument()
+    expect(within(invite).getByTestId('overview-invite-media')).toBeInTheDocument()
+    expect(within(invite).getByRole('button', { name: 'Zabrat termín' })).toBeInTheDocument()
+  })
+
+  it('s plánovaným pobytem pozvánka není', async () => {
+    renderOverview(reservations({ upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-28', '2026-12-30')] }))
+
+    await screen.findByRole('group', { name: 'Řetězec turnusu' })
+    expect(screen.queryByRole('region', { name: 'Chata zatím čeká' })).not.toBeInTheDocument()
   })
 })

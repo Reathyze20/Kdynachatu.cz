@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import type { DashboardReservationsData, LastStay } from "@/api/dashboard";
-import { formatWeekendRange, nightsBetween, getTodayFormatted, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
+import { formatWeekendRange, nightsBetween, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
-import { CalendarPlus, CircleCheck, TriangleAlert } from "lucide-react";
+import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
+import { CalendarPlus, CircleCheck, DoorOpen, TriangleAlert } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
@@ -97,7 +98,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const todayStr = getLocalTodayIso();
   const chainNode = <TurnusChainLine nodes={buildTurnusChain(dashboardChainStays(data, user?.username), todayStr)} className="status-chain" />;
   const currentHour = new Date().getHours();
-  const formattedDate = getTodayFormatted();
   const active = data.activeReservation;
 
   const freeWeekendNode = data.nextFreeWeekend ? (
@@ -109,7 +109,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     </button>
   ) : null;
 
-  const dateNode = <div className="dashboard-date">{formattedDate}</div>;
   const hasCheckoutTasks = cabinDepartureChecklist && cabinDepartureChecklist.length > 0;
 
   // ── Stav C: Occupied ─────────────────────────────────────────────────
@@ -169,7 +168,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     return (
       <div className={cardClass} id="dashboard-active-reservation" style={{ "--status-user-color": userColor } as React.CSSProperties}>
         <div className="card-body-full status-content">
-          {dateNode}
           <div className="status-hero-row">
             {avatarNode}
             <div className="status-hero-text">
@@ -200,7 +198,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     return (
       <div className="glass-card status-card is-free" id="dashboard-active-reservation">
         <div className="card-body-full status-content">
-          {dateNode}
           <div className="status-hero-row">
             <div className="status-avatar-block" style={{ background: "var(--color-primary)" }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
@@ -224,32 +221,23 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     );
   }
 
-  // ── Stav A: Free, nothing planned ────────────────────────────────────
+  // ── Stav A: nic se neděje → pozvánka (návrh #1 díl 5 = A, E2) ─────────
   return (
-    <div className="glass-card status-card is-free is-available" id="dashboard-active-reservation">
+    <section className="glass-card status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
       <div className="card-body-full status-content">
-        {dateNode}
-        <div className="status-hero-row">
-          <div className="status-avatar-block" style={{ background: "var(--color-primary)" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-          </div>
-          <div className="status-hero-text">
-            <div className="status-name-row">
-              <div className="status-name">Chata je volná!</div>
-            </div>
-            <div className="status-meta">
-              <span className="status-dates">Žádný plánovaný pobyt. Ideální čas vyrazit.</span>
-            </div>
-          </div>
+        <div className="overview-invite__media" data-testid="overview-invite-media" aria-hidden="true">
+          {OVERVIEW_INVITE_ILLUSTRATION ? <img src={OVERVIEW_INVITE_ILLUSTRATION} alt="" /> : <DoorOpen className="w-5 h-5" />}
         </div>
+        <h2 id="overview-invite-title" className="overview-invite__title">Chata zatím čeká</h2>
+        <p className="overview-invite__text">Zaberte termín a rozjeďte to.</p>
         {buildLastStayBlock(data.lastStay)}
-        <div className="status-cta-row">
-          {freeWeekendNode}
+        <div className="status-cta-row overview-invite__actions">
           <button className="status-cta status-cta-primary" onClick={() => navigate("/reservations")}>
-            Nová rezervace
+            Zabrat termín
           </button>
+          {freeWeekendNode}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
