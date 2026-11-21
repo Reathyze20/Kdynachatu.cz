@@ -1221,62 +1221,6 @@
   font-weight: 600;
 }
 
-/* Sunrise/sunset bar — integrated into hero zone */
-.weather-sun-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 11.5px;
-  color: var(--text-muted);
-  font-weight: 500;
-  padding: 5px 10px;
-  background: rgba(0, 0, 0, 0.025);
-  border-radius: 10px;
-}
-
-.weather-sun-uv {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-weight: 600;
-}
-
-.weather-sun-uv strong {
-  font-weight: 800;
-}
-
-.weather-sun-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.weather-sun-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.weather-sunrise-icon {
-  display: inline-block;
-  vertical-align: -2px;
-  opacity: 0.8;
-  color: #f59e0b;
-}
-
-.weather-sunset-icon {
-  display: inline-block;
-  vertical-align: -2px;
-  opacity: 0.8;
-  color: #ea580c;
-}
-
 .weather-day-length {
   font-weight: 600;
   opacity: 0.5;
@@ -1308,16 +1252,6 @@
   font-weight: 700;
 }
 
-/* UV chip colors */
-.weather-chip-uv.uv-low { background: rgba(22, 163, 74, 0.08); color: #16a34a; }
-.weather-chip-uv.uv-low strong { color: #16a34a; }
-.weather-chip-uv.uv-moderate { background: rgba(217, 119, 6, 0.08); color: #d97706; }
-.weather-chip-uv.uv-moderate strong { color: #d97706; }
-.weather-chip-uv.uv-high { background: rgba(220, 38, 38, 0.08); color: #dc2626; }
-.weather-chip-uv.uv-high strong { color: #dc2626; }
-.weather-chip-uv.uv-extreme { background: rgba(124, 58, 237, 0.08); color: #7c3aed; }
-.weather-chip-uv.uv-extreme strong { color: #7c3aed; }
-
 /* Rain chip coloring */
 .weather-chip-rain.rain-high { background: rgba(37, 99, 235, 0.08); color: #2563eb; }
 .weather-chip-rain.rain-high strong { color: #2563eb; }
@@ -1332,27 +1266,6 @@
   font-size: 0.8rem;
   font-weight: 500;
   flex-shrink: 0;
-}
-
-/* Default / caution (light rain/drizzle) — yellow */
-.weather-storm-alert.storm-caution {
-  background: rgba(234, 179, 8, 0.10);
-  border: 1px solid rgba(234, 179, 8, 0.20);
-  color: #a16207;
-}
-
-/* Warning (rain/showers/snow) — orange */
-.weather-storm-alert.storm-warning {
-  background: rgba(249, 115, 22, 0.10);
-  border: 1px solid rgba(249, 115, 22, 0.20);
-  color: #c2410c;
-}
-
-/* Severe (thunderstorms) — red */
-.weather-storm-alert.storm-severe {
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.18);
-  color: #b91c1c;
 }
 
 .weather-storm-alert strong {
@@ -1451,138 +1364,6 @@
   min-height: 48px;
 }
 
-.chart-bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
-}
-
-.chart-bar-track {
-  width: 100%;
-  height: 52px;
-  background: rgba(0, 0, 0, 0.035);
-  border-radius: 5px;
-  position: relative;
-  overflow: hidden;
-}
-
-.chart-bar-fill {
-  width: 100%;
-  border-radius: 5px 5px 0 0;
-  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
-
-.chart-bar-fill-rain {
-  background: rgba(59, 130, 246, 0.3);
-}
-
-.chart-bar-fill-wind {
-  background: rgba(16, 185, 129, 0.3);
-}
-
-.chart-bar-fill-temp {
-  background: rgba(245, 158, 11, 0.3);
-}
-
-.chart-bar-fill-accent.chart-bar-fill-temp {
-  background: linear-gradient(to top, #d97706, #fbbf24);
-}
-
-.chart-bar-fill-accent.chart-bar-fill-rain {
-  background: linear-gradient(to top, #2563eb, #60a5fa);
-}
-
-.chart-bar-fill-accent.chart-bar-fill-wind {
-  background: linear-gradient(to top, #059669, #34d399);
-}
-
-.chart-bar-label {
-  font-size: 9.5px;
-  color: var(--text-muted);
-  font-weight: 500;
-  white-space: nowrap;
-  line-height: 1;
-  opacity: 0.55;
-}
-
-.chart-bar-label-accent {
-  font-weight: 700;
-  opacity: 1;
-}
-
-/* "Teď" (now) label — visually distinct from numbered hours */
-.chart-bar-now {
-  font-weight: 700;
-  opacity: 1;
-  color: var(--text-main);
-  font-size: 10px;
-}
-
-/* Dimmed value labels on non-peak bars */
-.chart-bar-value-dim {
-  color: var(--text-muted);
-  font-size: 8.5px;
-  font-weight: 500;
-  opacity: 0.6;
-}
-
-/* Peak label colors per chart type */
-.chart-bar-peak[data-chart="rain"] .chart-bar-label-accent {
-  color: #2563eb;
-}
-
-.chart-bar-peak[data-chart="wind"] .chart-bar-label-accent {
-  color: #059669;
-}
-
-.chart-bar-peak[data-chart="temp"] .chart-bar-label-accent {
-  color: #d97706;
-}
-
-.chart-bar-value {
-  font-size: 9.5px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  text-align: center;
-  min-height: 12px;
-  /* Value now appears above the track in normal flex flow, not inside it */
-}
-
-.chart-bar-value-temp {
-  color: #d97706;
-}
-
-.chart-bar-value-rain {
-  color: #2563eb;
-}
-
-.chart-bar-value-wind {
-  color: #059669;
-}
-
-/* "No rain" fallback */
-.rain-clear-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1;
-  min-height: 80px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  opacity: 0.65;
-  padding: 8px 0;
-  text-align: center;
-}
-
 /* ── ZONE 3: Forecast — 5-day strip ──────────────────────────────── */
 
 .weather-forecast {
@@ -1594,73 +1375,6 @@
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
   gap: 2px;
-}
-
-.forecast-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex: 1;
-  padding: 8px 4px;
-  border-radius: 10px;
-  transition: background 0.15s ease;
-  cursor: default;
-}
-
-.forecast-day:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.forecast-day-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.01em;
-}
-
-.forecast-icon {
-  margin: 2px 0;
-}
-
-.forecast-temps {
-  font-size: 13.5px;
-  color: var(--text-main);
-  line-height: 1.3;
-  text-align: center;
-}
-
-.forecast-temps strong {
-  font-weight: 800;
-}
-
-.forecast-temps .forecast-temp-min {
-  color: var(--text-muted);
-  font-weight: 400;
-  font-size: 12px;
-  margin-left: 1px;
-}
-
-.forecast-precip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  color: #1976d2;
-  opacity: 0.8;
-  line-height: 1;
-  min-height: 14px;
-}
-
-.forecast-precip-none {
-  visibility: hidden;
-}
-
-.forecast-day-today .forecast-day-name {
-  color: var(--text-main);
-  font-weight: 700;
 }
 
 /* ── Weather card — desktop compaction (3-col grid, constrained height) ── */
@@ -1690,18 +1404,6 @@
     gap: 4px;
   }
 
-  .weather-sun-bar {
-    padding: 5px 10px;
-    font-size: 10.5px;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .weather-sun-uv {
-    padding: 2px 7px;
-    font-size: 10px;
-  }
-
   .weather-chart-section {
     padding-top: 8px;
     gap: 8px;
@@ -1728,43 +1430,9 @@
     text-align: right;
   }
 
-  .chart-bar-track {
-    height: 52px;
-  }
-
-  .chart-bar-value {
-    font-size: 9px;
-  }
-
-  .chart-bar-value-dim {
-    opacity: 0;
-  }
-
   .weather-forecast {
     padding: 6px 4px 2px;
     margin-top: 2px;
-  }
-
-  .forecast-day {
-    padding: 5px 3px;
-    gap: 3px;
-  }
-
-  .forecast-day-name {
-    font-size: 11px;
-  }
-
-  .forecast-temps {
-    font-size: 12.5px;
-  }
-
-  .forecast-precip {
-    font-size: 9px;
-  }
-
-  /* Hide forecast icons on desktop — saves ~28px vertical space, day+temps+precip is sufficient */
-  .forecast-icon {
-    display: none;
   }
 }
 
@@ -2107,59 +1775,12 @@
    Empty states
    ============================================================================ */
 
-.empty-state-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  flex: 1;
-  min-height: 120px;
-  gap: 10px;
-  padding: 16px;
-}
-
 .empty-state-icon,
 .empty-icon-duotone {
   font-size: 34px;
   color: var(--text-placeholder);
   opacity: 0.4;
   margin-bottom: 2px;
-}
-
-.empty-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-main);
-  margin: 0;
-}
-
-.empty-subtext {
-  font-size: 13px;
-  color: var(--text-placeholder);
-  margin: 0;
-}
-
-.empty-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  padding: 8px 20px;
-  background-color: var(--bg-card);
-  color: var(--text-main);
-  border: 1px solid var(--border-light);
-  border-radius: 9999px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.empty-cta:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--border-strong);
 }
 
 /* ============================================================================
@@ -2671,20 +2292,6 @@
   .status-handover {
     font-size: 12px;
     padding: 8px 10px;
-  }
-
-  .empty-state-card {
-    min-height: 140px;
-    padding: 14px;
-    gap: 8px;
-  }
-
-  .empty-cta {
-    width: 100%;
-    justify-content: center;
-    padding: 10px 16px;
-    font-size: 14px;
-    min-height: 44px;
   }
 
   .dashboard-card-header-title {
