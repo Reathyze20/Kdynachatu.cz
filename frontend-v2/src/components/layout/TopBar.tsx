@@ -1,13 +1,13 @@
 /**
  * components/layout/TopBar.tsx
- * Překlad: div.top-bar z index.html + dropdown logika + nav z router.ts buildNav()
+ * Překlad: div.top-bar z index.html + dropdown logika.
+ * Navigace sekcí je od desktop rámu #1b (#171) v DesktopSidebar; tady zůstává profilové menu s administrací.
  */
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
-import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { ChevronDown, LogOut, ScrollText, Settings, Shield, User, UserPlus } from 'lucide-react'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
@@ -19,7 +19,6 @@ interface TopBarProps {
 export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
   const { user, isAdmin, isSuperAdmin, logout } = useAuth()
   const { data: cabin } = useCabinFeatures()
-  const location = useLocation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -58,36 +57,10 @@ export function TopBar({ onOpenProfileDrawer }: TopBarProps) {
     showToast('Odhlášení úspěšné', 'info')
   }
 
-  // Sekce chaty dle feature flags (bez chaty žádné); admin obrazovky jsou v dropdownu.
-  // Desktop zatím ukazuje hlavní sekce i doplňky v jedné řadě, sidebar přijde v dalším kroku #171.
-  const mainNavItems = user?.cabinId ? visibleNavItems([...PRIMARY_NAV, ...MORE_NAV], cabin?.features) : []
-  const activeItem = findActiveNavItem(mainNavItems, location)
-
   const username = user?.username ?? 'Uživatel'
 
   return (
     <div className="top-bar" data-testid="desktop-topbar">
-      <div className="nav-left-group">
-        <Link to={user?.isSuperAdmin && !user?.cabinId ? '/superadmin' : '/dashboard'} className="brand-logo-lockup" data-testid="desktop-home-link">
-          <img src="/logo-icon.svg" alt="Kdy na chatu" className="nav-logo-icon" />
-        </Link>
-
-        <nav id="app-nav" className="app-nav" aria-label="Hlavní navigace" data-testid="desktop-primary-nav">
-          {mainNavItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`nav-link${item === activeItem ? ' active' : ''}`}
-              aria-current={item === activeItem ? 'page' : undefined}
-              data-testid="desktop-nav-link"
-              data-route={item.to}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
       <div className="user-info dropdown-container" id="nav-user-dropdown-container" ref={dropdownRef}>
         <button
           id="nav-dropdown-trigger"

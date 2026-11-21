@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { TopBar } from '@/components/layout/TopBar'
 
 let features: Record<string, boolean> | null = null
 
@@ -77,20 +76,5 @@ describe('MobileNav — dolní lišta (#171)', () => {
     renderNav('/dashboard')
     expect(screen.queryByRole('button', { name: /Víc/ })).not.toBeInTheDocument()
     expect(screen.getAllByRole('link')).toHaveLength(4)
-  })
-})
-
-describe('TopBar — desktop navigace do příchodu sidebaru (#171)', () => {
-  it('ukazuje všechny sekce chaty a aktivní je jen jedna', () => {
-    features = null
-    render(
-      <MemoryRouter initialEntries={['/reservations']}>
-        <TopBar onOpenProfileDrawer={vi.fn()} />
-      </MemoryRouter>,
-    )
-    const nav = screen.getByRole('navigation', { name: 'Hlavní navigace' })
-    expect(within(nav).getAllByRole('link').map(hrefOf)).toEqual(expect.arrayContaining(CABIN_PAGES))
-    expect(within(nav).getByRole('link', { name: 'Kalendář' })).toHaveAttribute('aria-current', 'page')
-    expect(within(nav).getByRole('link', { name: 'Předávka' })).not.toHaveAttribute('aria-current')
   })
 })

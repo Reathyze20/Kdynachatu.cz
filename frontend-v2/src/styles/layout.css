@@ -285,6 +285,32 @@
   }
 }
 
+/* ── Desktop rám #1b (#171): sidebar vlevo, obsah s omezenou čitelnou šířkou ── */
+.app-shell-body {
+  display: contents;
+  /* mobil: banner, top bar a stránka zůstávají přímo v .app-container */
+}
+
+@media (min-width: 769px) {
+  .app-container {
+    flex-direction: row;
+    max-width: none;
+    padding: 0;
+  }
+
+  .app-shell-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    max-width: 1200px;
+    /* čitelná šířka (G1), po stranách zůstává pozadí */
+    margin: 0 auto;
+    padding: 0 20px 20px;
+  }
+}
+
 /* ── Chybová hlášení uvnitř auth karet ─────────────────────────── */
 
 #login-error,

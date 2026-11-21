@@ -32,7 +32,8 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Component | Purpose | Key Props |
 |---|---|---|
 | **AppShell** | Main wrapper — header + nav + `<Outlet>` with Framer Motion route transitions | — |
-| **TopBar** | Desktop navigation bar with cabin name, nav links, user dropdown | `onOpenProfileDrawer` |
+| **TopBar** | Desktop bar with the profile dropdown (profile, admin, backoffice, logout); section nav lives in DesktopSidebar | `onOpenProfileDrawer` |
+| **DesktopSidebar** | Desktop left sidebar (frame #1b): cabin name + `PRIMARY_NAV` and a „Víc“ group with `MORE_NAV`, icon + label | — |
 | **MobileHeader** | Mobile top bar with user avatar | `animalIcon, username, onOpenProfileDrawer` |
 | **MobileNav** | Bottom tab bar: `PRIMARY_NAV` (Přehled · Kalendář · Předávka · Zásoby) + „Víc“ sheet with `MORE_NAV` | — |
 | **ProfileDrawer** | Right-side sheet with profile settings, avatar/color picker, password change, logout | `open, onClose` |
