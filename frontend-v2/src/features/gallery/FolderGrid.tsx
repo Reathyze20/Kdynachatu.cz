@@ -129,7 +129,7 @@ export function FolderGrid({
             <option value="name-desc">Z → A</option>
           </select>
           {!isGuest && (
-            <button className="btn-primary gallery-new-album-btn" onClick={onNewFolder} data-testid="gallery-create-folder-button">
+            <button className="btn btn-primary gallery-new-album-btn" onClick={onNewFolder} data-testid="gallery-create-folder-button">
               <Plus size={16} />
               <span className="gallery-btn-label">Nové album</span>
             </button>

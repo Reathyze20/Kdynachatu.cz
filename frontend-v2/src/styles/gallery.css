@@ -120,15 +120,11 @@ select.gallery-sort-select:focus {
   border-color: var(--brand-primary) !important;
 }
 
-/* New album button */
+/* New album button — tvar a zarovnání dává `.btn`, tady jen velikost do lišty */
 .gallery-new-album-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
   font-size: 0.85rem;
   padding: 0 16px;
   height: 36px;
-  border-radius: var(--radius-full, 9999px);
 }
 
 /* Tool buttons (select, upload) */
