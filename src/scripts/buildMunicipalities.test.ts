@@ -1,25 +1,19 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { jtskToWgs84 } from "./buildMunicipalities";
+import { jtskToWgs84, MUNICIPALITIES_FILE, type MunicipalityDataset } from "./buildMunicipalities";
 
-interface Dataset {
-  license: string;
-  districts: { code: number; name: string; region: string; municipalities: [number, string, number, number][] }[];
-}
-
-const DATA_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "../backend/data/municipalities.json");
-const dataset = JSON.parse(fs.readFileSync(DATA_FILE, "utf8")) as Dataset;
+// Strážce vygenerovaného souboru: ověřuje data v repu, ne parser (ten se pouští jen při aktualizaci).
+const dataset = JSON.parse(fs.readFileSync(MUNICIPALITIES_FILE, "utf8")) as MunicipalityDataset;
 const all = dataset.districts.flatMap((d) => d.municipalities.map(([code, name, lat, lon]) => ({ code, name, lat, lon, district: d.name, region: d.region })));
 
 describe("jtskToWgs84", () => {
-  test("converts an S-JTSK point to WGS84 within metres", () => {
-    // Definiční bod obce Plzeň z RÚIAN; referenční WGS84 z GeometryServer/project na ags.cuzk.cz.
+  test("matches the ČÚZK transformation service within about 15 m", () => {
+    // Definiční bod obce Plzeň z RÚIAN (ST_UZSZ k 2026-10-31: -822400.00 -1069700.00);
+    // referenční WGS84 z GeometryServer/project na ags.cuzk.cz.
     const [lat, lon] = jtskToWgs84(-822400, -1069700);
-    assert.ok(Math.abs(lat - 49.74758) < 0.0003, `lat ${lat}`);
-    assert.ok(Math.abs(lon - 13.37764) < 0.0003, `lon ${lon}`);
+    assert.ok(Math.abs(lat - 49.74758) < 0.00015, `lat ${lat}`);
+    assert.ok(Math.abs(lon - 13.37764) < 0.00015, `lon ${lon}`);
   });
 });
 

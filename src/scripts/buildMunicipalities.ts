@@ -1,6 +1,7 @@
 /**
  * Vygeneruje src/backend/data/municipalities.json – seznam obcí ČR s okresem, krajem a
- * definičním bodem obce (WGS84) pro výběr nejbližší obce chaty (ADR-0006, #279).
+ * definičním bodem obce (WGS84) pro výběr nejbližší obce chaty (#279; appka zná polohu chaty
+ * jen na úrovni obce, ADR-0006 „Chata je anonymní“).
  *
  * Zdroj: RÚIAN, výměnný formát VFR „stát – základní data“ (ST_UZSZ), ČÚZK, licence CC BY 4.0.
  *   1. Stáhni https://vdp.cuzk.cz/vymenny_format/soucasna/<YYYYMMDD>_ST_UZSZ.xml.zip
@@ -13,7 +14,25 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const OUTPUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../backend/data/municipalities.json");
+export const MUNICIPALITIES_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "../backend/data/municipalities.json");
+
+/** Tvar src/backend/data/municipalities.json. */
+export interface MunicipalityDataset {
+  source: string;
+  license: string;
+  validFrom: string;
+  format: string;
+  changes: string;
+  districts: MunicipalityDistrict[];
+}
+
+export interface MunicipalityDistrict {
+  code: number;
+  name: string;
+  region: string;
+  /** [kód obce, název, zeměpisná šířka, zeměpisná délka] */
+  municipalities: [number, string, number, number][];
+}
 
 /** S-JTSK (EPSG:5514, Křovák East-North) → WGS84 [lat, lon]. Zpětný Křovák + 7prvková Helmertova transformace. */
 export function jtskToWgs84(easting: number, northing: number, height = 300): [number, number] {
@@ -84,6 +103,8 @@ export function jtskToWgs84(easting: number, northing: number, height = 300): [n
 
 const PRAGUE_MUNICIPALITY = 554782;
 const PRAGUE_REGION = "19";
+/** Praha v RÚIAN okres nemá; použije se kód 3100, který pro ni vede ČSÚ (LAU 1 CZ0100). */
+const PRAGUE_DISTRICT = 3100;
 
 const round4 =(value: number) => Math.round(value * 10000) / 10000;
 
@@ -102,22 +123,27 @@ function main(file: string) {
   const validFrom = path.basename(file).slice(0, 8).replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
 
   const regions = new Map(records(xml, "Vusc").map((r) => [field(r, /<vci:Kod>(\d+)</), field(r, /<vci:Nazev>([^<]+)</)]));
-  const districts = records(xml, "Okres").map((r) => ({
+  const regionName = (code: string) => {
+    const name = regions.get(code);
+    if (!name) throw new Error(`Neznámý kraj ${code}`);
+    return name;
+  };
+  const districts: MunicipalityDistrict[] = records(xml, "Okres").map((r) => ({
     code: Number(field(r, /<oki:Kod>(\d+)</)),
     name: field(r, /<oki:Nazev>([^<]+)</),
-    region: regions.get(field(r, /<vci:Kod>(\d+)</)) ?? "",
-    municipalities: [] as [number, string, number, number][],
+    region: regionName(field(r, /<vci:Kod>(\d+)</)),
+    municipalities: [],
   }));
   // Praha jako jediná obec nemá okres; okres i kraj je u ní „Hlavní město Praha“.
-  const prague = regions.get(PRAGUE_REGION) ?? "Hlavní město Praha";
-  districts.push({ code: 0, name: prague, region: prague, municipalities: [] });
+  const prague = regionName(PRAGUE_REGION);
+  districts.push({ code: PRAGUE_DISTRICT, name: prague, region: prague, municipalities: [] });
   const byCode = new Map(districts.map((d) => [d.code, d]));
 
   for (const r of records(xml, "Obec")) {
     const [easting, northing] = field(r, /<gml:pos>([^<]+)</).trim().split(/\s+/).map(Number);
     const [lat, lon] = jtskToWgs84(easting, northing);
     const code = Number(field(r, /<obi:Kod>(\d+)</));
-    const districtCode = code === PRAGUE_MUNICIPALITY ? 0 : Number(field(r, /<oki:Kod>(\d+)</));
+    const districtCode = code === PRAGUE_MUNICIPALITY ? PRAGUE_DISTRICT : Number(field(r, /<oki:Kod>(\d+)</));
     const district = byCode.get(districtCode);
     if (!district) throw new Error(`Obec bez okresu: ${r.slice(0, 80)}`);
     district.municipalities.push([code, field(r, /<obi:Nazev>([^<]+)</), round4(lat), round4(lon)]);
@@ -133,11 +159,12 @@ function main(file: string) {
     license: "CC BY 4.0",
     validFrom,
     format: "municipalities: [kód obce, název, zeměpisná šířka, zeměpisná délka] (WGS84, definiční bod obce)",
+    changes: "Definiční body převedené z S-JTSK (EPSG:5514) na WGS84 a zaokrouhlené na 4 desetinná místa; Praha zařazena pod okres 3100 Hlavní město Praha.",
   };
   const body = JSON.stringify(header, null, 2).replace(/\n}$/, `,\n  "districts": [\n${lines.join(",\n")}\n  ]\n}\n`);
-  fs.writeFileSync(OUTPUT, body);
+  fs.writeFileSync(MUNICIPALITIES_FILE, body);
   const count = districts.reduce((sum, d) => sum + d.municipalities.length, 0);
-  console.log(`Zapsáno ${count} obcí v ${districts.length} okresech do ${OUTPUT}`);
+  console.log(`Zapsáno ${count} obcí v ${districts.length} okresech do ${MUNICIPALITIES_FILE}`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
