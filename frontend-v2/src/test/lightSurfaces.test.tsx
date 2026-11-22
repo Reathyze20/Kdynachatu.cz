@@ -146,7 +146,7 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
 
   // Akcenty povolené pravidlem C4a: modály a overlaye, toasty, lišty; plus přihlášení nad fotkou.
   const ALLOWED_BLUR = new Set([
-    '.modal-unified-overlay', '.dialog-overlay', '.lb-overlay', '.zen-overlay',
+    '.modal-unified-overlay', '.dialog-overlay', '.lb-overlay',
     '.toast', '.toast-success', '.toast-error', '.toast-info',
     '.chat-header', '.date-separator-label',
     '.login-container', '.register-container',
