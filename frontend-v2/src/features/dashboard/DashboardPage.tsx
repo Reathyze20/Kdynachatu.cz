@@ -16,6 +16,7 @@ import { NextArrivalCard } from "./NextArrivalCard";
 import { RunningLowCard } from "./RunningLowCard";
 import { CabinHero } from "./CabinHero";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
+import { DASHBOARD_SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import { motion } from "framer-motion";
@@ -148,7 +149,7 @@ export function DashboardPage() {
   });
 
   const shoppingQuery = useQuery<DashboardShoppingData>({
-    queryKey: ["dashboard", "shopping"],
+    queryKey: DASHBOARD_SHOPPING_KEY,
     queryFn: async () => {
       const { data } = await apiClient.get<DashboardShoppingData>("/dashboard/shopping");
       return DashboardShoppingSchema.parse(data) as DashboardShoppingData;

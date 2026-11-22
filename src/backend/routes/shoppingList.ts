@@ -6,6 +6,7 @@ import { createShoppingItemSchema, updateItemStatusSchema } from "../../validato
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { emitToCabin } from "../../utils/socket";
+import { inventoryEffect, isResolvedStatus, linkedInventoryChange } from "./shoppingItemStatus";
 
 const router = Router();
 
@@ -84,23 +85,20 @@ async function handlePurchaseItem(req: Request, res: Response) {
       splitWith = userIds;
     }
 
-    // Use transaction — update item + restock linked inventory + handle splits
-    const { updated, splits } = await prisma.$transaction(async (tx) => {
+    const cabinId = req.user!.cabinId!;
+    // "Bring from home" is resolved like "purchased": purchasedBy = who resolved it (bought or promised).
+    const isResolved = isResolvedStatus(status);
+    const effect = inventoryEffect(item.status, status);
+
+    // Use transaction — update item + restock/reopen linked inventory + handle splits
+    const { updated, splits, inventoryChanged } = await prisma.$transaction(async (tx) => {
       const updatedItem = await tx.shoppingListItem.update({
         where: { id: itemId },
         data: {
           status,
-          ...(isPurchased
-            ? {
-              purchasedById: req.user!.userId,
-              purchasedAt: new Date(),
-              price: price ? parseFloat(price) : null,
-            }
-            : {
-              purchasedById: null,
-              purchasedAt: null,
-              price: null,
-            }),
+          purchasedById: isResolved ? req.user!.userId : null,
+          purchasedAt: isResolved ? new Date() : null,
+          price: isPurchased && price ? parseFloat(price) : null,
         },
         include: {
           addedBy: { select: { username: true } },
@@ -108,12 +106,20 @@ async function handlePurchaseItem(req: Request, res: Response) {
         },
       });
 
-      // Auto-restock: if purchased and linked to inventory → set OK + remove from cart
-      if (isPurchased && updatedItem.linkedInventoryId) {
-        await tx.inventoryItem.update({
-          where: { id: updatedItem.linkedInventoryId },
-          data: { status: "OK", inCart: false },
+      // Linked inventory of the own cabin only; a vanished one is skipped, not a 500.
+      let changedInventory = false;
+      if (effect && updatedItem.linkedInventoryId) {
+        const inventory = await tx.inventoryItem.findFirst({
+          where: { id: updatedItem.linkedInventoryId, cabinId },
+          select: { id: true, status: true },
         });
+        if (inventory) {
+          const { count } = await tx.inventoryItem.updateMany({
+            where: { id: inventory.id, cabinId },
+            data: linkedInventoryChange(effect, inventory.status),
+          });
+          changedInventory = count > 0;
+        }
       }
 
       // Handle splits
@@ -129,7 +135,7 @@ async function handlePurchaseItem(req: Request, res: Response) {
       }
 
       const itemSplits = await tx.shoppingItemSplit.findMany({ where: { itemId } });
-      return { updated: updatedItem, splits: itemSplits };
+      return { updated: updatedItem, splits: itemSplits, inventoryChanged: changedInventory };
     });
 
     const updatedPayload = {
@@ -145,8 +151,10 @@ async function handlePurchaseItem(req: Request, res: Response) {
       price: updated.price ? parseFloat(updated.price.toString()) : undefined,
       splitWith: splits.map((s) => s.userId),
       isEssential: updated.isEssential,
+      linkedInventoryId: updated.linkedInventoryId,
     };
-    emitToCabin(req.user!.cabinId!, "shopping:item:updated", updatedPayload);
+    emitToCabin(cabinId, "shopping:item:updated", updatedPayload);
+    if (inventoryChanged) emitToCabin(cabinId, "inventory:updated", { id: updated.linkedInventoryId });
     res.json(updatedPayload);
   } catch (error) {
     logger.error("SHOPPING", "Purchase item error", { error: String(error), itemId });
@@ -197,20 +205,22 @@ async function deleteItem(req: Request, res: Response) {
       return res.status(404).json({ message: "Položka nenalezena" });
     }
 
+    const cabinId = req.user!.cabinId!;
     // Delete the item and reset linked inventory in a transaction
-    await prisma.$transaction(async (tx) => {
+    const inventoryChanged = await prisma.$transaction(async (tx) => {
       await tx.shoppingListItem.delete({ where: { id: itemId } });
 
-      // If linked to inventory, reset inCart flag so it shows as "not in cart" again
-      if (item.linkedInventoryId) {
-        await tx.inventoryItem.update({
-          where: { id: item.linkedInventoryId },
-          data: { inCart: false },
-        });
-      }
+      // If linked to the own cabin's inventory, reset inCart so it shows as "not in cart" again
+      if (!item.linkedInventoryId) return false;
+      const { count } = await tx.inventoryItem.updateMany({
+        where: { id: item.linkedInventoryId, cabinId },
+        data: { inCart: false },
+      });
+      return count > 0;
     });
 
-    emitToCabin(req.user!.cabinId!, "shopping:item:deleted", { id: itemId });
+    emitToCabin(cabinId, "shopping:item:deleted", { id: itemId });
+    if (inventoryChanged) emitToCabin(cabinId, "inventory:updated", { id: item.linkedInventoryId });
     res.json({ success: true });
   } catch (error) {
     logger.error("SHOPPING", "Delete item error", { error: String(error), itemId });

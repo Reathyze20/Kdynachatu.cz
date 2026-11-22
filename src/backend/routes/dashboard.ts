@@ -164,22 +164,23 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
   try {
     const cabinId = req.user!.cabinId!;
 
+    // Nevyřízená položka = jen Koupit; „Přivezu z domova“ i Koupeno jsou vyřešené (#167 = A)
     const activeListFilter = { isResolved: false, isPantry: false, cabinId };
     const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems] = await Promise.all([
       prisma.shoppingListItem.findMany({
-        where: { status: { not: "purchased" }, list: activeListFilter },
+        where: { status: "pending", list: activeListFilter },
         include: { list: { select: { id: true, name: true } } },
         orderBy: [{ isEssential: "desc" }, { createdAt: "asc" }],
         take: 6,
       }),
       prisma.shoppingListItem.count({
-        where: { status: { not: "purchased" }, list: activeListFilter },
+        where: { status: "pending", list: activeListFilter },
       }),
       prisma.shoppingListItem.count({
         where: { list: activeListFilter },
       }),
       prisma.shoppingListItem.findMany({
-        where: { isEssential: true, status: { not: "purchased" }, list: activeListFilter },
+        where: { isEssential: true, status: "pending", list: activeListFilter },
         select: { id: true, name: true },
         take: 10,
       })

@@ -138,7 +138,14 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
       return res.status(404).json({ message: "Položka nenalezena." });
     }
 
-    await prisma.inventoryItem.delete({ where: { id } });
+    // Zruš propojení nákupních položek vlastní chaty, ať štítek „Ze zásob“ neslibuje doplnění smazané zásoby
+    await prisma.$transaction([
+      prisma.shoppingListItem.updateMany({
+        where: { linkedInventoryId: id, list: { cabinId: req.user!.cabinId! } },
+        data: { linkedInventoryId: null },
+      }),
+      prisma.inventoryItem.delete({ where: { id } }),
+    ]);
     emitToCabin(req.user!.cabinId!, "inventory:deleted", { id });
     res.json({ message: "Položka smazána." });
   } catch (error) {
@@ -237,7 +244,8 @@ router.get("/missing-summary", protect, requireCabin, async (_req: Request, res:
       }),
       prisma.shoppingListItem.count({
         where: {
-          status: { not: "purchased" },
+          // Nevyřízená = jen Koupit; „Přivezu z domova“ už někdo zařídil (#167 = A)
+          status: "pending",
           list: { isResolved: false, isPantry: false, cabinId },
         },
       }),

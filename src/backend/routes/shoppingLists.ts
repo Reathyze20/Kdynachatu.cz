@@ -149,7 +149,8 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
             return res.status(403).json({ message: "Nemáte oprávnění smazat tento seznam" });
         }
 
-        await prisma.$transaction(async (tx) => {
+        const cabinId = req.user!.cabinId!;
+        const changedInventoryIds = await prisma.$transaction(async (tx) => {
             // Find all items with linked inventory before deleting
             const itemsWithInventory = await tx.shoppingListItem.findMany({
                 where: { listId: id, linkedInventoryId: { not: null } },
@@ -159,19 +160,26 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
             // Delete the list (cascades to items)
             await tx.shoppingList.delete({ where: { id } });
 
-            // Reset inCart for all linked inventory items
-            const inventoryIds = itemsWithInventory
+            // Reset inCart for linked inventory items of the own cabin
+            const inventoryIds = [...new Set(itemsWithInventory
                 .map((i) => i.linkedInventoryId)
-                .filter((id): id is string => id !== null);
-            if (inventoryIds.length > 0) {
-                await tx.inventoryItem.updateMany({
-                    where: { id: { in: inventoryIds } },
-                    data: { inCart: false },
-                });
-            }
+                .filter((id): id is string => id !== null))];
+            if (inventoryIds.length === 0) return [];
+            const owned = await tx.inventoryItem.findMany({
+                where: { id: { in: inventoryIds }, cabinId },
+                select: { id: true },
+            });
+            await tx.inventoryItem.updateMany({
+                where: { id: { in: owned.map((i) => i.id) }, cabinId },
+                data: { inCart: false },
+            });
+            return owned.map((i) => i.id);
         });
 
-        emitToCabin(req.user!.cabinId!, "shopping:list:changed", { id: req.params.id });
+        emitToCabin(cabinId, "shopping:list:changed", { id: req.params.id });
+        for (const inventoryId of changedInventoryIds) {
+            emitToCabin(cabinId, "inventory:updated", { id: inventoryId });
+        }
         res.json({ message: "List deleted successfully" });
     } catch (error) {
         logger.error("SHOPPING_LISTS", "Failed to delete shopping list", error);

@@ -13,8 +13,11 @@ import { ShoppingListArraySchema } from '@/api/schemas'
 import { showToast } from '@/lib/toast'
 import { handleMutationError } from '@/lib/mutationError'
 import { isNetworkError, OFFLINE_TOAST_MSG } from '@/lib/networkError'
+import { INVENTORY_KEY } from './useInventory'
 
 export const SHOPPING_KEY = ['shopping-lists'] as const
+/** Dashboard shopping summary (pending items, ★ warning); depends on item statuses. */
+export const DASHBOARD_SHOPPING_KEY = ['dashboard', 'shopping'] as const
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
@@ -147,7 +150,10 @@ export function useToggleItemStatus() {
     },
 
     onSettled: () => {
+      // Vyřešení i návrat na „Koupit“ mění propojenou zásobu a varování na Přehledu.
       void qc.invalidateQueries({ queryKey: SHOPPING_KEY })
+      void qc.invalidateQueries({ queryKey: INVENTORY_KEY })
+      void qc.invalidateQueries({ queryKey: DASHBOARD_SHOPPING_KEY })
     },
   })
 }
