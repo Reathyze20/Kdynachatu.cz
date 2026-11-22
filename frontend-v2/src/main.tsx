@@ -11,15 +11,13 @@ import App from './App'
 import { installGlobalErrorHandlers } from '@/lib/errorReporting'
 import { initOfflineQueue } from '@/lib/offlineQueue'
 import { initPwaInstall } from '@/lib/pwaInstall'
+import { clearLegacyStorage } from '@/lib/legacyStorage'
 
 // Musí běžet před renderem — `beforeinstallprompt` přichází brzy a jen jednou
 initPwaInstall()
 
-// Načtení uživatelsky nastaveného pozadí při startu aplikace
-const customBg = localStorage.getItem('app-background');
-if (customBg) {
-  document.documentElement.style.setProperty('--bg-image', `url("${customBg}")`);
-}
+// Jednorázový úklid hodnot po zrušených funkcích (např. vlastní pozadí, #248)
+clearLegacyStorage()
 
 // ─── TanStack Query: explicitně sync s window online/offline events ────────────
 // V5 toto dělá automaticky, ale explicitní registrace zaručuje kompatibilitu

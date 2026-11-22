@@ -121,7 +121,7 @@ The application renders above a fullscreen nature-photograph background. Main co
 
 The page renders inside `AppShell`'s `<main id="page-container">`, which already owns the page frame. Don't add outer page padding for it:
 
-- **Mobile** (the `max-width: 768px` shell in `styles/nav.css`): `#page-container` reserves room for the fixed `MobileHeader` (top) and the fixed `MobileNav` (bottom). The only source of the bottom bar's height is `--mobile-nav-height`; read that variable if something else must clear the bar (`ZenMode.css` does). The page wrapper adds only the side margin of the cards (`p-3`).
+- **Mobile** (the `max-width: 768px` shell in `styles/nav.css`): `#page-container` reserves room for the fixed `MobileHeader` (top) and the fixed `MobileNav` (bottom). The only source of the bottom bar's height is `--mobile-nav-height`; read that variable if something else must clear the bar. The page wrapper adds only the side margin of the cards (`p-3`).
 - **Desktop:** `DesktopSidebar` sits on the left, there is no top bar. `.app-shell-body` caps the content width (`max-width`, 1440 px), centres it and pads it (`styles/layout.css`), so the wrapper adds no padding (`md:p-0`). For a main column + side panel, use `TwoColumnLayout` instead of a hand-made grid (master-detail lists are the exception, see Recipe 7).
 - **Never** add bottom padding for the mobile nav (such as `pb-20 md:pb-0`) to a page. `#page-container` already reserves that space, so extra padding doubles the gap.
 

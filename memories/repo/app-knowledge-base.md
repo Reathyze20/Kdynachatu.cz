@@ -41,7 +41,7 @@
 | **Onboarding** | ⚠️ cabin.ts | ✅ OnboardingPage | ❌ | ✅ Cabin | Complete | 90% |
 | **Dashboard** | ✅ dashboard.ts | ✅ DashboardPage (9 komponent) | ❌ deprecated | aggregace | Complete | 95% |
 | **Počasí** | ❌ (klient FE) | ✅ WeatherCard | ❌ deprecated | ❌ (Open-Meteo API) | Complete | 100% |
-| **Zen Mode** | ✅ wallpapers.ts | ✅ ZenMode | ❌ | ✅ Wallpaper | Complete | 100% |
+| **Tapety** | ✅ wallpapers.ts | ❌ UI odstraněno (#248) | ❌ | ✅ Wallpaper | Backend bez UI | – |
 | **Rezervace** | ✅ reservations.ts (16 endpointů) | ✅ ReservationsPage (12 komponent) | ❌ deprecated | ✅ Reservation, UserAvailability, MonthlyNote, ReservationWatcher | Complete | 95% |
 | **Kalendář** | ✅ (součást reservations) | ✅ CalendarGrid, CalendarCell | ❌ deprecated | ✅ | Complete | 90% |
 | **Dostupnost uživatelů** | ✅ reservations.ts (4 endpointy) | ✅ AvailabilityModal | ❌ | ✅ UserAvailability | Complete | 90% |
@@ -413,7 +413,7 @@ Legacy frontend (`src/frontend/`) obsahuje:
 | [admin.ts](src/backend/routes/admin.ts) | `/api/admin` | 1 (system) | ✅ | ✅ | ❌ | Systémové statistiky |
 | [cabin.ts](src/backend/routes/cabin.ts) | `/api/cabin` | 3 (GET, PATCH, POST create) | ✅ | ✅ | ⚠️ (inline validace místo middleware) | Nastavení chaty |
 | [invites.ts](src/backend/routes/invites.ts) | `/api/invites` | 5 | ⚠️ (2 public) | ✅ | ✅ createInvite, acceptInvite | Magic links |
-| [wallpapers.ts](src/backend/routes/wallpapers.ts) | `/api/wallpapers` | 3 | ✅ | ✅ | ❌ (multer validace) | Zen mode tapety |
+| [wallpapers.ts](src/backend/routes/wallpapers.ts) | `/api/wallpapers` | 3 | ✅ | ✅ | ❌ (multer validace) | Tapety (bez UI od #248) |
 | [workspace.ts](src/backend/routes/workspace.ts) | `/api/workspace` | 1 | ✅ | ✅ | ✅ updateHandoverNote | Vzkaz na lednici |
 | [logs.ts](src/backend/routes/logs.ts) | `/api/logs` | 4 | ⚠️ (1 anon) | ❌ | ❌ | Logy + client error reporting |
 | [superadmin.ts](src/backend/routes/superadmin.ts) | **⚠️ NOT MOUNTED** | 2 | ✅ (SuperAdmin) | ❌ | ✅ superadminCreateUser | Není dostupný! |
@@ -431,7 +431,7 @@ Legacy frontend (`src/frontend/`) obsahuje:
 | [landing/](frontend-v2/src/features/landing/) | 1 (LandingPage) | 0 | 0 | landing.css | ✅ Complete |
 | [invite/](frontend-v2/src/features/invite/) | 1 (InvitePage) | 0 | invites API | invite.css | ✅ Complete |
 | [onboarding/](frontend-v2/src/features/onboarding/) | 1 (OnboardingPage) | 0 | cabin API | onboarding.css | ✅ Complete |
-| [dashboard/](frontend-v2/src/features/dashboard/) | 9 (DashboardPage, ActiveReservation, DepartureBanner, EssentialWarning, HandoverNote, ShoppingWidget, WeatherCard, ZenMode) | 0 (inline queries) | dashboard.ts (3 queries + weather) | dashboard.css, ZenMode.css | ✅ Complete |
+| [dashboard/](frontend-v2/src/features/dashboard/) | 7 (DashboardPage, ActiveReservation, DepartureBanner, EssentialWarning, HandoverNote, ShoppingWidget, WeatherCard) | 0 (inline queries) | dashboard.ts (3 queries + weather) | dashboard.css | ✅ Complete |
 | [reservations/](frontend-v2/src/features/reservations/) | 12 (ReservationsPage + calendar/2 + ui/8 + hooks/2) | 2 (useCalendar, useReservations) | reservations.ts | reservations.css, calendar.css, Reservations.module.css | ✅ Complete |
 | [notes/](frontend-v2/src/features/notes/) | 10 (NotesPage, ChatView, MessageBubble, MessageInput, MessageContextMenu, ReactionBar, ThreadList, AddToShoppingDialog, CreateRepairDialog) | 2 (useNotes, useThreads) | notes.ts | notes.css | ✅ Complete |
 | [shopping/](frontend-v2/src/features/shopping/) | 13 (ShoppingPage, ListMaster, ListDetail, ItemRow, ViewSwitcher, PantryView, InventoryRow, EditInventoryModal, AddToCartModal, BulkAddToCartModal, ShareListDialog) | 2 (useShoppingLists, useInventory) | shopping.ts | shopping.css | ✅ Complete |
