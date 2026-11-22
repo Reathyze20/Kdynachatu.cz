@@ -352,8 +352,9 @@
   border-top: 1px solid var(--border-strong);
 }
 
-/* Nápověda a profilové menu jsou <button>, vzhled berou z .app-sidebar-link */
+/* Nápověda, profilové menu a „Přidat na plochu“ jsou <button>, vzhled berou z .app-sidebar-link */
 .app-sidebar-help,
+.app-sidebar-install,
 .app-sidebar-profile-trigger {
   width: 100%;
   border: none;

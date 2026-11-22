@@ -14,9 +14,7 @@ import { AVATARS } from '@/lib/avatars'
 import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { useNavigate } from 'react-router-dom'
-import { Download, ScrollText, Settings, Shield } from 'lucide-react'
-import { usePwaInstall } from '@/hooks/usePwaInstall'
-import { promptPwaInstall } from '@/lib/pwaInstall'
+import { ScrollText, Settings, Shield } from 'lucide-react'
 
 interface ProfileData {
   email: string
@@ -33,7 +31,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, user, token, login } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { canInstall } = usePwaInstall()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
 
   // ─── Email state ────────────────────────────────────────────────────────────
@@ -284,28 +281,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         </div>
 
         <div className="drawer-body">
-          {canInstall ? (
-            <div className="drawer-section" data-testid="profile-install-app">
-              <h3>Aplikace v telefonu</h3>
-              {canInstall === 'prompt' ? (
-                <div className="drawer-quicklinks">
-                  <button
-                    type="button"
-                    className="button-secondary drawer-quicklink"
-                    onClick={() => { void promptPwaInstall() }}
-                  >
-                    <Download size={16} />
-                    <span>Nainstalovat na plochu</span>
-                  </button>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-600">
-                  V Safari klepni na tlačítko Sdílet a zvol <strong>„Přidat na plochu“</strong>.
-                </p>
-              )}
-            </div>
-          ) : null}
-
           {(isAdmin || isSuperAdmin) && (
             <div className="drawer-section">
               <h3>Správa a diagnostika</h3>

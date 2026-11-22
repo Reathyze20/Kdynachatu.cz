@@ -10,6 +10,8 @@ import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
 import { HelpFab } from '@/components/shared/HelpFab'
+import { InstallMenuItem } from '@/components/shared/InstallCard'
+import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { SidebarProfileMenu } from './SidebarProfileMenu'
 
 interface DesktopSidebarProps {
@@ -20,6 +22,7 @@ export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
   const { user } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
+  const { canInstall } = usePwaInstall()
 
   const hasCabin = Boolean(user?.cabinId)
   const primary = hasCabin ? visibleNavItems(PRIMARY_NAV, cabin?.features) : []
@@ -53,10 +56,11 @@ export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
         <nav className="app-sidebar-nav" aria-label="Hlavní navigace" data-testid="desktop-primary-nav">
           {primary.map(renderLink)}
 
-          {more.length > 0 ? (
+          {more.length > 0 || canInstall ? (
             <div role="group" aria-labelledby="app-sidebar-more" className="app-sidebar-group">
               <span id="app-sidebar-more" className="app-sidebar-heading app-sidebar-label">Víc</span>
               {more.map(renderLink)}
+              <InstallMenuItem className="app-sidebar-link app-sidebar-install" labelClassName="app-sidebar-label" />
             </div>
           ) : null}
         </nav>
