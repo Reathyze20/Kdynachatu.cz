@@ -67,10 +67,10 @@ export const sendVerificationEmailWithPIN = async (email: string, code: string):
 
       <div style="padding: 0 32px 32px 32px;">
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Dobrý den,
+          Ahoj,
         </p>
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 24px 0;">
-          Váš ověřovací kód pro dokončení registrace je:
+          Tvůj ověřovací kód pro dokončení registrace je:
         </p>
 
         <div style="text-align: center; margin: 30px 0;">
@@ -80,11 +80,11 @@ export const sendVerificationEmailWithPIN = async (email: string, code: string):
         </div>
 
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Tento kód zadejte do příslušného pole v aplikaci.
+          Zadej tento kód do příslušného pole v aplikaci.
         </p>
 
         <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Pokud jste o registraci nežádali, tento e-mail prosím ignorujte.
+          Pokud registrace nebyla tvoje, tento e-mail ignoruj.
         </p>
       </div>
     </div>
@@ -96,7 +96,7 @@ export const sendVerificationEmailWithPIN = async (email: string, code: string):
 </body>
 </html>`;
 
-    const textContent = `Dobrý den,\n\nVáš ověřovací kód je: ${code}\n\nZadejte ho do příslušného pole v aplikaci.\n\nPokud jste o registraci nežádali, tento e-mail ignorujte.`;
+    const textContent = `Ahoj,\n\nTvůj ověřovací kód je: ${code}\n\nZadej ho do příslušného pole v aplikaci.\n\nPokud registrace nebyla tvoje, tento e-mail ignoruj.`;
 
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
@@ -145,11 +145,11 @@ export const sendVerificationEmailWithToken = async (email: string, token: strin
 
       <div style="padding: 0 32px 32px 32px;">
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Dobrý den,
+          Ahoj,
         </p>
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 24px 0;">
           Děkujeme za registraci do aplikace <strong style="color: #111827;">${EMAIL_APP_NAME}</strong>. 
-          Pro aktivaci účtu prosím klikněte na tlačítko níže:
+          Účet aktivuješ tlačítkem níže:
         </p>
 
         <div style="text-align: center; margin: 24px 0;">
@@ -160,14 +160,14 @@ export const sendVerificationEmailWithToken = async (email: string, token: strin
         </div>
 
         <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 24px 0 8px 0;">
-          Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:
+          Pokud tlačítko nefunguje, zkopíruj tento odkaz do prohlížeče:
         </p>
         <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-top: 8px;">
           <a href="${verifyUrl}" style="color: #5d9b62; font-size: 13px; word-break: break-all; text-decoration: none;">${verifyUrl}</a>
         </div>
 
         <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Pokud jste o registraci nežádali, tento e-mail prosím ignorujte. Odkaz je platný jednorázově.
+          Pokud registrace nebyla tvoje, tento e-mail ignoruj. Odkaz můžeš použít jen jednou.
         </p>
       </div>
     </div>
@@ -179,7 +179,7 @@ export const sendVerificationEmailWithToken = async (email: string, token: strin
 </body>
 </html>`;
 
-    const textContent = `Dobrý den,\n\nPro aktivaci účtu v aplikaci ${EMAIL_APP_NAME} klikněte na tento odkaz:\n${verifyUrl}\n\nPokud jste o registraci nežádali, tento e-mail ignorujte.`;
+    const textContent = `Ahoj,\n\nÚčet v aplikaci ${EMAIL_APP_NAME} aktivuješ na tomto odkazu:\n${verifyUrl}\n\nPokud registrace nebyla tvoje, tento e-mail ignoruj.`;
 
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
@@ -228,11 +228,11 @@ export const sendSuperadminOnboardingEmail = async (
 
       <div style="padding: 0 32px 32px 32px;">
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Dobrý den,
+          Ahoj,
         </p>
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Backoffice vám vytvořil účet v aplikaci <strong style="color: #111827;">${EMAIL_APP_NAME}</strong>.
-          Pro první přihlášení potřebujete aktivovat účet a použít dočasné heslo níže.
+          Backoffice ti vytvořil účet v aplikaci <strong style="color: #111827;">${EMAIL_APP_NAME}</strong>.
+          Pro první přihlášení aktivuj účet a použij dočasné heslo níže.
         </p>
 
         <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
@@ -250,21 +250,21 @@ export const sendSuperadminOnboardingEmail = async (
         <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;">
           <p style="margin: 0 0 8px 0; color: #111827; font-weight: 600; font-size: 14px;">Jak pokračovat</p>
           <ol style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.7;">
-            <li>Klikněte na tlačítko pro aktivaci účtu.</li>
-            <li>Po ověření se přihlaste svým e-mailem nebo uživatelským jménem a dočasným heslem.</li>
-            <li>Po prvním přihlášení si heslo co nejdříve změňte.</li>
+            <li>Klikni na tlačítko pro aktivaci účtu.</li>
+            <li>Po ověření se přihlas svým e-mailem nebo uživatelským jménem a dočasným heslem.</li>
+            <li>Po prvním přihlášení si heslo co nejdřív změň.</li>
           </ol>
         </div>
 
         <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 24px 0 8px 0;">
-          Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:
+          Pokud tlačítko nefunguje, zkopíruj tento odkaz do prohlížeče:
         </p>
         <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-top: 8px;">
           <a href="${verifyUrl}" style="color: #5d9b62; font-size: 13px; word-break: break-all; text-decoration: none;">${verifyUrl}</a>
         </div>
 
         <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Pokud jste o vytvoření účtu nežádali, tento e-mail prosím ignorujte.
+          Pokud o účet nestojíš, tento e-mail ignoruj.
         </p>
       </div>
     </div>
@@ -277,11 +277,11 @@ export const sendSuperadminOnboardingEmail = async (
 </html>`;
 
     const textContent =
-      `Dobrý den,\n\n` +
-      `Backoffice vám vytvořil účet v aplikaci ${EMAIL_APP_NAME}.\n\n` +
+      `Ahoj,\n\n` +
+      `Backoffice ti vytvořil účet v aplikaci ${EMAIL_APP_NAME}.\n\n` +
       `Dočasné heslo: ${tempPassword}\n\n` +
-      `Nejprve aktivujte účet na odkazu:\n${verifyUrl}\n\n` +
-      `Poté se přihlaste svým e-mailem nebo uživatelským jménem a tímto dočasným heslem. Po prvním přihlášení si heslo změňte.`;
+      `Nejdřív aktivuj účet na odkazu:\n${verifyUrl}\n\n` +
+      `Pak se přihlas svým e-mailem nebo uživatelským jménem a tímto dočasným heslem. Po prvním přihlášení si heslo změň.`;
 
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
@@ -327,10 +327,10 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
 
       <div style="padding: 0 32px 32px 32px;">
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Dobrý den,
+          Ahoj,
         </p>
         <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 24px 0;">
-          Obdrželi jsme žádost o nastavení nového hesla k vašemu účtu v aplikaci <strong style="color: #111827;">${EMAIL_APP_NAME}</strong>.
+          Přišla nám žádost o nové heslo k tvému účtu v aplikaci <strong style="color: #111827;">${EMAIL_APP_NAME}</strong>.
         </p>
 
         <div style="text-align: center; margin: 24px 0;">
@@ -341,14 +341,14 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
         </div>
 
         <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 24px 0 8px 0;">
-          Pokud tlačítko nefunguje, zkopírujte tento odkaz do prohlížeče:
+          Pokud tlačítko nefunguje, zkopíruj tento odkaz do prohlížeče:
         </p>
         <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-top: 8px;">
           <a href="${resetUrl}" style="color: #5d9b62; font-size: 13px; word-break: break-all; text-decoration: none;">${resetUrl}</a>
         </div>
 
         <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Odkaz je platný 2 hodiny a lze jej použít pouze jednou. Pokud jste o změnu hesla nežádali, tento e-mail ignorujte.
+          Odkaz platí 2 hodiny a můžeš ho použít jen jednou. Pokud o nové heslo nestojíš, tento e-mail ignoruj.
         </p>
       </div>
     </div>
@@ -360,7 +360,7 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
 </body>
 </html>`;
 
-    const textContent = `Dobrý den,\n\nObdrželi jsme žádost o nastavení nového hesla k vašemu účtu v aplikaci ${EMAIL_APP_NAME}. Pokračujte zde:\n${resetUrl}\n\nOdkaz je platný 2 hodiny a lze jej použít pouze jednou. Pokud jste o změnu hesla nežádali, tento e-mail ignorujte.`;
+    const textContent = `Ahoj,\n\nPřišla nám žádost o nové heslo k tvému účtu v aplikaci ${EMAIL_APP_NAME}. Pokračuj tady:\n${resetUrl}\n\nOdkaz platí 2 hodiny a můžeš ho použít jen jednou. Pokud o nové heslo nestojíš, tento e-mail ignoruj.`;
 
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
@@ -423,11 +423,11 @@ export const sendFrostAlertEmail = async (
       </div>
 
       <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 16px 0;">
-        Pokud nemáte <strong>vypuštěnou vodu</strong> a zajištěné trubky, zvažte co nejdříve opatření, aby nedošlo k prasknutí potrubí.
+        Pokud na chatě není <strong>vypuštěná voda</strong> a zajištěné trubky, co nejdřív se postarej, aby potrubí nepraskalo.
       </p>
 
       <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-        <p style="margin: 0 0 8px 0; font-weight: 700; color: #166534; font-size: 14px;">Co můžete udělat:</p>
+        <p style="margin: 0 0 8px 0; font-weight: 700; color: #166534; font-size: 14px;">Co můžeš udělat:</p>
         <ul style="margin: 0; padding-left: 20px; color: #166534; font-size: 13px; line-height: 1.8;">
           <li>Vypustit vodu z potrubí a bojleru</li>
           <li>Zavřít hlavní uzávěr vody</li>
@@ -437,8 +437,8 @@ export const sendFrostAlertEmail = async (
       </div>
 
       <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-        Toto varování posíláme maximálně jednou za 7 dní. Pokud jste vodu již vypustili,
-        označte chatu jako „zazimovanou" v nastavení — upozornění se přestanou odesílat.
+        Toto varování posíláme nejvýš jednou za 7 dní. Pokud je voda už vypuštěná,
+        označ chatu v nastavení jako „zazimovanou" a upozornění přestanou chodit.
       </p>
     </div>
   </div>
@@ -454,7 +454,7 @@ export const sendFrostAlertEmail = async (
     `Varování: Pro chatu „${cabinName}" předpověď ukazuje mrazy v příštích dnech.\n` +
     `Nejnižší teplota: ${lowestTemp} °C\n` +
     `Dny s mrazem: ${frostDatesFormatted}\n\n` +
-    `Pokud nemáte vypuštěnou vodu, zvažte opatření proti prasknutí trubek.\n\n` +
+    `Pokud na chatě není vypuštěná voda, postarej se, aby trubky nepraskly.\n\n` +
     `— ${EMAIL_APP_NAME}`;
 
   try {

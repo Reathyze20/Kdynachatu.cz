@@ -11,31 +11,31 @@ export function PrivacyPage() {
       <div className="legal-container">
         <Link to="/" className="legal-back-link" data-testid="privacy-back-link">← Zpět na úvod</Link>
 
-        <h1>Ochrana vašich údajů</h1>
-        <p className="legal-subtitle">Chceme, abyste věděli, jak s vašimi daty nakládáme. Jednoduše a srozumitelně.</p>
+        <h1>Ochrana tvých údajů</h1>
+        <p className="legal-subtitle">Tady najdeš, jak s tvými daty nakládáme. Jednoduše a srozumitelně.</p>
         <p className="legal-updated">Poslední aktualizace: 12. dubna 2026</p>
 
         <section>
           <h2>Kdo jsme</h2>
           <p>
             Provozovatelem služby <strong>Kdy na chatu</strong> je její autor.
-            Pokud máte jakýkoli dotaz, napište nám na <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a>.
+            Pokud máš jakýkoli dotaz, napiš nám na <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a>.
           </p>
         </section>
 
         <section>
-          <h2>Co o vás víme</h2>
+          <h2>Co o tobě víme</h2>
           <div className="legal-info-cards">
             <div className="legal-info-card">
               <strong>Při registraci</strong>
               <span>Uživatelské jméno, e-mail a heslo (heslo ukládáme zašifrované, nikdy ho nevidíme v čitelné podobě)</span>
             </div>
             <div className="legal-info-card">
-              <strong>Váš profil</strong>
-              <span>Barva profilu a avatar, které si sami zvolíte</span>
+              <strong>Tvůj profil</strong>
+              <span>Barva profilu a avatar, které si zvolíš</span>
             </div>
             <div className="legal-info-card">
-              <strong>Co vytvoříte</strong>
+              <strong>Co vytvoříš</strong>
               <span>Rezervace, zprávy, fotky, zápisky v deníku, nákupní seznamy a položky rekonstrukce</span>
             </div>
             <div className="legal-info-card">
@@ -46,11 +46,11 @@ export function PrivacyPage() {
         </section>
 
         <section>
-          <h2>Proč vaše údaje potřebujeme</h2>
+          <h2>Proč tvoje údaje potřebujeme</h2>
           <ul>
             <li>Aby aplikace fungovala — rezervace, sdílení s členy chaty, přihlašování</li>
-            <li>Abychom chránili váš účet před neoprávněným přístupem</li>
-            <li>Abychom vám mohli poslat důležité e-maily (ověření účtu)</li>
+            <li>Abychom chránili tvůj účet před neoprávněným přístupem</li>
+            <li>Abychom ti mohli poslat důležité e-maily (ověření účtu)</li>
           </ul>
           <p className="legal-highlight">
             Neposíláme reklamy, newslettery ani marketingové e-maily.
@@ -58,26 +58,26 @@ export function PrivacyPage() {
         </section>
 
         <section>
-          <h2>Kdo vidí vaše údaje</h2>
+          <h2>Kdo vidí tvoje údaje</h2>
           <ul>
-            <li><strong>Členové vaší chaty</strong> — vidí vaše jméno, avatar, rezervace a obsah, který vytvoříte</li>
+            <li><strong>Členové tvé chaty</strong> — vidí tvoje jméno, avatar, rezervace a obsah, který vytvoříš</li>
             <li><strong>Poskytovatel hostingu</strong> — data jsou uložena na serveru v ČR</li>
           </ul>
           <p className="legal-highlight">
-            Vaše údaje neprodáváme. Nesdílíme je s reklamními sítěmi. Nemáme žádné „partnery" kteří by k nim měli přístup.
+            Tvoje údaje neprodáváme. Nesdílíme je s reklamními sítěmi. Nemáme žádné „partnery" kteří by k nim měli přístup.
           </p>
         </section>
 
         <section>
           <h2>Jak dlouho data uchováváme</h2>
           <p>
-            Vaše data existují, dokud máte účet. Když svůj účet smažete,
-            všechna vaše data odstraníme <strong>okamžitě a nenávratně</strong>.
+            Tvoje data existují, dokud máš účet. Když svůj účet smažeš,
+            všechna tvoje data odstraníme <strong>okamžitě a nenávratně</strong>.
           </p>
         </section>
 
         <section>
-          <h2>Co můžete udělat se svými daty</h2>
+          <h2>Co můžeš udělat se svými daty</h2>
           <div className="legal-rights-grid">
             <div className="legal-right-item">
               <span className="legal-right-icon" aria-hidden="true"><Download className="w-5 h-5" /></span>
@@ -90,14 +90,14 @@ export function PrivacyPage() {
               <span className="legal-right-icon" aria-hidden="true"><Pencil className="w-5 h-5" /></span>
               <div>
                 <strong>Upravit je</strong>
-                <span>E-mail, jméno a profil můžete kdykoli změnit</span>
+                <span>E-mail, jméno a profil můžeš kdykoli změnit</span>
               </div>
             </div>
             <div className="legal-right-item">
               <span className="legal-right-icon" aria-hidden="true"><Trash2 className="w-5 h-5" /></span>
               <div>
                 <strong>Smazat vše</strong>
-                <span>V nastavení profilu můžete smazat celý účet</span>
+                <span>V nastavení profilu můžeš smazat celý účet</span>
               </div>
             </div>
             <div className="legal-right-item">
@@ -111,50 +111,50 @@ export function PrivacyPage() {
         </section>
 
         <section id="cookies">
-          <h2>Co ukládáme ve vašem prohlížeči</h2>
+          <h2>Co ukládáme v tvém prohlížeči</h2>
           <p>
             <strong>Nepoužíváme sledovací cookies.</strong> Žádný Google Analytics, Facebook Pixel
-            ani jiné sledovací nástroje. Na vašem počítači si pamatujeme jen to, co je nezbytné:
+            ani jiné sledovací nástroje. Na tvém počítači si pamatujeme jen to, co je nezbytné:
           </p>
           <div className="legal-storage-list">
             <div className="legal-storage-item">
               <span className="legal-storage-icon">●</span>
               <div>
                 <strong>Přihlašovací údaje</strong>
-                <span>Abyste nemuseli zadávat heslo při každé návštěvě. Platí 7 dní nebo do odhlášení.</span>
+                <span>Aby nebylo nutné zadávat heslo při každé návštěvě. Platí 7 dní nebo do odhlášení.</span>
               </div>
             </div>
             <div className="legal-storage-item">
               <span className="legal-storage-icon">●</span>
               <div>
                 <strong>Identifikace chaty</strong>
-                <span>Abychom věděli, ke které chatě patříte.</span>
+                <span>Abychom věděli, ke které chatě patříš.</span>
               </div>
             </div>
             <div className="legal-storage-item">
               <span className="legal-storage-icon">●</span>
               <div>
                 <strong>Vzhled aplikace</strong>
-                <span>Vaše preference tmavého/světlého režimu a pozadí.</span>
+                <span>Tvoje preference tmavého/světlého režimu a pozadí.</span>
               </div>
             </div>
             <div className="legal-storage-item">
               <span className="legal-storage-icon">●</span>
               <div>
                 <strong>Souhlas s tímto oznámením</strong>
-                <span>Aby se vám tento banner nezobrazoval znovu.</span>
+                <span>Aby se ti tento banner nezobrazoval znovu.</span>
               </div>
             </div>
           </div>
           <p className="legal-note">
             Tato data jsou technicky nezbytná pro fungování aplikace a dle EU legislativy
-            (ePrivacy směrnice) nevyžadují váš souhlas. Informujeme vás o nich z důvodu transparentnosti.
-            Můžete je kdykoli smazat vymazáním dat prohlížeče — poté budete odhlášeni.
+            (ePrivacy směrnice) nevyžadují tvůj souhlas. Informujeme tě o nich z důvodu transparentnosti.
+            Můžeš je kdykoli smazat vymazáním dat prohlížeče — tím se odhlásíš.
           </p>
         </section>
 
         <section>
-          <h2>Jak chráníme vaše data</h2>
+          <h2>Jak chráníme tvoje data</h2>
           <ul>
             <li>Hesla ukládáme zašifrovaná — ani my je nevidíme</li>
             <li>Komunikace probíhá přes šifrované HTTPS spojení</li>
@@ -165,7 +165,7 @@ export function PrivacyPage() {
         <section>
           <h2>Kontakt</h2>
           <p>
-            Máte otázky ohledně svých údajů? Napište nám na{' '}
+            Máš otázky ohledně svých údajů? Napiš nám na{' '}
             <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a> — rádi odpovíme.
           </p>
         </section>

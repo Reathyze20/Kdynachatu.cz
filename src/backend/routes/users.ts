@@ -81,7 +81,7 @@ router.post("/", protect, requireCabin, validate(createUserSchema), async (req: 
 //                                GET MY PROFILE
 // ============================================================================
 router.get("/me", protect, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ message: "Nejste přihlášen." });
+  if (!req.user) return res.status(401).json({ message: "Nejdřív se přihlas." });
 
   try {
     const user = await prisma.user.findUnique({
@@ -108,7 +108,7 @@ router.get("/me", protect, async (req: Request, res: Response) => {
 //                                UPDATE MY PROFILE
 // ============================================================================
 router.patch("/me", protect, validate(updateProfileSchema), async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ message: "Nejste přihlášen." });
+  if (!req.user) return res.status(401).json({ message: "Nejdřív se přihlas." });
 
   const { email, color, animalIcon } = req.body;
 
@@ -133,7 +133,7 @@ router.patch("/me", protect, validate(updateProfileSchema), async (req: Request,
 //                            CHANGE MY PASSWORD
 // ============================================================================
 router.patch("/me/password", protect, validate(changeMyPasswordSchema), async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ message: "Nejste přihlášen." });
+  if (!req.user) return res.status(401).json({ message: "Nejdřív se přihlas." });
 
   const { oldPassword, newPassword } = req.body;
 
@@ -320,7 +320,7 @@ router.patch("/:id/remove-from-cabin", protect, requireCabin, async (req: Reques
 
     // Cannot remove yourself
     if (id === req.user.userId) {
-      return res.status(400).json({ message: "Nemůžete odebrat sami sebe." });
+      return res.status(400).json({ message: "Sebe z chaty odebrat nemůžeš." });
     }
 
     // Verify target user belongs to same cabin
@@ -467,7 +467,7 @@ router.delete("/me", protect, async (req: Request, res: Response) => {
 
     const { password } = req.body;
     if (!password || typeof password !== "string") {
-      return res.status(400).json({ message: "Pro smazání účtu zadejte heslo." });
+      return res.status(400).json({ message: "Pro smazání účtu zadej heslo." });
     }
 
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
@@ -486,7 +486,7 @@ router.delete("/me", protect, async (req: Request, res: Response) => {
       });
       if (adminCount <= 1) {
         return res.status(400).json({
-          message: "Jste jediný admin chaty. Nejdříve předejte roli admina jinému členovi.",
+          message: "Jsi jediný admin chaty. Nejdřív předej roli admina jinému členovi.",
         });
       }
     }
@@ -499,7 +499,7 @@ router.delete("/me", protect, async (req: Request, res: Response) => {
       username: req.user.username,
     });
 
-    res.json({ message: "Váš účet byl nenávratně smazán." });
+    res.json({ message: "Tvůj účet jsme nenávratně smazali." });
   } catch (error) {
     logger.error("USERS", "Self-delete account error", { error: String(error) });
     res.status(500).json({ message: "Chyba při mazání účtu." });
@@ -520,7 +520,7 @@ router.post("/me/leave-cabin", protect, requireCabin, async (req: Request, res: 
       });
       if (adminCount <= 1) {
         return res.status(400).json({
-          message: "Jste jediný admin. Nejdříve předejte roli admina jinému členovi.",
+          message: "Jsi jediný admin. Nejdřív předej roli admina jinému členovi.",
         });
       }
     }
@@ -537,7 +537,7 @@ router.post("/me/leave-cabin", protect, requireCabin, async (req: Request, res: 
       cabinId: req.user.cabinId,
     });
 
-    res.json({ message: "Úspěšně jste opustili chatu." });
+    res.json({ message: "Už nejsi členem chaty." });
   } catch (error) {
     logger.error("USERS", "Leave cabin error", { error: String(error) });
     res.status(500).json({ message: "Chyba při opouštění chaty." });

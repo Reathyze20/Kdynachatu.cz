@@ -36,7 +36,7 @@ export const registerSchema = z.object({
 export const forgotPasswordSchema = z.object({
   identifier: z.string()
     .trim()
-    .min(2, "Zadejte e-mail nebo uživatelské jméno")
+    .min(2, "Zadej e-mail nebo uživatelské jméno")
     .max(255, "Zadaná hodnota je příliš dlouhá"),
 });
 
