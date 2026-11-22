@@ -486,7 +486,7 @@ router.delete("/me", protect, async (req: Request, res: Response) => {
       });
       if (adminCount <= 1) {
         return res.status(400).json({
-          message: "Jsi jediný admin chaty. Nejdřív předej roli admina jinému členovi.",
+          message: "Jsi poslední admin chaty. Nejdřív předej roli admina jinému členovi.",
         });
       }
     }
@@ -520,7 +520,7 @@ router.post("/me/leave-cabin", protect, requireCabin, async (req: Request, res: 
       });
       if (adminCount <= 1) {
         return res.status(400).json({
-          message: "Jsi jediný admin. Nejdřív předej roli admina jinému členovi.",
+          message: "Jsi poslední admin chaty. Nejdřív předej roli admina jinému členovi.",
         });
       }
     }
@@ -537,7 +537,7 @@ router.post("/me/leave-cabin", protect, requireCabin, async (req: Request, res: 
       cabinId: req.user.cabinId,
     });
 
-    res.json({ message: "Už nejsi členem chaty." });
+    res.json({ message: "Už nejsi v této chatě." });
   } catch (error) {
     logger.error("USERS", "Leave cabin error", { error: String(error) });
     res.status(500).json({ message: "Chyba při opouštění chaty." });

@@ -116,7 +116,7 @@ router.post("/users", protect, requireSuperAdmin, validate(superadminCreateUserS
             email,
           });
           return res.status(503).json({
-            message: "Účet nebyl vytvořen, protože se nepodařilo odeslat onboarding e-mail. Zkus to znovu po opravě SMTP nebo doručování.",
+            message: "Účet jsme nevytvořili, protože se nepodařilo odeslat onboarding e-mail. Zkus to znovu po opravě SMTP nebo doručování.",
           });
         } catch (cleanupError) {
           logger.error("SUPERADMIN", "Failed to rollback user after onboarding email failure", {
@@ -146,7 +146,7 @@ router.post("/users", protect, requireSuperAdmin, validate(superadminCreateUserS
     } = {
       message: verificationEmailSent
         ? `Uživatel ${username} byl vytvořen. Onboarding e-mail s aktivačním odkazem a dočasným heslem byl odeslán.`
-        : `Uživatel ${username} byl vytvořen, ale onboarding e-mail se nepodařilo odeslat. Použij nouzové údaje níže.`,
+        : `Uživatele ${username} jsme vytvořili, ale onboarding e-mail se nepodařilo odeslat. Použij nouzové údaje níže.`,
       user: {
         id: newUser.id,
         username: newUser.username,

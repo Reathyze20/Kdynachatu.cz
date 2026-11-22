@@ -64,7 +64,7 @@ export function PrivacyPage() {
             <li><strong>Poskytovatel hostingu</strong> — data jsou uložena na serveru v ČR</li>
           </ul>
           <p className="legal-highlight">
-            Tvoje údaje neprodáváme. Nesdílíme je s reklamními sítěmi. Nemáme žádné „partnery" kteří by k nim měli přístup.
+            Tvoje údaje neprodáváme. Nesdílíme je s reklamními sítěmi. Nemáme žádné „partnery“, kteří by k nim měli přístup.
           </p>
         </section>
 
@@ -121,7 +121,7 @@ export function PrivacyPage() {
               <span className="legal-storage-icon">●</span>
               <div>
                 <strong>Přihlašovací údaje</strong>
-                <span>Aby nebylo nutné zadávat heslo při každé návštěvě. Platí 7 dní nebo do odhlášení.</span>
+                <span>Ať nemusíš zadávat heslo při každé návštěvě. Platí 7 dní nebo do odhlášení.</span>
               </div>
             </div>
             <div className="legal-storage-item">

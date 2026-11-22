@@ -349,7 +349,7 @@ router.get("/:channelId/messages", protect, requireCabin, async (req: Request, r
       where: { id: channelId, cabinId },
     });
     if (!channel) {
-      return res.status(404).json({ message: "Kanál nenalezen nebo k němu nemáš přístup." });
+      return res.status(404).json({ message: "Kanál neexistuje, nebo k němu nemáš přístup." });
     }
 
     const notes = await prisma.note.findMany({

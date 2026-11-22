@@ -179,7 +179,7 @@ export const sendVerificationEmailWithToken = async (email: string, token: strin
 </body>
 </html>`;
 
-    const textContent = `Ahoj,\n\nÚčet v aplikaci ${EMAIL_APP_NAME} aktivuješ na tomto odkazu:\n${verifyUrl}\n\nPokud registrace nebyla tvoje, tento e-mail ignoruj.`;
+    const textContent = `Ahoj,\n\nÚčet v aplikaci ${EMAIL_APP_NAME} aktivuješ přes tento odkaz:\n${verifyUrl}\n\nPokud registrace nebyla tvoje, tento e-mail ignoruj.`;
 
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
@@ -264,7 +264,7 @@ export const sendSuperadminOnboardingEmail = async (
         </div>
 
         <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Pokud o účet nestojíš, tento e-mail ignoruj.
+          Pokud účet nečekáš, tento e-mail ignoruj.
         </p>
       </div>
     </div>
@@ -348,7 +348,7 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
         </div>
 
         <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Odkaz platí 2 hodiny a můžeš ho použít jen jednou. Pokud o nové heslo nestojíš, tento e-mail ignoruj.
+          Odkaz platí 2 hodiny a můžeš ho použít jen jednou. Pokud žádost nebyla od tebe, tento e-mail ignoruj.
         </p>
       </div>
     </div>
@@ -360,7 +360,7 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
 </body>
 </html>`;
 
-    const textContent = `Ahoj,\n\nPřišla nám žádost o nové heslo k tvému účtu v aplikaci ${EMAIL_APP_NAME}. Pokračuj tady:\n${resetUrl}\n\nOdkaz platí 2 hodiny a můžeš ho použít jen jednou. Pokud o nové heslo nestojíš, tento e-mail ignoruj.`;
+    const textContent = `Ahoj,\n\nPřišla nám žádost o nové heslo k tvému účtu v aplikaci ${EMAIL_APP_NAME}. Pokračuj tady:\n${resetUrl}\n\nOdkaz platí 2 hodiny a můžeš ho použít jen jednou. Pokud žádost nebyla od tebe, tento e-mail ignoruj.`;
 
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
