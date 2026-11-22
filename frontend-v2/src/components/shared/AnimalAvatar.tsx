@@ -3,13 +3,14 @@
  * Handles both new avatar IDs ("fox", "bear") and legacy emoji ("🦊").
  */
 import { getAvatarById, isAvatarId } from "@/lib/avatars";
+import { memberInitial, toMemberColor } from "@/lib/memberPalette";
 
 interface AnimalAvatarProps {
   /** Avatar identifier — new ID ("fox") or legacy emoji ("🦊") */
   icon: string | null | undefined;
-  /** Fallback: user's first letter */
+  /** Name; its initial is shown when the member has no avatar */
   username: string;
-  /** User color for letter/emoji fallback */
+  /** Stored member color; shown as the nearest palette color (#271) */
   color?: string;
   /** Size in px (default 48) */
   size?: number;
@@ -25,7 +26,8 @@ function hexToRgba(hex: string | undefined, alpha = 1): string {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-export function AnimalAvatar({ icon, username, color, size = 48, className = "" }: AnimalAvatarProps) {
+export function AnimalAvatar({ icon, username, color: storedColor, size = 48, className = "" }: AnimalAvatarProps) {
+  const color = toMemberColor(storedColor);
   const avatarDef = isAvatarId(icon) ? getAvatarById(icon!) : undefined;
 
   // New-style: SVG image avatar
@@ -76,7 +78,7 @@ export function AnimalAvatar({ icon, username, color, size = 48, className = "" 
     );
   }
 
-  // Fallback: generic user silhouette (no text initials)
+  // Fallback: white initial on the member color (G4: color never alone, ≥ 4.5:1)
   return (
     <div
       className={className}
@@ -89,20 +91,14 @@ export function AnimalAvatar({ icon, username, color, size = 48, className = "" 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: hexToRgba(color, 0.12),
-        overflow: "hidden",
+        backgroundColor: color,
+        color: "#fff",
+        fontSize: size * 0.45,
+        fontWeight: 700,
+        lineHeight: 1,
       }}
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill={color || "#94a3b8"}
-        width={size * 0.55}
-        height={size * 0.55}
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="8" r="4" />
-        <path d="M20 21v-1a6 6 0 0 0-6-6H10a6 6 0 0 0-6 6v1" />
-      </svg>
+      <span aria-hidden="true">{memberInitial(username)}</span>
     </div>
   );
 }

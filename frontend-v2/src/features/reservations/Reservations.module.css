@@ -432,6 +432,11 @@ button.newReservationButton {
   text-overflow: ellipsis;
 }
 
+/* G4: na mobilu se jméno do pruhu nevejde, nese aspoň iniciálu. */
+.calBarInitial {
+  display: none;
+}
+
 .calBarWithOverflow {
   padding-right: 28px;
 }
@@ -2354,6 +2359,11 @@ button.btnReset {
     margin-top: 0;
     margin-bottom: 0;
     line-height: 1;
+  }
+
+  .calBarInitial {
+    display: inline;
+    font-size: 0.6rem;
   }
 
   .calBarWithOverflow {

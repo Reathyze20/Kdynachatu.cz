@@ -70,22 +70,3 @@ export const ANIMAL_EMOJIS = [
   '🦉','🦋','🐢','🦎','🐙','🦀','🐬','🐳','🦈','🐘',
   '🦒','🦓','🦏','🦛','🐪','🦘','🦙','🦔','🐿️','🦡',
 ]
-
-export const SWATCH_COLORS = [
-  '#2d6a4f',  // forest green
-  '#40916c',  // medium green
-  '#52b788',  // light green
-  '#bf6c3d',  // terracotta/rust
-  '#c68b3f',  // golden amber
-  '#7a5b42',  // dark wood brown
-  '#a0522d',  // sienna
-  '#6b7c47',  // olive
-  '#8fa37a',  // sage
-  '#c1877a',  // dusty rose/clay
-  '#d4956a',  // warm sand/peach
-  '#6b7280',  // stone gray
-  '#5c7a6b',  // muted teal-green
-  '#7d6c5a',  // warm taupe
-  '#8b6914',  // dark gold/mustard
-  '#4a6741',  // dark olive
-]

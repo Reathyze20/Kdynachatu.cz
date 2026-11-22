@@ -11,21 +11,12 @@ import { membersApi } from '@/api/members'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
+import { MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { useNavigate } from 'react-router-dom'
 import { Download, ScrollText, Settings, Shield } from 'lucide-react'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { promptPwaInstall } from '@/lib/pwaInstall'
-
-// ─── Konstanty ────────────────────────────────────────────────────────────────
-const SWATCH_COLORS = [
-  '#2d6a4f', '#40916c', '#52b788',
-  '#bf6c3d', '#c68b3f', '#7a5b42',
-  '#a0522d', '#6b7c47', '#8fa37a',
-  '#c1877a', '#d4956a', '#6b7280',
-  '#5c7a6b', '#7d6c5a', '#8b6914',
-  '#4a6741',
-]
 
 interface ProfileData {
   email: string
@@ -428,15 +419,18 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <div className="form-group">
                 <label>Vyberte si barvu:</label>
                 <div id="profile-color-grid" className="swatch-grid">
-                  {SWATCH_COLORS.map((color) => (
+                  {MEMBER_PALETTE.map(({ hex, name }) => (
                     <div
-                      key={color}
-                      className={`color-swatch${selectedColor.toLowerCase() === color.toLowerCase() ? ' active' : ''}`}
-                      style={{ backgroundColor: color }}
+                      key={hex}
+                      className={`color-swatch${toMemberColor(selectedColor) === hex ? ' active' : ''}`}
+                      style={{ backgroundColor: hex }}
                       tabIndex={0}
                       role="button"
-                      onClick={() => handleColorSelect(color)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleColorSelect(color) } }}
+                      aria-label={name}
+                      aria-pressed={toMemberColor(selectedColor) === hex}
+                      title={name}
+                      onClick={() => handleColorSelect(hex)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleColorSelect(hex) } }}
                     />
                   ))}
                 </div>
