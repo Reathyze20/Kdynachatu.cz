@@ -55,6 +55,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
 | **ColorPicker** | Grid of the 8 verified member colors (`MEMBER_PALETTE`); a stored off-palette color shows as the nearest one (#271) | `value, onChange, size?` |
 | **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y (po 14. 12.) → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
+| **MunicipalityPicker** | Výběr nejbližší obce chaty ze seznamu obcí ČR (#279, ADR-0006): ARIA combobox nad `GET /api/municipalities`, nabízí obec s okresem a krajem, hodnotou je jen vybraná obec (psaní výběr zruší). Uvádí zdroj ČÚZK (CC BY 4.0) | `id, value, onChange, placeholder?, required?, testId?` |
 
 ---
 
@@ -191,6 +192,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | `client.ts` | `apiClient` (Axios) | JWT interceptor, 401 handler |
 | `auth.ts` | `SignupStatusResponse`, `authApi` | getSignupStatus |
+| `municipalities.ts` | `MunicipalityOption`, `municipalitiesApi` | search (veřejné, obce ČR z RÚIAN) |
 | `admin.ts` | `CabinUser`, `adminApi` | getUsers, getSystemInfo, getLogs, getInvites, createInvite, updateUserRole, deactivateUser |
 | `dashboard.ts` | `DashboardData`, `dashboardApi` | getDashboard, getWeather, getWeatherForecast, getFreeWeekends |
 | `diary.ts` | `DiaryFolder`, `DiaryEntry`, `diaryApi` | getFolders, createFolder, renameFolder, getEntriesInFolder, createEntry, updateEntry, deleteEntry |
@@ -210,6 +212,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|
 | `useOnline` | `navigator.onLine` + event listeners → `boolean` |
 | `useCabinFeatures` | Query cabin feature flags → `{ features, isLoading }` |
+| `useMunicipalitySearch` | Našeptávání obcí se zpožděním 250 ms, od 2 znaků → `{ results, isFetching, isSettled }`; `MUNICIPALITY_KEYS` |
 
 ---
 
