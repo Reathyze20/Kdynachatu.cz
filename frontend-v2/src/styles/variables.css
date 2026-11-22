@@ -187,6 +187,12 @@
   --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
   --bg-app-backdrop: radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%), rgb(var(--page));
 
+  /* ── Stavy zásob a plynu (Dostatek · Dochází · Došlo), mock 06 ───────────
+     Ztmavené kvůli kontrastu štítku na podbarvení (G1, #269). Podbarvení --ok-bg … níž. */
+  --ok: 47 107 82;
+  --low: 138 75 6;
+  --empty: 180 35 35;
+
   /* ── Fotka krajiny — jen přihlášení (.photo-backdrop), ne po přihlášení (C5a) ── */
   --bg-image: url("/bg-hero.jpg");
 
@@ -261,6 +267,19 @@
   --rule: 52 62 54;
   --rule-soft: 37 46 40;
   --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+  --ok: 94 186 134;
+  --low: 234 179 8;
+  --empty: 248 113 113;
+}
+
+/* Podbarvení stavových štítků: 16 % barvy stavu, neprůhledně na ploše karty, aby kontrast
+   textu (≥ 4,5 : 1, G1) nezávisel na hoveru řádku pod štítkem. V `.dark` znovu, protože
+   custom property se dědí už spočítaná. */
+:root,
+.dark {
+  --ok-bg: color-mix(in srgb, rgb(var(--ok)) 16%, rgb(var(--sheet)));
+  --low-bg: color-mix(in srgb, rgb(var(--low)) 16%, rgb(var(--sheet)));
+  --empty-bg: color-mix(in srgb, rgb(var(--empty)) 16%, rgb(var(--sheet)));
 }
 
 /* =============================================================================
