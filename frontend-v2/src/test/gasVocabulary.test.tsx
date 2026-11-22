@@ -21,6 +21,15 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u-eva',
 
 type Gas = 'full' | 'half' | 'low' | 'empty'
 const TODAY = '2026-12-10'
+// Čtení všech čtyř uložených hodnot a chybějící hodnoty; staré `half` je Dostatek.
+const READ_CASES: [Gas | null, string | null][] = [
+  ['full', 'Plynová bomba: Dostatek'],
+  ['half', 'Plynová bomba: Dostatek'],
+  ['low', 'Plynová bomba: Dochází'],
+  ['empty', 'Plynová bomba: Došlo'],
+  [null, null],
+]
+const OLD_GAS_WORDS = /Plný|Půl|Prázdný|Plyn:/i
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -72,13 +81,7 @@ describe('Stav chaty při odjezdu: plynová bomba', () => {
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/reservations/r-1/checkout', { checkoutState: {} }))
   })
 
-  it.each<[Gas | null, string | null]>([
-    ['full', 'Plynová bomba: Dostatek'],
-    ['half', 'Plynová bomba: Dostatek'],
-    ['low', 'Plynová bomba: Dochází'],
-    ['empty', 'Plynová bomba: Došlo'],
-    [null, null],
-  ])('shrnutí potvrzeného odjezdu čte %s jako %s', async (value, expected) => {
+  it.each(READ_CASES)('shrnutí potvrzeného odjezdu čte %s jako %s', async (value, expected) => {
     api.get.mockResolvedValueOnce({
       data: {
         isCheckoutCompleted: true, checkoutCompletedBy: 'u-eva', checkoutCompletedByUsername: 'Eva',
@@ -90,7 +93,7 @@ describe('Stav chaty při odjezdu: plynová bomba', () => {
     await screen.findByText('Odjezd potvrzen')
     if (expected) expect(screen.getByText(expected)).toBeInTheDocument()
     else expect(screen.queryByText(/Plynová bomba/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Plný|Půl|Prázdný|Plyn:/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(OLD_GAS_WORDS)).not.toBeInTheDocument()
   })
 })
 
@@ -111,18 +114,12 @@ describe('Od minule na Přehledu: plynová bomba', () => {
     )
   }
 
-  it.each<[Gas | null, string | null]>([
-    ['full', 'Plynová bomba: Dostatek'],
-    ['half', 'Plynová bomba: Dostatek'],
-    ['low', 'Plynová bomba: Dochází'],
-    ['empty', 'Plynová bomba: Došlo'],
-    [null, null],
-  ])('čte %s jako %s', (value, expected) => {
+  it.each(READ_CASES)('čte %s jako %s', (value, expected) => {
     renderOverviewCard(value)
 
     const briefing = screen.getByText('Od minule — Jana').parentElement as HTMLElement
     if (expected) expect(briefing).toHaveTextContent(expected)
     else expect(briefing).not.toHaveTextContent(/Plynová bomba/)
-    expect(briefing).not.toHaveTextContent(/Plný|Půl|Prázdný|Plyn:/i)
+    expect(briefing).not.toHaveTextContent(OLD_GAS_WORDS)
   })
 })

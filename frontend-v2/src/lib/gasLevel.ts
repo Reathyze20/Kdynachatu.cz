@@ -5,7 +5,9 @@
  * Backend dál přijímá čtyři hodnoty: stará `half` se jen čte (jako Dostatek),
  * formulář zapisuje jen `full` / `low` / `empty`.
  */
-export type GasValue = "full" | "half" | "low" | "empty";
+import type { CheckoutState } from "@/api/reservations";
+
+export type GasValue = NonNullable<CheckoutState["gas"]>;
 export type WritableGasValue = Exclude<GasValue, "half">;
 
 export const GAS_LABEL = "Plynová bomba";
@@ -23,12 +25,12 @@ export const GAS_OPTIONS: { value: WritableGasValue; label: string }[] = (["full
 );
 
 /** Zobrazený stav plynu; chybějící nebo neznámá hodnota se nezobrazuje (`null`). */
-export function gasStateLabel(value: string | null | undefined): string | null {
-  return value && Object.prototype.hasOwnProperty.call(GAS_STATE, value) ? GAS_STATE[value as GasValue] : null;
+export function gasStateLabel(value: GasValue | null | undefined): string | null {
+  return value ? GAS_STATE[value] ?? null : null;
 }
 
 /** „Plynová bomba: Dochází“, nebo `null`, když stav plynu chybí. */
-export function gasLine(value: string | null | undefined): string | null {
+export function gasLine(value: GasValue | null | undefined): string | null {
   const state = gasStateLabel(value);
   return state ? `${GAS_LABEL}: ${state}` : null;
 }
