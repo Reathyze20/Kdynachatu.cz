@@ -32,15 +32,21 @@ export interface Nudge {
 interface BuildNudgesInput {
   reservations?: DashboardReservationsData;
   shopping?: DashboardShoppingData;
+  /** Přihlášený člen; upomínka na odjezd patří jen tomu, kdo dnes odjíždí (#255). */
+  myUsername?: string | null;
 }
 
-export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge[] {
+export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesInput): Nudge[] {
   const nudges: Nudge[] = [];
   const todayStr = getLocalTodayIso();
 
-  // 1. Departure today — prompt the leaving occupant to fill the state.
+  // 1. Departure today — prompt the leaving occupant (and only them) to fill the state.
   const active = reservations?.activeReservation;
-  if (active && active.to === todayStr && !active.isCheckoutCompleted) {
+  // Organizátor nebo spolucestující; username je unikátní napříč účty
+  const isMyStay =
+    !!myUsername &&
+    (active?.username === myUsername || !!active?.participants?.some((p) => p.username === myUsername));
+  if (active && isMyStay && active.to === todayStr && !active.isCheckoutCompleted) {
     nudges.push({
       id: `departure-${active.id}`,
       tone: "action",

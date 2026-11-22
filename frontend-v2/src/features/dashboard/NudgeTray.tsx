@@ -49,7 +49,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const hasAction = (n: Nudge) => n.href in ACTION_LABEL;
-  const nudges = buildNudges({ reservations, shopping })
+  const nudges = buildNudges({ reservations, shopping, myUsername: user?.username })
     .filter((n) => !n.id.startsWith("supply-") && !dismissed.includes(n.id))
     .sort((a, b) => Number(hasAction(b)) - Number(hasAction(a)));
   if (nudges.length === 0) return null;

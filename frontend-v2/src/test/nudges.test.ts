@@ -81,17 +81,28 @@ describe('buildNudges', () => {
   })
 
   it('prompts to fill the state when departing today and checkout not done', () => {
-    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TODAY, isCheckoutCompleted: false }) }) })
+    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TODAY, isCheckoutCompleted: false }) }), myUsername: 'Táta' })
     expect(ids(ns)).toContain('departure-r1')
   })
 
+  it('prompts departure to a co-traveller whose shared stay ends today (#255)', () => {
+    const participants = [{ userId: 'u2', username: 'Máma', userColor: null, userAnimalIcon: null }]
+    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ username: 'Táta', participants }) }), myUsername: 'Máma' })
+    expect(ids(ns)).toContain('departure-r1')
+  })
+
+  it('does NOT prompt departure when the stay of another member ends today (#255)', () => {
+    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ username: 'Táta' }) }), myUsername: 'Máma' })
+    expect(ids(ns).some((id) => id.startsWith('departure-'))).toBe(false)
+  })
+
   it('does NOT prompt departure when checkout already completed', () => {
-    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TODAY, isCheckoutCompleted: true }) }) })
+    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TODAY, isCheckoutCompleted: true }) }), myUsername: 'Táta' })
     expect(ids(ns).some((id) => id.startsWith('departure-'))).toBe(false)
   })
 
   it('does NOT prompt departure when the stay ends in the future', () => {
-    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TOMORROW, isCheckoutCompleted: false }) }) })
+    const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TOMORROW, isCheckoutCompleted: false }) }), myUsername: 'Táta' })
     expect(ids(ns).some((id) => id.startsWith('departure-'))).toBe(false)
   })
 

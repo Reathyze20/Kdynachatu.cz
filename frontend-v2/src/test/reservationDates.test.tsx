@@ -94,7 +94,7 @@ describe('reservation dates: "today" is the local calendar day, not the UTC one'
   it('half an hour after local midnight the departure nudge belongs to the new day', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2027-07-10T00:30:00+02:00')) // = 2027-07-09T22:30Z
-    const ids = (to: string) => buildNudges({ reservations: dashboard(to) }).map((n) => n.id)
+    const ids = (to: string) => buildNudges({ reservations: dashboard(to), myUsername: 'Táta' }).map((n) => n.id)
     expect(ids('2027-07-10')).toContain('departure-r1')
     expect(ids('2027-07-09')).not.toContain('departure-r1')
   })
