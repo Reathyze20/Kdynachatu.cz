@@ -27,11 +27,7 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { userId: 'u-m
 
 const { socketHandlers } = vi.hoisted(() => ({ socketHandlers: new Map<string, (data?: unknown) => void>() }))
 vi.mock('@/hooks/useSocket', () => ({
-  useSocket: () => ({
-    on: (event: string, handler: (data?: unknown) => void) => socketHandlers.set(event, handler),
-    off: vi.fn(),
-    socketGeneration: 0,
-  }),
+  useSocket: () => ({ on: (event: string, h: (data?: unknown) => void) => socketHandlers.set(event, h), off: vi.fn(), socketGeneration: 0 }),
 }))
 
 const item = (overrides: Pick<ShoppingItem, 'id' | 'name'> & Partial<ShoppingItem>): ShoppingItem => ({
@@ -43,13 +39,11 @@ const item = (overrides: Pick<ShoppingItem, 'id' | 'name'> & Partial<ShoppingIte
   ...overrides,
 })
 
-const newClient = () =>
-  new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-
-/** Spies on invalidations so the test sees them even when an active query refetches right away. */
+const newClient = () => new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+// Spy, not isInvalidated: an active query refetches right away and clears the flag.
 function invalidatedKeys(qc: QueryClient) {
   const spy = vi.spyOn(qc, 'invalidateQueries')
-  return () => spy.mock.calls.map(([filters]) => JSON.stringify(filters?.queryKey))
+  return () => spy.mock.calls.map(([filters]) => filters?.queryKey)
 }
 
 function renderPage(items: ShoppingItem[]) {
@@ -99,49 +93,35 @@ describe('shopping page: item row tags', () => {
 
 // #219: „Přivezu z domova“ je vyřešené – vidí se, kdo to slíbil, a změna obnoví nákupy, zásoby i Přehled.
 describe('shopping page: bring from home is resolved', () => {
-  const jana = { id: 'u-jana', username: 'Jana', animalIcon: null }
-  const petr = { id: 'u-petr', username: 'Petr', animalIcon: null }
-
   it('shows the avatar of who promised to bring an item and keeps "Koupil(a)" for a bought one', async () => {
     renderPage([
-      item({ id: 'i-home', name: 'Plyn', status: 'bring_from_home', purchasedBy: jana }),
-      item({ id: 'i-bought', name: 'Rohlíky', status: 'purchased', purchasedBy: petr }),
+      item({ id: 'i-home', name: 'Plyn', status: 'bring_from_home', purchasedBy: { id: 'u-jana', username: 'Jana' } }),
+      item({ id: 'i-bought', name: 'Rohlíky', status: 'purchased', purchasedBy: { id: 'u-petr', username: 'Petr' } }),
     ])
 
-    const home = await rowOf('Plyn')
-    expect(home.getByTitle('Přiveze Jana')).toBeInTheDocument()
-    const bought = await rowOf('Rohlíky')
-    expect(bought.getByTitle('Koupil(a) Petr')).toBeInTheDocument()
+    expect((await rowOf('Plyn')).getByTitle('Přiveze Jana')).toBeInTheDocument()
+    expect((await rowOf('Rohlíky')).getByTitle('Koupil(a) Petr')).toBeInTheDocument()
   })
 
   it('marking an item "Přivezu z domova" sends the status and refreshes shopping, inventory and the dashboard', async () => {
-    const qc = renderPage([item({ id: 'i-3', name: 'Káva', linkedInventoryId: 'inv-1' })])
-    const invalidated = invalidatedKeys(qc)
+    const invalidated = invalidatedKeys(renderPage([item({ id: 'i-3', name: 'Káva', linkedInventoryId: 'inv-1' })]))
 
-    const row = await rowOf('Káva')
-    await userEvent.setup().click(row.getByRole('button', { name: 'Přivezu z domova' }))
+    await userEvent.setup().click((await rowOf('Káva')).getByRole('button', { name: 'Přivezu z domova' }))
 
     expect(api.put).toHaveBeenCalledWith('/shopping-list/i-3/purchase', { status: 'bring_from_home' })
-    await waitFor(() => {
-      expect(invalidated()).toEqual(expect.arrayContaining(
-        [SHOPPING_KEY, INVENTORY_KEY, DASHBOARD_SHOPPING_KEY].map((key) => JSON.stringify(key)),
-      ))
-    })
+    await waitFor(() => expect(invalidated()).toEqual(expect.arrayContaining([SHOPPING_KEY, INVENTORY_KEY, DASHBOARD_SHOPPING_KEY])))
   })
 
   it.each(['shopping:item:added', 'shopping:item:updated', 'shopping:item:deleted', 'shopping:list:changed'])(
     'socket event %s refreshes the shopping lists and the dashboard warning',
-    async (event) => {
+    (event) => {
       const qc = newClient()
       const invalidated = invalidatedKeys(qc)
-      const wrapper = ({ children }: PropsWithChildren) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-      renderHook(() => useRealtimeSync(), { wrapper })
+      renderHook(() => useRealtimeSync(), { wrapper: ({ children }: PropsWithChildren) => <QueryClientProvider client={qc}>{children}</QueryClientProvider> })
 
       act(() => socketHandlers.get(event)?.({ id: 'i-1' }))
 
-      expect(invalidated()).toEqual(expect.arrayContaining(
-        [SHOPPING_KEY, DASHBOARD_SHOPPING_KEY].map((key) => JSON.stringify(key)),
-      ))
+      expect(invalidated()).toEqual(expect.arrayContaining([SHOPPING_KEY, DASHBOARD_SHOPPING_KEY]))
     },
   )
 })

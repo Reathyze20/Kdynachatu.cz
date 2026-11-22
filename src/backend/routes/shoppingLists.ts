@@ -150,7 +150,9 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
         }
 
         const cabinId = req.user!.cabinId!;
-        const changedInventoryIds = await prisma.$transaction(async (tx) => {
+        let inventoryIds: string[] = [];
+        let inventoryChanged = 0;
+        await prisma.$transaction(async (tx) => {
             // Find all items with linked inventory before deleting
             const itemsWithInventory = await tx.shoppingListItem.findMany({
                 where: { listId: id, linkedInventoryId: { not: null } },
@@ -161,24 +163,20 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
             await tx.shoppingList.delete({ where: { id } });
 
             // Reset inCart for linked inventory items of the own cabin
-            const inventoryIds = [...new Set(itemsWithInventory
+            inventoryIds = itemsWithInventory
                 .map((i) => i.linkedInventoryId)
-                .filter((id): id is string => id !== null))];
-            if (inventoryIds.length === 0) return [];
-            const owned = await tx.inventoryItem.findMany({
-                where: { id: { in: inventoryIds }, cabinId },
-                select: { id: true },
-            });
-            await tx.inventoryItem.updateMany({
-                where: { id: { in: owned.map((i) => i.id) }, cabinId },
-                data: { inCart: false },
-            });
-            return owned.map((i) => i.id);
+                .filter((id): id is string => id !== null);
+            if (inventoryIds.length > 0) {
+                ({ count: inventoryChanged } = await tx.inventoryItem.updateMany({
+                    where: { id: { in: inventoryIds }, cabinId },
+                    data: { inCart: false },
+                }));
+            }
         });
 
         emitToCabin(cabinId, "shopping:list:changed", { id: req.params.id });
-        for (const inventoryId of changedInventoryIds) {
-            emitToCabin(cabinId, "inventory:updated", { id: inventoryId });
+        if (inventoryChanged > 0) {
+            for (const inventoryId of inventoryIds) emitToCabin(cabinId, "inventory:updated", { id: inventoryId });
         }
         res.json({ message: "List deleted successfully" });
     } catch (error) {
