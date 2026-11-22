@@ -1,6 +1,10 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { cabinForecastCoordinates } from "./weatherAlerts";
+
+// weatherAlerts přes e-mail načítá config.ts, který bez JWT_SECRET ukončí proces (CI nemá .env).
+// Env se nastaví před dynamickým importem, stejně jako v cabinSignup.test.ts.
+process.env.JWT_SECRET ||= "test-secret-for-weather-alert-tests-0123456789";
+const { cabinForecastCoordinates } = await import("./weatherAlerts");
 
 describe("cabinForecastCoordinates", () => {
   test("uses the stored centre of the picked municipality without geocoding", async () => {
