@@ -307,6 +307,11 @@ export const updateCabinSettingsSchema = z.object({
   features: z.record(z.string(), z.boolean()).optional().nullable(),
 });
 
+// Municipalities — GET /api/municipalities?q= (našeptávání nejbližší obce chaty)
+export const municipalitySearchSchema = z.object({
+  q: z.string().trim().min(2, "Napiš aspoň dva znaky názvu obce.").max(100, "Název obce je příliš dlouhý."),
+});
+
 // Cabin create
 export const createCabinSchema = z.object({
   name: z.string().trim().min(2, "Název chaty musí mít alespoň 2 znaky").max(100, "Maximální délka je 100 znaků"),

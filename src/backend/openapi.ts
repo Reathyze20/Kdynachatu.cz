@@ -219,6 +219,26 @@ const schemas: Record<string, JsonSchema> = {
       },
     },
   },
+  MunicipalitySearchResponse: {
+    type: "object",
+    required: ["municipalities"],
+    properties: {
+      municipalities: {
+        type: "array",
+        maxItems: 10,
+        items: {
+          type: "object",
+          required: ["code", "name", "district", "region"],
+          properties: {
+            code: { type: "integer", description: "Kod obce v RUIAN", example: 565768 },
+            name: { type: "string", example: "Třebenice" },
+            district: { type: "string", description: "Okres", example: "Litoměřice" },
+            region: { type: "string", description: "Kraj", example: "Ústecký kraj" },
+          },
+        },
+      },
+    },
+  },
   CabinSettings: {
     type: "object",
     required: ["id", "name", "subdomain", "weatherLocation", "isWinterized", "features", "createdAt"],
@@ -572,6 +592,17 @@ const paths: Record<string, OpenApiObject> = {
       summary: "Fiktivni demo ucty pro rychle prihlaseni (neprazdne jen na stagingu)",
       responses: {
         "200": jsonResponse(ref("DemoAccountsResponse"), "Seznam demo uctu, mimo staging prazdny"),
+      },
+    },
+  },
+  "/api/municipalities": {
+    get: {
+      tags: ["Cabin"],
+      summary: "Verejne naseptavani obci CR (RUIAN, CUZK, CC BY 4.0) pro vyber nejblizsi obce chaty",
+      parameters: [{ name: "q", in: "query", required: true, schema: { type: "string", minLength: 2, maxLength: 100 } }],
+      responses: {
+        "200": jsonResponse(ref("MunicipalitySearchResponse"), "Az 10 obci s okresem a krajem, bez souradnic"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Chybi dotaz nebo je kratsi nez 2 znaky"),
       },
     },
   },
