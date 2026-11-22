@@ -187,8 +187,9 @@
   --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
   --bg-app-backdrop: radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%), rgb(var(--page));
 
-  /* ── Stavy zásob a plynu (Dostatek · Dochází · Došlo), mock 06 ───────────
-     Ztmavené kvůli kontrastu štítku na podbarvení (G1, #269). Podbarvení --ok-bg … níž. */
+  /* ── Stavové štítky zásob a plynu (Dostatek · Málo/Dochází · Došlo) ──────
+     Hodnoty z mocku docs/design/06-prehled-v2-atomy.html, ztmavené kvůli kontrastu štítku
+     na podbarvení (G1, #269). Pro štítky redesignu místo --status-*; podbarvení --ok-bg … níž. */
   --ok: 47 107 82;
   --low: 138 75 6;
   --empty: 180 35 35;
