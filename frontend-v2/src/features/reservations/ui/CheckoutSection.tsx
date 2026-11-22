@@ -198,8 +198,7 @@ export function CheckoutSection({ reservation }: Props) {
     try {
       await checkout.mutateAsync({ id: reservation.id, state: buildState() });
     } catch (error) {
-      // Bez signálu je předávka v offline frontě, místo chyby se ukáže štítek
-      if (isQueuedOffline(error)) return;
+      if (isQueuedOffline(error)) return; // offline: předávka je ve frontě, místo chyby štítek
       setSubmitError(
         getNetworkAwareActionMessage(
           error,

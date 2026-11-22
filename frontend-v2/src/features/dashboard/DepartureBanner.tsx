@@ -59,8 +59,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       // Stejná cesta zápisu jako CheckoutSection. Předávka jde první, aby po selhání
       // nezůstala v chatu zpráva bez dokončené předávky. Volný checklist chaty nemá
       // strukturovaný protějšek, do checkoutState jde jen vzkaz; bez vzkazu zůstane
-      // případný už uložený stav beze změny. Bez signálu jde předávka do offline fronty a zpráva
-      // se neposílá (po odmítnuté předávce by zůstala sama); vzkaz je i tak v checkoutState.
+      // případný už uložený stav beze změny. Offline jde předávka do fronty bez zprávy (#276).
       const note = departureNote.trim();
       try {
         await completeCheckout(reservationId, note ? { note } : undefined);
@@ -83,8 +82,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       dismissToday();
       setDismissed(true);
       setModalOpen(false);
-      // Ve frontě: banner ukazuje štítek „Čeká na odeslání“ a po odeslání zmizí
-      if (queued) return;
+      if (queued) return; // ve frontě: štítek „Čeká na odeslání“, po odeslání zmizí
       setSubmitError(null);
       showToast("Odjezdový protokol byl uložen.", "success");
       // RESERVATIONS_KEY pokrývá kalendář i gate odjezdu na dashboardu
