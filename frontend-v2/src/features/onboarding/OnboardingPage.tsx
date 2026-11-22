@@ -94,7 +94,7 @@ export default function OnboardingPage() {
         isSuperAdmin: data.isSuperAdmin,
         remember: !!localStorage.getItem('authToken'),
       })
-      showToast('Chata byla uspesne vytvorena!', 'success')
+      showToast('Chatu jsme vytvořili!', 'success')
       navigate('/dashboard', { replace: true })
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Nepodarilo se vytvorit chatu.'

@@ -24,7 +24,7 @@ export function AdminDiagnosticsPage() {
             <span className="admin-kicker">Diagnostika</span>
             <h1 className="admin-page-title admin-page-title--wide">Velká stránka pro incidenty, logy a support kódy</h1>
             <p className="admin-page-lead">
-              Když rodina nahlásí problém, nehledáš po více panelech. Tady máš systémové logy, request ID, support workflow i rychlý stav aplikace na jednom místě.
+              Když rodina nahlásí problém, nemusíš hledat ve více panelech. Tady máš systémové logy, request ID, support workflow i rychlý stav aplikace na jednom místě.
             </p>
           </div>
 

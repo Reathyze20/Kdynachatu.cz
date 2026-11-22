@@ -33,7 +33,7 @@ export function VerifyEmailPage() {
         })
 
         setState('success')
-        setMessage(data.message || 'Účet byl úspěšně ověřen!')
+        setMessage(data.message || 'Účet je ověřený!')
       } catch (err) {
         if ((err as Error).name === 'AbortError') return
         const data = (err as { response?: { data?: VerifyTokenResponse } }).response?.data

@@ -395,7 +395,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
                 if (saveError) setSaveError(null)
                 setPassword(e.target.value)
               }}
-              placeholder="Ponechte prázdné pro zachování stávajícího"
+              placeholder="Nech prázdné, pokud heslo neměníš"
               minLength={8}
               maxLength={100}
               autoComplete="new-password"

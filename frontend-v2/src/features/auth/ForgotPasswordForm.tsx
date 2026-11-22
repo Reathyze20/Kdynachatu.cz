@@ -73,7 +73,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
         </p>
 
         <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading || requestSent} data-testid="forgot-password-submit-button">
-          {loading ? 'Odesílám odkaz…' : requestSent ? 'Odkaz byl odeslán' : 'Poslat odkaz pro obnovu'}
+          {loading ? 'Odesílám odkaz…' : requestSent ? 'Odkaz jsme poslali' : 'Poslat odkaz pro obnovu'}
         </button>
 
         {message && (
