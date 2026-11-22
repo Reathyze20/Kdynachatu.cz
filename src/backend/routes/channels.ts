@@ -221,7 +221,7 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
     if (!channel) return res.status(404).json({ message: "Kanál nenalezen." });
 
     if (req.user.role !== "admin" && channel.createdById !== req.user.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění smazat tento kanál." });
+      return res.status(403).json({ message: "Nemáš oprávnění smazat tento kanál." });
     }
 
     await prisma.noteThread.delete({ where: { id } });
@@ -349,7 +349,7 @@ router.get("/:channelId/messages", protect, requireCabin, async (req: Request, r
       where: { id: channelId, cabinId },
     });
     if (!channel) {
-      return res.status(404).json({ message: "Kanál nenalezen nebo k němu nemáte přístup." });
+      return res.status(404).json({ message: "Kanál neexistuje, nebo k němu nemáš přístup." });
     }
 
     const notes = await prisma.note.findMany({

@@ -102,7 +102,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const apiLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 500,
-    message: "Příliš mnoho požadavků. Zkuste to prosím za chvíli.",
+    message: "Příliš mnoho požadavků. Zkus to za chvíli.",
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => req.path === "/api/health",
@@ -112,7 +112,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const authLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 30,
-    message: "Příliš mnoho pokusů o přihlášení. Zkuste to prosím později.",
+    message: "Příliš mnoho pokusů o přihlášení. Zkus to později.",
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -122,7 +122,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const loginLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 10,
-    message: { message: "Příliš mnoho neúspěšných pokusů o přihlášení. Zkuste to prosím za 15 minut." },
+    message: { message: "Příliš mnoho neúspěšných pokusů o přihlášení. Zkus to za 15 minut." },
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true,

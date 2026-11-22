@@ -96,7 +96,7 @@ router.patch("/:id/rename", protect, requireCabin, validate(renameShoppingListSc
         }
 
         if (list.createdById !== req.user!.userId && req.user!.role !== "admin") {
-            return res.status(403).json({ error: "Nemáte oprávnění přejmenovat tento seznam" });
+            return res.status(403).json({ error: "Nemáš oprávnění přejmenovat tento seznam" });
         }
 
         const updated = await prisma.shoppingList.update({
@@ -146,7 +146,7 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
         }
 
         if (list.createdById !== req.user!.userId && req.user!.role !== "admin") {
-            return res.status(403).json({ message: "Nemáte oprávnění smazat tento seznam" });
+            return res.status(403).json({ message: "Nemáš oprávnění smazat tento seznam" });
         }
 
         const cabinId = req.user!.cabinId!;

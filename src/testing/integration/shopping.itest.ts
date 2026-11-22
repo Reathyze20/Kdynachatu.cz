@@ -158,7 +158,7 @@ describe("shopping: same-cabin flows still work (positive control)", () => {
   test("member A cannot rename a list created by admin A (403 stays inside the cabin)", async () => {
     const res = await as(app, world.memberA).patch(`/api/shopping-lists/${listA}/rename`).send({ name: "Moje" });
     assert.equal(res.status, 403);
-    assert.equal(res.body.error, "Nemáte oprávnění přejmenovat tento seznam");
+    assert.equal(res.body.error, "Nemáš oprávnění přejmenovat tento seznam");
     assert.equal((await listSnapshot(listA))?.name, "Nákup A");
   });
 });

@@ -11,7 +11,7 @@ export function TermsPage() {
         <Link to="/" className="legal-back-link" data-testid="terms-back-link">← Zpět na úvod</Link>
 
         <h1>Obchodní podmínky</h1>
-        <p className="legal-subtitle">Pravidla hry — co od nás můžete čekat a co očekáváme my od vás.</p>
+        <p className="legal-subtitle">Pravidla hry — co od nás můžeš čekat a co očekáváme my od tebe.</p>
         <p className="legal-updated">Poslední aktualizace: 12. dubna 2026</p>
 
         <section>
@@ -122,7 +122,7 @@ export function TermsPage() {
         <section>
           <h2>12. Kontakt</h2>
           <p>
-            V případě dotazů kontaktujte: <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a>.
+            S dotazy piš na <a href="mailto:noreply@kdynachatu.cz">noreply@kdynachatu.cz</a>.
           </p>
         </section>
 

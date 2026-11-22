@@ -617,7 +617,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
       : false;
     if (isPrimaryCollisionBlocked(effectiveStatus, hasOverlappingPrimary)) {
       return res.status(409).json({
-        message: "V tomto termínu už je jiná pevná rezervace. Změňte termín, nebo rezervaci uložte jako předběžnou.",
+        message: "V tomto termínu už je jiná pevná rezervace. Změň termín, nebo rezervaci ulož jako předběžnou.",
       });
     }
 
@@ -804,7 +804,7 @@ router.post("/:id/watch", protect, requireCabin, async (req: Request, res: Respo
       return res.status(404).json({ message: "Rezervace nenalezena." });
     }
     if (reservation.userId === req.user.userId) {
-      return res.status(400).json({ message: "Nemůžete hlídat vlastní rezervaci." });
+      return res.status(400).json({ message: "Vlastní rezervaci hlídat nemůžeš." });
     }
     await prisma.reservationWatcher.upsert({
       where: {
