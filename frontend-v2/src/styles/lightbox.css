@@ -184,7 +184,7 @@
   padding: 4px 14px;
   min-height: unset;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -213,7 +213,7 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 9999px;
   color: white;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .lb-desc-input::placeholder {
@@ -235,7 +235,7 @@
   border: none;
   border-radius: 9999px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -286,6 +286,6 @@
   .lb-desc-input,
   .lb-desc-save {
     height: 44px;
-    min-height: 44px;
+    min-height: var(--touch-target-min);
   }
 }
