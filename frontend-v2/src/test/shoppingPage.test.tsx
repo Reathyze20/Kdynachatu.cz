@@ -40,7 +40,7 @@ const item = (overrides: Pick<ShoppingItem, 'id' | 'name'> & Partial<ShoppingIte
 })
 
 const newClient = () => new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-// Spy, not isInvalidated: an active query refetches right away and clears the flag.
+// Spy místo isInvalidated: aktivní dotaz se hned znovu načte a příznak smaže.
 function invalidatedKeys(qc: QueryClient) {
   const spy = vi.spyOn(qc, 'invalidateQueries')
   return () => spy.mock.calls.map(([filters]) => filters?.queryKey)

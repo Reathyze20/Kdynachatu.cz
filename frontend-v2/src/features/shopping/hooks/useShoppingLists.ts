@@ -16,7 +16,7 @@ import { isNetworkError, OFFLINE_TOAST_MSG } from '@/lib/networkError'
 import { INVENTORY_KEY } from './useInventory'
 
 export const SHOPPING_KEY = ['shopping-lists'] as const
-/** Dashboard shopping summary (pending items, ★ warning); depends on item statuses. */
+/** Nákupní souhrn na Přehledu (nevyřízené položky, varování ★); závisí na stavech položek. */
 export const DASHBOARD_SHOPPING_KEY = ['dashboard', 'shopping'] as const
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
