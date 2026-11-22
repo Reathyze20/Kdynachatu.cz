@@ -15,11 +15,13 @@ import { sendEmail } from "../../utils/email";
 
 const router = Router();
 
-// ── Helper: random color for new users (verified member palette, #271) ────────
-// Keep in sync with MEMBER_PALETTE in frontend-v2/src/lib/memberPalette.ts.
+// ── Helper: random color for new users ──────────────────────────────────────
 const COLORS = [
-  "#1D5FA8", "#B3401A", "#7A3FA0", "#1F6F4A",
-  "#0E6F7C", "#8A5A00", "#A6306A", "#4B5563",
+  "#2d6a4f", "#40916c", "#52b788",
+  "#bf6c3d", "#c68b3f", "#7a5b42",
+  "#a0522d", "#6b7c47", "#8fa37a",
+  "#c1877a", "#d4956a", "#5c7a6b",
+  "#8b6914", "#4a6741", "#7d6c5a",
 ];
 function randomColor(): string {
   return COLORS[Math.floor(Math.random() * COLORS.length)];
