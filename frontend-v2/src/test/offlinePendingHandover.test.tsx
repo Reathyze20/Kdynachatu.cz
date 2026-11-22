@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { InternalAxiosRequestConfig } from 'axios'
+import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Reservation } from '@/api/reservations'
@@ -12,14 +13,7 @@ import skeletonCssRaw from '@/styles/skeleton.css?raw'
 
 // Pravidlo E4 (#276): předávka odeslaná bez signálu má štítek „Čeká na odeslání“,
 // po odeslání fronty štítek zmizí. Fiktivní data, žádná reálná chata.
-const { api } = vi.hoisted(() => ({
-  api: {
-    get: vi.fn(),
-    patch: vi.fn(),
-    post: vi.fn(),
-    request: vi.fn(),
-  },
-}))
+const { api } = vi.hoisted(() => ({ api: { get: vi.fn(), patch: vi.fn(), post: vi.fn(), request: vi.fn() } }))
 vi.mock('@/api/client', () => ({ default: api }))
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 
@@ -33,9 +27,7 @@ function failOfflineIntoQueue(method: string) {
 
 async function reconnectAndFlush() {
   api.request.mockResolvedValue({ data: {} })
-  await act(async () => {
-    await flushQueue()
-  })
+  await act(() => flushQueue())
 }
 
 const TODAY = '2026-12-10'
@@ -52,21 +44,15 @@ beforeEach(() => {
 })
 afterEach(() => vi.useRealTimers())
 
-function newClient() {
+function renderWithClient(ui: ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   qc.setQueryData(RESERVATIONS_KEY, { reservations: [], availabilities: [] })
-  return qc
+  render(<QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>)
 }
 
 describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
   it('na Přehledu: předávka i zpráva jdou do fronty, karta má štítek a po odeslání zmizí', async () => {
-    render(
-      <QueryClientProvider client={newClient()}>
-        <MemoryRouter>
-          <DepartureBanner reservationId="r-1" departureChecklist={['Zavřít okna']} onRefresh={vi.fn()} />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    )
+    renderWithClient(<DepartureBanner reservationId="r-1" departureChecklist={['Zavřít okna']} onRefresh={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Vyplnit protokol' }))
     fireEvent.click(screen.getByRole('checkbox', { name: /Zavřít okna/ }))
@@ -93,11 +79,7 @@ describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
       id: 'r-2', userId: 'u-eva', username: 'Eva', from: '2026-12-08', to: TODAY,
       purpose: 'Víkend', status: 'primary', isCheckoutCompleted: false,
     }
-    render(
-      <QueryClientProvider client={newClient()}>
-        <CheckoutSection reservation={reservation} />
-      </QueryClientProvider>,
-    )
+    renderWithClient(<CheckoutSection reservation={reservation} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Potvrdit odjezd' }))
 

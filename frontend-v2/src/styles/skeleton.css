@@ -146,8 +146,7 @@
 }
 
 /* ── Offline banner a štítek „Čeká na odeslání“ (E4, #276) ──────────
-   Barvy ze stavových tokenů --low / --low-bg (variables.css): kontrast textu
-   ≥ 4,5 : 1 ve světlém i tmavém režimu hlídá statusBadgeContrast.test.ts. */
+   Tokeny --low/--low-bg: kontrast ≥ 4,5 : 1 i v tmavém režimu (statusBadgeContrast.test.ts). */
 .offline-banner {
   background: var(--low-bg);
   color: rgb(var(--low));

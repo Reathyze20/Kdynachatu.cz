@@ -16,9 +16,7 @@ const at = (h: number, m: number, day = 22) => new Date(2026, 10, day, h, m).get
 let onlineState = true
 function setOnline(value: boolean) {
   onlineState = value
-  act(() => {
-    window.dispatchEvent(new Event(value ? 'online' : 'offline'))
-  })
+  act(() => void window.dispatchEvent(new Event(value ? 'online' : 'offline')))
 }
 
 beforeEach(() => {
@@ -31,26 +29,11 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('E4 Čerstvost dat: upozornění nahoře', () => {
-  it('online s čerstvými daty nic neukazuje', () => {
-    markDataReceived(at(10, 30))
-    render(<OfflineBanner />)
-
-    expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.queryByRole('status')).toBeNull()
-  })
-
-  it('online s daty staršími než hodina ukáže „Údaje z HH:MM“', () => {
-    markDataReceived(at(9, 40))
-    render(<OfflineBanner />)
-
-    expect(screen.getByRole('status')).toHaveTextContent('Údaje z 9:40')
-    expect(screen.queryByRole('alert')).toBeNull()
-  })
-
-  it('offline ukáže „Jste offline“ s časem posledních dat a zmizí po připojení', () => {
+  it('online s čerstvými daty nic, offline „Jste offline · údaje z HH:MM“, po připojení zase nic', () => {
     markDataReceived(at(10, 55))
     render(<OfflineBanner />)
     expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('status')).toBeNull()
 
     setOnline(false)
     expect(screen.getByRole('alert')).toHaveTextContent('Jste offline · údaje z 10:55.')
@@ -59,7 +42,14 @@ describe('E4 Čerstvost dat: upozornění nahoře', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
-  it('offline s čekající změnou řekne, že se odešle po připojení', () => {
+  it('online s daty staršími než hodina ukáže „Údaje z HH:MM“', () => {
+    markDataReceived(at(9, 40))
+    render(<OfflineBanner />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Údaje z 9:40.')
+  })
+
+  it('offline s čekající změnou řekne, že čeká na odeslání', () => {
     markDataReceived(at(10, 55))
     enqueueMutation({ method: 'patch', url: '/reservations/r-1/checkout', headers: {} } as InternalAxiosRequestConfig)
     render(<OfflineBanner />)
