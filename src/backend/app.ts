@@ -44,7 +44,9 @@ import workspaceRoutes from "./routes/workspace";
 import invitesRoutes from "./routes/invites";
 import cabinRoutes from "./routes/cabin";
 import wallpapersRoutes from "./routes/wallpapers";
-import municipalitiesRoutes from "./routes/municipalities";
+import { municipalitySearchHandler } from "./routes/municipalities";
+import { validate } from "../validators/validate";
+import { municipalitySearchSchema } from "../validators/schemas";
 import { demoAccountsHandler, resolveDemoAccounts } from "./routes/demoAccounts";
 
 export interface CreateAppOptions {
@@ -257,8 +259,8 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   // Rychlé přihlášení demo účty – neprázdné jen na stagingu (viz routes/demoAccounts.ts)
   app.get("/api/demo-accounts", demoAccountsHandler(resolveDemoAccounts(process.env)));
 
-  // Veřejné našeptávání obcí (číselník RÚIAN) – potřebuje ho i registrace nové chaty
-  app.use("/api/municipalities", municipalitiesRoutes);
+  // Veřejné našeptávání obcí (číselník RÚIAN) pro registraci nové chaty (viz routes/municipalities.ts)
+  app.get("/api/municipalities", validate(municipalitySearchSchema, "query"), municipalitySearchHandler);
 
   // API routes
   app.use("/api/dashboard", dashboardRoutes);

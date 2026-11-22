@@ -2,7 +2,9 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import express from "express";
-import municipalitiesRoutes, { findMunicipality, searchMunicipalities } from "./municipalities";
+import { findMunicipality, municipalitySearchHandler, searchMunicipalities } from "./municipalities";
+import { validate } from "../../validators/validate";
+import { municipalitySearchSchema } from "../../validators/schemas";
 
 describe("searchMunicipalities", () => {
   test("offers every namesake municipality with its own district", () => {
@@ -30,13 +32,26 @@ describe("searchMunicipalities", () => {
     assert.match(names[firstInnerWord], / Lhota/);
   });
 
+  test("offers every municipality of an exact name even above the limit", () => {
+    const novaVes = searchMunicipalities("Nová Ves");
+    assert.equal(novaVes.filter((m) => m.name === "Nová Ves").length, 14);
+    assert.equal(new Set(novaVes.map((m) => m.code)).size, novaVes.length);
+  });
+
+  test("narrows namesakes by the district typed after the name", () => {
+    assert.deepEqual(
+      searchMunicipalities("nova ves zdar").map((m) => `${m.name} (${m.district})`),
+      ["Nová Ves (Žďár nad Sázavou)"],
+    );
+  });
+
   test("matches a word inside a hyphenated name", () => {
     assert.ok(searchMunicipalities("mistek").some((m) => m.name === "Frýdek-Místek"));
   });
 
   test("returns at most the requested number of results", () => {
-    assert.equal(searchMunicipalities("lhota").length, 10);
-    assert.equal(searchMunicipalities("lhota", 3).length, 3);
+    assert.equal(searchMunicipalities("lhot").length, 10);
+    assert.equal(searchMunicipalities("lhot", 3).length, 3);
   });
 
   test("needs at least two characters", () => {
@@ -63,7 +78,7 @@ describe("findMunicipality", () => {
 describe("GET /api/municipalities", () => {
   async function get(query: string) {
     const app = express();
-    app.use("/api/municipalities", municipalitiesRoutes);
+    app.get("/api/municipalities", validate(municipalitySearchSchema, "query"), municipalitySearchHandler);
     const server = app.listen(0, "127.0.0.1");
     await new Promise<void>((resolve) => server.once("listening", () => resolve()));
     try {

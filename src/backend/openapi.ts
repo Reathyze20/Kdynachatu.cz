@@ -225,7 +225,7 @@ const schemas: Record<string, JsonSchema> = {
     properties: {
       municipalities: {
         type: "array",
-        maxItems: 10,
+        description: "Az 10 obci; obce se stejnym nazvem jako dotaz vzdy vsechny",
         items: {
           type: "object",
           required: ["code", "name", "district", "region"],
@@ -597,11 +597,14 @@ const paths: Record<string, OpenApiObject> = {
   },
   "/api/municipalities": {
     get: {
-      tags: ["Cabin"],
+      tags: ["Auth"],
       summary: "Verejne naseptavani obci CR (RUIAN, CUZK, CC BY 4.0) pro vyber nejblizsi obce chaty",
-      parameters: [{ name: "q", in: "query", required: true, schema: { type: "string", minLength: 2, maxLength: 100 } }],
+      parameters: [{
+        name: "q", in: "query", required: true, schema: { type: "string", minLength: 2, maxLength: 100 },
+        description: "Zacatek nazvu obce, bez ohledu na diakritiku; muze pokracovat okresem (nova ves benesov)",
+      }],
       responses: {
-        "200": jsonResponse(ref("MunicipalitySearchResponse"), "Az 10 obci s okresem a krajem, bez souradnic"),
+        "200": jsonResponse(ref("MunicipalitySearchResponse"), "Obce s okresem a krajem, bez souradnic"),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Chybi dotaz nebo je kratsi nez 2 znaky"),
       },
     },
