@@ -69,6 +69,22 @@ export function getQueueLength(): number {
   return readQueue().length
 }
 
+/** Čeká ve frontě request s touto metodou a URL? (štítek „Čeká na odeslání“, #276) */
+export function isMutationQueued(method: string, url: string): boolean {
+  const m = method.toLowerCase()
+  return readQueue().some((q) => q.method === m && q.url === url)
+}
+
+export function subscribeQueue(callback: () => void): () => void {
+  window.addEventListener('offline-queue:changed', callback)
+  return () => window.removeEventListener('offline-queue:changed', callback)
+}
+
+/** Chyba requestu, který api/client.ts bez signálu uložil do fronty (odešle se později). */
+export function isQueuedOffline(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && (err as { queuedOffline?: boolean }).queuedOffline === true
+}
+
 /** Rozhodne, jestli daný request patří do offline fronty. */
 export function isQueueableRequest(config: InternalAxiosRequestConfig | undefined): boolean {
   if (!config?.method || !config.url) return false

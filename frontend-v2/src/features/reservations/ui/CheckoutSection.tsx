@@ -5,6 +5,9 @@ import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservati
 import { useCheckoutReservation } from "../hooks/useReservations";
 import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
 import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/gasLevel";
+import { isQueuedOffline } from "@/lib/offlineQueue";
+import { useIsQueued } from "@/hooks/useOfflineQueue";
+import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 import styles from "../Reservations.module.css";
 
 function chipStyle(active: boolean): React.CSSProperties {
@@ -38,6 +41,8 @@ export function CheckoutSection({ reservation }: Props) {
   const isPrimary = reservation.status === "primary";
   const eligible = isPrimary && isReservationActiveOrRecent(reservation);
   const checkout = useCheckoutReservation();
+  // Předávka čekající v offline frontě (E4, #276); po odeslání fronty štítek zmizí
+  const checkoutPending = useIsQueued("patch", `/reservations/${reservation.id}/checkout`);
 
   const [tasks, setTasks] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
@@ -96,6 +101,16 @@ export function CheckoutSection({ reservation }: Props) {
   }, [eligible, reservation.id, reservation.isCheckoutCompleted, reloadKey]);
 
   if (!eligible) return null;
+
+  if (checkoutPending) {
+    return (
+      <div className={styles.checkoutSection}>
+        <h4 className={styles.checkoutTitle}>Předávka je vyplněná</h4>
+        <p className={styles.checkoutHint}>Odešle se, jakmile bude signál.</p>
+        <PendingSyncBadge />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -184,6 +199,8 @@ export function CheckoutSection({ reservation }: Props) {
     try {
       await checkout.mutateAsync({ id: reservation.id, state: buildState() });
     } catch (error) {
+      // Bez signálu je předávka v offline frontě, místo chyby se ukáže štítek
+      if (isQueuedOffline(error)) return;
       setSubmitError(
         getNetworkAwareActionMessage(
           error,

@@ -145,11 +145,13 @@
   gap: var(--space-lg);
 }
 
-/* ── Offline banner ───────────────────────────────────────────────── */
+/* ── Offline banner a štítek „Čeká na odeslání“ (E4, #276) ──────────
+   Barvy ze stavových tokenů --low / --low-bg (variables.css): kontrast textu
+   ≥ 4,5 : 1 ve světlém i tmavém režimu hlídá statusBadgeContrast.test.ts. */
 .offline-banner {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-  border-bottom: 2px solid var(--color-warning-border);
+  background: var(--low-bg);
+  color: rgb(var(--low));
+  border-bottom: 2px solid rgb(var(--low) / .35);
   padding: 8px 16px;
   text-align: center;
   font-size: var(--font-size-sm);
@@ -162,4 +164,18 @@
 
 .offline-banner.hidden {
   display: none;
+}
+
+.pending-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 4px;
+  width: fit-content;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--low-bg);
+  color: rgb(var(--low));
+  font-size: 0.875rem;
+  font-weight: 600;
 }

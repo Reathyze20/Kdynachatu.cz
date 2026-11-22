@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { TriangleAlert } from "lucide-react";
+import { Clock, TriangleAlert } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/api/client";
 import { completeCheckout } from "@/api/reservations";
@@ -10,6 +10,9 @@ import { Modal } from "@/components/shared/Modal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { getLocalTodayIso } from "@/lib/dateUtils";
+import { isQueuedOffline } from "@/lib/offlineQueue";
+import { useIsQueued } from "@/hooks/useOfflineQueue";
+import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 
 const BANNER_KEY = "departure_dismissed_date";
 const DEFAULT_CHECKLIST = [
@@ -30,6 +33,12 @@ function dismissToday(): void {
   sessionStorage.setItem(BANNER_KEY, getLocalTodayIso());
 }
 
+/** Request, který api/client bez signálu uložil do offline fronty, se bere jako odeslaný později. */
+function keepIfQueued(error: unknown): true {
+  if (isQueuedOffline(error)) return true;
+  throw error;
+}
+
 interface Props {
   /** Můj dnes končící pobyt s nedokončenou předávkou (z gate dashboardu) */
   reservationId: string;
@@ -46,18 +55,24 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
   const [departureNote, setDepartureNote] = useState("");
   const [incompleteConfirmOpen, setIncompleteConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Předávka čekající v offline frontě (E4, #276); po odeslání fronty štítek zmizí
+  const checkoutPending = useIsQueued("patch", `/reservations/${reservationId}/checkout`);
 
   const checklistItems =
     departureChecklist && departureChecklist.length > 0 ? departureChecklist : DEFAULT_CHECKLIST;
 
   const submitMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<{ queued: boolean }> => {
       // Stejná cesta zápisu jako CheckoutSection. Předávka jde první, aby po selhání
       // nezůstala v chatu zpráva bez dokončené předávky. Volný checklist chaty nemá
       // strukturovaný protějšek, do checkoutState jde jen vzkaz; bez vzkazu zůstane
-      // případný už uložený stav beze změny.
+      // případný už uložený stav beze změny. Bez signálu jde předávka do offline fronty
+      // a zpráva se zařadí za ni, po připojení se odešlou ve stejném pořadí.
       const note = departureNote.trim();
-      await completeCheckout(reservationId, note ? { note } : undefined);
+      const queued = await completeCheckout(reservationId, note ? { note } : undefined).then(
+        () => false,
+        keepIfQueued,
+      );
 
       let fullMessage = "**Odjezd z chaty:**\n";
       checklistItems.forEach((item, i) => {
@@ -66,9 +81,16 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       if (note) {
         fullMessage += `\n**Vzkaz:** ${note}`;
       }
-      await apiClient.post("/channels/messages", { message: fullMessage });
+      await apiClient.post("/channels/messages", { message: fullMessage }).catch(keepIfQueued);
+      return { queued };
     },
-    onSuccess: () => {
+    onSuccess: ({ queued }) => {
+      if (queued) {
+        // Banner zůstane se štítkem „Čeká na odeslání“, dokud se fronta neodešle
+        setModalOpen(false);
+        setSubmitError(null);
+        return;
+      }
       dismissToday();
       setDismissed(true);
       setModalOpen(false);
@@ -91,6 +113,21 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
   });
 
   if (dismissed) return null;
+
+  if (checkoutPending) {
+    return (
+      <div id="departure-banner" className="departure-banner">
+        <div className="departure-banner-content">
+          <div className="departure-banner-icon" aria-hidden="true"><Clock className="w-5 h-5" /></div>
+          <div className="departure-banner-text">
+            <h3>Předávka je vyplněná</h3>
+            <p>Odešle se, jakmile bude signál.</p>
+            <PendingSyncBadge />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const openModal = () => {
     setCheckedItems(new Array(checklistItems.length).fill(false));
