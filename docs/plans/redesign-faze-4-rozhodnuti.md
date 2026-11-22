@@ -317,7 +317,7 @@ to důležité** · instalace **B karta jednou po 3. návštěvě** · barvy **A
 > 2. **Do té doby jen odkaz ven:** na Přehledu odkaz „Akce v okolí“ na kalendář Kudy z nudy pro kraj
 >    chaty, `https://www.kudyznudy.cz/kalendar-akci/<kraj>` (např. `jihocesky-kraj`, `kraj-vysocina`).
 >    Nic se nestahuje ani neukládá. Kraj se odvodí z vybrané obce (#279, číselník RÚIAN). Filtr podle
->    okresu ani okruhu v km Kudy z nudy v URL nemá.
+>    okresu ani okruhu v km Kudy z nudy v URL nemá. Ticket #283 (blokuje #279).
 > 3. **(b) a (c) až podle odpovědi CzechTourism.** Karta s akcemi a filtrem 10 / 20 / 50 km dává smysl
 >    jen s daty s polohou. Když přístup nedostanou, zůstane odkaz.
 
