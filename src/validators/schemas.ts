@@ -16,9 +16,8 @@ export const registerSchema = z.object({
     .max(50, "Subdoména je příliš dlouhá (max 50 znaků)")
     .regex(/^[a-z0-9-]+$/, "Subdoména může obsahovat jen malá písmena, čísla a pomlčky")
     .optional(),
-  weatherLocation: z.string()
-    .min(2, "Nejbližší město nebo PSČ musí mít alespoň 2 znaky")
-    .max(100, "Lokalita je příliš dlouhá (max 100 znaků)"),
+  // Nejbližší obec ze seznamu (kód RÚIAN), ne volný text – ADR-0006
+  municipalityCode: z.number({ message: "Vyber nejbližší obec ze seznamu." }).int().positive("Vyber nejbližší obec ze seznamu."),
 
   // User fields
   username: z.string()
@@ -302,7 +301,7 @@ export const updateCabinSettingsSchema = z.object({
   rules: z.string().max(5000).optional().nullable(),
   departureChecklist: z.array(z.string().max(100)).max(15).optional().nullable(),
   coverPhotoUrl: z.string().max(1000).optional().nullable(),
-  weatherLocation: z.string().max(100).optional().nullable(),
+  municipalityCode: z.number().int().positive().optional().nullable(),
   isWinterized: z.boolean().optional(),
   features: z.record(z.string(), z.boolean()).optional().nullable(),
 });

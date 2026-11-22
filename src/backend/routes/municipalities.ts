@@ -82,6 +82,32 @@ export function findMunicipality(code: number): Municipality | undefined {
   return found && { ...toOption(found), latitude: found.latitude, longitude: found.longitude };
 }
 
+/** Sloupce chaty pro vybranou obec, nebo null pro neznámý kód. Souřadnice bere ze serverového číselníku, nikdy od klienta. */
+export function cabinMunicipalityFields(code: number) {
+  const m = findMunicipality(code);
+  if (!m) return null;
+  return {
+    municipalityCode: m.code,
+    municipalityName: m.name,
+    municipalityDistrict: m.district,
+    municipalityRegion: m.region,
+    latitude: m.latitude,
+    longitude: m.longitude,
+    // Počasí ve starších klientech a mrazová upozornění bez souřadnic dál čtou název obce.
+    weatherLocation: m.name,
+  };
+}
+
+export const NO_CABIN_MUNICIPALITY = {
+  municipalityCode: null,
+  municipalityName: null,
+  municipalityDistrict: null,
+  municipalityRegion: null,
+  latitude: null,
+  longitude: null,
+  weatherLocation: null,
+} as const;
+
 /** GET /api/municipalities?q= – našeptávání obcí (název, okres, kraj; bez souřadnic). Vstup ověří validate(). */
 export const municipalitySearchHandler: RequestHandler = (req, res) => {
   const body: MunicipalitySearchResponse = { municipalities: searchMunicipalities(String(req.query.q)) };

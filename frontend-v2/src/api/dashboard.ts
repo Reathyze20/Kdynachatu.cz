@@ -179,6 +179,9 @@ export interface CabinSettings {
   id: string;
   name: string;
   weatherLocation: string | null;
+  municipalityName?: string | null;
+  latitude?: number | null; // definiční bod vybrané obce (ADR-0006)
+  longitude?: number | null;
   departureChecklist: string[];
   isWinterized?: boolean;
   features?: Record<string, boolean> | null;
@@ -212,19 +215,29 @@ function mapWMOCode(code: number, isNight: boolean): { description: string; icon
 
 // ─── fetchWeather ─────────────────────────────────────────────────────
 
-export async function fetchWeather(location: string | null | undefined): Promise<WeatherResult> {
-  if (!location || location.trim() === "") return "EMPTY_LOCATION";
+export type WeatherPlace = Pick<CabinSettings, "weatherLocation" | "municipalityName" | "latitude" | "longitude">;
+
+/** Počasí pro uložený střed vybrané obce; chata bez vybrané obce geokóduje textovou lokalitu jako dřív. */
+export async function fetchWeather(place: WeatherPlace | null | undefined): Promise<WeatherResult> {
+  const location = place?.weatherLocation?.trim() ?? "";
+  const hasCoordinates = place?.latitude != null && place?.longitude != null;
+  if (!hasCoordinates && !location) return "EMPTY_LOCATION";
 
   try {
-    // Step 1: Geocoding
-    const geoRes = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location.trim())}&count=1&language=cs&format=json`,
-    );
-    const geoData = await geoRes.json() as { results?: { latitude: number; longitude: number; name: string }[] };
+    let lat: number, lon: number, city: string;
+    if (hasCoordinates) {
+      [lat, lon, city] = [place!.latitude!, place!.longitude!, place!.municipalityName ?? location];
+    } else {
+      // Step 1: Geocoding
+      const geoRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=cs&format=json`,
+      );
+      const geoData = await geoRes.json() as { results?: { latitude: number; longitude: number; name: string }[] };
 
-    if (!geoData.results || geoData.results.length === 0) return "LOCATION_NOT_FOUND";
+      if (!geoData.results || geoData.results.length === 0) return "LOCATION_NOT_FOUND";
 
-    const { latitude: lat, longitude: lon, name: city } = geoData.results[0];
+      ({ latitude: lat, longitude: lon, name: city } = geoData.results[0]);
+    }
 
     // Step 2: Forecast
     const fxRes = await fetch(

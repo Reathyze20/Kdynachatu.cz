@@ -178,10 +178,10 @@ export function DashboardPage() {
     }
   }, [notesQuery.data]);
 
-  // Weather is fetched client-side using cabin's weatherLocation
+  // Weather is fetched client-side: stored municipality centre, else the legacy weatherLocation text
   const weatherQuery = useQuery({
-    queryKey: ["weather", cabinQuery.data?.weatherLocation ?? null],
-    queryFn: () => fetchWeather(cabinQuery.data?.weatherLocation),
+    queryKey: ["weather", cabinQuery.data?.weatherLocation ?? null, cabinQuery.data?.latitude ?? null, cabinQuery.data?.longitude ?? null],
+    queryFn: () => fetchWeather(cabinQuery.data),
     enabled: cabinQuery.isSuccess,
     staleTime: 10 * 60 * 1000,
   });

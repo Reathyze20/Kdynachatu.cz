@@ -12,6 +12,7 @@ import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { CABIN_SIGNUP_ENABLED } from "../../config/config";
 import { requireCabinSignupOpen } from "./cabinSignup";
+import { cabinMunicipalityFields, NO_CABIN_MUNICIPALITY } from "./municipalities";
 
 const router = Router();
 
@@ -26,6 +27,12 @@ const CABIN_SELECT = {
   departureChecklist: true,
   coverPhotoUrl: true,
   weatherLocation: true,
+  municipalityCode: true,
+  municipalityName: true,
+  municipalityDistrict: true,
+  municipalityRegion: true,
+  latitude: true,
+  longitude: true,
   isWinterized: true,
   features: true,
   createdAt: true,
@@ -154,7 +161,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
       rules,
       departureChecklist,
       coverPhotoUrl,
-      weatherLocation,
+      municipalityCode,
       isWinterized,
       features,
     } = req.body;
@@ -201,10 +208,11 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
       }
     }
 
-    if (weatherLocation !== undefined && weatherLocation !== null) {
-      if (typeof weatherLocation !== "string" || weatherLocation.length > 100) {
-        errors.push("Lokalita pro počasí může mít maximálně 100 znaků.");
-      }
+    // Poloha chaty jen jako obec ze seznamu (ADR-0006); volný text weatherLocation se už nepřijímá.
+    const municipality =
+      municipalityCode === undefined || municipalityCode === null ? null : cabinMunicipalityFields(Number(municipalityCode));
+    if (municipalityCode !== undefined && municipalityCode !== null && (!Number.isInteger(municipalityCode) || !municipality)) {
+      errors.push("Vyber nejbližší obec ze seznamu.");
     }
 
     if (isWinterized !== undefined && typeof isWinterized !== "boolean") {
@@ -228,7 +236,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
         : null;
     }
     if (coverPhotoUrl !== undefined) data.coverPhotoUrl = coverPhotoUrl || null;
-    if (weatherLocation !== undefined) data.weatherLocation = weatherLocation?.trim() || null;
+    if (municipalityCode !== undefined) Object.assign(data, municipality ?? NO_CABIN_MUNICIPALITY);
     if (isWinterized !== undefined) data.isWinterized = isWinterized;
     if (features !== undefined) data.features = features;
 

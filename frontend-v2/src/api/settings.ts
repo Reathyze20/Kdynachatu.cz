@@ -11,7 +11,14 @@ export interface CabinConfig {
   subdomain: string
   description: string | null
   welcomeMessage: string | null
-  weatherLocation: string | null
+  weatherLocation: string | null // název vybrané obce, u starších chat volný text
+  // Nejbližší obec z číselníku RÚIAN (ADR-0006); null = chata obec ještě nevybrala
+  municipalityCode: number | null
+  municipalityName: string | null
+  municipalityDistrict: string | null
+  municipalityRegion: string | null
+  latitude: number | null
+  longitude: number | null
   rules: string | null
   departureChecklist: string[] | null
   coverPhotoUrl: string | null
@@ -23,7 +30,8 @@ export interface CabinConfigUpdate {
   name?: string
   description?: string | null
   welcomeMessage?: string | null
-  weatherLocation?: string | null
+  /** Kód obce z GET /api/municipalities; null obec smaže. Název, okres a souřadnice doplní server. */
+  municipalityCode?: number | null
   rules?: string | null
   departureChecklist?: string[]
   isWinterized?: boolean

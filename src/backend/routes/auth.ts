@@ -10,6 +10,7 @@ import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema,
 import { protect } from "../../middleware/authMiddleware";
 import { CABIN_SIGNUP_ENABLED } from "../../config/config";
 import { requireCabinSignupOpen, signupStatusHandler } from "./cabinSignup";
+import { cabinMunicipalityFields } from "./municipalities";
 
 const router = Router();
 
@@ -160,7 +161,11 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
     return res.status(400).json({ message: firstError.message });
   }
 
-  const { cabinName, subdomain: requestedSubdomain, weatherLocation, username, email, password, color } = parsed.data;
+  const { cabinName, subdomain: requestedSubdomain, municipalityCode, username, email, password, color } = parsed.data;
+  const municipality = cabinMunicipalityFields(municipalityCode);
+  if (!municipality) {
+    return res.status(400).json({ message: "Vyber nejbližší obec ze seznamu." });
+  }
 
   try {
     // ── Pre-flight: check for existing user / email ────────────────────
@@ -210,7 +215,7 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
         data: {
           name: cabinName.trim(),
           subdomain: uniqueSubdomain,
-          weatherLocation: weatherLocation.trim(),
+          ...municipality,
         },
       });
 
