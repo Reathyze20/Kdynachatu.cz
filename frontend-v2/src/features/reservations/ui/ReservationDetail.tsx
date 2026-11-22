@@ -37,7 +37,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
   const isMine = r.userId === user?.userId;
   const isAdmin = user?.role === "admin";
   const canEdit = isMine || isAdmin;
-  const c = toMemberColor(r.userColor);
+  const memberColor = toMemberColor(r.userColor);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
@@ -110,10 +110,10 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
           <AnimalAvatar
             icon={r.userAnimalIcon}
             username={r.username}
-            color={c}
+            color={memberColor}
             size={42}
           />
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c }} />
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: memberColor }} />
           <strong className="text-[16px] font-bold text-slate-800">{r.username}</strong>
         </div>
         <span className={badge.cls}>{badge.label}</span>

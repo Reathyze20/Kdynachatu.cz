@@ -52,7 +52,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **OfflineBanner** | Yellow "Jste offline" banner at top | — (uses `useOnline`) |
 | **HelpFab** | Floating help button + modal with app guide | — |
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
-| **ColorPicker** | Grid of 18 swatch colors for profile | `value, onChange` |
+| **ColorPicker** | Grid of the 8 verified member colors (`MEMBER_PALETTE`); a stored off-palette color shows as the nearest one (#271) | `value, onChange, size?` |
 | **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y (po 14. 12.) → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
 
 ---
@@ -216,8 +216,9 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 
 | File | Key Exports |
 |---|---|
-| `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `SWATCH_COLORS`, `MONTH_NAMES`, `DAY_NAMES` |
+| `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `MONTH_NAMES`, `DAY_NAMES` |
 | `dateUtils.ts` | `formatDateRange()`, `formatWeekendRange()`, `nightsBetween()`, `nightsLabel()`, `daysUntil()`, `formatShortDayDate()`, `getTodayFormatted()`, `getLocalTodayIso()` |
+| `memberPalette.ts` | `MEMBER_PALETTE` (8 verified member colors, white text ≥ 4.5:1), `toMemberColor()` (stored color → nearest palette color, CIEDE2000), `memberInitial()` — G4: member color never alone (#271) |
 | `toast.ts` | `showToast(message, type)` — dispatches window event |
 | `turnusChain.ts` | `buildTurnusChain(stays, today)` — nodes teď/další/pak from firm (`primary`) stays only, own stay `isMine` |
 | `navRoutes.ts` | `PRIMARY_NAV[]`, `MORE_NAV[]`, `visibleNavItems()`, `findActiveNavItem()` — global navigation model |

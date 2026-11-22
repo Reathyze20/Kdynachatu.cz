@@ -23,8 +23,8 @@ export const MEMBER_PALETTE: readonly MemberColor[] = [
   { hex: '#4B5563', name: 'břidlicová' },
 ]
 
-/** Neutrální břidlicová pro chybějící nebo neplatnou barvu. */
-export const FALLBACK_MEMBER_COLOR = '#4B5563'
+/** Neutrální břidlicová (poslední v paletě) pro chybějící nebo neplatnou barvu. */
+export const FALLBACK_MEMBER_COLOR = MEMBER_PALETTE[MEMBER_PALETTE.length - 1].hex
 
 type Lab = [number, number, number]
 
