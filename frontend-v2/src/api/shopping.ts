@@ -17,6 +17,7 @@ export interface ShoppingItem {
   /** Inventory item this entry was added from; null when added by hand. */
   linkedInventoryId?: string | null
   addedBy?: { id: string; username: string; animalIcon?: string | null }
+  /** Who resolved the item: bought it, or promised to bring it from home. */
   purchasedBy?: { id: string; username: string; animalIcon?: string | null } | null
 }
 

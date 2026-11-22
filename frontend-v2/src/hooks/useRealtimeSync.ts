@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { useSocket } from './useSocket'
 import { RESERVATIONS_KEY } from '@/features/reservations/hooks/useReservations'
+import { DASHBOARD_SHOPPING_KEY } from '@/features/shopping/hooks/useShoppingLists'
 
 export function useRealtimeSync() {
   const { user } = useAuth()
@@ -46,6 +47,8 @@ export function useRealtimeSync() {
 
     function handleShoppingChange() {
       void qc.invalidateQueries({ queryKey: ['shopping-lists'] })
+      // Varování a nevyřízené nákupy na Přehledu počítá server ze stavů položek
+      void qc.invalidateQueries({ queryKey: DASHBOARD_SHOPPING_KEY })
     }
 
     function handleReconstructionChange() {

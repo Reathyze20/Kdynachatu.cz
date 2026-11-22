@@ -365,6 +365,7 @@ const schemas: Record<string, JsonSchema> = {
       purchasedBy: {
         allOf: [ref("ShoppingUser")],
         nullable: true,
+        description: "Kdo položku zařídil – koupil nebo slíbil přivézt",
       },
       splits: {
         type: "array",

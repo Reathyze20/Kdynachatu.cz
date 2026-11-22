@@ -147,6 +147,31 @@ describe("inventory: same-cabin flows still work (positive control)", () => {
   });
 });
 
+// #219: smazaná zásoba nesmí u nákupních položek dál slibovat doplnění (štítek ze zásob).
+describe("inventory: deleting an item unlinks its shopping items", () => {
+  const linkedShoppingItem = async (owner: TestUser, linkedInventoryId: string, name: string) => {
+    const list = await prisma.shoppingList.create({ data: { name: `Seznam ${name}`, createdById: owner.id, cabinId: owner.cabinId } });
+    return (await prisma.shoppingListItem.create({ data: { name, listId: list.id, addedById: owner.id, linkedInventoryId } })).id;
+  };
+  const linkOf = async (id: string) => (await prisma.shoppingListItem.findUnique({ where: { id } }))?.linkedInventoryId;
+
+  test("DELETE /inventory/:id unlinks only the own cabin's shopping items and keeps them", async () => {
+    const inv = await createItem(world.memberA, "Čaj A", { status: "LOW" });
+    const own = await linkedShoppingItem(world.memberA, inv, "Čaj A");
+    const foreign = await linkedShoppingItem(world.memberB, inv, "Tajný čaj B");
+
+    assert.equal((await as(app, world.memberA).delete(`/api/inventory/${inv}`)).status, 200);
+    assert.equal(await itemSnapshot(inv), null);
+    assert.deepEqual([await linkOf(own), await linkOf(foreign)], [null, inv]);
+  });
+
+  test("cabin A deleting a cabin B item gets 404 and cabin B's link stays", async () => {
+    const shoppingItemB = await linkedShoppingItem(world.memberB, itemB, "Tajné kakao B");
+    assert.equal((await as(app, world.memberA).delete(`/api/inventory/${itemB}`)).status, 404);
+    assert.equal(await linkOf(shoppingItemB), itemB);
+  });
+});
+
 describe("inventory: error messages are readable Czech", () => {
   test("404 on a cabin B item and 409 on a second add-to-cart carry the Czech text", async () => {
     const missing = await as(app, world.memberA).delete(`/api/inventory/${itemB}`);

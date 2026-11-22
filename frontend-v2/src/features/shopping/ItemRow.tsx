@@ -78,10 +78,10 @@ function ItemRowInner({ item, listCreatedById }: Props) {
       </span>
       <span className="detail-item-name">{item.name}</span>
       {item.linkedInventoryId && <span className="from-inventory-badge">Ze zásob</span>}
-      {isPurchased && item.purchasedBy && (
+      {(isPurchased || isFromHome) && item.purchasedBy && (
         <span
           className="purchased-by-badge"
-          title={`Koupil(a) ${item.purchasedBy.username}`}
+          title={`${isFromHome ? 'Přiveze' : 'Koupil(a)'} ${item.purchasedBy.username}`}
         >
           <AnimalAvatar icon={item.purchasedBy.animalIcon ?? null} username={item.purchasedBy.username} size={20} />
         </span>

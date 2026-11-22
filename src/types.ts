@@ -52,6 +52,7 @@ export interface ShoppingListItem {
   status: "pending" | "bring_from_home" | "purchased";
   /** Inventory item this entry was added from; null when added by hand. */
   linkedInventoryId?: string | null;
+  /** Who resolved the item: bought it, or promised to bring it from home. */
   purchasedBy?: string;
   purchasedById?: string;
   purchasedAt?: string;
