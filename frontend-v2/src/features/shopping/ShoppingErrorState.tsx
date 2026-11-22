@@ -13,16 +13,16 @@ interface ShoppingErrorStateProps {
 
 export function getShoppingLoadErrorMessage(error: unknown, fallback?: string): string {
   if (isNetworkError(error)) {
-    return 'Vypadá to na problém s připojením. Obnovte spojení a zkuste načtení zopakovat.'
+    return 'Vypadá to na problém s připojením. Obnov spojení a zkus načtení zopakovat.'
   }
 
-  return fallback ?? 'Data se teď nepodařilo načíst. Zkuste to prosím znovu.'
+  return fallback ?? 'Data se teď nepodařilo načíst. Zkus to prosím znovu.'
 }
 
 export function getShoppingActionErrorMessage(
   error: unknown,
   fallback: string,
-  offlineFallback = 'Spojení vypadlo dřív, než se změna stihla uložit. Zkuste to znovu po obnovení připojení.',
+  offlineFallback = 'Spojení vypadlo dřív, než se změna stihla uložit. Zkus to znovu po obnovení připojení.',
 ): string {
   return isNetworkError(error) ? offlineFallback : fallback
 }

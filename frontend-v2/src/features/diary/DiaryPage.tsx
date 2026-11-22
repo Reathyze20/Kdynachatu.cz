@@ -176,8 +176,8 @@ export function DiaryPage() {
       setCreateError(
         getNetworkAwareActionMessage(
           error,
-          'Pobyt se nepodařilo vytvořit. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se pobyt stihl vytvořit. Zkuste to znovu po obnovení připojení.',
+          'Pobyt se nepodařilo vytvořit. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se pobyt stihl vytvořit. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -202,8 +202,8 @@ export function DiaryPage() {
       setRenameError(
         getNetworkAwareActionMessage(
           error,
-          'Pobyt se nepodařilo přejmenovat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se pobyt stihl přejmenovat. Zkuste to znovu po obnovení připojení.',
+          'Pobyt se nepodařilo přejmenovat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se pobyt stihl přejmenovat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -227,8 +227,8 @@ export function DiaryPage() {
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          'Pobyt se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se pobyt stihl smazat. Zkuste to znovu po obnovení připojení.',
+          'Pobyt se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se pobyt stihl smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -319,7 +319,7 @@ export function DiaryPage() {
               <div className="form-group">
                 <label htmlFor="reservation-select">Načíst z rezervace</label>
                 <select id="reservation-select" value={createFromReservation} onChange={handleReservationSelect}>
-                  <option value="">— Vyberte rezervaci —</option>
+                  <option value="">— Vyber rezervaci —</option>
                   {myReservations.map(r => (
                     <option key={r.id} value={r.id}>
                       {r.from.slice(0, 10)} – {r.to.slice(0, 10)}{r.purpose ? ` (${r.purpose})` : ''}
@@ -373,7 +373,7 @@ export function DiaryPage() {
       <PromptDialog
         isOpen={deleteTarget !== null}
         title="Smazat pobyt"
-        description={<>Smaže se celý pobyt včetně zápisků. Pro potvrzení napište <strong>SMAZAT</strong>.</>}
+        description={<>Smažeš celý pobyt včetně zápisků. Pro potvrzení napiš <strong>SMAZAT</strong>.</>}
         label="Potvrzovací text"
         placeholder="SMAZAT"
         submitLabel="Smazat"

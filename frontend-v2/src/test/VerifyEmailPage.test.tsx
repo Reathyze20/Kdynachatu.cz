@@ -25,7 +25,7 @@ describe('VerifyEmailPage', () => {
   it('shows loading state when token is present', () => {
     vi.spyOn(apiClient, 'get').mockReturnValue(new Promise(() => {}) as ReturnType<typeof apiClient.get>)
     renderWithRouter('/verify?token=abc123')
-    expect(screen.getByText('Ověřuji váš účet…')).toBeInTheDocument()
+    expect(screen.getByText('Ověřuji tvůj účet…')).toBeInTheDocument()
   })
 
   it('shows success on valid token', async () => {

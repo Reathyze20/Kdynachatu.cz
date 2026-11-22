@@ -70,8 +70,8 @@ export function ListDetail({ list, onBack }: Props) {
       <section className="shopping-detail" id="shopping-detail" data-testid="shopping-list-detail">
         <div className="detail-placeholder">
           <img src="/icons/empty_basket.svg" alt="" aria-hidden="true" style={{ maxHeight: 80, width: 'auto', opacity: 0.65, marginBottom: '0.5rem' }} />
-          <p className="detail-placeholder-title">Vyberte nákupní seznam</p>
-          <p className="detail-placeholder-hint">Klikněte na seznam vlevo, nebo vytvořte nový.</p>
+          <p className="detail-placeholder-title">Vyber nákupní seznam</p>
+          <p className="detail-placeholder-hint">Klikni na seznam vlevo, nebo vytvoř nový.</p>
         </div>
       </section>
     )
@@ -104,8 +104,8 @@ export function ListDetail({ list, onBack }: Props) {
       setAddItemError(
         getNetworkAwareActionMessage(
           error,
-          'Položku se nepodařilo přidat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se položka stihla přidat. Zkuste to znovu po obnovení připojení.',
+          'Položku se nepodařilo přidat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se položka stihla přidat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -148,7 +148,7 @@ export function ListDetail({ list, onBack }: Props) {
                 <span
                   className="detail-title-text"
                   onClick={startEditing}
-                  title="Klikněte pro přejmenování"
+                  title="Klikni pro přejmenování"
                 >
                   {list.name}
                   <svg className="detail-title-edit-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -204,7 +204,7 @@ export function ListDetail({ list, onBack }: Props) {
               <div className="detail-empty-state">
                 <img src="/icons/empty_basket.svg" alt="" aria-hidden="true" style={{ maxHeight: 80, width: 'auto', opacity: 0.65, marginBottom: '0.5rem' }} />
                 <h3 className="detail-empty-state-title">Košík je prázdný</h3>
-                <p className="detail-empty-state-text">Přidejte první položku.</p>
+                <p className="detail-empty-state-text">Přidej první položku.</p>
               </div>
             ) : (
               <div className="detail-items-card">

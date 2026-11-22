@@ -48,8 +48,8 @@ export function AddToCartModal({ invId, invName, onClose }: Props) {
       setSubmitError(
         getShoppingActionErrorMessage(
           error,
-          'Zásobu se nepodařilo přidat do vybraného seznamu. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zásoba stihla přidat do seznamu. Zkuste to znovu po obnovení připojení.',
+          'Zásobu se nepodařilo přidat do vybraného seznamu. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zásoba stihla přidat do seznamu. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -67,8 +67,8 @@ export function AddToCartModal({ invId, invName, onClose }: Props) {
       setSubmitError(
         getShoppingActionErrorMessage(
           error,
-          'Nepodařilo se vytvořit nový seznam a přidat do něj zásobu. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se stihl vytvořit seznam pro zásobu. Zkuste to znovu po obnovení připojení.',
+          'Nepodařilo se vytvořit nový seznam a přidat do něj zásobu. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se stihl vytvořit seznam pro zásobu. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -88,7 +88,7 @@ export function AddToCartModal({ invId, invName, onClose }: Props) {
       maxWidth="max-w-sm"
     >
       <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0 0 var(--space-md)' }}>
-        Vyberte, do kterého seznamu chcete položku přidat:
+        Vyber, do kterého seznamu chceš položku přidat:
       </p>
       <div>
         {isLoading ? (
@@ -125,7 +125,7 @@ export function AddToCartModal({ invId, invName, onClose }: Props) {
         )}
       </div>
 
-      <div className="modal-divider">— nebo vytvořte nový —</div>
+      <div className="modal-divider">— nebo vytvoř nový —</div>
 
       {!showNewListForm ? (
         <button className="add-to-cart-list-btn" onClick={handleShowNewForm}>
