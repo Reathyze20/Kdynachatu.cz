@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { detectIosSafari, dismissInstallBanner, isInstallBannerDismissed } from '@/lib/pwaInstall'
+import { detectIosSafari, dismissInstallCard, recordVisit, shouldOfferInstallCard } from '@/lib/pwaInstall'
 
 const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
 const IPHONE_CHROME = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0 Mobile/15E148 Safari/604.1'
@@ -25,24 +25,40 @@ describe('detectIosSafari', () => {
   })
 })
 
-describe('odložení instalačního banneru', () => {
+describe('karta instalace po 3. návštěvě (#277)', () => {
   afterEach(() => localStorage.clear())
 
-  it('bez záznamu se banner zobrazuje', () => {
-    expect(isInstallBannerDismissed()).toBe(false)
+  const minute = 60 * 1000
+  const start = Date.UTC(2026, 10, 22, 8)
+
+  it('na první a druhé návštěvě se karta neukáže, na třetí ano', () => {
+    recordVisit(start)
+    expect(shouldOfferInstallCard()).toBe(false)
+    recordVisit(start + 24 * 60 * minute)
+    expect(shouldOfferInstallCard()).toBe(false)
+    recordVisit(start + 48 * 60 * minute)
+    expect(shouldOfferInstallCard()).toBe(true)
   })
 
-  it('po zavření je skrytý 30 dní, pak se vrátí', () => {
-    const day = 24 * 60 * 60 * 1000
-    const dismissedAt = Date.UTC(2026, 10, 1)
-    dismissInstallBanner(dismissedAt)
-
-    expect(isInstallBannerDismissed(dismissedAt + 29 * day)).toBe(true)
-    expect(isInstallBannerDismissed(dismissedAt + 31 * day)).toBe(false)
+  it('opakované načtení během půl hodiny je pořád jedna návštěva', () => {
+    recordVisit(start)
+    recordVisit(start + 5 * minute)
+    recordVisit(start + 20 * minute)
+    expect(shouldOfferInstallCard()).toBe(false)
   })
 
-  it('poškozená hodnota banner neblokuje', () => {
-    localStorage.setItem('pwa-install-dismissed-at', 'nesmysl')
-    expect(isInstallBannerDismissed()).toBe(false)
+  it('po „Teď ne“ se karta už nikdy neukáže', () => {
+    for (let day = 0; day < 3; day++) recordVisit(start + day * 24 * 60 * minute)
+    dismissInstallCard()
+
+    expect(shouldOfferInstallCard()).toBe(false)
+    recordVisit(start + 400 * 24 * 60 * minute)
+    expect(shouldOfferInstallCard()).toBe(false)
+  })
+
+  it('poškozený počet návštěv se počítá od nuly', () => {
+    localStorage.setItem('pwa-install-visits', 'nesmysl')
+    recordVisit(start)
+    expect(shouldOfferInstallCard()).toBe(false)
   })
 })
