@@ -42,7 +42,7 @@ export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesI
 
   // 1. Departure today — prompt the leaving occupant (and only them) to fill the state.
   const active = reservations?.activeReservation;
-  // Organizátor nebo spolucestující; username je unikátní napříč účty
+  // Organizer or co-traveller; usernames are unique across accounts
   const isMyStay =
     !!myUsername &&
     (active?.username === myUsername || !!active?.participants?.some((p) => p.username === myUsername));

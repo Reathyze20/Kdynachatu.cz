@@ -96,6 +96,11 @@ describe('buildNudges', () => {
     expect(ids(ns).some((id) => id.startsWith('departure-'))).toBe(false)
   })
 
+  it('does NOT prompt departure when the viewer is unknown (#255)', () => {
+    const ns = buildNudges({ reservations: reservations({ activeReservation: active() }), myUsername: null })
+    expect(ids(ns).some((id) => id.startsWith('departure-'))).toBe(false)
+  })
+
   it('does NOT prompt departure when checkout already completed', () => {
     const ns = buildNudges({ reservations: reservations({ activeReservation: active({ to: TODAY, isCheckoutCompleted: true }) }), myUsername: 'Táta' })
     expect(ids(ns).some((id) => id.startsWith('departure-'))).toBe(false)
