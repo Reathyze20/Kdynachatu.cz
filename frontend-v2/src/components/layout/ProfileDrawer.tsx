@@ -210,7 +210,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setDeleteLoading(true)
     try {
       await apiClient.delete('/users/me', { data: { password } })
-      showToast('Tvůj účet byl smazán', 'success')
+      showToast('Účet jsme smazali', 'success')
       logout()
       navigate('/')
     } catch (err: unknown) {
@@ -245,7 +245,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       queryClient.clear()
       setShowLeaveCabinConfirm(false)
       onClose()
-      showToast(response.message || 'Chata opuštěna.', 'success')
+      showToast(response.message || 'Už nejsi v této chatě.', 'success')
       navigate(user.isSuperAdmin ? '/superadmin' : '/onboarding', { replace: true })
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -570,7 +570,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <PromptDialog
                 isOpen={showDeleteConfirm}
                 title="Smazat můj účet"
-                description="Tato akce je nevratná. Všechna tvoje data budou smazána."
+                description="Tato akce je nevratná. Smažeme všechna tvoje data."
                 label="Potvrď heslem"
                 inputType="password"
                 autoComplete="current-password"

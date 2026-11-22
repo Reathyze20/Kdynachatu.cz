@@ -50,7 +50,7 @@ const helpDictionary: Record<string, ReactNode> = {
   shopping: (
     <>
       <h3>Nákupy &amp; Zásoby</h3>
-      <p>Spravuj nákupní seznamy a virtuální spíž. Víš vždy, co je na chatě a co je potřeba dokoupit.</p>
+      <p>Spravuj nákupní seznamy a virtuální spíž. Vždycky víš, co je na chatě a co je potřeba dokoupit.</p>
       <ul>
         <li><strong>Nákupní seznam</strong> — přidej položky, kliknutím na kolečko je odškrtni.</li>
         <li><strong>Virtuální spíž</strong> — sleduj, co je aktuálně na chatě.</li>

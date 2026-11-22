@@ -140,7 +140,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
                 </button>
               </div>
             ) : lists.length === 0 ? (
-              <p>Nejsou žádné aktivní nákupní seznamy. Vytvoř nejprve seznam.</p>
+              <p>Nejsou žádné aktivní nákupní seznamy. Nejdřív vytvoř seznam.</p>
             ) : (
               <>
                 <div className="form-group">
