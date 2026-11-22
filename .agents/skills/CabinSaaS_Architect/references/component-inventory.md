@@ -73,9 +73,8 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | DashboardPage | Page | ✅ Complete |
 | CabinHero | Header | ✅ Compact cabin strip above both columns: photo slot (Midjourney drop-in via `overviewAssets.ts`), cabin name, date + weather line (#172) |
-| ActiveReservation | Card | ✅ „Na chatě teď“: who is at the cabin now + turnus chain; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
-| NextArrivalCard | Card | ✅ Side panel „Další příjezd“: next firm stay (own as „Ty“) with purpose, nights and co-travellers, plus „Váš pobyt“ when mine is not next (#172) |
-| ParticipantStack | Inline | ✅ „Také jede“ avatars of co-travellers (status card + next arrival) |
+| ActiveReservation | Card | ✅ Status header „Na chatě teď“ now → next (#272): who is at the cabin and until when, arrow, who comes next and from when (avatar + name, G4); desktop shows purpose, nights and co-travellers under each side; „Chata je volná“ / „Zatím nikdo“ when a side is empty; chain line only from the stay after next; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
+| ParticipantStack | Inline | ✅ „Také jede“ avatars of co-travellers (status header) |
 | DepartureBanner | Banner | ✅ |
 | NudgeTray | Card | ✅ „Visí na vás“: nudges from `nudges.ts` as one action card, actionable first, first highlighted with a button, max 2 visible + „Zobrazit víc“; low supplies stay in RunningLowCard (#172) |
 | PinnedNote | Card | ✅ |

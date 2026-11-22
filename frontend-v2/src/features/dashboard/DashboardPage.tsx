@@ -12,7 +12,6 @@ import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
-import { NextArrivalCard } from "./NextArrivalCard";
 import { RunningLowCard } from "./RunningLowCard";
 import { CabinHero } from "./CabinHero";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
@@ -260,7 +259,7 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, další příjezd, vzkaz). Počasí je jen řádek v pruhu nahoře (mock 01).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, vzkaz). Další příjezd je jen v hlavičce (#272). Počasí je jen řádek v pruhu nahoře (mock 01).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {shoppingQuery.isError ? (
@@ -268,7 +267,6 @@ export function DashboardPage() {
       ) : shoppingQuery.data ? (
         <RunningLowCard data={shoppingQuery.data} />
       ) : null}
-      {reservationsQuery.data && <NextArrivalCard data={reservationsQuery.data} />}
       <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />

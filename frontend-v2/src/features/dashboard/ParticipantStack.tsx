@@ -1,4 +1,4 @@
-/** „Také jede“: avatary spolucestujících u pobytu (karta „Na chatě teď“ i „Další příjezd“, #172). */
+/** „Také jede“: avatary spolucestujících u pobytu v hlavičce teď → příště (#172, #272). */
 import type { ReservationParticipantLite } from "@/api/dashboard";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 

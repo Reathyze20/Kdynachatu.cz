@@ -1,0 +1,54 @@
+/* ── Hlavička Přehledu teď → příště (#272, návrh #6 díl 2A) ──
+   Jedna karta: vlevo kdo je teď na chatě, šipka, vpravo kdo jede příště. Osoba je vždy
+   avatar s iniciálou + jméno (G4). Text 16/14 px z tokenů (G3), barvy z tokenů karty. */
+.status-header .status-content { gap: var(--space-md); }
+.status-header .status-chain { margin-top: 0; }
+
+.status-header__label {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.status-header__row { display: flex; align-items: flex-start; gap: var(--space-sm); }
+.status-header__side { display: flex; flex: 1 1 0; flex-direction: column; gap: var(--space-sm); min-width: 0; }
+.status-header__person { display: flex; align-items: center; gap: var(--space-sm); min-width: 0; }
+.status-header__text { display: flex; flex-direction: column; min-width: 0; }
+
+/* Dlouhé jméno se zalomí, neusekne (G3, WCAG 1.4.4) */
+.status-header__name { font-size: var(--font-size-lg); font-weight: 800; line-height: 1.25; color: var(--text-main); overflow-wrap: anywhere; }
+.status-header__when { font-size: var(--font-size-base); line-height: 1.35; color: var(--text-muted); }
+
+/* Šipka na ose 40px avataru */
+.status-header__arrow { flex-shrink: 0; width: 20px; height: 20px; margin-top: 10px; color: var(--text-muted); }
+
+.status-header__mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.status-header__mark--free { background: var(--brand-primary); color: var(--text-on-primary); }
+.status-header__mark--none { border: 2px dashed var(--text-placeholder); }
+
+/* Detail pod osobou (účel, noci, s kým), zarovnaný pod jméno */
+.status-header__detail { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: calc(40px + var(--space-sm)); }
+.status-header__detail .status-participants { margin-top: 0; }
+.status-header__meta,
+.status-header__mine { margin: 0; font-size: var(--font-size-sm); line-height: 1.4; color: var(--text-muted); }
+
+/* Detail pobytu nese hlavička jen na desktopu (upřesnění 1 k návrhu #6) */
+@media (max-width: 1023px) {
+  .status-header__detail { display: none; }
+}
+
+/* Úzký telefon: avatar nad jménem, ať se jméno a datum vejdou do poloviny karty */
+@media (max-width: 400px) {
+  .status-header__person { flex-direction: column; align-items: flex-start; }
+}
