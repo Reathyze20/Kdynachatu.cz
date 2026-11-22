@@ -73,7 +73,7 @@ export function CheckoutSection({ reservation }: Props) {
           setLoadError(
             getNetworkAwareLoadMessage(
               error,
-              "Nepodařilo se načíst stav potvrzeného odjezdu. Zkuste to znovu.",
+              "Nepodařilo se načíst stav potvrzeného odjezdu. Zkus to znovu.",
             ),
           );
         })
@@ -91,7 +91,7 @@ export function CheckoutSection({ reservation }: Props) {
           setLoadError(
             getNetworkAwareLoadMessage(
               error,
-              "Nepodařilo se načíst výjezdový protokol. Zkuste to znovu.",
+              "Nepodařilo se načíst výjezdový protokol. Zkus to znovu.",
             ),
           );
         })
@@ -202,8 +202,8 @@ export function CheckoutSection({ reservation }: Props) {
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          "Odjezd se nepodařilo potvrdit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se odjezd stihl potvrdit. Zkuste to znovu po obnovení připojení.",
+          "Odjezd se nepodařilo potvrdit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se odjezd stihl potvrdit. Zkus to znovu po obnovení připojení.",
         ),
       );
     }

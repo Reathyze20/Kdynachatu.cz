@@ -81,7 +81,7 @@ describe('DesktopSidebar — desktop rám #1b (#171)', () => {
     const user = userEvent.setup()
     renderSidebar('/reservations')
     const sidebar = screen.getByTestId('desktop-sidebar')
-    expect(within(sidebar).queryByRole('button', { name: 'Potřebujete poradit?' })).not.toBeInTheDocument()
+    expect(within(sidebar).queryByRole('button', { name: 'Potřebuješ poradit?' })).not.toBeInTheDocument()
 
     await user.click(within(sidebar).getByRole('button', { name: 'Nápověda' }))
     expect(await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).toBeInTheDocument()

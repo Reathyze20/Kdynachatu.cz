@@ -124,7 +124,7 @@ describe('shopping optimistic status mutation', () => {
     expect(showToast).toHaveBeenCalledWith(
       {
         title: 'Chyba při aktualizaci položky',
-        detail: 'Něco se pokazilo. Zkuste to prosím znovu.',
+        detail: 'Něco se pokazilo. Zkus to prosím znovu.',
         supportCode: undefined,
       },
       'error',

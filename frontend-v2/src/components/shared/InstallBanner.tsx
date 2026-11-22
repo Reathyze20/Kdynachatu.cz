@@ -41,10 +41,10 @@ export function InstallBanner() {
     >
       <img src="/pwa-icon-192.png" alt="" width={40} height={40} className="shrink-0 rounded-lg" />
       <div className="flex min-w-0 flex-1 flex-col items-start gap-1 text-sm">
-        <p className="font-semibold text-slate-900">Mějte chatu po ruce</p>
+        <p className="font-semibold text-slate-900">Měj chatu po ruce</p>
         {canInstall === 'prompt' ? (
           <>
-            <p className="text-slate-600">Nainstalujte si aplikaci na plochu — otevře se bez prohlížeče a funguje i offline.</p>
+            <p className="text-slate-600">Nainstaluj si aplikaci na plochu — otevře se bez prohlížeče a funguje i offline.</p>
             <button type="button" className="button-primary inline-flex items-center gap-1.5" style={{ marginTop: 4 }} onClick={handleInstall}>
               <Download className="h-4 w-4" aria-hidden="true" />
               Nainstalovat
@@ -52,7 +52,7 @@ export function InstallBanner() {
           </>
         ) : (
           <p className="text-slate-600">
-            Klepněte na <Share className="inline h-4 w-4 align-text-bottom" aria-label="Sdílet" /> a zvolte
+            Klepni na <Share className="inline h-4 w-4 align-text-bottom" aria-label="Sdílet" /> a zvol
             {' '}<strong>„Přidat na plochu“</strong>.
           </p>
         )}

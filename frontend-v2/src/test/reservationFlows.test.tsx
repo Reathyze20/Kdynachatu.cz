@@ -254,7 +254,7 @@ describe('booking form: essentials first, the rest under "Víc"', () => {
     const purpose = screen.getByLabelText('Účel návštěvy')
     expect(purpose).toHaveAttribute('aria-required', 'true')
     expect(purpose).toHaveAttribute('aria-invalid', 'true')
-    expect(purpose).toHaveAccessibleDescription('Vyplňte účel návštěvy.')
+    expect(purpose).toHaveAccessibleDescription('Vyplň účel návštěvy.')
     expect(api.post).not.toHaveBeenCalled()
   })
 

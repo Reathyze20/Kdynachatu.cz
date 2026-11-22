@@ -186,7 +186,7 @@ export async function flushQueue(): Promise<void> {
     showToast(
       {
         title: 'Některé změny se nepodařilo uložit',
-        detail: `${dropped} ${dropped === 1 ? 'změnu' : 'změny/změn'} server odmítl — zkontrolujte prosím data.`,
+        detail: `${dropped} ${dropped === 1 ? 'změnu' : 'změny/změn'} server odmítl — zkontroluj prosím data.`,
       },
       'error',
     )

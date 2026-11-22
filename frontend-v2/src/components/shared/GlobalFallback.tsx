@@ -81,7 +81,7 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
   const quip = pickStableQuip(err?.message ?? 'GlobalFallback', GLOBAL_ERROR_QUIPS)
   const supportDetails = extractSupportErrorDetails(error)
   const friendlyMessage = getUserFriendlyMessage(supportDetails.status,
-    'Omlouváme se za nepříjemnosti. Zkuste obnovit stránku — pokud chyba přetrvá, kontaktujte správce chaty.',
+    'Omlouváme se za nepříjemnosti. Zkus obnovit stránku — pokud chyba přetrvá, kontaktuj správce chaty.',
   )
   const supportBlock = formatSupportBlock(supportDetails)
   const [devExpanded, setDevExpanded] = useState(false)
