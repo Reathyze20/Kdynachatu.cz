@@ -1,7 +1,8 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { jtskToWgs84, MUNICIPALITIES_FILE, type MunicipalityDataset } from "./buildMunicipalities";
+import { jtskToWgs84 } from "./buildMunicipalities";
+import { MUNICIPALITIES_FILE, type MunicipalityDataset } from "../backend/data/municipalityDataset";
 
 // Strážce vygenerovaného souboru: ověřuje data v repu, ne parser (ten se pouští jen při aktualizaci).
 const dataset = JSON.parse(fs.readFileSync(MUNICIPALITIES_FILE, "utf8")) as MunicipalityDataset;

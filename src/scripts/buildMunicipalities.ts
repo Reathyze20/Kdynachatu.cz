@@ -13,26 +13,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
-export const MUNICIPALITIES_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "../backend/data/municipalities.json");
-
-/** Tvar src/backend/data/municipalities.json. */
-export interface MunicipalityDataset {
-  source: string;
-  license: string;
-  validFrom: string;
-  format: string;
-  changes: string;
-  districts: MunicipalityDistrict[];
-}
-
-export interface MunicipalityDistrict {
-  code: number;
-  name: string;
-  region: string;
-  /** [kód obce, název, zeměpisná šířka, zeměpisná délka] */
-  municipalities: [number, string, number, number][];
-}
+import { MUNICIPALITIES_FILE, type MunicipalityDistrict } from "../backend/data/municipalityDataset";
 
 /** S-JTSK (EPSG:5514, Křovák East-North) → WGS84 [lat, lon]. Zpětný Křovák + 7prvková Helmertova transformace. */
 export function jtskToWgs84(easting: number, northing: number, height = 300): [number, number] {
