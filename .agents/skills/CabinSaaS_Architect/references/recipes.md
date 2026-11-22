@@ -33,7 +33,7 @@ function <Feature>PageContent() {
 
   if (!data || data.length === 0) {
     return (
-      <div className="p-4 md:p-6 lg:p-8">
+      <div className="p-3 md:p-0">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-8 text-center">
           <p className="text-5xl mb-4">📭</p>
           <h2 className="text-lg font-semibold text-slate-800 mb-2">Zatím žádná data</h2>
@@ -45,7 +45,7 @@ function <Feature>PageContent() {
 
   return (
     <motion.div
-      className="p-4 md:p-6 lg:p-8 pb-20 md:pb-0 space-y-6"
+      className="p-3 md:p-0 space-y-6"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
@@ -227,7 +227,7 @@ import { motion } from 'framer-motion'
 
 export function FeatureSkeleton() {
   return (
-    <div className="p-4 md:p-6 lg:p-8 pb-20 md:pb-0">
+    <div className="p-3 md:p-0">
       <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-6 md:p-8 space-y-6">
         {/* Title skeleton */}
         <div className="h-8 w-40 bg-slate-200 rounded-lg animate-pulse" />
@@ -387,7 +387,7 @@ export function MasterDetailPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 pb-20 md:pb-0">
+    <div className="p-3 md:p-0">
       <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
         <div className="flex flex-col md:flex-row" style={{ height: 'calc(100vh - 160px)' }}>
           {/* Master (list) — full width on mobile, 1/3 on desktop */}

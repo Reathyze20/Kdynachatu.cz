@@ -111,15 +111,19 @@ This app is used by families planning weekend getaways. It should evoke warmth, 
 The application renders above a fullscreen nature-photograph background. Main content floats in generously padded, rounded, frosted-glass or solid-white cards:
 
 ```tsx
-{/* Page-level wrapper — every page follows this */}
-<div className="p-4 md:p-6 lg:p-8 space-y-6 pb-20 md:pb-0">
+{/* Page-level wrapper for new pages (RouteTransitionSkeleton uses the same frame) */}
+<div className="p-3 md:p-0 space-y-6">
   <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-6 md:p-8">
     {/* Content lives here, never touching outer edges */}
   </div>
 </div>
 ```
 
-Note the `pb-20 md:pb-0` — this accounts for the mobile bottom navigation bar.
+The page renders inside `AppShell`'s `<main id="page-container">`, which already owns the page frame. Don't add outer page padding for it:
+
+- **Mobile** (the `max-width: 768px` shell in `styles/nav.css`): `#page-container` reserves room for the fixed `MobileHeader` (top) and the fixed `MobileNav` (bottom). The only source of the bottom bar's height is `--mobile-nav-height`; read that variable if something else must clear the bar (`ZenMode.css` does). The page wrapper adds only the side margin of the cards (`p-3`).
+- **Desktop:** `DesktopSidebar` sits on the left, there is no top bar. `.app-shell-body` caps the content width (`max-width`, 1440 px), centres it and pads it (`styles/layout.css`), so the wrapper adds no padding (`md:p-0`). For a main column + side panel, use `TwoColumnLayout` instead of a hand-made grid (master-detail lists are the exception, see Recipe 7).
+- **Never** add bottom padding for the mobile nav (such as `pb-20 md:pb-0`) to a page. `#page-container` already reserves that space, so extra padding doubles the gap.
 
 ### Spacing & Edges
 
@@ -307,7 +311,7 @@ Check `references/component-inventory.md` — it lists every existing component,
 
 - **Touch targets:** Minimum 44×44px for all interactive elements.
 - **Mobile-first:** Start from 320px width, scale up. Use `md:` and `lg:` breakpoints.
-- The app has a bottom `<MobileNav>` with 5 tabs on mobile — account for its height in page padding (`pb-20 md:pb-0`).
+- The app has a fixed bottom `<MobileNav>` with 5 tabs on mobile. Its space is handled by the shell, see "The Core Wrapper Pattern" in Rule 2.
 - All modals must be scrollable on short viewports.
 - Use `aria-label` on icon-only buttons. Use semantic HTML (`<nav>`, `<main>`, `<section>`).
 - Master-detail layouts: on mobile, show only master OR detail (toggle with back button). See Recipe 7 in `references/recipes.md`.
@@ -405,7 +409,8 @@ Before finishing any component, verify:
 - [ ] Modal uses the unified `<Modal>` component
 - [ ] Animations are ≤ `0.3s`, use `easeOut`, and wrap exiting elements in `<AnimatePresence>`
 - [ ] No content touches parent outer edges (generous padding/gaps)
-- [ ] `pb-20 md:pb-0` on page wrapper (mobile nav space)
+- [ ] Page wrapper is `p-3 md:p-0`; the shell (`#page-container`, `.app-shell-body`) provides the nav space and desktop frame
+- [ ] Main column + side context panel uses `TwoColumnLayout` (master-detail: Recipe 7)
 - [ ] Colors use Emerald (primary) + Slate (neutral) — no rogue palettes
 - [ ] Inline styles use CSS custom properties (`var(--brand-primary)`) — no hardcoded hex
 - [ ] No `window.confirm()` / `window.prompt()` — use `<ConfirmDialog>` / `<PromptDialog>`
