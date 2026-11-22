@@ -242,6 +242,7 @@ export function ReservationsPage() {
               ) : (
                 <ReservationList
                   reservations={filtered}
+                  allReservations={allReservations}
                   futureReservations={futureReservations}
                   month={cal.month}
                   year={cal.year}

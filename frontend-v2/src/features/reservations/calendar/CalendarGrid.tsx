@@ -198,7 +198,7 @@ export function CalendarGrid({
           ) : quickStatsNode}
         </div>
         {onNewReservation ? (
-          <button type="button" className={styles.newReservationButton} onClick={onNewReservation} data-testid="reservation-create-button">
+          <button type="button" className={`btn-primary ${styles.newReservationButton}`} onClick={onNewReservation} data-testid="reservation-create-button">
             <Plus className="w-4 h-4" aria-hidden="true" />
             <span className="max-md:sr-only">Nová rezervace</span>
           </button>

@@ -97,7 +97,7 @@ describe('reservations page: detail in the side panel', () => {
     expect(within(detail).getByText('Petr')).toBeInTheDocument()
     expect(calendarHeading()).toBeInTheDocument()
     for (const bar of barsOf(stay)) expect(bar).toHaveAttribute('aria-current', 'true')
-    expect(screen.getByText('Vybraná rezervace')).toBeInTheDocument()
+    expect(screen.getAllByText('Vybraná rezervace')).toHaveLength(barsOf(stay).length)
 
     await user.click(within(panel).getByTestId('reservation-back-button'))
 

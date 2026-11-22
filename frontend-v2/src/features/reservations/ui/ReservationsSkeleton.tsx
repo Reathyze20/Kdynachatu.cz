@@ -18,7 +18,7 @@ const listSkeleton = (
 export function ReservationsSkeleton() {
   return (
     <TwoColumnLayout asideLabel="Rezervace" aside={listSkeleton}>
-      {/* Left: Calendar skeleton */}
+      {/* Main column: calendar skeleton */}
       <div className={styles.skeletonCalendarCard}>
         <div className={styles.skeletonHeaderBar}>
           <div className={styles.skeletonNavBlock} />

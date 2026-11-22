@@ -82,7 +82,8 @@
   flex-wrap: wrap;
 }
 
-/* „Nová rezervace" v hlavičce kalendáře; na mobilu jen ikona (text zůstává pro čtečku). */
+/* „Nová rezervace" v hlavičce kalendáře (barvy z .btn-primary); na mobilu jen ikona,
+   text zůstává pro čtečku. */
 button.newReservationButton {
   display: inline-flex;
   align-items: center;
@@ -91,17 +92,10 @@ button.newReservationButton {
   min-width: 44px;
   min-height: 44px;
   padding: 0 var(--space-lg);
-  border: none;
   border-radius: var(--radius-full);
-  background: var(--primary);
-  color: var(--primary-foreground);
   font-size: var(--font-size-sm);
   font-weight: 700;
   white-space: nowrap;
-}
-
-button.newReservationButton:hover {
-  background: var(--brand-primary-hover);
 }
 
 /* Stav výběru v hlavičce — nahrazuje statistiky, dokud je aktivní výběr.

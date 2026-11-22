@@ -164,7 +164,7 @@ export function CalendarCell({
                       onShowDetail(r);
                     }}
                   >
-                    {isSelected && showLabel ? <span className="sr-only">Vybraná rezervace</span> : null}
+                    {isSelected ? <span className="sr-only">Vybraná rezervace</span> : null}
                     <span className={styles.calBarLabel}>{showLabel ? r.username : "\u00A0"}</span>
                     {hasOverflowBadge ? (
                       <button
