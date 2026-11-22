@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '@/api/client'
+import type { CabinConfig } from '@/api/settings'
 import { RegisterForm } from '@/features/auth/RegisterForm'
 import { CabinSettingsPanel } from '@/features/settings/CabinSettingsPage'
 
@@ -15,7 +16,7 @@ const TREBENICE = [
   { code: 591866, name: 'Třebenice', district: 'Třebíč', region: 'Kraj Vysočina' },
 ]
 
-const CABIN = {
+const CABIN: CabinConfig = {
   id: 'c-1', name: 'Chata U Lesa', subdomain: 'u-lesa', description: null, welcomeMessage: null, rules: null,
   departureChecklist: ['Zavřít vodu'], coverPhotoUrl: null, isWinterized: false, features: {},
   weatherLocation: 'Trebenice', municipalityCode: null, municipalityName: null, municipalityDistrict: null,
@@ -106,6 +107,18 @@ describe('nejbližší obec v nastavení chaty', () => {
     await waitFor(() => expect(patch).toHaveBeenCalled())
     // undefined Axios do JSON nepošle, server pak textovou lokalitu nechá být
     expect((patch.mock.calls[0][1] as { municipalityCode?: number | null }).municipalityCode).toBeUndefined()
+  })
+
+  it('lets the admin remove a legacy text location', async () => {
+    mockGet()
+    const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: CABIN })
+    renderWithClient(<CabinSettingsPanel />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Odebrat starou lokalitu' }))
+    await userEvent.click(screen.getByTestId('cabin-settings-save-button'))
+
+    await waitFor(() => expect(patch).toHaveBeenCalled())
+    expect(patch.mock.calls[0][1]).toMatchObject({ municipalityCode: null })
   })
 
   it('does not save typed text without a pick', async () => {

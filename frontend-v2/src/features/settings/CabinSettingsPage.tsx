@@ -174,6 +174,8 @@ export function CabinSettingsPanel({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [municipality, setMunicipality] = useState<MunicipalityOption | null>(null)
+  const [municipalityPending, setMunicipalityPending] = useState(false)
+  const [legacyLocationRemoved, setLegacyLocationRemoved] = useState(false)
   const [welcomeMessage, setWelcomeMessage] = useState('')
   const [rules, setRules] = useState('')
   const [isWinterized, setIsWinterized] = useState(false)
@@ -212,14 +214,13 @@ export function CabinSettingsPanel({
       return
     }
 
-    // Napsaný text bez výběru obce neukládat (MunicipalityPicker mu nastaví chybu validace).
-    const municipalityInput = document.getElementById('cs-municipality') as HTMLInputElement | null
-    if (municipalityInput && !municipalityInput.checkValidity()) {
+    // Napsaný text bez výběru obce neukládat.
+    if (municipalityPending) {
       showToast('Vyber nejbližší obec ze seznamu, nebo pole vymaž.', 'error')
       return
     }
-    // Bez výběru zůstane stará textová lokalita; smazání dřív vybrané obce pošle null.
-    const municipalityCode = municipality ? municipality.code : settings?.municipalityCode ? null : undefined
+    // Bez výběru zůstane stará textová lokalita; smazání obce nebo odebrání staré lokality pošle null.
+    const municipalityCode = municipality ? municipality.code : settings?.municipalityCode || legacyLocationRemoved ? null : undefined
 
     const cleanChecklist = checklist.map((s) => s.trim()).filter((s) => s.length > 0)
 
@@ -256,7 +257,7 @@ export function CabinSettingsPanel({
         },
       },
     )
-  }, [name, description, welcomeMessage, municipality, settings, rules, isWinterized, checklist, features, updateSettings])
+  }, [name, description, welcomeMessage, municipality, municipalityPending, legacyLocationRemoved, settings, rules, isWinterized, checklist, features, updateSettings])
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -412,13 +413,17 @@ export function CabinSettingsPanel({
                       id="cs-municipality"
                       value={municipality}
                       onChange={setMunicipality}
+                      onPendingChange={setMunicipalityPending}
                       placeholder="Např. Třebenice"
                       testId="cabin-settings-municipality-input"
                     />
-                    {settings?.weatherLocation && !settings.municipalityCode && (
+                    {settings?.weatherLocation && !settings.municipalityCode && !legacyLocationRemoved && (
                       <span className="cs-hint" data-testid="cabin-settings-legacy-location">
                         Teď je uložená jen jako text: „{settings.weatherLocation}“. Vyber obec ze seznamu, ať počasí
-                        chodí ze správného místa.
+                        chodí ze správného místa.{' '}
+                        <button type="button" className="min-h-11 underline" onClick={() => setLegacyLocationRemoved(true)}>
+                          Odebrat starou lokalitu
+                        </button>
                       </span>
                     )}
                     <span className="cs-hint">

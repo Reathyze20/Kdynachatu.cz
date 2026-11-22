@@ -209,9 +209,9 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
     }
 
     // Poloha chaty jen jako obec ze seznamu (ADR-0006); volný text weatherLocation se už nepřijímá.
-    const municipality =
-      municipalityCode === undefined || municipalityCode === null ? null : cabinMunicipalityFields(Number(municipalityCode));
-    if (municipalityCode !== undefined && municipalityCode !== null && (!Number.isInteger(municipalityCode) || !municipality)) {
+    const parsedCode = updateCabinSettingsSchema.shape.municipalityCode.safeParse(municipalityCode);
+    const municipality = parsedCode.success && parsedCode.data ? cabinMunicipalityFields(parsedCode.data) : null;
+    if (!parsedCode.success || (parsedCode.data && !municipality)) {
       errors.push("Vyber nejbližší obec ze seznamu.");
     }
 

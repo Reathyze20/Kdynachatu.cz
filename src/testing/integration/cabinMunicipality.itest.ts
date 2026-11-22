@@ -2,6 +2,7 @@ import "./env"; // musí zůstat první import
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import type { Express } from "express";
+import request from "supertest";
 import prisma from "../../utils/prisma";
 import { as, setupIntegrationFile, teardownIntegrationFile, type TestWorld } from "./harness";
 
@@ -22,6 +23,27 @@ before(async () => {
 });
 
 after(teardownIntegrationFile);
+
+describe("POST /api/register – nearest municipality (#279)", () => {
+  const signup = { cabinName: "Chata Nová", username: "novak-obec", email: "novak-obec@example.com", password: "Heslo-123456" };
+
+  test("rejects an unknown municipality code without creating the cabin", async () => {
+    const res = await request(app).post("/api/register").send({ ...signup, municipalityCode: 1 });
+
+    assert.equal(res.status, 400);
+    assert.equal(await prisma.cabin.count({ where: { name: signup.cabinName } }), 0);
+  });
+
+  test("stores the picked municipality on the new cabin", async () => {
+    const res = await request(app).post("/api/register").send({ ...signup, municipalityCode: 565768 });
+
+    assert.equal(res.status, 201);
+    const cabin = await prisma.cabin.findFirst({ where: { name: signup.cabinName } });
+    assert.equal(cabin?.municipalityCode, 565768);
+    assert.equal(cabin?.municipalityDistrict, "Litoměřice");
+    assert.ok(Math.abs((cabin?.longitude ?? 0) - 13.99) < 0.05);
+  });
+});
 
 describe("PATCH /api/cabin – nearest municipality (#279)", () => {
   test("stores name, district, region and centre of the picked municipality only for the own cabin", async () => {

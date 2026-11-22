@@ -4,7 +4,7 @@
  *
  * Hodnotou je jen obec vybraná ze seznamu – psaní po výběru ji zruší. Napsaný text bez výběru
  * nastaví inputu chybu validace („Vyber obec ze seznamu.“), takže ho formulář s nativní validací
- * neodešle. Formulář s `noValidate` musí `value === null` hlídat sám.
+ * neodešle. Formulář s `noValidate` hlídá `value === null` sám; napsaný text bez výběru mu ohlásí `onPendingChange`.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { MunicipalityOption } from '@/api/municipalities'
@@ -15,6 +15,8 @@ interface MunicipalityPickerProps {
   id: string
   value: MunicipalityOption | null
   onChange: (municipality: MunicipalityOption | null) => void
+  /** true, když je v poli napsaný text bez výběru ze seznamu (pro formuláře s `noValidate`) */
+  onPendingChange?: (pending: boolean) => void
   placeholder?: string
   required?: boolean
   testId?: string
@@ -27,7 +29,7 @@ function describe(m: MunicipalityOption, ambiguous: boolean): string {
 
 const NOT_PICKED = 'Vyber obec ze seznamu.'
 
-export function MunicipalityPicker({ id, value, onChange, placeholder = 'Začni psát název obce', required, testId }: MunicipalityPickerProps) {
+export function MunicipalityPicker({ id, value, onChange, onPendingChange, placeholder = 'Začni psát název obce', required, testId }: MunicipalityPickerProps) {
   const listId = useId()
   const hintId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -44,9 +46,11 @@ export function MunicipalityPicker({ id, value, onChange, placeholder = 'Začni 
     shownValue.current = value
   }, [value, text])
 
+  const pending = text.trim() !== '' && !value
   useEffect(() => {
-    inputRef.current?.setCustomValidity(text.trim() && !value ? NOT_PICKED : '')
-  }, [text, value])
+    inputRef.current?.setCustomValidity(pending ? NOT_PICKED : '')
+    onPendingChange?.(pending)
+  }, [pending, onPendingChange])
 
   const isAmbiguous = (m: MunicipalityOption) =>
     results.some((other) => other.code !== m.code && other.name === m.name && other.district === m.district)

@@ -220,13 +220,14 @@ export type WeatherPlace = Pick<CabinSettings, "weatherLocation" | "municipality
 /** Počasí pro uložený střed vybrané obce; chata bez vybrané obce geokóduje textovou lokalitu jako dřív. */
 export async function fetchWeather(place: WeatherPlace | null | undefined): Promise<WeatherResult> {
   const location = place?.weatherLocation?.trim() ?? "";
-  const hasCoordinates = place?.latitude != null && place?.longitude != null;
-  if (!hasCoordinates && !location) return "EMPTY_LOCATION";
+  const storedLat = place?.latitude ?? null;
+  const storedLon = place?.longitude ?? null;
+  if ((storedLat === null || storedLon === null) && !location) return "EMPTY_LOCATION";
 
   try {
     let lat: number, lon: number, city: string;
-    if (hasCoordinates) {
-      [lat, lon, city] = [place!.latitude!, place!.longitude!, place!.municipalityName ?? location];
+    if (storedLat !== null && storedLon !== null) {
+      [lat, lon, city] = [storedLat, storedLon, place?.municipalityName ?? location];
     } else {
       // Step 1: Geocoding
       const geoRes = await fetch(

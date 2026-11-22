@@ -97,14 +97,13 @@ export async function checkFrostAlerts(): Promise<void> {
     const cooldownDate = new Date();
     cooldownDate.setDate(cooldownDate.getDate() - ALERT_COOLDOWN_DAYS);
 
-    // 1) Find eligible cabins — has weatherLocation, not winterized, cooldown expired
+    // 1) Find eligible cabins — picked municipality or legacy weatherLocation, not winterized, cooldown expired
     const cabins = await prisma.cabin.findMany({
       where: {
-        weatherLocation: { not: null },
         isWinterized: false,
-        OR: [
-          { lastFrostAlertAt: null },
-          { lastFrostAlertAt: { lt: cooldownDate } },
+        AND: [
+          { OR: [{ latitude: { not: null } }, { weatherLocation: { not: null } }] },
+          { OR: [{ lastFrostAlertAt: null }, { lastFrostAlertAt: { lt: cooldownDate } }] },
         ],
       },
       include: {
