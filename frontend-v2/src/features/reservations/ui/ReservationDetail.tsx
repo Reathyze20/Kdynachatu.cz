@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { escapeHtml } from "@/lib/utils";
+import { toMemberColor } from "@/lib/memberPalette";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { showToast } from "@/lib/toast";
 
@@ -36,7 +37,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
   const isMine = r.userId === user?.userId;
   const isAdmin = user?.role === "admin";
   const canEdit = isMine || isAdmin;
-  const c = r.userColor || "var(--text-muted)";
+  const memberColor = toMemberColor(r.userColor);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
@@ -109,10 +110,10 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
           <AnimalAvatar
             icon={r.userAnimalIcon}
             username={r.username}
-            color={c}
+            color={memberColor}
             size={42}
           />
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c }} />
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: memberColor }} />
           <strong className="text-[16px] font-bold text-slate-800">{r.username}</strong>
         </div>
         <span className={badge.cls}>{badge.label}</span>

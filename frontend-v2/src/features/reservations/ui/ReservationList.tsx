@@ -407,7 +407,7 @@ function ReservationCard({
   index: number;
   onClick: (r: Reservation) => void;
 }) {
-  const uColor = r.userColor || "#94a3b8";
+  const uColor = r.userColor || undefined;
   const d1 = new Date(r.from + "T00:00:00");
   const d2 = new Date(r.to + "T00:00:00");
   const isPast = d2 < new Date();

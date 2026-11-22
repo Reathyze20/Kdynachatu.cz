@@ -5,6 +5,7 @@ import apiClient from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { AvatarPicker } from '@/components/shared/AvatarPicker';
 import { ColorPicker } from '@/components/shared/ColorPicker';
+import { MEMBER_PALETTE } from '@/lib/memberPalette';
 import cabinBg from '@/img/olivier-guillard-FKJgBUDoVC0-unsplash.jpg';
 
 interface ValidateResponse {
@@ -44,7 +45,7 @@ export function InvitePage() {
     password: '',
     email: '',
     animalIcon: 'liska',
-    color: '#0ea5e9'
+    color: MEMBER_PALETTE[0].hex
   });
   
   const [submitting, setSubmitting] = useState(false);

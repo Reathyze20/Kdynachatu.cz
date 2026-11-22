@@ -36,7 +36,7 @@ export function MessageBubble({
   onReplyClick,
 }: Props) {
   const resolved = note.isResolvedAsTask === true;
-  const userColor = userInfo?.color || "#a3b19b";
+  const userColor = userInfo?.color || undefined;
   const animalIcon = userInfo?.animalIcon ?? null;
   const bubbleRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

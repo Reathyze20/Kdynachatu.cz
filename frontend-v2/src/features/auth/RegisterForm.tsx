@@ -8,13 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { Eye, EyeOff, Mail } from 'lucide-react'
-
-const REGISTER_SWATCH_COLORS = [
-  '#2d6a4f', '#40916c', '#52b788',
-  '#bf6c3d', '#c68b3f', '#7a5b42',
-  '#a0522d', '#6b7c47', '#c1877a',
-  '#d4956a', '#6b7280', '#5c7a6b',
-]
+import { MEMBER_PALETTE } from '@/lib/memberPalette'
 
 interface RegisterFormProps {
   onShowLogin: () => void
@@ -53,7 +47,7 @@ async function validateWeatherLocation(location: string): Promise<boolean> {
 
 export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
   const navigate = useNavigate()
-  const [selectedColor, setSelectedColor] = useState('#5d9b62')
+  const [selectedColor, setSelectedColor] = useState(MEMBER_PALETTE[0].hex)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'warning'; testCode?: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -253,16 +247,18 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
         <div className="form-group">
           <label>Barva profilu</label>
           <div className="color-picker-swatches" id="register-color-swatches" data-testid="register-color-swatches">
-            {REGISTER_SWATCH_COLORS.map((color) => (
+            {MEMBER_PALETTE.map(({ hex, name }) => (
               <button
-                key={color}
+                key={hex}
                 type="button"
-                className={`color-swatch${selectedColor === color ? ' active' : ''}`}
-                style={{ backgroundColor: color }}
-                data-color={color}
-                aria-label={`Barva ${color}`}
-                data-testid={`register-color-swatch-${color.slice(1).toLowerCase()}`}
-                onClick={() => setSelectedColor(color)}
+                className={`color-swatch${selectedColor === hex ? ' active' : ''}`}
+                style={{ backgroundColor: hex }}
+                data-color={hex}
+                aria-label={`Barva ${name}`}
+                aria-pressed={selectedColor === hex}
+                title={name}
+                data-testid={`register-color-swatch-${hex.slice(1).toLowerCase()}`}
+                onClick={() => setSelectedColor(hex)}
               />
             ))}
           </div>

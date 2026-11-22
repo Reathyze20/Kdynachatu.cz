@@ -97,7 +97,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   // ── Stav C: Occupied ─────────────────────────────────────────────────
   if (active && isValidReservation(active)) {
     const departingToday = active.to === todayStr;
-    const userColor = active.userColor || "#ea580c";
+    const userColor = active.userColor || undefined;
 
     let title: string;
     let subtitle: string;
@@ -149,7 +149,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     }
 
     return (
-      <div className={cardClass} id="dashboard-active-reservation" style={{ "--status-user-color": userColor } as React.CSSProperties}>
+      <div className={cardClass} id="dashboard-active-reservation">
         <div className="card-body-full status-content">
           <div className="status-hero-row">
             {avatarNode}
