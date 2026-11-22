@@ -163,8 +163,8 @@ export function FolderGrid({
         {folders.length === 0 && (
           <div className="gallery-empty-state" style={{ gridColumn: '1 / -1' }}>
             <FolderOpen size={48} strokeWidth={1} style={{ color: 'var(--text-placeholder)' }} />
-            <p className="gallery-empty-title">Zatím nemáte žádná alba</p>
-            <p className="gallery-empty-subtitle">Začněte nahrávat fotky z vaší chaty!</p>
+            <p className="gallery-empty-title">Zatím nemáš žádná alba</p>
+            <p className="gallery-empty-subtitle">Začni nahrávat fotky z chaty!</p>
             {!isGuest && (
               <button
                 className="btn btn-primary btn-lg gallery-empty-action"

@@ -21,7 +21,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
     const identifier = identifierRef.current?.value.trim() ?? ''
 
     if (identifier.length < 2) {
-      setMessage({ text: 'Zadejte e-mail nebo uživatelské jméno.', type: 'error' })
+      setMessage({ text: 'Zadej e-mail nebo uživatelské jméno.', type: 'error' })
       return
     }
 
@@ -30,13 +30,13 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
 
     try {
       const { data } = await apiClient.post<ForgotPasswordResponse>('/forgot-password', { identifier })
-      const text = data.message || 'Pokud účet existuje, poslali jsme vám e-mail s odkazem pro obnovu hesla.'
+      const text = data.message || 'Pokud účet existuje, poslali jsme ti e-mail s odkazem pro obnovu hesla.'
       setRequestSent(true)
       setMessage({ text, type: 'success' })
       showToast('Pokud účet existuje, poslali jsme e-mail pro obnovu hesla.', 'success')
     } catch (err: unknown) {
       const data = (err as { response?: { data?: ForgotPasswordResponse } }).response?.data
-      const text = data?.message || 'Nepodařilo se odeslat žádost. Zkuste to znovu.'
+      const text = data?.message || 'Nepodařilo se odeslat žádost. Zkus to znovu.'
       setMessage({ text, type: 'error' })
       showToast(text, 'error')
     } finally {
@@ -69,11 +69,11 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
         </div>
 
         <p style={{ color: 'var(--color-text-light)', fontSize: '0.95rem', lineHeight: 1.5, marginTop: 0 }}>
-          Obnova funguje jen pro účty, které mají nastavený e-mail. Pokud e-mail u účtu není, požádejte správce chaty o změnu hesla.
+          Obnova funguje jen pro účty, které mají nastavený e-mail. Pokud e-mail u účtu není, požádej správce chaty o změnu hesla.
         </p>
 
         <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading || requestSent} data-testid="forgot-password-submit-button">
-          {loading ? 'Odesílám odkaz…' : requestSent ? 'Odkaz byl odeslán' : 'Poslat odkaz pro obnovu'}
+          {loading ? 'Odesílám odkaz…' : requestSent ? 'Odkaz jsme poslali' : 'Poslat odkaz pro obnovu'}
         </button>
 
         {message && (

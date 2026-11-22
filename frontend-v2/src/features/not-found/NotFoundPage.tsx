@@ -11,7 +11,7 @@ export function NotFoundPage() {
         <div className="not-found-icon">404</div>
         <h1 className="not-found-title">Stránka nenalezena</h1>
         <p className="not-found-text">
-          Tato stránka neexistuje nebo byla přesunuta. Zkontrolujte adresu a zkuste to znovu.
+          Tato stránka neexistuje nebo jsme ji přesunuli. Zkontroluj adresu a zkus to znovu.
         </p>
         <button
           className="btn btn-primary"

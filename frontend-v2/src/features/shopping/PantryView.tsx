@@ -109,8 +109,8 @@ export function PantryView({ onBack }: Props) {
       setAddItemError(
         getNetworkAwareActionMessage(
           error,
-          'Zásobu se nepodařilo přidat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zásoba stihla přidat. Zkuste to znovu po obnovení připojení.',
+          'Zásobu se nepodařilo přidat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zásoba stihla přidat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -332,7 +332,7 @@ export function PantryView({ onBack }: Props) {
             <div className="detail-empty-state">
               <img src="/icons/empty_basket.svg" alt="" aria-hidden="true" style={{ maxHeight: 80, width: 'auto', opacity: 0.65, marginBottom: '0.5rem' }} />
               <h3 className="detail-empty-state-title">Žádné zásoby</h3>
-              <p className="detail-empty-state-text">Přidejte první položku, kterou chcete na chatě sledovat.</p>
+              <p className="detail-empty-state-text">Přidej první položku, kterou chceš na chatě sledovat.</p>
             </div>
           ) : filteredInventory.length === 0 ? (
             <div className="detail-empty-state">
@@ -400,7 +400,7 @@ export function PantryView({ onBack }: Props) {
       <ConfirmDialog
         isOpen={deleteTarget !== null}
         title="Smazat zásobu"
-        message={`Opravdu chcete smazat zásobu „${deleteTarget?.name ?? ''}"? Tato akce je nevratná.`}
+        message={`Opravdu chceš smazat zásobu „${deleteTarget?.name ?? ''}"? Tato akce je nevratná.`}
         confirmLabel="Smazat"
         danger
         loading={deleteItem.isPending}
@@ -414,8 +414,8 @@ export function PantryView({ onBack }: Props) {
             setDeleteError(
               getNetworkAwareActionMessage(
                 error,
-                'Zásobu se nepodařilo smazat. Zkuste to znovu.',
-                'Spojení vypadlo dřív, než se zásoba stihla smazat. Zkuste to znovu po obnovení připojení.',
+                'Zásobu se nepodařilo smazat. Zkus to znovu.',
+                'Spojení vypadlo dřív, než se zásoba stihla smazat. Zkus to znovu po obnovení připojení.',
               ),
             )
           }

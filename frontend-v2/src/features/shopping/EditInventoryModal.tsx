@@ -49,8 +49,8 @@ export function EditInventoryModal({ item, onClose }: Props) {
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          'Zásobu se nepodařilo uložit. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zásoba stihla uložit. Zkuste to znovu po obnovení připojení.',
+          'Zásobu se nepodařilo uložit. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zásoba stihla uložit. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -71,8 +71,8 @@ export function EditInventoryModal({ item, onClose }: Props) {
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          'Zásobu se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zásoba stihla smazat. Zkuste to znovu po obnovení připojení.',
+          'Zásobu se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zásoba stihla smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -205,7 +205,7 @@ export function EditInventoryModal({ item, onClose }: Props) {
     <ConfirmDialog
       isOpen={showDeleteConfirm}
       title="Smazat zásobu"
-      message="Opravdu chcete tuto zásobu smazat? Tato akce je nevratná."
+      message="Opravdu chceš tuto zásobu smazat? Tato akce je nevratná."
       confirmLabel="Smazat"
       danger
       loading={deleteItem.isPending}

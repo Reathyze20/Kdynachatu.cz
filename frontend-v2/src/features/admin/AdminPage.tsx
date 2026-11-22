@@ -201,8 +201,8 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
           setSaveError(
             getNetworkAwareActionMessage(
               error,
-              'Uživatele se nepodařilo upravit. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se změny uživatele stihly uložit. Zkuste to znovu po obnovení připojení.',
+              'Uživatele se nepodařilo upravit. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se změny uživatele stihly uložit. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
@@ -223,8 +223,8 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
           setConfirmError(
             getNetworkAwareActionMessage(
               error,
-              'Rezervace uživatele se nepodařilo smazat. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se rezervace stihly smazat. Zkuste to znovu po obnovení připojení.',
+              'Rezervace uživatele se nepodařilo smazat. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se rezervace stihly smazat. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
@@ -245,8 +245,8 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
             setConfirmError(
               getNetworkAwareActionMessage(
                 error,
-                'Uživatele se nepodařilo odebrat z chaty. Zkuste to znovu.',
-                'Spojení vypadlo dřív, než se odebrání stihlo uložit. Zkuste to znovu po obnovení připojení.',
+                'Uživatele se nepodařilo odebrat z chaty. Zkus to znovu.',
+                'Spojení vypadlo dřív, než se odebrání stihlo uložit. Zkus to znovu po obnovení připojení.',
               ),
             )
           },
@@ -266,8 +266,8 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
           setConfirmError(
             getNetworkAwareActionMessage(
               error,
-              'Uživatele se nepodařilo smazat. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se uživatel stihl smazat. Zkuste to znovu po obnovení připojení.',
+              'Uživatele se nepodařilo smazat. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se uživatel stihl smazat. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
@@ -310,7 +310,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
                     setConfirmAction('remove-from-cabin')
                   }}
                   disabled={removeUserFromCabin.isPending || isSelf}
-                  title={isSelf ? 'Nemůžete odebrat sami sebe z chaty' : undefined}
+                  title={isSelf ? 'Sebe z chaty odebrat nemůžeš' : undefined}
                   data-testid="edit-user-remove-from-cabin-button"
                 >
                   Odebrat z chaty
@@ -333,7 +333,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
                     setConfirmAction('delete-user')
                   }}
                   disabled={deleteUser.isPending || isSelf}
-                  title={isSelf ? 'Nemůžete smazat sami sebe' : undefined}
+                  title={isSelf ? 'Vlastní účet smazat nemůžeš' : undefined}
                   data-testid="edit-user-delete-user-button"
                 >
                   Smazat uživatele
@@ -395,7 +395,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
                 if (saveError) setSaveError(null)
                 setPassword(e.target.value)
               }}
-              placeholder="Ponechte prázdné pro zachování stávajícího"
+              placeholder="Nech prázdné, pokud heslo neměníš"
               minLength={8}
               maxLength={100}
               autoComplete="new-password"
@@ -503,8 +503,8 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           setCreateError(
             getNetworkAwareActionMessage(
               error,
-              'Pozvánku se nepodařilo vytvořit. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se pozvánka stihla vytvořit. Zkuste to znovu po obnovení připojení.',
+              'Pozvánku se nepodařilo vytvořit. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se pozvánka stihla vytvořit. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
@@ -523,8 +523,8 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         setActionError(
           getNetworkAwareActionMessage(
             error,
-            'Pozvánku se nepodařilo zrušit. Zkuste to znovu.',
-            'Spojení vypadlo dřív, než se pozvánka stihla zrušit. Zkuste to znovu po obnovení připojení.',
+            'Pozvánku se nepodařilo zrušit. Zkus to znovu.',
+            'Spojení vypadlo dřív, než se pozvánka stihla zrušit. Zkus to znovu po obnovení připojení.',
           ),
         )
       },
@@ -553,7 +553,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
       showToast('Text pozvánky zkopírován', 'success')
       copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000)
     }).catch(() => {
-      setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkuste akci zopakovat nebo zprávu poslat e-mailem.')
+      setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')
       showToast('Nepodařilo se zkopírovat text', 'error')
     })
   }
@@ -564,7 +564,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
 
     const trimmedEmail = emailValue.trim()
     if (!trimmedEmail) {
-      setEmailError('Zadejte e-mail, kam se má pozvánka poslat.')
+      setEmailError('Zadej e-mail, kam se má pozvánka poslat.')
       return
     }
 
@@ -582,8 +582,8 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           setEmailError(
             getNetworkAwareActionMessage(
               error,
-              'Pozvánku se nepodařilo odeslat e-mailem. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se pozvánka stihla odeslat. Zkuste to znovu po obnovení připojení.',
+              'Pozvánku se nepodařilo odeslat e-mailem. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se pozvánka stihla odeslat. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
@@ -638,7 +638,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           {createInvite.isPending ? 'Vytvářím…' : 'Vytvořit pozvánku'}
         </button>
       </form>
-      <p className="admin-form-note">Pro rodinu je nejpraktičtější jednorázová pozvánka. Pole počet použití můžete smazat, pokud chcete sdílený odkaz.</p>
+      <p className="admin-form-note">Pro rodinu je nejpraktičtější jednorázová pozvánka. Pole počet použití můžeš smazat, pokud chceš sdílený odkaz.</p>
       {createError ? (
         <div className="error-message show admin-section-error" role="alert">{createError}</div>
       ) : null}
@@ -872,11 +872,11 @@ export function AdminPage() {
   const workspaceSummary: Record<AdminWorkspace, { title: string; lead: string }> = {
     members: {
       title: 'Správa členů, rolí a lokálních účtů',
-      lead: 'Přidejte člena bez e-mailu, upravte role a rychle zkontrolujte, kdo má do chaty skutečně přístup.',
+      lead: 'Přidej člena bez e-mailu, uprav role a rychle zkontroluj, kdo má do chaty skutečně přístup.',
     },
     invites: {
       title: 'Pozvánky, sdílené odkazy a nové vstupy',
-      lead: 'Když potřebujete přidat nového člověka, řešte to tady: role, platnost, kopírování zprávy i odeslání e-mailem.',
+      lead: 'Když potřebuješ přidat nového člověka, řeš to tady: role, platnost, kopírování zprávy i odeslání e-mailem.',
     },
     cabin: {
       title: 'Společné nastavení chaty v jednom panelu',
@@ -925,7 +925,7 @@ export function AdminPage() {
         <div className="page-card admin-page-card admin-denied-card">
           <span className="admin-kicker">Administrace</span>
           <h1 className="admin-page-title">Přístup odepřen</h1>
-          <p className="admin-page-lead">Nemáte administrátorská oprávnění pro správu účtů, pozvánek ani systémového přehledu.</p>
+          <p className="admin-page-lead">Nemáš administrátorská oprávnění pro správu účtů, pozvánek ani systémového přehledu.</p>
         </div>
       </div>
     )
@@ -943,7 +943,7 @@ export function AdminPage() {
       role: String(fd.get('role') ?? 'user'),
     }
     if (!body.username || !body.password) {
-      showToast('Vyplňte uživatelské jméno a heslo', 'error')
+      showToast('Vyplň uživatelské jméno a heslo', 'error')
       return
     }
     setCreateUserError(null)
@@ -957,8 +957,8 @@ export function AdminPage() {
         setCreateUserError(
           getNetworkAwareActionMessage(
             error,
-            'Uživatele se nepodařilo vytvořit. Zkuste to znovu.',
-            'Spojení vypadlo dřív, než se uživatel stihl vytvořit. Zkuste to znovu po obnovení připojení.',
+            'Uživatele se nepodařilo vytvořit. Zkus to znovu.',
+            'Spojení vypadlo dřív, než se uživatel stihl vytvořit. Zkus to znovu po obnovení připojení.',
           ),
         )
       },
@@ -1058,7 +1058,7 @@ export function AdminPage() {
                 <p>
                   {users.length === 0
                     ? 'Vytvoř první účet a správa uživatelů se začne plnit.'
-                    : 'Zkuste změnit hledaný výraz nebo zrušit aktivní filtr role.'}
+                    : 'Zkus změnit hledaný výraz nebo zrušit aktivní filtr role.'}
                 </p>
                 <div className="admin-empty-actions">
                   {users.length === 0 ? (
@@ -1112,7 +1112,7 @@ export function AdminPage() {
                             <div className="admin-user-title-row">
                               <span className="admin-user-name">{user.username}</span>
                               {currentUser?.userId === user.id ? (
-                                <span className="admin-user-self-badge">Váš účet</span>
+                                <span className="admin-user-self-badge">Tvůj účet</span>
                               ) : null}
                             </div>
                             <div className="admin-user-subline">
@@ -1246,7 +1246,7 @@ export function AdminPage() {
                     <h2 className="admin-card-title">Jak člena přidat</h2>
                   </div>
                   <p className="admin-card-description">
-                    Pozvánka je nejlepší pro většinu rodiny. Lokální účet použijte jen tam, kde nechcete řešit e-mail nebo onboarding přes odkaz.
+                    Pozvánka je nejlepší pro většinu rodiny. Lokální účet použij jen tam, kde nechceš řešit e-mail nebo onboarding přes odkaz.
                   </p>
                 </div>
               </div>

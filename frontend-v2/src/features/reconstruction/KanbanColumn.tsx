@@ -118,8 +118,8 @@ function TaskCard({ item, currentUserId, isGuest = false, onEdit }: TaskCardProp
         setDeleteError(
           getNetworkAwareActionMessage(
             error,
-            'Položku se nepodařilo smazat. Zkuste to znovu.',
-            'Spojení vypadlo dřív, než se položka stihla smazat. Zkuste to znovu po obnovení připojení.',
+            'Položku se nepodařilo smazat. Zkus to znovu.',
+            'Spojení vypadlo dřív, než se položka stihla smazat. Zkus to znovu po obnovení připojení.',
           ),
         )
       },
@@ -192,7 +192,7 @@ function TaskCard({ item, currentUserId, isGuest = false, onEdit }: TaskCardProp
         <ConfirmDialog
           isOpen={showDeleteConfirm}
           title="Smazat položku"
-          message="Opravdu chcete smazat tuto položku?"
+          message="Opravdu chceš smazat tuto položku?"
           confirmLabel="Smazat"
           danger
           loading={deleteItem.isPending}
@@ -275,7 +275,7 @@ function TaskCard({ item, currentUserId, isGuest = false, onEdit }: TaskCardProp
         <ConfirmDialog
           isOpen={showDeleteConfirm}
           title="Smazat položku"
-          message="Opravdu chcete smazat tuto položku?"
+          message="Opravdu chceš smazat tuto položku?"
           confirmLabel="Smazat"
           danger
           loading={deleteItem.isPending}
@@ -347,7 +347,7 @@ function TaskCard({ item, currentUserId, isGuest = false, onEdit }: TaskCardProp
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="Smazat položku"
-        message="Opravdu chcete smazat tuto položku?"
+        message="Opravdu chceš smazat tuto položku?"
         confirmLabel="Smazat"
         danger
         loading={deleteItem.isPending}
