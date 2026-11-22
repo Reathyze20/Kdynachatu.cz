@@ -112,14 +112,20 @@ The application renders above a fullscreen nature-photograph background. Main co
 
 ```tsx
 {/* Page-level wrapper — every page follows this */}
-<div className="p-4 md:p-6 lg:p-8 space-y-6 pb-20 md:pb-0">
+<div className="p-3 md:p-0 space-y-6">
   <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-6 md:p-8">
     {/* Content lives here, never touching outer edges */}
   </div>
 </div>
 ```
 
-Note the `pb-20 md:pb-0` — this accounts for the mobile bottom navigation bar.
+The page renders inside `AppShell`'s `<main id="page-container">`, which already owns the page frame. Don't add outer page padding for it:
+
+- **Mobile (≤ 768 px):** `#page-container` reserves room for the fixed `MobileHeader` (top) and the fixed `MobileNav` (bottom) in `styles/nav.css`. The only source of the bottom bar's height is `--mobile-nav-height`; read that variable if something else must clear the bar (`ZenMode.css` does). The page wrapper adds only the side margin of the cards (`p-3`).
+- **Desktop (≥ 769 px):** `DesktopSidebar` sits on the left, there is no top bar. `.app-shell-body` caps the content at 1440 px, centres it and pads it (`styles/layout.css`), so the wrapper adds no padding (`md:p-0`). For a main column + side panel, use `TwoColumnLayout` (side by side from 1024 px) instead of a hand-made grid.
+- **Never** add `pb-20 md:pb-0` or any other bottom padding for the mobile nav. It duplicates the space `#page-container` already reserves. (Before PR #203 the unlayered global reset also silently beat every Tailwind spacing utility, so such padding was dead code; after it, it doubles the gap.)
+
+`RouteTransitionSkeleton` uses this frame (`p-3 md:p-0`) so the skeleton lines up with the real page.
 
 ### Spacing & Edges
 
@@ -307,7 +313,7 @@ Check `references/component-inventory.md` — it lists every existing component,
 
 - **Touch targets:** Minimum 44×44px for all interactive elements.
 - **Mobile-first:** Start from 320px width, scale up. Use `md:` and `lg:` breakpoints.
-- The app has a bottom `<MobileNav>` with 5 tabs on mobile — account for its height in page padding (`pb-20 md:pb-0`).
+- The app has a fixed bottom `<MobileNav>` with 5 tabs on mobile. `#page-container` already reserves its height (`--mobile-nav-height` in `styles/nav.css`); pages add no padding for it. See "The Core Wrapper Pattern" in Rule 2.
 - All modals must be scrollable on short viewports.
 - Use `aria-label` on icon-only buttons. Use semantic HTML (`<nav>`, `<main>`, `<section>`).
 - Master-detail layouts: on mobile, show only master OR detail (toggle with back button). See Recipe 7 in `references/recipes.md`.
@@ -405,7 +411,8 @@ Before finishing any component, verify:
 - [ ] Modal uses the unified `<Modal>` component
 - [ ] Animations are ≤ `0.3s`, use `easeOut`, and wrap exiting elements in `<AnimatePresence>`
 - [ ] No content touches parent outer edges (generous padding/gaps)
-- [ ] `pb-20 md:pb-0` on page wrapper (mobile nav space)
+- [ ] Page wrapper adds no padding for the shell: `p-3 md:p-0`, no `pb-20 md:pb-0` (`#page-container` reserves the mobile nav space, `.app-shell-body` the desktop frame)
+- [ ] Main column + side panel uses `TwoColumnLayout`, not a hand-made grid
 - [ ] Colors use Emerald (primary) + Slate (neutral) — no rogue palettes
 - [ ] Inline styles use CSS custom properties (`var(--brand-primary)`) — no hardcoded hex
 - [ ] No `window.confirm()` / `window.prompt()` — use `<ConfirmDialog>` / `<PromptDialog>`
