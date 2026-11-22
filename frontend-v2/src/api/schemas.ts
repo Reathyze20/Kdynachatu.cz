@@ -165,6 +165,7 @@ const ShoppingItemSchema = z.object({
   addedById: z.string(),
   createdAt: z.string(),
   isEssential: z.boolean(),
+  linkedInventoryId: z.string().nullable().optional(),
   addedBy: z
     .object({ id: z.string(), username: z.string(), animalIcon: z.string().nullable().optional() })
     .optional(),
