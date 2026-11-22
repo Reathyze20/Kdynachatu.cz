@@ -5,6 +5,7 @@ import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
+import { gasLine } from "@/lib/gasLevel";
 import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
 import { ParticipantStack } from "./ParticipantStack";
 import { CalendarPlus, CircleCheck, DoorOpen, TriangleAlert } from "lucide-react";
@@ -19,14 +20,13 @@ function isValidReservation(r: { from: string; to: string } | null | undefined):
   return !!r.from && !!r.to;
 }
 
-const GAS_LABEL_CZ: Record<string, string> = { full: "plný", half: "půl", low: "dochází", empty: "prázdný" };
-
 /** Arrival briefing derived from the last completed stay's checkout state. */
 function buildArrivalBriefing(lastStay: LastStay): React.ReactNode {
   const s = lastStay.checkoutState;
   if (!s) return null;
   const chips: string[] = [];
-  if (s.gas) chips.push(`Plyn: ${GAS_LABEL_CZ[s.gas] ?? s.gas}`);
+  const gas = gasLine(s.gas);
+  if (gas) chips.push(gas);
   if (s.heatingOff) chips.push("topení vypnuté");
   if (s.waterOff) chips.push("voda uzavřená");
   const hasText = !!(s.broken || s.leftBehind || s.note);
