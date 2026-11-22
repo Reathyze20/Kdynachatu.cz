@@ -9,7 +9,8 @@ import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { extractSupportErrorDetails } from "@/lib/errorDetails";
 import { isoRangesOverlap } from "@/lib/dateUtils";
-import { Home, CalendarClock } from "lucide-react";
+import { Home, CalendarClock, ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface Props {
   open: boolean;
@@ -24,6 +25,21 @@ interface Props {
 
 /** Type the form starts with: a tentative stay stays tentative, anything else counts as firm. */
 const initialType = (existing?: Reservation | null): BookingType => (existing?.status === "soft" ? "soft" : "primary");
+
+/** Same limit as the API (`createReservationSchema`). */
+const PURPOSE_MAX = 100;
+/** Fields under the "Víc" disclosure; an error on any of them has to open it. */
+const MORE_FIELDS = ["notes", "handoverNote", "status"];
+
+/** "Víc" starts open when the edited stay already carries something it hides. */
+const startsWithMoreOpen = (existing?: Reservation | null) =>
+  !!existing && (!!existing.notes || !!existing.handoverNote || existing.status === "soft" || existing.status === "backup");
+
+function validatePurpose(purpose: string): string | undefined {
+  if (!purpose.trim()) return "Vyplňte účel návštěvy.";
+  if (purpose.length > PURPOSE_MAX) return `Účel může mít nejvýš ${PURPOSE_MAX} znaků.`;
+  return undefined;
+}
 
 export function BookingForm({ open, onClose, fromDate, toDate, existing, allReservations, onCreated }: Props) {
   const isEdit = !!existing;
@@ -45,8 +61,10 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const fromRef = useRef<HTMLInputElement>(null);
+  const purposeRef = useRef<HTMLInputElement>(null);
 
   const create = useCreateReservation();
   const update = useUpdateReservation();
@@ -55,6 +73,21 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   const { data: members } = useUsers();
   // Selectable co-occupants: everyone in the cabin except the organizer (current user)
   const selectableMembers = (members ?? []).filter((m) => m.id !== user?.userId);
+  const me = members?.find((m) => m.id === user?.userId);
+
+  const clearError = (field: string) => {
+    if (submitError) setSubmitError(null);
+    if (fieldErrors[field]) setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  /** Ties a field to its error message so a screen reader announces it with the field. */
+  const errorProps = (field: string) =>
+    fieldErrors[field] ? { "aria-invalid": true, "aria-describedby": `${field}-error` } : {};
+
+  const showFieldErrors = (errors: Record<string, string>) => {
+    setFieldErrors(errors);
+    if (Object.keys(errors).some((f) => MORE_FIELDS.includes(f))) setMoreOpen(true);
+  };
 
   const toggleParticipant = (id: string) => {
     if (submitError) setSubmitError(null);
@@ -84,6 +117,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
     setSubmitError(null);
     setFieldErrors({});
     setDeleteError(null);
+    setMoreOpen(startsWithMoreOpen(existing));
   }, [existing, fromDate, toDate, open]);
 
   // Check for overlapping non-backup reservations
@@ -103,6 +137,13 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
     e.preventDefault();
     if (!from || !to) { showToast("Vyplňte datum příjezdu a odjezdu.", "error"); return; }
     if (to < from) { showToast("Datum odjezdu nesmí být před příjezdem.", "error"); return; }
+    const purposeError = validatePurpose(purpose);
+    if (purposeError) {
+      setSubmitError(null);
+      showFieldErrors({ purpose: purposeError });
+      purposeRef.current?.focus();
+      return;
+    }
     const btn = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     if (btn) btn.disabled = true;
     setSubmitting(true);
@@ -129,7 +170,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
         for (const err of validationErrors) {
           newFieldErrors[err.path] = err.message;
         }
-        setFieldErrors(newFieldErrors);
+        showFieldErrors(newFieldErrors);
       } else if (errorDetails.status === 409 && errorDetails.message) {
         // Firm stay collides with another firm one: the server says what to do instead.
         setSubmitError(errorDetails.message);
@@ -213,7 +254,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
           <input type="hidden" value={existing?.id ?? ""} />
 
           {backupWarning && (
-            <div className="backup-warning-message">
+            <div className="backup-warning-message" role="status">
               V tomto termínu existuje jiná rezervace. Vaše bude uložena jako záložní.
             </div>
           )}
@@ -228,8 +269,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                 className={`form-control ${fieldErrors.from ? "is-invalid" : ""}`}
                 value={from}
                 onChange={(e) => {
-                  if (submitError) setSubmitError(null);
-                  if (fieldErrors.from) setFieldErrors(prev => ({ ...prev, from: undefined }));
+                  clearError("from");
                   setFrom(e.target.value);
                 }}
                 required
@@ -245,8 +285,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                 className={`form-control ${fieldErrors.to ? "is-invalid" : ""}`}
                 value={to}
                 onChange={(e) => {
-                  if (submitError) setSubmitError(null);
-                  if (fieldErrors.to) setFieldErrors(prev => ({ ...prev, to: undefined }));
+                  clearError("to");
                   setTo(e.target.value);
                 }}
                 required
@@ -256,100 +295,127 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
           </div>
 
           <div className="form-group">
-            <label htmlFor="purpose-input">Účel návštěvy</label>
+            <span id="booking-who-label" className="booking-field-label">Kdo jede</span>
+            <div className="participant-picker" role="group" aria-labelledby="booking-who-label">
+              {/* The organizer always goes and is never sent in participantIds. */}
+              <span className="participant-chip participant-chip--selected participant-chip--locked" title="Organizátor, jedete vždy">
+                <AnimalAvatar icon={me?.animalIcon ?? user?.animalIcon ?? null} username={me?.username ?? user?.username ?? ""} color={me?.color || undefined} size={22} />
+                <span>Ty</span>
+              </span>
+              {selectableMembers.map((m) => {
+                const selected = participantIds.includes(m.id);
+                return (
+                  <button
+                    type="button"
+                    key={m.id}
+                    className={`participant-chip${selected ? " participant-chip--selected" : ""}`}
+                    onClick={() => toggleParticipant(m.id)}
+                    aria-pressed={selected}
+                  >
+                    <AnimalAvatar
+                      icon={m.animalIcon ?? null}
+                      username={m.username}
+                      color={m.color || undefined}
+                      size={22}
+                    />
+                    <span>{m.username}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <div className="flex items-baseline justify-between gap-2">
+              <label htmlFor="purpose-input">Účel návštěvy</label>
+              <span className="booking-field-hint">povinné · {purpose.length}/{PURPOSE_MAX}</span>
+            </div>
             <input
+              ref={purposeRef}
               id="purpose-input"
               type="text"
               className={`form-control ${fieldErrors.purpose ? "is-invalid" : ""}`}
               value={purpose}
               onChange={(e) => {
-                if (submitError) setSubmitError(null);
-                if (fieldErrors.purpose) setFieldErrors(prev => ({ ...prev, purpose: undefined }));
+                clearError("purpose");
                 setPurpose(e.target.value);
               }}
               placeholder="Víkend, Dovolená…"
-              maxLength={200}
+              aria-required="true"
+              {...errorProps("purpose")}
             />
-            {fieldErrors.purpose && <span className="field-error-msg">{fieldErrors.purpose}</span>}
+            {fieldErrors.purpose && <span id="purpose-error" className="field-error-msg">{fieldErrors.purpose}</span>}
           </div>
 
-          {selectableMembers.length > 0 && (
-            <div className="form-group">
-              <label>
-                Kdo jede s tebou?{" "}
-                {participantIds.length > 0 && (
-                  <span className="char-count">{participantIds.length} vybráno</span>
-                )}
-              </label>
-              <div className="participant-picker" role="group" aria-label="Spolucestující">
-                {selectableMembers.map((m) => {
-                  const selected = participantIds.includes(m.id);
-                  return (
-                    <button
-                      type="button"
-                      key={m.id}
-                      className={`participant-chip${selected ? " participant-chip--selected" : ""}`}
-                      onClick={() => toggleParticipant(m.id)}
-                      aria-pressed={selected}
-                    >
-                      <AnimalAvatar
-                        icon={m.animalIcon ?? null}
-                        username={m.username}
-                        color={m.color || undefined}
-                        size={22}
-                      />
-                      <span>{m.username}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            className="booking-more-toggle"
+            aria-expanded={moreOpen}
+            aria-controls={moreOpen ? "booking-more" : undefined}
+            onClick={() => setMoreOpen((v) => !v)}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+            Víc — vzkaz, poznámka, typ
+          </button>
 
+          <AnimatePresence initial={false}>
+          {moreOpen && (
+          <motion.div
+            id="booking-more"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
           <div className="form-group">
             <label htmlFor="notes-textarea">
               Poznámka <span className="char-count">{notes.length}/1000</span>
             </label>
             <textarea
               id="notes-textarea"
-              className="form-control"
+              className={`form-control ${fieldErrors.notes ? "is-invalid" : ""}`}
               rows={3}
               value={notes}
               onChange={(e) => {
-                if (submitError) setSubmitError(null);
+                clearError("notes");
                 setNotes(e.target.value.slice(0, 1000));
               }}
               placeholder="Interní poznámka…"
+              {...errorProps("notes")}
             />
+            {fieldErrors.notes && <span id="notes-error" className="field-error-msg">{fieldErrors.notes}</span>}
           </div>
 
           <div className="form-group">
             <label htmlFor="handover-notes-textarea">
-              Vzkaz pro další <span className="char-count">{handover.length}/1000</span>
+              Vzkaz pro dalšího <span className="char-count">{handover.length}/1000</span>
             </label>
             <textarea
               id="handover-notes-textarea"
-              className="form-control"
+              className={`form-control ${fieldErrors.handoverNote ? "is-invalid" : ""}`}
               rows={3}
               value={handover}
               onChange={(e) => {
-                if (submitError) setSubmitError(null);
+                clearError("handoverNote");
                 setHandover(e.target.value.slice(0, 1000));
               }}
               placeholder="Co necháváš dalším návštěvníkům…"
+              {...errorProps("handoverNote")}
             />
+            {fieldErrors.handoverNote && <span id="handoverNote-error" className="field-error-msg">{fieldErrors.handoverNote}</span>}
           </div>
 
-          <div className="space-y-3 mb-6 mt-4">
-            <label className="block text-sm font-medium text-slate-700">Typ rezervace</label>
+          <div className="space-y-3 mb-6 mt-4" role="group" aria-labelledby="booking-type-label">
+            <span id="booking-type-label" className="block text-sm font-medium text-slate-700">Typ rezervace</span>
             {isBackup ? (
               <p className="text-sm text-slate-600">Záložní – přidělil systém kvůli kolizi</p>
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
+                  aria-pressed={!soft}
                   onClick={() => {
-                    if (submitError) setSubmitError(null);
+                    clearError("status");
                     setBookingType("primary");
                   }}
                   className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
@@ -368,11 +434,12 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                     <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-emerald-700" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
                   </div>
                 </button>
-              
+
                 <button
                   type="button"
+                  aria-pressed={soft}
                   onClick={() => {
-                    if (submitError) setSubmitError(null);
+                    clearError("status");
                     setBookingType("soft");
                   }}
                   className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
@@ -393,7 +460,11 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                 </button>
               </div>
             )}
+            {fieldErrors.status && <span className="field-error-msg">{fieldErrors.status}</span>}
           </div>
+          </motion.div>
+          )}
+          </AnimatePresence>
           {submitError ? (
             <div className="error-message show" role="alert">{submitError}</div>
           ) : null}
