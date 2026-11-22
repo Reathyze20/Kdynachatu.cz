@@ -11,7 +11,7 @@ import { membersApi } from '@/api/members'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
-import { MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
+import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { useNavigate } from 'react-router-dom'
 import { Download, ScrollText, Settings, Shield } from 'lucide-react'
@@ -42,7 +42,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [emailMessage, setEmailMessage] = useState('')
 
   // ─── Color / Avatar state ───────────────────────────────────────────────────
-  const [selectedColor, setSelectedColor] = useState('#8BB88B')
+  const [selectedColor, setSelectedColor] = useState(FALLBACK_MEMBER_COLOR)
   const [selectedAnimal, setSelectedAnimal] = useState('')
 
   // ─── Security form ──────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   useEffect(() => {
     if (profileData) {
       setEmail(profileData.email ?? '')
-      setSelectedColor(profileData.color ?? '#8BB88B')
+      setSelectedColor(profileData.color ?? FALLBACK_MEMBER_COLOR)
       setSelectedAnimal(profileData.animalIcon ?? '')
     }
   }, [profileData])
@@ -90,7 +90,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setEmail(profileData?.email ?? '')
     setEmailError(false)
     setEmailMessage('')
-    setSelectedColor(profileData?.color ?? '#8BB88B')
+    setSelectedColor(profileData?.color ?? FALLBACK_MEMBER_COLOR)
     setSelectedAnimal(profileData?.animalIcon ?? '')
     setSecurityMessage('')
     setSecurityError(false)

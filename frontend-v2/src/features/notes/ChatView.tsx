@@ -130,7 +130,7 @@ export function ChatView({
   // Participants avatar colors
   const participantInfo = useMemo(() => {
     const seen = new Set<string>();
-    const result: { username: string; color: string; animalIcon: string | null }[] = [];
+    const result: { username: string; color: string | undefined; animalIcon: string | null }[] = [];
     let total = 0;
     for (const n of notes) {
       if (!seen.has(n.username)) {
@@ -139,7 +139,7 @@ export function ChatView({
         if (result.length < 3) {
           result.push({
             username: n.username,
-            color: userMap[n.username]?.color ?? '#a3b19b',
+            color: userMap[n.username]?.color,
             animalIcon: userMap[n.username]?.animalIcon ?? null,
           });
         }
