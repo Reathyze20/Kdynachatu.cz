@@ -1,4 +1,4 @@
-/** „Také jede“: avatary spolucestujících u pobytu v hlavičce teď → příště (#172, #272). */
+/** „Také jede“: avatary a jména spolucestujících u pobytu v hlavičce teď → příště (#172, #272, G4). */
 import type { ReservationParticipantLite } from "@/api/dashboard";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 
@@ -14,6 +14,7 @@ export function ParticipantStack({ participants }: { participants: ReservationPa
           </span>
         ))}
       </div>
+      <span className="status-participants-names">{participants.map((p) => p.username).join(", ")}</span>
     </div>
   );
 }

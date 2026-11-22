@@ -191,7 +191,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           {!now && buildLastStayBlock(data.lastStay)}
           {myNext && !chain.some((n) => n.stay?.id === myNext.id) && (
             <p className="status-header__mine">
-              <span className="status-next-label-personal">Váš pobyt {inDaysLabel(myNext.from)}</span> · {formatDateRange(myNext.from, myNext.to)}
+              <strong>Váš pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}
             </p>
           )}
           {checkoutReminderNode}

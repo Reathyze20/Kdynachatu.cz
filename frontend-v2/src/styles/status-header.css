@@ -1,12 +1,14 @@
 /* ── Hlavička Přehledu teď → příště (#272, návrh #6 díl 2A) ──
    Jedna karta: vlevo kdo je teď na chatě, šipka, vpravo kdo jede příště. Osoba je vždy
-   avatar s iniciálou + jméno (G4). Text 16/14 px z tokenů (G3), barvy z tokenů karty. */
+   avatar s iniciálou + jméno (G4). Barvy z tokenů karty. Text 16/14 px (G3): `max()` drží
+   minimum, dokud tokeny `--font-size-base/sm` nemají 16/14 px (#284). */
+.status-header { --status-header-avatar: 40px; --status-header-sm: max(0.875rem, var(--font-size-sm)); }
 .status-header .status-content { gap: var(--space-md); }
 .status-header .status-chain { margin-top: 0; }
 
 .status-header__label {
   margin: 0;
-  font-size: var(--font-size-sm);
+  font-size: var(--status-header-sm);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -20,28 +22,30 @@
 
 /* Dlouhé jméno se zalomí, neusekne (G3, WCAG 1.4.4) */
 .status-header__name { font-size: var(--font-size-lg); font-weight: 800; line-height: 1.25; color: var(--text-main); overflow-wrap: anywhere; }
-.status-header__when { font-size: var(--font-size-base); line-height: 1.35; color: var(--text-muted); }
+.status-header__when { font-size: max(1rem, var(--font-size-base)); line-height: 1.35; color: var(--text-muted); }
 
-/* Šipka na ose 40px avataru */
-.status-header__arrow { flex-shrink: 0; width: 20px; height: 20px; margin-top: 10px; color: var(--text-muted); }
+/* Šipka na ose avataru */
+.status-header__arrow { flex-shrink: 0; width: 20px; height: 20px; margin-top: calc((var(--status-header-avatar) - 20px) / 2); color: var(--text-muted); }
 
 .status-header__mark {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--status-header-avatar);
+  height: var(--status-header-avatar);
   border-radius: 50%;
 }
 .status-header__mark--free { background: var(--brand-primary); color: var(--text-on-primary); }
 .status-header__mark--none { border: 2px dashed var(--text-placeholder); }
 
 /* Detail pod osobou (účel, noci, s kým), zarovnaný pod jméno */
-.status-header__detail { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: calc(40px + var(--space-sm)); }
+.status-header__detail { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: calc(var(--status-header-avatar) + var(--space-sm)); }
 .status-header__detail .status-participants { margin-top: 0; }
+.status-header .status-participants-label,
+.status-header .status-participants-names,
 .status-header__meta,
-.status-header__mine { margin: 0; font-size: var(--font-size-sm); line-height: 1.4; color: var(--text-muted); }
+.status-header__mine { margin: 0; font-size: var(--status-header-sm); line-height: 1.4; color: var(--text-muted); }
 
 /* Detail pobytu nese hlavička jen na desktopu (upřesnění 1 k návrhu #6) */
 @media (max-width: 1023px) {
