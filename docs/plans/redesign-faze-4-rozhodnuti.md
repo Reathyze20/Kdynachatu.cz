@@ -308,6 +308,19 @@ to důležité** · instalace **B karta jednou po 3. návštěvě** · barvy **A
 > souřadnice slouží filtru akcí i počasí. Přesnou adresu appka nesbírá; sloupec `Cabin.address`
 > jde k odstranění (contract migrace, schvaluje člověk).
 
+> **(a) rozhodnuto 2026-11-22 („podle doporučení“).** Research zdrojů je v #281. Jediný zdroj,
+> který pokrývá akce na venkově (poutě, trhy, akce obcí) a má u akcí polohu, je **Kudy z nudy**
+> (CzechTourism). Přístup k jejich API mají jen smluvní partneři a přidělování je podle jejich
+> FAQ pozastavené. Ticketmaster vrací skoro jen velké akce ve městech a podmínky zakazují komerci,
+> proto ho **nebereme**. Ruční zadávání akcí rodinou také ne.
+> 1. **Uživatel požádá CzechTourism o přístup** (katalog@czechtourism.cz). Text e-mailu připraví agent.
+> 2. **Do té doby jen odkaz ven:** na Přehledu odkaz „Akce v okolí“ na kalendář Kudy z nudy pro kraj
+>    chaty, `https://www.kudyznudy.cz/kalendar-akci/<kraj>` (např. `jihocesky-kraj`, `kraj-vysocina`).
+>    Nic se nestahuje ani neukládá. Kraj se odvodí z vybrané obce (#279, číselník RÚIAN). Filtr podle
+>    okresu ani okruhu v km Kudy z nudy v URL nemá.
+> 3. **(b) a (c) až podle odpovědi CzechTourism.** Karta s akcemi a filtrem 10 / 20 / 50 km dává smysl
+>    jen s daty s polohou. Když přístup nedostanou, zůstane odkaz.
+
 **Tickety (2026-11-22):** nadřazené #268 (sub-issue #66). #269 kontrast štítků · #270 text 16 px +
 dotyk 48/56 · #271 paleta členů · #272 hlavička teď → příště · #273 osa „Potom“ s volnem (blokuje
 #272) · #274 jedna výzva „Visí na tobě“ (blokuje #255) · #275 „Potřebuje pozornost“ · #276 offline a
@@ -315,8 +328,7 @@ stáří dat · #277 karta instalace · #278 tykání · #279 výběr nejbližš
 `Cabin.address` (pro člověka) · #281 mini-design D3 akce v okolí. „Koupím já“ = slib „Přivezu
 z domova“ (#167), rozhodl uživatel 2026-11-22.
 
-Poznámky pro stavbu: „Koupím já“ (díl 4A) je nová akce. Nejblíž je stav „Přivezu z domova“
-z #167, takže před implementací rozhodnout, jestli jde o tentýž slib. Navržená paleta: `#1D5FA8`
+Poznámky pro stavbu: „Koupím já“ (díl 4A) je tentýž slib jako „Přivezu z domova“ z #167. Navržená paleta: `#1D5FA8`
 modrá, `#B3401A` cihlová, `#7A3FA0` fialová, `#1F6F4A` jedlová, `#0E6F7C` petrolejová, `#8A5A00`
 okrová, `#A6306A` vínová, `#4B5563` břidlicová. Stávající barvy členů se přemapují na nejbližší
 barvu z palety, bez migrace.
