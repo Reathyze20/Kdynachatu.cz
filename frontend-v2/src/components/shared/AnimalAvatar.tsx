@@ -92,7 +92,7 @@ export function AnimalAvatar({ icon, username, color: storedColor, size = 48, cl
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: color,
-        color: "#fff",
+        color: "var(--raw-white)",
         fontSize: size * 0.45,
         fontWeight: 700,
         lineHeight: 1,
