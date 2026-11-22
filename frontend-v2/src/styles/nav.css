@@ -518,6 +518,7 @@
     font-size: var(--font-size-sm);
     font-weight: 500;
     padding: 6px 4px;
+    /* fallback v px čte test lišty v layoutCss.test.ts */
     min-height: var(--touch-target-min, 48px);
     border-radius: var(--radius-md);
     transition: color var(--transition-fast), background var(--transition-fast);

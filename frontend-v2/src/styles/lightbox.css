@@ -285,7 +285,7 @@
 
   .lb-desc-input,
   .lb-desc-save {
-    height: 44px;
+    height: var(--touch-target-min);
     min-height: var(--touch-target-min);
   }
 }

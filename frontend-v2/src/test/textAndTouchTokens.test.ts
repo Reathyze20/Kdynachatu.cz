@@ -11,6 +11,7 @@ import buttonTsxRaw from '@/components/ui/button.tsx?raw'
  */
 
 const CSS = import.meta.glob<string>('../**/*.css', { query: '?raw', import: 'default', eager: true })
+const TSX = import.meta.glob<string>(['../**/*.tsx', '!../test/**', '!../**/*.test.tsx'], { query: '?raw', import: 'default', eager: true })
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
 
@@ -43,6 +44,16 @@ function smallFontSizes(css: string): number {
     .filter((m) => !m[2] && (toPx(m[1]) ?? 14) < 14).length
 }
 
+/** Písmo pod 14 px v TSX: Tailwind `text-[11px]` a inline `fontSize: '0.75rem'` nebo `fontSize: 12`. */
+function smallTsxFontSizes(tsx: string): number {
+  return [...tsx.matchAll(/text-\[([\d.]+(?:px|rem))\]|fontSize:\s*(?:['"]([\d.]+(?:px|rem))['"]|(\d+)\b(?!\.))/g)]
+    .filter((m) => (toPx(m[1] ?? m[2] ?? `${m[3]}px`) ?? 14) < 14).length
+}
+
+/** Počet výskytů pro každý soubor, jen soubory s nenulovým počtem. */
+const countPerFile = (files: Record<string, string>, count: (source: string) => number) =>
+  Object.fromEntries(Object.entries(files).map(([file, src]) => [file, count(src)] as const).filter(([, n]) => n > 0))
+
 /**
  * Zbývající dluh G3: počet `font-size` pod 14 px v souborech, které ještě nikdo nepřevedl na tokeny.
  * Smí jen klesat. Když soubor převedeš, sniž číslo (nebo řádek smaž); nový soubor sem nepatří.
@@ -63,6 +74,20 @@ const G3_DEBT: Record<string, number> = {
   '../styles/superadmin.css': 3,
 }
 
+/** Totéž pro TSX (Tailwind a inline styly). */
+const G3_DEBT_TSX: Record<string, number> = {
+  '../components/layout/ProfileDrawer.tsx': 3,
+  '../components/shared/FeatureErrorFallback.tsx': 5,
+  '../components/shared/GlobalFallback.tsx': 6,
+  '../features/gallery/UploadModal.tsx': 1,
+  '../features/landing/LandingPage.tsx': 3,
+  '../features/reservations/ui/BookingForm.tsx': 2,
+  '../features/reservations/ui/CheckoutSection.tsx': 3,
+  '../features/reservations/ui/ReservationDetail.tsx': 16,
+  '../features/shopping/AddToCartModal.tsx': 1,
+  '../features/shopping/BulkAddToCartModal.tsx': 1,
+}
+
 describe('G3 · běžný text 16 px, vedlejší 14 px, nic menšího (#270)', () => {
   it('tokeny: běžný text 16 px, vedlejší 14 px a nejmenší token má aspoň 14 px', () => {
     expect(toPx(token('--font-size-base'))).toBe(16)
@@ -76,12 +101,8 @@ describe('G3 · běžný text 16 px, vedlejší 14 px, nic menšího (#270)', ()
   })
 
   it('písmo pod 14 px zbývá jen v souborech se zapsaným dluhem a dluh neroste', () => {
-    const counts = Object.fromEntries(
-      Object.entries(CSS)
-        .map(([file, css]) => [file, smallFontSizes(css)] as const)
-        .filter(([, n]) => n > 0),
-    )
-    expect(counts).toEqual(G3_DEBT)
+    expect(countPerFile(CSS, smallFontSizes)).toEqual(G3_DEBT)
+    expect(countPerFile(TSX, smallTsxFontSizes)).toEqual(G3_DEBT_TSX)
   })
 })
 

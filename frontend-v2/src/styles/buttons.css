@@ -71,7 +71,7 @@ button:not(:disabled):active,
   transform: scale(0.97) translateY(0) !important;
 }
 
-/* Sizes — i .btn-sm má dotykovou plochu 48 px (B2), menší je jen odsazením */
+/* Velikosti: i .btn-sm má dotykovou plochu 48 px (B2), menší je jen odsazením */
 .btn-sm {
   padding: 6px 14px;
   font-size: var(--font-size-xs);
