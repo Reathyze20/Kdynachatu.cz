@@ -5,20 +5,14 @@
 
 /* ── Layout ────────────────────────────────────────────────────────── */
 
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: var(--space-xl);
-  align-items: stretch;
+/* Sloupce skládá TwoColumnLayout (#209); stránka mu jen předá výšku. */
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   height: 100%;
+  min-width: 0;
   min-height: 0;
-}
-
-@media (max-width: 1024px) {
-  .layout {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
-  }
 }
 
 /* ── Calendar Card ─────────────────────────────────────────────────── */
@@ -26,6 +20,7 @@
 .calendarCard {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
   background: var(--bg-app);
   border-radius: var(--radius-xl);
@@ -85,6 +80,22 @@
   display: flex;
   gap: var(--space-sm);
   flex-wrap: wrap;
+}
+
+/* „Nová rezervace" v hlavičce kalendáře (barvy z .btn-primary); na mobilu jen ikona,
+   text zůstává pro čtečku. */
+button.newReservationButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Stav výběru v hlavičce — nahrazuje statistiky, dokud je aktivní výběr.
@@ -405,6 +416,12 @@
   border-radius: 0;
   margin-left: 0;
   margin-right: 0;
+}
+
+/* Rezervace otevřená v bočním panelu: linka nahoře a dole + tučný text, ne jen barva. */
+.calBarSelected {
+  box-shadow: inset 0 2px 0 var(--text-main), inset 0 -2px 0 var(--text-main);
+  font-weight: 700;
 }
 
 .calBarLabel {
@@ -2183,8 +2200,8 @@ button.btnReset {
 
   /* ── Calendar header: centered row layout ────────────────────── */
   .calendarHeaderBar {
-    flex-direction: column;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
     margin-bottom: 12px;
   }
@@ -2193,7 +2210,8 @@ button.btnReset {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     justify-content: center;
   }
 
@@ -2213,6 +2231,7 @@ button.btnReset {
 
   /* ── Stat badges: compact row ────────────────────────────────── */
   .calendarStats {
+    order: 1;
     width: 100%;
     justify-content: center;
     gap: 6px;

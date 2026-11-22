@@ -1,9 +1,9 @@
 /**
  * ReservationsPage.tsx — Refactored: CSS Modules + Skeletons + Empty States + Ethical Friction
  *
- * Layout:
- *   Left  — CalendarGrid + QuickStats
- *   Right — ReservationList | ReservationDetail
+ * Layout (TwoColumnLayout, #209):
+ *   Main  — CalendarGrid + QuickStats + „Nová rezervace"
+ *   Aside — ReservationList | ReservationDetail (landmark „Rezervace")
  */
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -25,6 +25,7 @@ import { showToast } from "@/lib/toast";
 import { useAuth } from "@/context/AuthContext";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { Modal } from "@/components/shared/Modal";
+import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import styles from "./Reservations.module.css";
 import { isIsoDateInRange } from "@/lib/dateUtils";
 
@@ -177,6 +178,14 @@ export function ReservationsPage() {
     setSelectedReservation(null);
   };
 
+  // Empty booking form (calendar header button)
+  const handleNewReservation = () => {
+    setEditingReservation(null);
+    setBookingFrom("");
+    setBookingTo("");
+    setBookingOpen(true);
+  };
+
   // Assign from detail/list
   const handleAssign = (_: string) => {
     showToast("Funkce přiřazení bude brzy dostupná.", "info");
@@ -185,7 +194,7 @@ export function ReservationsPage() {
   // ── Skeleton while loading ────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className={styles.layout} data-testid="reservations-page" data-reservations-state="loading">
+      <div className={styles.page} data-testid="reservations-page" data-reservations-state="loading">
         <ReservationsSkeleton />
       </div>
     );
@@ -193,7 +202,7 @@ export function ReservationsPage() {
 
   if (isError) {
     return (
-      <div className={styles.layout} data-testid="reservations-page" data-reservations-state="error">
+      <div className={styles.page} data-testid="reservations-page" data-reservations-state="error">
         <FeatureErrorFallback
           error={error as Error}
           resetErrorBoundary={() => {
@@ -216,73 +225,71 @@ export function ReservationsPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className={styles.layout} data-testid="reservations-page" data-reservations-state="ready">
-      {/* ── Left: Calendar ── */}
-      <ErrorBoundary
-        FallbackComponent={(props) => (
-          <FeatureErrorFallback {...props} title="Kalendář rezervací se nepodařilo načíst" />
-        )}
+    <div className={styles.page} data-testid="reservations-page" data-reservations-state="ready">
+      <TwoColumnLayout
+        asideLabel="Rezervace"
+        aside={
+          <div className={styles.listContainer} data-testid="reservations-sidebar">
+            <div className={styles.listScroll}>
+              {selectedReservation ? (
+                <ReservationDetail
+                  reservation={selectedReservation}
+                  onBack={() => setSelectedReservation(null)}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onAssign={handleAssign}
+                />
+              ) : (
+                <ReservationList
+                  reservations={filtered}
+                  allReservations={allReservations}
+                  futureReservations={futureReservations}
+                  month={cal.month}
+                  year={cal.year}
+                  onMonthChange={(m, y) => { cal.goToMonth(m, y); setSelectedDay(null); }}
+                  onShowDetail={setSelectedReservation}
+                  selectedDay={selectedDay}
+                  onClearDayFilter={() => setSelectedDay(null)}
+                />
+              )}
+            </div>
+          </div>
+        }
       >
-        <CalendarGrid
-          month={cal.month}
-          year={cal.year}
-          reservations={allReservations}
-          availabilities={allAvailabilities}
-          currentUserId={user?.userId ?? ""}
-          selectedDay={selectedDay}
-          rangeStart={cal.rangeStart}
-          onGoToPrev={cal.goToPrev}
-          onGoToNext={cal.goToNext}
-          onRangeComplete={handleRangeComplete}
-          onShowMonthList={handleAvailabilityClick}
-          onRangeClear={cal.clearRange}
-          onRangeStartSet={cal.setRangeStart}
-          onShowDetail={setSelectedReservation}
-          onDaySelect={handleDaySelect}
-          onDayClear={() => setSelectedDay(null)}
-          showCreateButton={filtered.length > 0 || !!selectedReservation}
-          quickStatsNode={
-            <QuickStats
-              reservations={allReservations}
-              month={cal.month}
-              year={cal.year}
-            />
-          }
-        />
-      </ErrorBoundary>
-
-      {/* ── Right: Sidebar ── */}
-      <div className={styles.listContainer} data-testid="reservations-sidebar">
-        <div className={styles.listScroll}>
-          {selectedReservation ? (
-            <ReservationDetail
-              reservation={selectedReservation}
-              onBack={() => setSelectedReservation(null)}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onAssign={handleAssign}
-            />
-          ) : (
-            <ReservationList
-              reservations={filtered}
-              allReservations={allReservations}
-              futureReservations={futureReservations}
-              month={cal.month}
-              year={cal.year}
-              onMonthChange={(m, y) => { cal.goToMonth(m, y); setSelectedDay(null); }}
-              onShowDetail={setSelectedReservation}
-              selectedDay={selectedDay}
-              onClearDayFilter={() => setSelectedDay(null)}
-              onNewReservation={() => {
-                setEditingReservation(null);
-                setBookingFrom("");
-                setBookingTo("");
-                setBookingOpen(true);
-              }}
-            />
+        <ErrorBoundary
+          FallbackComponent={(props) => (
+            <FeatureErrorFallback {...props} title="Kalendář rezervací se nepodařilo načíst" />
           )}
-         </div>
-       </div>
+        >
+          <CalendarGrid
+            month={cal.month}
+            year={cal.year}
+            reservations={allReservations}
+            availabilities={allAvailabilities}
+            currentUserId={user?.userId ?? ""}
+            selectedDay={selectedDay}
+            selectedReservationId={selectedReservation?.id ?? null}
+            rangeStart={cal.rangeStart}
+            onGoToPrev={cal.goToPrev}
+            onGoToNext={cal.goToNext}
+            onRangeComplete={handleRangeComplete}
+            onShowMonthList={handleAvailabilityClick}
+            onRangeClear={cal.clearRange}
+            onRangeStartSet={cal.setRangeStart}
+            onShowDetail={setSelectedReservation}
+            onDaySelect={handleDaySelect}
+            onDayClear={() => setSelectedDay(null)}
+            onNewReservation={handleNewReservation}
+            quickStatsNode={
+              <QuickStats
+                reservations={allReservations}
+                month={cal.month}
+                year={cal.year}
+              />
+            }
+          />
+        </ErrorBoundary>
+      </TwoColumnLayout>
 
       {/* ── Modals ── */}
       <BookingForm

@@ -28,6 +28,7 @@ interface CalendarCellProps {
   availabilities: UserAvailability[];
   currentUserId: string;
   selectedDay?: string | null;
+  selectedReservationId: string | null;
   rangeStart: string | null;
   rangeHoverDate: string | null;
   onCellClick: (dateStr: string, isOtherMonth: boolean) => void;
@@ -46,6 +47,7 @@ export function CalendarCell({
   availabilities,
   currentUserId: _currentUserId,
   selectedDay,
+  selectedReservationId,
   rangeStart,
   rangeHoverDate,
   onCellClick,
@@ -122,6 +124,7 @@ export function CalendarCell({
                 const isSingleDay = isStart && isEnd;
                 const isMiddle = !isStart && !isEnd;
                 const hasOverflowBadge = hiddenCount > 0 && index === visible.length - 1;
+                const isSelected = r.id === selectedReservationId;
 
                 const barCls = [
                   styles.calBar,
@@ -132,6 +135,7 @@ export function CalendarCell({
                   isMiddle ? styles.calBarMiddle : "",
                   !isSingleDay && isEnd ? styles.calBarEnd : "",
                   isOtherMonth ? styles.otherMonthBar : "",
+                  isSelected ? styles.calBarSelected : "",
                 ]
                   .filter(Boolean)
                   .join(" ");
@@ -153,12 +157,14 @@ export function CalendarCell({
                     key={r.id}
                     className={barCls}
                     style={barStyle}
+                    aria-current={isSelected ? "true" : undefined}
                     title={`${r.username} (${r.purpose})${r.participants && r.participants.length > 0 ? ` +${r.participants.length}: ${r.participants.map((p) => p.username).join(", ")}` : ""}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onShowDetail(r);
                     }}
                   >
+                    {isSelected ? <span className="sr-only">Vybraná rezervace</span> : null}
                     <span className={styles.calBarLabel}>{showLabel ? r.username : "\u00A0"}</span>
                     {hasOverflowBadge ? (
                       <button
