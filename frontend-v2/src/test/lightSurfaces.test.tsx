@@ -107,7 +107,7 @@ describe('Lehké pozadí po přihlášení (C5a)', () => {
       .filter((r) => !PUBLIC_FILES.some((f) => r.file.endsWith(f)))
       .filter((r) => usesPhoto(r.body))
       .flatMap((r) => r.selectors)
-      .filter((s) => s !== '.photo-backdrop' && !s.startsWith(':root') && !s.startsWith('.zen-'))
+      .filter((s) => s !== '.photo-backdrop' && !s.startsWith(':root'))
     expect(offenders).toEqual([])
   })
 
@@ -146,7 +146,7 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
 
   // Akcenty povolené pravidlem C4a: modály a overlaye, toasty, lišty; plus přihlášení nad fotkou.
   const ALLOWED_BLUR = new Set([
-    '.modal-unified-overlay', '.dialog-overlay', '.lb-overlay', '.zen-overlay',
+    '.modal-unified-overlay', '.dialog-overlay', '.lb-overlay',
     '.toast', '.toast-success', '.toast-error', '.toast-info',
     '.chat-header', '.date-separator-label',
     '.login-container', '.register-container',

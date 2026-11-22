@@ -483,7 +483,7 @@
   /* Jediný zdroj výšky lišty bez bezpečné zóny (#196): 6 px odsazení nahoře
      i dole + 1 px rámeček + záložka asi 53 px (změřeno 66 px). Lišta je
      aspoň takto vysoká (min-height níže); při větším písmu může narůst.
-     Používá ji offset obsahu (#page-container) i přepínač zen módu (ZenMode.css). */
+     Používá ji offset obsahu (#page-container). */
   :root {
     --mobile-nav-height: 66px;
   }
