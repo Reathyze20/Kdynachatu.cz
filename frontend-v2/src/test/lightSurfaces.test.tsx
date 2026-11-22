@@ -107,7 +107,7 @@ describe('Lehké pozadí po přihlášení (C5a)', () => {
       .filter((r) => !PUBLIC_FILES.some((f) => r.file.endsWith(f)))
       .filter((r) => usesPhoto(r.body))
       .flatMap((r) => r.selectors)
-      .filter((s) => s !== '.photo-backdrop' && !s.startsWith(':root') && !s.startsWith('.zen-'))
+      .filter((s) => s !== '.photo-backdrop' && !s.startsWith(':root'))
     expect(offenders).toEqual([])
   })
 
