@@ -85,6 +85,43 @@ describe('MunicipalityPicker', () => {
     expect(screen.getByTestId('picked')).toHaveTextContent('nic')
   })
 
+  it('editing a pick searches by the name again, not by the shown district', async () => {
+    const get = mockSearch(TREBENICE)
+    renderPicker({ initial: TREBENICE[0] })
+
+    await userEvent.type(screen.getByRole('combobox'), '{End}{Backspace}')
+
+    expect(screen.getByRole('combobox')).toHaveValue('Třebenice')
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/municipalities', { params: { q: 'Třebenice' } }))
+    expect(await screen.findAllByRole('option')).toHaveLength(2)
+  })
+
+  it('marks typed text without a pick as invalid', async () => {
+    mockSearch(TREBENICE)
+    renderPicker()
+    const input = screen.getByRole('combobox')
+    expect(input).toBeValid()
+
+    await userEvent.type(input, 'Třebe')
+    expect(input).toBeInvalid()
+
+    await userEvent.click(await screen.findByRole('option', { name: /Litoměřice/ }))
+    expect(input).toBeValid()
+  })
+
+  it('tells apart two namesakes in one district by their code', async () => {
+    mockSearch([
+      { code: 553841, name: 'Mezholezy', district: 'Domažlice', region: 'Plzeňský kraj' },
+      { code: 553859, name: 'Mezholezy', district: 'Domažlice', region: 'Plzeňský kraj' },
+    ])
+    renderPicker()
+
+    await userEvent.type(screen.getByRole('combobox'), 'Mezho')
+    await userEvent.click(await screen.findByRole('option', { name: /kód obce 553859/ }))
+
+    expect(screen.getByRole('combobox')).toHaveValue('Mezholezy (okres Domažlice, kód obce 553859)')
+  })
+
   it('does not search before two characters', async () => {
     const get = mockSearch(TREBENICE)
     renderPicker()

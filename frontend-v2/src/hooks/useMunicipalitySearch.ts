@@ -11,7 +11,7 @@ export const MUNICIPALITY_KEYS = {
 }
 
 const DEBOUNCE_MS = 250
-export const MIN_QUERY_LENGTH = 2
+const MIN_QUERY_LENGTH = 2 // stejně jako municipalitySearchSchema na backendu
 
 export function useMunicipalitySearch(text: string) {
   const trimmed = text.trim()
@@ -33,7 +33,7 @@ export function useMunicipalitySearch(text: string) {
 
   return {
     results: enabled ? (result.data ?? []) : [],
-    isFetching: enabled && result.isFetching,
-    isSettled: enabled && query === trimmed && result.isSuccess,
+    /** Výsledky patří k aktuálnímu textu (zpoždění doběhlo a dotaz se povedl) – teprve pak má smysl hlásit „nic nenalezeno“. */
+    hasFinalResults: enabled && query === trimmed && result.isSuccess,
   }
 }
