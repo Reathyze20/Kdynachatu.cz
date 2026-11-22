@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.6.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.5.0...v1.6.0) (2026-11-22)
+
+
+### Features
+
+* **calendar:** booking form with essentials first and a "Víc" disclosure ([#266](https://github.com/Reathyze20/Kdynachatu.cz/issues/266)) ([d8c5444](https://github.com/Reathyze20/Kdynachatu.cz/commit/d8c54448cf402e24a456cd32cb5431ba2fe9c8e4))
+* **calendar:** two-column reservations page with the detail in the side panel ([#265](https://github.com/Reathyze20/Kdynachatu.cz/issues/265)) ([a9f085e](https://github.com/Reathyze20/Kdynachatu.cz/commit/a9f085e498e7996e151074be06e7f3d5fb9c7db7))
+* **dashboard:** add the compact cabin hero and the invitation empty state ([#237](https://github.com/Reathyze20/Kdynachatu.cz/issues/237)) ([6d7f639](https://github.com/Reathyze20/Kdynachatu.cz/commit/6d7f63943be67a783cb9e74c403dd3576a3dbade))
+* **dashboard:** add the running-low card to the side panel ([#235](https://github.com/Reathyze20/Kdynachatu.cz/issues/235)) ([05b22de](https://github.com/Reathyze20/Kdynachatu.cz/commit/05b22de092782d0dac44a3b8b3cc55d822798c53))
+* **dashboard:** drop the maintenance widget from the overview ([#236](https://github.com/Reathyze20/Kdynachatu.cz/issues/236)) ([11fc7cb](https://github.com/Reathyze20/Kdynachatu.cz/commit/11fc7cb3ff858d1d2b0cf942ee77ed64028b0a0c))
+* **dashboard:** keep weather in the hero and enrich the next arrival ([#241](https://github.com/Reathyze20/Kdynachatu.cz/issues/241)) ([4a3fb3f](https://github.com/Reathyze20/Kdynachatu.cz/commit/4a3fb3f411ed1499facb2a6a4668ebe7a85c5e92))
+* **dashboard:** move next arrival and weather into the side panel ([#232](https://github.com/Reathyze20/Kdynachatu.cz/issues/232)) ([69afb4e](https://github.com/Reathyze20/Kdynachatu.cz/commit/69afb4e417e954d774456b9799de09c4dbcaa529))
+* **dashboard:** stack the overview cards and move the note aside ([#234](https://github.com/Reathyze20/Kdynachatu.cz/issues/234)) ([ebbca3e](https://github.com/Reathyze20/Kdynachatu.cz/commit/ebbca3edd60ef18107b6357435584e314f11499b))
+* **dashboard:** turn nudges into the "visí na vás" action card ([#240](https://github.com/Reathyze20/Kdynachatu.cz/issues/240)) ([1e6559f](https://github.com/Reathyze20/Kdynachatu.cz/commit/1e6559fd68e5b7ed677133f597810a93816fb50e))
+* **shopping:** treat "bring from home" as resolved and record who promised it ([#250](https://github.com/Reathyze20/Kdynachatu.cz/issues/250)) ([676019b](https://github.com/Reathyze20/Kdynachatu.cz/commit/676019b559b36cb20837df5fca793e6796363098))
+* **theme:** light forest background and solid content cards ([#245](https://github.com/Reathyze20/Kdynachatu.cz/issues/245)) ([c9aa191](https://github.com/Reathyze20/Kdynachatu.cz/commit/c9aa191d5a77f7d73c620d346eae51ba78c8c8b0))
+
+
+### Bug Fixes
+
+* **reservations:** save the tentative reservation type on create and edit ([#246](https://github.com/Reathyze20/Kdynachatu.cz/issues/246)) ([d427d0c](https://github.com/Reathyze20/Kdynachatu.cz/commit/d427d0c56b3e36e27f6b0615b7c0cab6ace48d05))
+* **shopping:** show the from-inventory badge based on linkedInventoryId ([#249](https://github.com/Reathyze20/Kdynachatu.cz/issues/249)) ([eb85915](https://github.com/Reathyze20/Kdynachatu.cz/commit/eb85915a469b2c64b71119056920bf7f0edf4dd8))
+
+
+### Performance Improvements
+
+* **chat:** replace the 7.4 MB chat background texture with a 20 kB WebP ([#253](https://github.com/Reathyze20/Kdynachatu.cz/issues/253)) ([6021e9d](https://github.com/Reathyze20/Kdynachatu.cz/commit/6021e9db1bf5150080122b541e058fc341cc4943))
+
 ## [1.5.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.4.2...v1.5.0) (2026-11-21)
 
 
