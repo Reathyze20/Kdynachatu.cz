@@ -71,9 +71,13 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
   const del = useDeleteReservation();
   const { user } = useAuth();
   const { data: members } = useUsers();
-  // Selectable co-occupants: everyone in the cabin except the organizer (current user)
-  const selectableMembers = (members ?? []).filter((m) => m.id !== user?.userId);
-  const me = members?.find((m) => m.id === user?.userId);
+  // The organizer owns the stay: me on a new one, the owner when an admin edits someone else's.
+  const organizerId = existing?.userId ?? user?.userId;
+  const isMyStay = organizerId === user?.userId;
+  const organizer = members?.find((m) => m.id === organizerId);
+  // Selectable co-occupants: everyone in the cabin except the organizer
+  const selectableMembers = (members ?? []).filter((m) => m.id !== organizerId);
+  const organizerName = organizer?.username ?? (isMyStay ? user?.username : existing?.username) ?? "";
 
   const clearError = (field: string) => {
     if (submitError) setSubmitError(null);
@@ -298,9 +302,14 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
             <span id="booking-who-label" className="booking-field-label">Kdo jede</span>
             <div className="participant-picker" role="group" aria-labelledby="booking-who-label">
               {/* The organizer always goes and is never sent in participantIds. */}
-              <span className="participant-chip participant-chip--selected participant-chip--locked" title="Organizátor, jedete vždy">
-                <AnimalAvatar icon={me?.animalIcon ?? user?.animalIcon ?? null} username={me?.username ?? user?.username ?? ""} color={me?.color || undefined} size={22} />
-                <span>Ty</span>
+              <span className="participant-chip participant-chip--selected participant-chip--locked" title="Organizátor rezervace">
+                <AnimalAvatar
+                  icon={organizer?.animalIcon ?? (isMyStay ? user?.animalIcon : null) ?? null}
+                  username={organizerName}
+                  color={organizer?.color || undefined}
+                  size={22}
+                />
+                <span>{isMyStay ? "Ty" : organizerName}</span>
               </span>
               {selectableMembers.map((m) => {
                 const selected = participantIds.includes(m.id);
@@ -364,7 +373,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
             id="booking-more"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
           <div className="form-group">
@@ -405,8 +414,8 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
             {fieldErrors.handoverNote && <span id="handoverNote-error" className="field-error-msg">{fieldErrors.handoverNote}</span>}
           </div>
 
-          <div className="space-y-3 mb-6 mt-4" role="group" aria-labelledby="booking-type-label">
-            <span id="booking-type-label" className="block text-sm font-medium text-slate-700">Typ rezervace</span>
+          <div className="space-y-3 mb-6 mt-4" role="group" aria-labelledby="booking-type-label" aria-describedby={fieldErrors.status ? "status-error" : undefined}>
+            <span id="booking-type-label" className="booking-field-label">Typ rezervace</span>
             {isBackup ? (
               <p className="text-sm text-slate-600">Záložní – přidělil systém kvůli kolizi</p>
             ) : (
@@ -460,7 +469,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                 </button>
               </div>
             )}
-            {fieldErrors.status && <span className="field-error-msg">{fieldErrors.status}</span>}
+            {fieldErrors.status && <span id="status-error" className="field-error-msg">{fieldErrors.status}</span>}
           </div>
           </motion.div>
           )}

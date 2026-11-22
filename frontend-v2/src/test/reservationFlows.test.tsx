@@ -291,4 +291,13 @@ describe('booking form: essentials first, the rest under "Víc"', () => {
     expect(moreToggle()).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByText(/bude uložena jako záložní/)).toBeVisible()
   })
+
+  it('when an admin edits someone else\'s stay, the owner is the fixed organizer and the admin is a co-traveller', async () => {
+    await renderForm({ existing: stay({ userId: 'u-jana', username: 'Jana' }) })
+    const who = screen.getByRole('group', { name: 'Kdo jede' })
+    expect(await within(who).findByRole('button', { name: 'Já' })).toHaveAttribute('aria-pressed', 'false')
+    expect(within(who).getByText('Jana')).toBeInTheDocument()
+    expect(within(who).queryByRole('button', { name: 'Jana' })).toBeNull()
+    expect(within(who).queryByText('Ty')).toBeNull()
+  })
 })
