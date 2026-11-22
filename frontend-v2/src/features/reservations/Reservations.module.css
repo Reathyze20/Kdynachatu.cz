@@ -503,6 +503,14 @@ button.newReservationButton {
   color: transparent !important;
 }
 
+/* G4: pruh, který pokračuje do dalšího týdne, nese jméno i v pondělí. */
+.calBarMiddle .calBarLabel,
+.calBarEnd .calBarLabel,
+.calBarMiddle .calBarInitial,
+.calBarEnd .calBarInitial {
+  color: var(--text-main);
+}
+
 .calBarBackup {
   opacity: 0.7;
   border: 1px dashed currentColor;
@@ -2359,6 +2367,10 @@ button.btnReset {
     margin-top: 0;
     margin-bottom: 0;
     line-height: 1;
+  }
+
+  .calBarLabel {
+    display: none;
   }
 
   .calBarInitial {
