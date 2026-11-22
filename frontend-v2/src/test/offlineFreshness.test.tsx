@@ -29,14 +29,14 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('E4 Čerstvost dat: upozornění nahoře', () => {
-  it('online s čerstvými daty nic, offline „Jste offline · údaje z HH:MM“, po připojení zase nic', () => {
+  it('online s čerstvými daty nic, offline „Jsi offline · údaje z HH:MM“, po připojení zase nic', () => {
     markDataReceived(at(10, 55))
     render(<OfflineBanner />)
     expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.queryByRole('status')).toBeNull()
 
     setOnline(false)
-    expect(screen.getByRole('alert')).toHaveTextContent('Jste offline · údaje z 10:55.')
+    expect(screen.getByRole('alert')).toHaveTextContent('Jsi offline · údaje z 10:55.')
 
     setOnline(true)
     expect(screen.queryByRole('alert')).toBeNull()
@@ -55,7 +55,7 @@ describe('E4 Čerstvost dat: upozornění nahoře', () => {
     render(<OfflineBanner />)
 
     setOnline(false)
-    expect(screen.getByRole('alert')).toHaveTextContent('Jste offline · údaje z 10:55. 1 změna čeká na odeslání.')
+    expect(screen.getByRole('alert')).toHaveTextContent('Jsi offline · údaje z 10:55. 1 změna čeká na odeslání.')
   })
 
   it('data z jiného dne mají u času i datum', () => {

@@ -71,7 +71,7 @@ describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
     expect(api.request.mock.calls.map(([c]) => `${c.method} ${c.url}`)).toEqual(['patch /reservations/r-1/checkout'])
     // Banner nespadne zpět na „Vyplnit protokol“, než se přenačte stav pobytu
     await waitFor(() => expect(screen.queryByText('Čeká na odeslání')).toBeNull())
-    expect(screen.queryByText('Dnes odjíždíte!')).toBeNull()
+    expect(screen.queryByText('Dnes odjíždíš!')).toBeNull()
   })
 
   it('v detailu pobytu: potvrzení bez signálu ukáže štítek místo chyby a po odeslání zmizí', async () => {

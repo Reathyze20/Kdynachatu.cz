@@ -317,7 +317,7 @@ export function ReservationsPage() {
       >
         <div className="space-y-4 py-2">
           <p className="text-slate-600 text-sm">
-            Co byste chtěli v tomto termínu naplánovat?
+            Co chceš v tomto termínu naplánovat?
           </p>
           <div className="grid grid-cols-1 gap-3">
             <button

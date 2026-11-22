@@ -65,7 +65,7 @@ export function AvailabilityModal({ open, onClose, fromDate, toDate, myAvailabil
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!from || !to) { showToast("Vyplňte datum od a do.", "error"); return; }
+    if (!from || !to) { showToast("Vyplň datum od a do.", "error"); return; }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -82,11 +82,11 @@ export function AvailabilityModal({ open, onClose, fromDate, toDate, myAvailabil
         getNetworkAwareActionMessage(
           error,
           editId
-            ? "Dostupnost se nepodařilo upravit. Zkuste to znovu."
-            : "Dostupnost se nepodařilo uložit. Zkuste to znovu.",
+            ? "Dostupnost se nepodařilo upravit. Zkus to znovu."
+            : "Dostupnost se nepodařilo uložit. Zkus to znovu.",
           editId
-            ? "Spojení vypadlo dřív, než se dostupnost stihla upravit. Zkuste to znovu po obnovení připojení."
-            : "Spojení vypadlo dřív, než se dostupnost stihla uložit. Zkuste to znovu po obnovení připojení.",
+            ? "Spojení vypadlo dřív, než se dostupnost stihla upravit. Zkus to znovu po obnovení připojení."
+            : "Spojení vypadlo dřív, než se dostupnost stihla uložit. Zkus to znovu po obnovení připojení.",
         ),
       );
     } finally {
@@ -103,8 +103,8 @@ export function AvailabilityModal({ open, onClose, fromDate, toDate, myAvailabil
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          "Dostupnost se nepodařilo smazat. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se dostupnost stihla smazat. Zkuste to znovu po obnovení připojení.",
+          "Dostupnost se nepodařilo smazat. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se dostupnost stihla smazat. Zkus to znovu po obnovení připojení.",
         ),
       );
     } finally {

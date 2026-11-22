@@ -254,7 +254,7 @@ describe('booking form: essentials first, the rest under "Víc"', () => {
     const purpose = screen.getByLabelText('Účel návštěvy')
     expect(purpose).toHaveAttribute('aria-required', 'true')
     expect(purpose).toHaveAttribute('aria-invalid', 'true')
-    expect(purpose).toHaveAccessibleDescription('Vyplňte účel návštěvy.')
+    expect(purpose).toHaveAccessibleDescription('Vyplň účel návštěvy.')
     expect(api.post).not.toHaveBeenCalled()
   })
 
@@ -289,7 +289,7 @@ describe('booking form: essentials first, the rest under "Víc"', () => {
   it('the backup warning is visible without expanding "Víc"', async () => {
     await renderForm({ allReservations: [stay({ id: 'r-other', userId: 'u-jana', username: 'Jana' })] })
     expect(moreToggle()).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByText(/bude uložena jako záložní/)).toBeVisible()
+    expect(screen.getByText(/uložíme jako záložní/)).toBeVisible()
   })
 
   it('when an admin edits someone else\'s stay, the owner is the fixed organizer and the admin is a co-traveller', async () => {

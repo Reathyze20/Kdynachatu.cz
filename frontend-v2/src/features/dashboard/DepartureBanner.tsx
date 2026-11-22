@@ -94,8 +94,8 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          "Odjezdový protokol se nepodařilo uložit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se odjezdový protokol stihl uložit. Zkuste to znovu po obnovení připojení.",
+          "Odjezdový protokol se nepodařilo uložit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se odjezdový protokol stihl uložit. Zkus to znovu po obnovení připojení.",
         ),
       );
     },
@@ -160,7 +160,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       <ConfirmDialog
         isOpen={incompleteConfirmOpen}
         title="Neúplný checklist"
-        message="Některé položky nejsou odškrtnuté. Opravdu chcete protokol odeslat?"
+        message="Některé položky nejsou odškrtnuté. Opravdu chceš protokol odeslat?"
         confirmLabel="Odeslat"
         onConfirm={handleConfirmedSubmit}
         onCancel={() => setIncompleteConfirmOpen(false)}
@@ -170,8 +170,8 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
         <div className="departure-banner-content">
           <div className="departure-banner-icon" aria-hidden="true"><TriangleAlert className="w-5 h-5" /></div>
           <div className="departure-banner-text">
-            <h3>Dnes odjíždíte!</h3>
-            <p>Nezapomeňte vyplnit odjezdový protokol a nechat vzkaz.</p>
+            <h3>Dnes odjíždíš!</h3>
+            <p>Nezapomeň vyplnit odjezdový protokol a nechat vzkaz.</p>
           </div>
         </div>
         <button id="btn-open-departure" className="button-primary departure-banner-action" onClick={openModal}>
@@ -195,7 +195,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
         }
       >
         <p style={{ color: 'var(--color-text-muted)', marginBottom: 12, fontSize: '0.9rem' }}>
-          Před odjezdem, prosím, zkontrolujte:
+          Před odjezdem, prosím, zkontroluj:
         </p>
         <div className="departure-checklist">
           {checklistItems.map((item, i) => (

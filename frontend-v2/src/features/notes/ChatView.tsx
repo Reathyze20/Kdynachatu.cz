@@ -220,8 +220,8 @@ export function ChatView({
       setDeleteNoteError(
         getNetworkAwareActionMessage(
           error,
-          "Zprávu se nepodařilo smazat. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se zpráva stihla smazat. Zkuste to znovu po obnovení připojení.",
+          "Zprávu se nepodařilo smazat. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se zpráva stihla smazat. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -243,8 +243,8 @@ export function ChatView({
       setEditError(
         getNetworkAwareActionMessage(
           error,
-          "Zprávu se nepodařilo upravit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se zpráva stihla upravit. Zkuste to znovu po obnovení připojení.",
+          "Zprávu se nepodařilo upravit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se zpráva stihla upravit. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -449,7 +449,7 @@ export function ChatView({
         {filtered.length === 0 ? (
           <div className="empty-chat-state">
             <span className="empty-chat-state-icon"></span>
-            <p className="empty-chat-state-text">Zatím tu je ticho...<br />Napište první zprávu.</p>
+            <p className="empty-chat-state-text">Zatím tu je ticho...<br />Napiš první zprávu.</p>
           </div>
         ) : (
           <>
@@ -561,7 +561,7 @@ export function ChatView({
       <ConfirmDialog
         isOpen={deleteNoteId !== null}
         title="Smazat zprávu"
-        message="Opravdu chcete smazat tuto zprávu?"
+        message="Opravdu chceš smazat tuto zprávu?"
         confirmLabel="Smazat"
         danger
         loading={deleteNote.isPending}

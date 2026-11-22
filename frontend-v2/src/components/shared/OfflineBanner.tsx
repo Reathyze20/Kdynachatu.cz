@@ -2,7 +2,7 @@
  * OfflineBanner.tsx — Překlad #offline-banner z vanilla app, rozšířený o pravidlo E4 (#276).
  *
  * Řádek nahoře v AppShell. Online s čerstvými daty se nic neukazuje. Offline řekne
- * „Jste offline · údaje z HH:MM“ a kolik změn čeká v offline frontě (lib/offlineQueue).
+ * „Jsi offline · údaje z HH:MM“ a kolik změn čeká v offline frontě (lib/offlineQueue).
  * Online s daty staršími než hodina řekne „Údaje z HH:MM“ (lib/dataFreshness).
  *
  * CSS: src/styles/skeleton.css → .offline-banner
@@ -40,7 +40,7 @@ export function OfflineBanner() {
     <div className="offline-banner" role="alert" aria-live="polite" data-testid="offline-banner">
       <WifiOff className="w-4 h-4 shrink-0" aria-hidden="true" />
       <span>
-        <strong>Jste offline</strong>{since ? ` · údaje z ${since}. ` : '. '}
+        <strong>Jsi offline</strong>{since ? ` · údaje z ${since}. ` : '. '}
         {pendingCount > 0
           ? `${pendingCount === 1 ? '1 změna čeká' : `${pendingCount} změny/změn čeká`} na odeslání. Po obnovení připojení se uloží automaticky.`
           : 'Změny provedené offline se uloží po obnovení připojení.'}
