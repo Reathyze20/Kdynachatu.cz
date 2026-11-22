@@ -4,16 +4,8 @@ import apiClient from "@/api/client";
 import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservations";
 import { useCheckoutReservation } from "../hooks/useReservations";
 import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
+import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/gasLevel";
 import styles from "../Reservations.module.css";
-
-type GasLevel = "full" | "half" | "low" | "empty";
-const GAS_OPTIONS: { v: GasLevel; label: string }[] = [
-  { v: "full", label: "Plný" },
-  { v: "half", label: "Půl" },
-  { v: "low", label: "Dochází" },
-  { v: "empty", label: "Prázdný" },
-];
-const GAS_LABEL: Record<GasLevel, string> = { full: "plný", half: "půl", low: "dochází", empty: "prázdný" };
 
 function chipStyle(active: boolean): React.CSSProperties {
   return {
@@ -50,7 +42,7 @@ export function CheckoutSection({ reservation }: Props) {
   const [tasks, setTasks] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
   // Structured "state of the cabin" (arrival-briefing source)
-  const [gas, setGas] = useState<GasLevel | null>(null);
+  const [gas, setGas] = useState<WritableGasValue | null>(null);
   const [heatingOff, setHeatingOff] = useState(false);
   const [waterOff, setWaterOff] = useState(false);
   const [broken, setBroken] = useState("");
@@ -140,6 +132,7 @@ export function CheckoutSection({ reservation }: Props) {
       ? `${ts.getDate()}.${ts.getMonth() + 1}.${ts.getFullYear()} ${ts.getHours().toString().padStart(2, "0")}:${ts.getMinutes().toString().padStart(2, "0")}`
       : "";
     const s = completedStatus.checkoutState;
+    const gasSummary = gasLine(s?.gas);
     return (
       <div className={styles.checkoutSection}>
         <div className={styles.checkoutCompleted}>
@@ -151,7 +144,7 @@ export function CheckoutSection({ reservation }: Props) {
         </div>
         {s && (
           <div style={{ marginTop: 10, fontSize: "0.85rem", lineHeight: 1.6 }}>
-            {s.gas && <div><strong>Plyn:</strong> {GAS_LABEL[s.gas as GasLevel] ?? s.gas}</div>}
+            {gasSummary && <div>{gasSummary}</div>}
             {s.heatingOff && <div>Topení vypnuté</div>}
             {s.waterOff && <div>Voda uzavřená</div>}
             {s.broken && <div><strong>Rozbité:</strong> {s.broken}</div>}
@@ -210,12 +203,12 @@ export function CheckoutSection({ reservation }: Props) {
         Vyplň pro dalšího návštěvníka — uvidí to jako přivítání. Vše nepovinné.
       </p>
 
-      {/* Plyn */}
+      {/* Plynová bomba: tři segmenty, opětovné klepnutí výběr zruší (plyn je nepovinný) */}
       <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", display: "block", marginBottom: 6 }}>Plyn</label>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <span id={`gas-label-${reservation.id}`} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", display: "block", marginBottom: 6 }}>{GAS_LABEL}</span>
+        <div role="group" aria-labelledby={`gas-label-${reservation.id}`} style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {GAS_OPTIONS.map((o) => (
-            <button type="button" key={o.v} style={chipStyle(gas === o.v)} onClick={() => { clearErr(); setGas(gas === o.v ? null : o.v); }}>
+            <button type="button" key={o.value} aria-pressed={gas === o.value} style={chipStyle(gas === o.value)} onClick={() => { clearErr(); setGas(gas === o.value ? null : o.value); }}>
               {o.label}
             </button>
           ))}

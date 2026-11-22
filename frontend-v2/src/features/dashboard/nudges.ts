@@ -9,6 +9,7 @@
  */
 import { Car, Flame, House, Luggage, ShoppingCart, type LucideIcon } from "lucide-react";
 import { daysUntil, getLocalTodayIso } from "@/lib/dateUtils";
+import { gasLine } from "@/lib/gasLevel";
 import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
 
 export type NudgeTone = "info" | "action" | "warn";
@@ -27,8 +28,6 @@ export interface Nudge {
   /** Optional message to copy into the family chat. Presence enables the button. */
   whatsapp?: string;
 }
-
-const GAS_CZ: Record<string, string> = { full: "plný", half: "půl", low: "dochází", empty: "prázdný" };
 
 interface BuildNudgesInput {
   reservations?: DashboardReservationsData;
@@ -87,17 +86,16 @@ export function buildNudges({ reservations, shopping }: BuildNudgesInput): Nudge
 
   // 3b. Gas low/empty from the last checkout state.
   const gas = reservations?.lastStay?.checkoutState?.gas;
-  if (gas === "low" || gas === "empty") {
+  const gasTitle = gas === "low" || gas === "empty" ? gasLine(gas) : null;
+  if (gasTitle) {
     nudges.push({
       id: `gas-${gas}-${reservations?.lastStay?.to ?? ""}`,
       tone: "warn",
       icon: Flame,
-      title: `Plyn: ${GAS_CZ[gas]}`,
-      detail: "Poslední návštěva nahlásila docházející plyn.",
+      title: gasTitle,
+      detail: "Nahlásila to poslední návštěva při odjezdu.",
       href: "/shopping",
-      whatsapp: gas === "empty"
-        ? "🔥 Na chatě došel plyn. Někdo přiveze bombu?"
-        : "🔥 Na chatě dochází plyn. Někdo přiveze bombu?",
+      whatsapp: `🔥 ${gasTitle}. Přiveze někdo na chatu novou?`,
     });
   }
 
