@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { getLocalTodayIso } from "@/lib/dateUtils";
 import { isQueuedOffline } from "@/lib/offlineQueue";
-import { useIsQueued } from "@/hooks/useOfflineQueue";
+import { useCheckoutPending } from "@/hooks/useOfflineQueue";
 import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 
 const BANNER_KEY = "departure_dismissed_date";
@@ -33,12 +33,6 @@ function dismissToday(): void {
   sessionStorage.setItem(BANNER_KEY, getLocalTodayIso());
 }
 
-/** Request, který api/client bez signálu uložil do offline fronty, se bere jako odeslaný později. */
-function keepIfQueued(error: unknown): true {
-  if (isQueuedOffline(error)) return true;
-  throw error;
-}
-
 interface Props {
   /** Můj dnes končící pobyt s nedokončenou předávkou (z gate dashboardu) */
   reservationId: string;
@@ -55,8 +49,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
   const [departureNote, setDepartureNote] = useState("");
   const [incompleteConfirmOpen, setIncompleteConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  // Předávka čekající v offline frontě (E4, #276); po odeslání fronty štítek zmizí
-  const checkoutPending = useIsQueued("patch", `/reservations/${reservationId}/checkout`);
+  const checkoutPending = useCheckoutPending(reservationId); // E4, #276
 
   const checklistItems =
     departureChecklist && departureChecklist.length > 0 ? departureChecklist : DEFAULT_CHECKLIST;
@@ -66,13 +59,15 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       // Stejná cesta zápisu jako CheckoutSection. Předávka jde první, aby po selhání
       // nezůstala v chatu zpráva bez dokončené předávky. Volný checklist chaty nemá
       // strukturovaný protějšek, do checkoutState jde jen vzkaz; bez vzkazu zůstane
-      // případný už uložený stav beze změny. Bez signálu jde předávka do offline fronty
-      // a zpráva se zařadí za ni, po připojení se odešlou ve stejném pořadí.
+      // případný už uložený stav beze změny. Bez signálu jde předávka do offline fronty a zpráva
+      // se neposílá (po odmítnuté předávce by zůstala sama); vzkaz je i tak v checkoutState.
       const note = departureNote.trim();
-      const queued = await completeCheckout(reservationId, note ? { note } : undefined).then(
-        () => false,
-        keepIfQueued,
-      );
+      try {
+        await completeCheckout(reservationId, note ? { note } : undefined);
+      } catch (error) {
+        if (isQueuedOffline(error)) return { queued: true };
+        throw error;
+      }
 
       let fullMessage = "**Odjezd z chaty:**\n";
       checklistItems.forEach((item, i) => {
@@ -81,19 +76,15 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       if (note) {
         fullMessage += `\n**Vzkaz:** ${note}`;
       }
-      await apiClient.post("/channels/messages", { message: fullMessage }).catch(keepIfQueued);
-      return { queued };
+      await apiClient.post("/channels/messages", { message: fullMessage });
+      return { queued: false };
     },
     onSuccess: ({ queued }) => {
-      if (queued) {
-        // Banner zůstane se štítkem „Čeká na odeslání“, dokud se fronta neodešle
-        setModalOpen(false);
-        setSubmitError(null);
-        return;
-      }
       dismissToday();
       setDismissed(true);
       setModalOpen(false);
+      // Ve frontě: banner ukazuje štítek „Čeká na odeslání“ a po odeslání zmizí
+      if (queued) return;
       setSubmitError(null);
       showToast("Odjezdový protokol byl uložen.", "success");
       // RESERVATIONS_KEY pokrývá kalendář i gate odjezdu na dashboardu
@@ -112,8 +103,6 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
     },
   });
 
-  if (dismissed) return null;
-
   if (checkoutPending) {
     return (
       <div id="departure-banner" className="departure-banner">
@@ -128,6 +117,8 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       </div>
     );
   }
+
+  if (dismissed) return null;
 
   const openModal = () => {
     setCheckedItems(new Array(checklistItems.length).fill(false));

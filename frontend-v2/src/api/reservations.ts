@@ -83,8 +83,10 @@ export interface CheckoutStatus {
  * CheckoutSection (reservation detail) and DepartureBanner (dashboard).
  * `state === undefined` keeps any previously stored state untouched.
  */
+export const checkoutPath = (id: string) => `/reservations/${id}/checkout`;
+
 export function completeCheckout(id: string, state?: CheckoutState): Promise<CheckoutStatus> {
   return apiClient
-    .patch<CheckoutStatus>(`/reservations/${id}/checkout`, state !== undefined ? { checkoutState: state } : undefined)
+    .patch<CheckoutStatus>(checkoutPath(id), state !== undefined ? { checkoutState: state } : undefined)
     .then((r) => r.data);
 }

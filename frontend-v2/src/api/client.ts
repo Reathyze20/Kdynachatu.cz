@@ -5,7 +5,7 @@
 import axios from 'axios'
 import { showToast } from '@/lib/toast'
 import { rememberApiCorrelation } from '@/lib/observability'
-import { enqueueMutation, isQueueableRequest } from '@/lib/offlineQueue'
+import { enqueueMutation, flushQueue, getQueueLength, isQueueableRequest } from '@/lib/offlineQueue'
 import { markDataReceived } from '@/lib/dataFreshness'
 
 interface AuthErrorPayload {
@@ -128,6 +128,8 @@ apiClient.interceptors.response.use(
     })
     // Čas posledních dat pro upozornění „údaje z HH:MM“ (E4, #276)
     if (response.config.method?.toLowerCase() === 'get') markDataReceived()
+    // Server odpovídá → odeslat frontu i bez eventu `online` (slabý signál ho nemusí vyvolat)
+    if (getQueueLength() > 0) void flushQueue()
 
     return response
   },

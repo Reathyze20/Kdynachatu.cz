@@ -51,7 +51,7 @@ function renderWithClient(ui: ReactNode) {
 }
 
 describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
-  it('na Přehledu: předávka i zpráva jdou do fronty, karta má štítek a po odeslání zmizí', async () => {
+  it('na Přehledu: předávka jde do fronty bez zprávy do chatu, karta má štítek a po odeslání zmizí', async () => {
     renderWithClient(<DepartureBanner reservationId="r-1" departureChecklist={['Zavřít okna']} onRefresh={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Vyplnit protokol' }))
@@ -62,16 +62,16 @@ describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
     expect(screen.getByText('Předávka je vyplněná')).toBeTruthy()
     expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Vyplnit protokol' })).toBeNull()
-    // Pořadí ve frontě: předávka, pak zpráva do chatu
-    expect(getQueueLength()).toBe(2)
+    // Zpráva by po odmítnuté předávce zůstala v chatu sama, proto se neposílá
+    expect(api.post).not.toHaveBeenCalled()
+    expect(getQueueLength()).toBe(1)
 
     await reconnectAndFlush()
 
-    expect(api.request.mock.calls.map(([c]) => `${c.method} ${c.url}`)).toEqual([
-      'patch /reservations/r-1/checkout',
-      'post /channels/messages',
-    ])
+    expect(api.request.mock.calls.map(([c]) => `${c.method} ${c.url}`)).toEqual(['patch /reservations/r-1/checkout'])
+    // Banner nespadne zpět na „Vyplnit protokol“, než se přenačte stav pobytu
     await waitFor(() => expect(screen.queryByText('Čeká na odeslání')).toBeNull())
+    expect(screen.queryByText('Dnes odjíždíte!')).toBeNull()
   })
 
   it('v detailu pobytu: potvrzení bez signálu ukáže štítek místo chyby a po odeslání zmizí', async () => {

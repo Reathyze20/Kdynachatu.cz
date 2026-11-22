@@ -6,6 +6,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from '@/context/AuthContext'
+import { markDataReceived } from '@/lib/dataFreshness'
 
 /**
  * Connect to the Socket.io server, authenticated via JWT.
@@ -29,6 +30,8 @@ export function useSocket() {
       reconnectionDelay: 2000,
     })
 
+    // Heartbeat realtime spojení: změny chodí socketem, data jsou čerstvá i bez GET (E4, #276)
+    socket.io.on('ping', () => markDataReceived())
     socketRef.current = socket
     setSocketGeneration((g) => g + 1)
 

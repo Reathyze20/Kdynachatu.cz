@@ -6,7 +6,7 @@ import { useCheckoutReservation } from "../hooks/useReservations";
 import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
 import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/gasLevel";
 import { isQueuedOffline } from "@/lib/offlineQueue";
-import { useIsQueued } from "@/hooks/useOfflineQueue";
+import { useCheckoutPending } from "@/hooks/useOfflineQueue";
 import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 import styles from "../Reservations.module.css";
 
@@ -41,8 +41,7 @@ export function CheckoutSection({ reservation }: Props) {
   const isPrimary = reservation.status === "primary";
   const eligible = isPrimary && isReservationActiveOrRecent(reservation);
   const checkout = useCheckoutReservation();
-  // Předávka čekající v offline frontě (E4, #276); po odeslání fronty štítek zmizí
-  const checkoutPending = useIsQueued("patch", `/reservations/${reservation.id}/checkout`);
+  const checkoutPending = useCheckoutPending(reservation.id); // E4, #276
 
   const [tasks, setTasks] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
