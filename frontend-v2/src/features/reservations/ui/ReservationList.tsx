@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Plus, ChevronDown, PenLine, X } from "lucide-react";
+import { ChevronDown, PenLine, X } from "lucide-react";
 import type { Reservation } from "@/api/reservations";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal } from "@/components/shared/Modal";
@@ -104,7 +104,6 @@ interface Props {
   year: number;
   onMonthChange: (month: number, year: number) => void;
   onShowDetail: (r: Reservation) => void;
-  onNewReservation: () => void;
   selectedDay?: string | null;
   onClearDayFilter?: () => void;
 }
@@ -121,7 +120,6 @@ export function ReservationList({
   year,
   onMonthChange,
   onShowDetail,
-  onNewReservation,
   selectedDay,
   onClearDayFilter,
 }: Props) {
@@ -339,19 +337,6 @@ export function ReservationList({
           )}
         </div>
       </div>
-
-      {/* ── E. Create reservation button ── */}
-      <button
-        type="button"
-        onClick={onNewReservation}
-        className={`${css.ctaButton} ${css.ctaButtonLayout}`}
-        data-testid="reservation-create-button"
-      >
-        <span className={css.ctaIcon}>
-          <Plus size={18} strokeWidth={2.5} />
-        </span>
-        Vytvořit rezervaci
-      </button>
 
       {/* ── Note edit modal ── */}
       <Modal

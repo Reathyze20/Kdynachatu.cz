@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { getDaysInMonth, getDay, format } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { CalendarCell } from "./CalendarCell";
 import type { Reservation, UserAvailability } from "@/api/reservations";
 import styles from "../Reservations.module.css";
@@ -33,6 +33,8 @@ interface CalendarGridProps {
   availabilities: UserAvailability[];
   currentUserId: string;
   selectedDay?: string | null;
+  /** Reservation whose detail is open in the side panel — marked in the grid. */
+  selectedReservationId?: string | null;
   rangeStart: string | null;
   onGoToPrev: () => void;
   onGoToNext: () => void;
@@ -44,8 +46,8 @@ interface CalendarGridProps {
   onDaySelect: (dateStr: string) => void;
   onDayClear?: () => void;
   quickStatsNode?: React.ReactNode;
-  /** Hide the "Vytvořit rezervaci" button when EmptyState CTA is visible in the right panel */
-  showCreateButton?: boolean;
+  /** „Nová rezervace" in the header — opens an empty booking form (no button without it). */
+  onNewReservation?: () => void;
 }
 
 export function CalendarGrid({
@@ -55,6 +57,7 @@ export function CalendarGrid({
   availabilities,
   currentUserId,
   selectedDay,
+  selectedReservationId = null,
   rangeStart,
   onGoToPrev,
   onGoToNext,
@@ -66,7 +69,7 @@ export function CalendarGrid({
   onDaySelect,
   onDayClear,
   quickStatsNode,
-  showCreateButton: _showCreateButton = true,
+  onNewReservation,
 }: CalendarGridProps) {
   const [rangeHoverDate, setRangeHoverDate] = useState<string | null>(null);
 
@@ -194,6 +197,12 @@ export function CalendarGrid({
             </div>
           ) : quickStatsNode}
         </div>
+        {onNewReservation ? (
+          <button type="button" className={styles.newReservationButton} onClick={onNewReservation} data-testid="reservation-create-button">
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span className="max-md:sr-only">Nová rezervace</span>
+          </button>
+        ) : null}
       </div>
 
       {/* Calendar grid */}
@@ -228,6 +237,7 @@ export function CalendarGrid({
                   onShowMonthList={onShowMonthList}
                   onDaySelect={onDaySelect}
                   selectedDay={selectedDay}
+                  selectedReservationId={selectedReservationId}
                 />
               );
             })}
