@@ -10,7 +10,7 @@ import notesCssRaw from '@/styles/notes.css?raw'
 const MAX_BACKGROUND_BYTES = 50 * 1024
 
 // Jen chat-bg*, ať test zbytečně neinlinuje ostatní velké obrázky z public/.
-const publicImages = import.meta.glob<string>('../../public/chat-bg*.{png,jpg,jpeg,webp,avif}', {
+const chatBackgroundImages = import.meta.glob<string>('../../public/chat-bg*.{png,jpg,jpeg,webp,avif}', {
   query: '?inline',
   import: 'default',
   eager: true,
@@ -36,12 +36,14 @@ describe('pozadí chatu', () => {
     const url = chatBackgroundUrl()
     expect(url, 'notes.css: .notes-chat-area-wrapper::before bez background-image').toBeDefined()
 
-    const image = publicImages[`../../public${url}`]
+    const image = chatBackgroundImages[`../../public${url}`]
     expect(image, `soubor ${url} v public/ neexistuje`).toBeDefined()
     expect(dataUrlBytes(image)).toBeLessThanOrEqual(MAX_BACKGROUND_BYTES)
   })
 
-  it('původní 7,4 MB textura už v public/ není', () => {
-    expect(Object.keys(publicImages)).not.toContain('../../public/chat-bg-forest.png')
+  it('žádná varianta chat-bg* v public/ nepřesahuje 50 kB', () => {
+    for (const [path, image] of Object.entries(chatBackgroundImages)) {
+      expect(dataUrlBytes(image), path).toBeLessThanOrEqual(MAX_BACKGROUND_BYTES)
+    }
   })
 })
