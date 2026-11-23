@@ -1,6 +1,6 @@
 /**
  * Guard + config for `seedStaging.ts`. The seed must never touch a non-staging DB
- * (docs/plans/SEP-1-deploy.md §4.5): DEPLOY_TARGET=staging AND the DB name either ends in
+ * (docs/STAGING-SETUP.md): DEPLOY_TARGET=staging AND the DB name either ends in
  * `_staging` or contains `test`. The `test` branch mirrors the integration-test DB guard
  * (testing/integration/dbGuard.ts) so the seed can run against the disposable harness DB used by
  * `npm run test:integration`. The known production DB `cabin_reservation` matches neither and is

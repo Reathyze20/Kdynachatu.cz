@@ -483,6 +483,23 @@
   color: var(--brand-primary);
 }
 
+/* Odkaz na kalendář Kudy z nudy (#283): tichý, ale 48 px na dotyk a 16 px text (B2, G3) */
+.cabin-hero__events {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  /* rozestup od odkazu „Nastavit lokalitu počasí“, když jsou vedle sebe (B2) */
+  margin-inline-end: var(--touch-target-gap);
+  min-height: var(--touch-target-min);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.cabin-hero__events svg {
+  flex-shrink: 0;
+}
+
 /* ── Pozvánka, když se nic neděje (#172, návrh #1 díl 5 = A) ── */
 .overview-invite .status-content {
   align-items: center;

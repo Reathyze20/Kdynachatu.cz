@@ -1,7 +1,7 @@
-# SEP-1 B3 – Příprava serveru pro staging
+# Příprava serveru pro staging
 
 Jednorázový postup pro `staging.kdynachatu.cz` na **produkčním Netcup VPS** – staging běží jako druhý proces na stejném stroji jako produkce `kdynachatu.cz` (jiný port, jiná DB, jiný adresář). Níže značí `<IP_NETCUP>` veřejnou IP toho serveru (stejnou jako A záznam produkční `kdynachatu.cz`).
-Souvisí s [`SEP-1-deploy.md`](SEP-1-deploy.md) a [`ADR-0002`](../adr/0002-hosting-a-deploy.md). **Produkční adresář, databáze ani nginx blok se nemění.**
+Souvisí s [`ADR-0002`](adr/0002-hosting-a-deploy.md) a [`SERVER-SETUP.md`](SERVER-SETUP.md). **Produkční adresář, databáze ani nginx blok se nemění.**
 
 **Na serveru se nic nebuilduje.** Workflow `deploy-staging.yml` po každém merge do `main` sestaví v GitHub Actions hotový artefakt (Prisma klient, frontend `dist/`, backend bez `node_modules`) a na server ho nasadí stejný skript jako produkci, `scripts/deploy/deploy-release.sh` s `DEPLOY_TARGET=staging`. Na serveru proběhne jen `npm ci --omit=dev`, `prisma migrate deploy` a restart PM2 – při 2 GB RAM sdílených s produkcí by `npm ci` s dev závislostmi nebo Vite build hrozil OOM, který by shodil i rodinu. Staging nemá zálohy DB ani backup cron (jen fiktivní data). Rozložení: `/home/reathyze/chata-staging/.env` a `data/` sdílené, `releases/main-<sha>_<čas>/` jednotlivé verze, `current` odkaz na běžící verzi (při neúspěšném health checku se vrátí na předchozí).
 
