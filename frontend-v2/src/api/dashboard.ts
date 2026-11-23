@@ -201,6 +201,7 @@ export interface CabinSettings {
   name: string;
   weatherLocation: string | null;
   municipalityName?: string | null;
+  municipalityRegion?: string | null; // kraj vybrané obce z RÚIAN (#279), pro odkaz „Akce v kraji“
   latitude?: number | null; // definiční bod vybrané obce (ADR-0006)
   longitude?: number | null;
   departureChecklist: string[];
