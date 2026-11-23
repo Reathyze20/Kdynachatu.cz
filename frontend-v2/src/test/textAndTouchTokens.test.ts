@@ -59,7 +59,7 @@ const countPerFile = (files: Record<string, string>, count: (source: string) => 
  * Smí jen klesat. Když soubor převedeš, sniž číslo (nebo řádek smaž); nový soubor sem nepatří.
  */
 const G3_DEBT: Record<string, number> = {
-  '../features/reservations/Reservations.module.css': 28,
+  '../features/reservations/Reservations.module.css': 27,
   '../styles/admin.css': 31,
   '../styles/cabin-settings.css': 8,
   '../styles/diary.css': 3,
@@ -83,7 +83,7 @@ const G3_DEBT_TSX: Record<string, number> = {
   '../features/landing/LandingPage.tsx': 3,
   '../features/reservations/ui/BookingForm.tsx': 2,
   '../features/reservations/ui/CheckoutSection.tsx': 3,
-  '../features/reservations/ui/ReservationDetail.tsx': 16,
+  '../features/reservations/ui/ReservationDetail.tsx': 13,
   '../features/shopping/AddToCartModal.tsx': 1,
   '../features/shopping/BulkAddToCartModal.tsx': 1,
 }
