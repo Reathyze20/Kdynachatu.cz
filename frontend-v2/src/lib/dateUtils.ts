@@ -11,6 +11,21 @@ export function formatDateRange(from: string, to: string): string {
   return `${f.getDate()}. ${MONTH_NAMES_CZ[f.getMonth()]} – ${t.getDate()}. ${MONTH_NAMES_CZ[t.getMonth()]} ${t.getFullYear()}`;
 }
 
+/**
+ * Rozsah pobytu číselně i s rokem: „12.–14. 7. 2025“, „30. 6. – 2. 7. 2025“,
+ * přes Nový rok „30. 12. 2025 – 2. 1. 2026“. Vstup je kalendářní den YYYY-MM-DD,
+ * čte se po složkách, takže se den neposune v žádném časovém pásmu.
+ */
+export function formatStayRange(from: string, to?: string | null): string {
+  const [fy, fm, fd] = from.slice(0, 10).split("-").map(Number);
+  const full = (d: number, m: number, y: number) => `${d}. ${m}. ${y}`;
+  if (!to || to.slice(0, 10) === from.slice(0, 10)) return full(fd, fm, fy);
+  const [ty, tm, td] = to.slice(0, 10).split("-").map(Number);
+  if (fy !== ty) return `${full(fd, fm, fy)} – ${full(td, tm, ty)}`;
+  if (fm !== tm) return `${fd}. ${fm}. – ${full(td, tm, ty)}`;
+  return `${fd}.–${full(td, tm, ty)}`;
+}
+
 export function formatWeekendRange(start: string, end: string): string {
   const s = new Date(start + "T12:00:00");
   const e = new Date(end + "T12:00:00");

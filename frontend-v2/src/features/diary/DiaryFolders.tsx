@@ -5,29 +5,9 @@ import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { DiaryFolder } from '@/api/diary'
 import { formatCount } from '@/lib/utils'
+import { formatStayRange } from '@/lib/dateUtils'
 
 type PeriodFilter = 'all' | 'current_year' | 'last_year' | 'older'
-
-const TAG_ICONS: Record<string, string> = {
-  relax: '○',
-  party: '○',
-  work: '○',
-  mushroom: '○',
-  hike: '○',
-  family: '○',
-}
-
-function tagIcon(tag: string | null | undefined): string {
-  return (tag && TAG_ICONS[tag]) ?? '○'
-}
-
-function formatDateRange(start: string | null, end: string | null): string {
-  if (!start) return ''
-  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
-  const s = new Date(start).toLocaleDateString('cs-CZ', opts)
-  const e = end ? new Date(end).toLocaleDateString('cs-CZ', opts) : ''
-  return e && e !== s ? `${s} — ${e}` : s
-}
 
 function filterFolders(folders: DiaryFolder[], period: PeriodFilter): DiaryFolder[] {
   if (period === 'all') return folders
@@ -95,12 +75,11 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder 
             data-testid="diary-folder-card"
             data-folder-id={folder.id}
           >
-            <div className="folder-icon-large">{tagIcon(folder.activityTag)}</div>
             <div className="folder-info">
               <span className="folder-name">{folder.name}</span>
-              {(folder.startDate || folder.endDate) && (
+              {folder.startDate && (
                 <span className="folder-dates">
-                  {formatDateRange(folder.startDate, folder.endDate)}
+                  {formatStayRange(folder.startDate, folder.endDate)}
                 </span>
               )}
               <div className="folder-stats-badges">
