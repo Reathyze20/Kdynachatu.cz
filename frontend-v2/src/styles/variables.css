@@ -204,6 +204,8 @@
   --glow: 252 232 204;
   --under-top: 230 218 198;
   --under-bottom: 220 205 181;
+  /* Teplý závoj přes titulní fotku v pozadí (D4, #341, picker 08 varianta A) */
+  --backdrop-veil: linear-gradient(180deg, rgb(30 22 14 / .10), rgb(30 22 14 / .35));
   --lift: 0 1px 2px rgb(0 0 0 / .06), 0 14px 32px -16px rgb(30 20 10 / .45);
 
   /* ── Stavové štítky zásob a plynu (Dostatek · Málo/Dochází · Došlo) ──────

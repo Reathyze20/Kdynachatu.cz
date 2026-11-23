@@ -306,6 +306,37 @@
   }
 }
 
+/* ── Titulní fotka jako pozadí (D4, #341): pevně za obsahem, nad podkladem D z body.
+   Viditelná až po načtení (AppBackdrop), takže text se vykreslí bez čekání na fotku. ── */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.app-backdrop[data-visible='true'] {
+  opacity: 1;
+}
+
+.app-backdrop img,
+.app-backdrop__veil {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.app-backdrop img {
+  object-fit: cover;
+}
+
+.app-backdrop__veil {
+  background: var(--backdrop-veil);
+}
+
 /* ── Dvousloupcové rozložení (#171, TwoColumnLayout): hlavní sloupec + boční panel ──
    Mobil a úzký desktop: pod sebou, hlavní napřed. Od 1024 px vedle sebe (1.5fr : 1fr
    podle mocku 01b), ale jen když boční panel má obsah. Rozložení jen skládá sloupce

@@ -17,6 +17,7 @@ import { OfflineBanner } from '@/components/shared/OfflineBanner'
 import { RouteTransitionSkeleton, getRouteSkeletonVariant } from '@/components/shared/RouteTransitionSkeleton'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
+import { AppBackdrop } from './AppBackdrop'
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -65,6 +66,8 @@ export function AppShell() {
 
   return (
     <div className="app-wrapper" data-testid="app-shell">
+      {/* Titulní fotka chaty jako pozadí za obsahem (#341) */}
+      <AppBackdrop />
       <a href="#page-container" className="skip-to-content">Přeskočit navigaci</a>
       <div id="app-section" className="app-container">
         {/* Mobile header */}
