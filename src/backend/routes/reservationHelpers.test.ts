@@ -1,6 +1,6 @@
 import { test, describe, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { calendarTodayIso, departureGate, isPrimaryCollisionBlocked, nextFreeWeekend, sanitizeCheckoutState } from "./reservationHelpers";
+import { calendarTodayIso, departureGate, handoverFault, isPrimaryCollisionBlocked, nextFreeWeekend, sanitizeCheckoutState } from "./reservationHelpers";
 
 describe("calendarTodayIso (Europe/Prague)", () => {
   test("after local midnight it is already the new day, although UTC is still on the previous one", () => {
@@ -167,5 +167,23 @@ describe("departureGate", () => {
       departingToday: false,
       departingReservationId: null,
     });
+  });
+});
+
+describe("handoverFault", () => {
+  const at = new Date("2026-11-15T16:30:00.000Z");
+
+  test("broken things from the last handover → fault with who and when", () => {
+    assert.deepEqual(handoverFault({ broken: "  Kape kohoutek ", note: "x" }, "Petr", at), {
+      text: "Kape kohoutek",
+      reportedBy: "Petr",
+      reportedAt: "2026-11-15T16:30:00.000Z",
+    });
+  });
+
+  test("an empty or missing field means the next handover overwrote the fault", () => {
+    assert.equal(handoverFault({ broken: "   " }, "Petr", at), null);
+    assert.equal(handoverFault({ note: "Vše v pořádku" }, "Petr", at), null);
+    assert.equal(handoverFault(null, "Petr", at), null);
   });
 });

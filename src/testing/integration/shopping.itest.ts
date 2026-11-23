@@ -366,6 +366,55 @@ describe("shopping: bring from home counts as resolved and restocks the linked i
     assert.equal((await as(app, world.memberA).delete(`/api/shopping-list/${goneItem}`)).status, 200, "vanished inventory");
   });
 
+  // #275 „Potřebuje pozornost“ + „Koupím já“ (slib „Přivezu z domova“)
+  type Attention = { name: string; isEmpty: boolean; inventoryId: string | null; shoppingItemId: string | null };
+  const attentionOf = async (user: TestUser) => (await as(app, user).get("/api/dashboard/shopping")).body.attention as Attention[];
+
+  test("dashboard attention lists own supplies Dochází/Došlo and pending ★ items, not plain ones", async () => {
+    const supplies = [await createInventory(world.memberA, "Toaleťák P", "EMPTY", false), await createInventory(world.memberB, "Cizí P", "EMPTY", false)];
+    const items = [await createLinkedItem("Baterky P", null, { isEssential: true }), await createLinkedItem("Mléko P", null)];
+    try {
+      const rows = await attentionOf(world.memberA);
+      assert.deepEqual(rows.find((r) => r.name === "Toaleťák P"), { name: "Toaleťák P", isEmpty: true, isEssential: false, inventoryId: supplies[0], shoppingItemId: null });
+      assert.equal(rows.find((r) => r.name === "Baterky P")?.shoppingItemId, items[0]);
+      assert.deepEqual(["Mléko P", "Cizí P"].map((n) => rows.some((r) => r.name === n)), [false, false]);
+    } finally {
+      // Ostatní testy v souboru počítají nevyřízené ★ položky seznamu
+      await prisma.shoppingListItem.deleteMany({ where: { id: { in: items } } });
+      await prisma.inventoryItem.deleteMany({ where: { id: { in: supplies } } });
+    }
+  });
+
+  test("Koupím já marks the pending item or adds it with my pledge, restocks the supply and drops it from attention", async () => {
+    const onList = await createInventory(world.memberA, "Sůl P", "LOW");
+    const listed = await createLinkedItem("Sůl P", onList);
+    const offList = await createInventory(world.memberA, "Sirky P", "EMPTY", false);
+
+    const first = await recorded(() => as(app, world.memberA).post(`/api/inventory/${onList}/pledge`));
+    assert.equal(first.result.status, 200);
+    assert.equal(first.result.body.id, listed);
+    assert.deepEqual(await resolvedBy(listed), { status: "bring_from_home", by: world.memberA.id, at: true, price: null, splits: 0 });
+    assert.deepEqual(first.rooms, roomA());
+
+    const second = await as(app, world.adminA).post(`/api/inventory/${offList}/pledge`);
+    assert.equal(second.status, 200);
+    const created = await prisma.shoppingListItem.findUnique({ where: { id: second.body.id }, include: { list: true } });
+    assert.deepEqual([created?.linkedInventoryId, created?.status, created?.purchasedById, created?.list?.cabinId], [offList, "bring_from_home", world.adminA.id, world.cabinA.id]);
+
+    assert.deepEqual([await inventoryOf(onList), await inventoryOf(offList)], [{ status: "OK", inCart: false }, { status: "OK", inCart: false }]);
+    const rows = await attentionOf(world.memberA);
+    assert.deepEqual(["Sůl P", "Sirky P"].map((n) => rows.some((r) => r.name === n)), [false, false]);
+  });
+
+  test("Koupím já on another cabin's supply is 404, changes nothing and emits nothing", async () => {
+    const foreign = await createInventory(world.memberB, "Cizí Q", "EMPTY", false);
+    const { result, rooms } = await recorded(() => as(app, world.memberA).post(`/api/inventory/${foreign}/pledge`));
+    assert.equal(result.status, 404);
+    assert.deepEqual(rooms, []);
+    assert.deepEqual(await inventoryOf(foreign), { status: "EMPTY", inCart: false });
+    assert.equal(await prisma.shoppingListItem.count({ where: { linkedInventoryId: foreign } }), 0);
+  });
+
   test("dashboard and missing-summary treat only Koupit as pending; a ★ item someone will bring leaves the warning", async () => {
     const home = await createLinkedItem("Plyn A", null, { status: "bring_from_home", isEssential: true });
     const pending = await createLinkedItem("Baterky A", null, { isEssential: true });

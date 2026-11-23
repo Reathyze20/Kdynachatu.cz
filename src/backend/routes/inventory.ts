@@ -2,10 +2,11 @@
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import { validate } from "../../validators/validate";
-import { createInventoryItemSchema, updateInventoryItemSchema, addToCartSchema } from "../../validators/schemas";
+import { createInventoryItemSchema, updateInventoryItemSchema, addToCartSchema, inventoryIdParamsSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { emitToCabin } from "../../utils/socket";
+import { linkedInventoryChange } from "./shoppingItemStatus";
 
 const router = Router();
 
@@ -227,6 +228,46 @@ router.post("/:id/add-to-cart", protect, requireCabin, validate(addToCartSchema)
   } catch (error) {
     logger.error("INVENTORY", "Failed to add inventory item to cart", { error: String(error) });
     res.status(500).json({ message: "Nepodařilo se přidat do nákupu." });
+  }
+});
+
+// ============================================================================
+//  POST /:id/pledge — „Koupím já“ z Přehledu (#275) = slib „Přivezu z domova“ (#167)
+//  Položku nákupu zásoby označí mým slibem; když na aktivním seznamu není, přidá ji
+//  (do nejnovějšího seznamu, jinak do nového „Nákup“). Slib zásobu doplní jako každé vyřešení.
+// ============================================================================
+router.post("/:id/pledge", protect, requireCabin, validate(inventoryIdParamsSchema, "params"), async (req: Request, res: Response) => {
+  const cabinId = req.user!.cabinId!;
+  const userId = req.user!.userId;
+  try {
+    const supply = await prisma.inventoryItem.findFirst({ where: { id: req.params.id, cabinId } });
+    if (!supply) return res.status(404).json({ message: "Položka nenalezena." });
+
+    const activeList = { cabinId, isResolved: false, isPantry: false };
+    const pledge = { status: "bring_from_home" as const, purchasedById: userId, purchasedAt: new Date(), price: null };
+    const { item, created } = await prisma.$transaction(async (tx) => {
+      const existing = await tx.shoppingListItem.findFirst({ where: { linkedInventoryId: supply.id, status: "pending", list: activeList } });
+      if (existing) {
+        await tx.shoppingItemSplit.deleteMany({ where: { itemId: existing.id } });
+        const updated = await tx.shoppingListItem.update({ where: { id: existing.id }, data: pledge });
+        await tx.inventoryItem.updateMany({ where: { id: supply.id, cabinId }, data: linkedInventoryChange("restock", supply.status) });
+        return { item: updated, created: false };
+      }
+      const list = (await tx.shoppingList.findFirst({ where: activeList, orderBy: { createdAt: "desc" } }))
+        ?? (await tx.shoppingList.create({ data: { name: "Nákup", createdById: userId, cabinId } }));
+      const createdItem = await tx.shoppingListItem.create({
+        data: { name: supply.name, listId: list.id, addedById: userId, linkedInventoryId: supply.id, isEssential: supply.isEssential, ...pledge },
+      });
+      await tx.inventoryItem.updateMany({ where: { id: supply.id, cabinId }, data: linkedInventoryChange("restock", supply.status) });
+      return { item: createdItem, created: true };
+    });
+
+    emitToCabin(cabinId, created ? "shopping:item:added" : "shopping:item:updated", { id: item.id, linkedInventoryId: supply.id, status: item.status });
+    emitToCabin(cabinId, "inventory:updated", { id: supply.id });
+    res.json({ id: item.id, status: item.status, purchasedById: item.purchasedById });
+  } catch (error) {
+    logger.error("INVENTORY", "Failed to pledge inventory item", { error: String(error) });
+    res.status(500).json({ message: "Nepodařilo se uložit slib." });
   }
 });
 
