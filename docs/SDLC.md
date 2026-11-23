@@ -109,7 +109,7 @@ Postup krok za krokem je ve skillu `database-migrations` (`.claude/skills/databa
 |---|---|---|
 | Ruleset pro `main` | Require pull request, **0 required approvals**, block force push, block deletion | Sólo autor nemůže schválit vlastní PR |
 | Required status checks | `preflight` (workflow CI), `guardrails` (workflow Guardrails) | Hlavní brána proti chybám AI |
-| Require branches up to date | zapnout | Testy běží proti aktuálnímu `main` |
+| Require branches up to date | vypnuto (od 2026-11-23) | Každý merge jinak posílal ostatní PR do „BEHIND“ a vyžadoval ruční update; merge queue osobní repo nemá. Kolize dvou PR zachytí CI na `main` po merge |
 | Secret scanning + push protection | zapnout | Brání commitu secrets |
 | CodeQL | default setup, JavaScript/TypeScript | Statická analýza v PR |
 | Dependabot alerts + security updates | zapnout (`.github/dependabot.yml` je v repu) | Zranitelné závislosti |
