@@ -48,7 +48,7 @@ describe('cabin signup closed (CABIN_SIGNUP_ENABLED)', () => {
     renderPage(<AuthPage />)
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith('/signup-status'))
     expect(screen.getByTestId('login-form')).toBeInTheDocument()
-    expect(screen.queryByText(/Zaregistrujte se/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Zaregistruj se/)).not.toBeInTheDocument()
   })
 
   it('onboarding offers cabin creation when signup is open', async () => {

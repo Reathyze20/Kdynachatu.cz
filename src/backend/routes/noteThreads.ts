@@ -122,7 +122,7 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
         }
 
         if (req.user.role !== "admin" && thread.createdById !== req.user.userId) {
-            return res.status(403).json({ message: "Nemáte oprávnění smazat tuto záložku." });
+            return res.status(403).json({ message: "Nemáš oprávnění smazat tuto záložku." });
         }
 
         await prisma.noteThread.delete({

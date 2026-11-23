@@ -77,8 +77,8 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
       setSaveError(
         getNetworkAwareActionMessage(
           error,
-          'Zápis se nepodařilo uložit. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zápis stihl uložit. Zkuste to znovu po obnovení připojení.',
+          'Zápis se nepodařilo uložit. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zápis stihl uložit. Zkus to znovu po obnovení připojení.',
         ),
       )
       return false
@@ -109,8 +109,8 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          'Zápis se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zápis stihl smazat. Zkuste to znovu po obnovení připojení.',
+          'Zápis se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zápis stihl smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -272,7 +272,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         title="Vytrhnout zápisník"
-        message="Opravdu chcete vytrhnout tento zápisník? Tato akce je nevratná."
+        message="Opravdu chceš vytrhnout tento zápisník? Tato akce je nevratná."
         confirmLabel="Vytrhnout"
         danger
         loading={deleteEntry.isPending}

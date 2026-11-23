@@ -145,7 +145,7 @@ export function PhotoGrid({
           <div className="gallery-empty-state" style={{ gridColumn: '1 / -1' }}>
             <Upload size={40} strokeWidth={1} style={{ color: 'var(--text-placeholder)' }} />
             <p className="gallery-empty-title">Album je prázdné</p>
-            <p className="gallery-empty-subtitle">Nahrajte své první fotky</p>
+            <p className="gallery-empty-subtitle">Nahraj své první fotky</p>
             {!isGuest && (
               <button className="btn-primary" onClick={onUpload} style={{ marginTop: 12 }} data-testid="gallery-empty-upload-button">
                 <Upload size={16} /> Nahrát fotky

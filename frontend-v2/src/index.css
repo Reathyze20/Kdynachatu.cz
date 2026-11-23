@@ -25,6 +25,7 @@
 
 /* ─── Stránkové styly ─── */
 @import './styles/dashboard.css';
+@import './styles/status-header.css';
 @import './styles/reservations.css';
 @import './styles/calendar.css';
 @import './styles/notes.css';

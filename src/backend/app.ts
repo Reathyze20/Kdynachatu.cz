@@ -44,6 +44,9 @@ import workspaceRoutes from "./routes/workspace";
 import invitesRoutes from "./routes/invites";
 import cabinRoutes from "./routes/cabin";
 import wallpapersRoutes from "./routes/wallpapers";
+import { municipalitySearchHandler } from "./routes/municipalities";
+import { validate } from "../validators/validate";
+import { municipalitySearchSchema } from "../validators/schemas";
 import { demoAccountsHandler, resolveDemoAccounts } from "./routes/demoAccounts";
 
 export interface CreateAppOptions {
@@ -102,7 +105,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const apiLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 500,
-    message: "Příliš mnoho požadavků. Zkuste to prosím za chvíli.",
+    message: "Příliš mnoho požadavků. Zkus to za chvíli.",
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => req.path === "/api/health",
@@ -112,7 +115,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const authLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 30,
-    message: "Příliš mnoho pokusů o přihlášení. Zkuste to prosím později.",
+    message: "Příliš mnoho pokusů o přihlášení. Zkus to později.",
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -122,7 +125,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const loginLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 10,
-    message: { message: "Příliš mnoho neúspěšných pokusů o přihlášení. Zkuste to prosím za 15 minut." },
+    message: { message: "Příliš mnoho neúspěšných pokusů o přihlášení. Zkus to za 15 minut." },
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true,
@@ -255,6 +258,9 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
 
   // Rychlé přihlášení demo účty – neprázdné jen na stagingu (viz routes/demoAccounts.ts)
   app.get("/api/demo-accounts", demoAccountsHandler(resolveDemoAccounts(process.env)));
+
+  // Veřejné našeptávání obcí (číselník RÚIAN) pro registraci nové chaty (viz routes/municipalities.ts)
+  app.get("/api/municipalities", validate(municipalitySearchSchema, "query"), municipalitySearchHandler);
 
   // API routes
   app.use("/api/dashboard", dashboardRoutes);

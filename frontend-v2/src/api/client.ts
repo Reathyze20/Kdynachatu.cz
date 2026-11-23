@@ -5,7 +5,8 @@
 import axios from 'axios'
 import { showToast } from '@/lib/toast'
 import { rememberApiCorrelation } from '@/lib/observability'
-import { enqueueMutation, isQueueableRequest } from '@/lib/offlineQueue'
+import { enqueueMutation, flushQueue, getQueueLength, isQueueableRequest } from '@/lib/offlineQueue'
+import { markDataReceived } from '@/lib/dataFreshness'
 
 interface AuthErrorPayload {
   code?: string
@@ -125,6 +126,10 @@ apiClient.interceptors.response.use(
       method: response.config.method?.toUpperCase(),
       url: response.config.url,
     })
+    // Čas posledních dat pro upozornění „údaje z HH:MM“ (E4, #276)
+    if (response.config.method?.toLowerCase() === 'get') markDataReceived()
+    // Server odpovídá → odeslat frontu i bez eventu `online` (slabý signál ho nemusí vyvolat)
+    if (getQueueLength() > 0) void flushQueue()
 
     return response
   },
@@ -137,7 +142,7 @@ apiClient.interceptors.response.use(
         showToast(
           {
             title: 'Uloženo do fronty',
-            detail: 'Jste offline — změna se odešle automaticky po obnovení připojení.',
+            detail: 'Jsi offline — změna se odešle automaticky po obnovení připojení.',
           },
           'info',
         )
@@ -148,7 +153,7 @@ apiClient.interceptors.response.use(
       // Throttle: show toast max once per 10 seconds to avoid spam
       if (now - lastNetworkErrorToast > 10_000) {
         lastNetworkErrorToast = now
-        showToast('Chyba připojení k serveru. Zkontrolujte internet.', 'error')
+        showToast('Chyba připojení k serveru. Zkontroluj internet.', 'error')
       }
       return Promise.reject(error)
     }
@@ -174,14 +179,14 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 403 && authError?.code === ACCOUNT_BANNED_CODE && !shouldIgnoreAuthError) {
       clearStoredAuthState()
-      showToast(authError.message || 'Tento účet byl zablokován. Kontaktujte administrátora.', 'error')
+      showToast(authError.message || 'Tento účet byl zablokován. Kontaktuj administrátora.', 'error')
       window.dispatchEvent(new CustomEvent('auth:blocked'))
       return Promise.reject(error)
     }
 
     if (error.response?.status === 401 && !shouldIgnoreAuthError) {
       clearStoredAuthState()
-      showToast('Relace vypršela, přihlaste se znovu', 'error')
+      showToast('Relace vypršela, přihlas se znovu', 'error')
       window.dispatchEvent(new CustomEvent('auth:expired'))
     }
     return Promise.reject(error)

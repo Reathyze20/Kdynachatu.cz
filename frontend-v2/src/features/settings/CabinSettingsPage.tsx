@@ -11,6 +11,8 @@ import { useCabinSettings, useUpdateCabinSettings } from './hooks/useCabinSettin
 import { showToast } from '@/lib/toast'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
+import type { MunicipalityOption } from '@/api/municipalities'
+import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -152,7 +154,7 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 
 export function CabinSettingsPanel({
   title = 'Nastavení chaty',
-  subtitle = 'Přizpůsobte si svou chatu podle sebe',
+  subtitle = 'Přizpůsob si svou chatu podle sebe',
   showBackButton = false,
   onBack,
 }: CabinSettingsPanelProps) {
@@ -171,7 +173,9 @@ export function CabinSettingsPanel({
   // Form state
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [weatherLocation, setWeatherLocation] = useState('')
+  const [municipality, setMunicipality] = useState<MunicipalityOption | null>(null)
+  const [municipalityPending, setMunicipalityPending] = useState(false)
+  const [legacyLocationRemoved, setLegacyLocationRemoved] = useState(false)
   const [welcomeMessage, setWelcomeMessage] = useState('')
   const [rules, setRules] = useState('')
   const [isWinterized, setIsWinterized] = useState(false)
@@ -187,7 +191,11 @@ export function CabinSettingsPanel({
     if (!settings) return
     setName(settings.name ?? '')
     setDescription(settings.description ?? '')
-    setWeatherLocation(settings.weatherLocation ?? '')
+    setMunicipality(
+      settings.municipalityCode && settings.municipalityName
+        ? { code: settings.municipalityCode, name: settings.municipalityName, district: settings.municipalityDistrict ?? '', region: settings.municipalityRegion ?? '' }
+        : null,
+    )
     setWelcomeMessage(settings.welcomeMessage ?? '')
     setRules(settings.rules ?? '')
     setIsWinterized(settings.isWinterized ?? false)
@@ -206,6 +214,14 @@ export function CabinSettingsPanel({
       return
     }
 
+    // Napsaný text bez výběru obce neukládat.
+    if (municipalityPending) {
+      showToast('Vyber nejbližší obec ze seznamu, nebo pole vymaž.', 'error')
+      return
+    }
+    // Bez výběru zůstane stará textová lokalita; smazání obce nebo odebrání staré lokality pošle null.
+    const municipalityCode = municipality ? municipality.code : settings?.municipalityCode || legacyLocationRemoved ? null : undefined
+
     const cleanChecklist = checklist.map((s) => s.trim()).filter((s) => s.length > 0)
 
     setSaveError(null)
@@ -216,7 +232,7 @@ export function CabinSettingsPanel({
         name: name.trim(),
         description: description.trim() || null,
         welcomeMessage: welcomeMessage.trim() || null,
-        weatherLocation: weatherLocation.trim() || null,
+        municipalityCode,
         rules: rules.trim() || null,
         departureChecklist: cleanChecklist,
         isWinterized,
@@ -234,14 +250,14 @@ export function CabinSettingsPanel({
           setSaveError(
             getNetworkAwareActionMessage(
               error,
-              'Nastavení chaty se nepodařilo uložit. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se nastavení chaty stihlo uložit. Zkuste to znovu po obnovení připojení.',
+              'Nastavení chaty se nepodařilo uložit. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se nastavení chaty stihlo uložit. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
       },
     )
-  }, [name, description, welcomeMessage, weatherLocation, rules, isWinterized, checklist, features, updateSettings])
+  }, [name, description, welcomeMessage, municipality, municipalityPending, legacyLocationRemoved, settings, rules, isWinterized, checklist, features, updateSettings])
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -354,7 +370,7 @@ export function CabinSettingsPanel({
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Základní informace</h2>
-                    <p>Jak se vaše chata jmenuje a kde se nachází</p>
+                    <p>Jak se chata jmenuje a kde se nachází</p>
                   </div>
 
                   <div className="cs-field">
@@ -389,22 +405,29 @@ export function CabinSettingsPanel({
                   </div>
 
                   <div className="cs-field">
-                    <label htmlFor="cs-weather-location">
-                      Přibližná lokalita (pro počasí){' '}
+                    <label htmlFor="cs-municipality">
+                      Nejbližší obec (pro počasí){' '}
                       <span className="cs-optional">(nepovinné)</span>
                     </label>
-                    <input
-                      type="text"
-                      id="cs-weather-location"
-                      maxLength={100}
-                      value={weatherLocation}
-                      onChange={(e) => setWeatherLocation(e.target.value)}
-                      placeholder="Např. Třebenice nebo 412 01"
-                      data-testid="cabin-settings-weather-location-input"
+                    <MunicipalityPicker
+                      id="cs-municipality"
+                      value={municipality}
+                      onChange={setMunicipality}
+                      onPendingChange={setMunicipalityPending}
+                      placeholder="Např. Třebenice"
+                      testId="cabin-settings-municipality-input"
                     />
+                    {settings?.weatherLocation && !settings.municipalityCode && !legacyLocationRemoved && (
+                      <span className="cs-hint" data-testid="cabin-settings-legacy-location">
+                        Teď je uložená jen jako text: „{settings.weatherLocation}“. Vyber obec ze seznamu, ať počasí
+                        chodí ze správného místa.{' '}
+                        <button type="button" className="min-h-11 underline" onClick={() => setLegacyLocationRemoved(true)}>
+                          Odebrat starou lokalitu
+                        </button>
+                      </span>
+                    )}
                     <span className="cs-hint">
-                      Z bezpečnostních důvodů úmyslně neukládáme přesnou adresu ani GPS vaší chaty.
-                      K zobrazení počasí nám stačí pouze název nejbližší obce nebo PSČ.
+                      Z bezpečnostních důvodů neukládáme přesnou adresu ani GPS chaty, jen nejbližší obec.
                     </span>
                   </div>
                 </section>
@@ -412,7 +435,7 @@ export function CabinSettingsPanel({
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Uvítání a pravidla</h2>
-                    <p>Nastavte tón komunikace vaší chaty</p>
+                    <p>Nastav tón komunikace chaty</p>
                   </div>
 
                   <div className="cs-field">
@@ -489,7 +512,7 @@ export function CabinSettingsPanel({
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Aktivní moduly</h2>
-                    <p>Zapněte nebo vypněte funkce podle potřeb vaší rodiny</p>
+                    <p>Zapni nebo vypni funkce podle potřeb rodiny</p>
                   </div>
                   <FeatureToggles
                     features={features}

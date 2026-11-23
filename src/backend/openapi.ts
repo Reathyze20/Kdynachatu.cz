@@ -123,11 +123,11 @@ const schemas: Record<string, JsonSchema> = {
   },
   RegisterRequest: {
     type: "object",
-    required: ["cabinName", "weatherLocation", "username", "email", "password"],
+    required: ["cabinName", "municipalityCode", "username", "email", "password"],
     properties: {
       cabinName: { type: "string", example: "Chata Trebenice" },
       subdomain: { type: "string", nullable: true, example: "trebenice" },
-      weatherLocation: { type: "string", example: "Trebenice" },
+      municipalityCode: { type: "integer", description: "Kod nejblizsi obce v RUIAN z GET /api/municipalities", example: 565768 },
       username: { type: "string", example: "novyadmin" },
       email: { type: "string", format: "email", example: "admin@example.cz" },
       password: { type: "string", format: "password", example: "<vase-heslo>" },
@@ -219,6 +219,26 @@ const schemas: Record<string, JsonSchema> = {
       },
     },
   },
+  MunicipalitySearchResponse: {
+    type: "object",
+    required: ["municipalities"],
+    properties: {
+      municipalities: {
+        type: "array",
+        description: "Az 10 obci; obce se stejnym nazvem jako dotaz vzdy vsechny",
+        items: {
+          type: "object",
+          required: ["code", "name", "district", "region"],
+          properties: {
+            code: { type: "integer", description: "Kod obce v RUIAN", example: 565768 },
+            name: { type: "string", example: "Třebenice" },
+            district: { type: "string", description: "Okres", example: "Litoměřice" },
+            region: { type: "string", description: "Kraj", example: "Ústecký kraj" },
+          },
+        },
+      },
+    },
+  },
   CabinSettings: {
     type: "object",
     required: ["id", "name", "subdomain", "weatherLocation", "isWinterized", "features", "createdAt"],
@@ -235,7 +255,13 @@ const schemas: Record<string, JsonSchema> = {
         items: { type: "string" },
       },
       coverPhotoUrl: { type: "string", nullable: true },
-      weatherLocation: { type: "string", nullable: true, example: "Trebenice" },
+      weatherLocation: { type: "string", nullable: true, example: "Třebenice", description: "Nazev obce; u chat bez vybrane obce stary volny text" },
+      municipalityCode: { type: "integer", nullable: true, example: 565768 },
+      municipalityName: { type: "string", nullable: true, example: "Třebenice" },
+      municipalityDistrict: { type: "string", nullable: true, example: "Litoměřice" },
+      municipalityRegion: { type: "string", nullable: true, example: "Ústecký kraj" },
+      latitude: { type: "number", nullable: true, description: "Definicni bod obce (WGS84), ne poloha chaty", example: 50.4763 },
+      longitude: { type: "number", nullable: true, example: 13.99 },
       isWinterized: { type: "boolean", example: true },
       features: {
         type: "object",
@@ -258,7 +284,10 @@ const schemas: Record<string, JsonSchema> = {
         items: { type: "string" },
       },
       coverPhotoUrl: { type: "string", nullable: true },
-      weatherLocation: { type: "string", nullable: true },
+      municipalityCode: {
+        type: "integer", nullable: true, example: 565768,
+        description: "Kod obce v RUIAN; server doplni nazev, okres, kraj a souradnice. null obec smaze. Volny text weatherLocation se neprijima.",
+      },
       isWinterized: { type: "boolean" },
       features: { type: "object", additionalProperties: true },
     },
@@ -572,6 +601,20 @@ const paths: Record<string, OpenApiObject> = {
       summary: "Fiktivni demo ucty pro rychle prihlaseni (neprazdne jen na stagingu)",
       responses: {
         "200": jsonResponse(ref("DemoAccountsResponse"), "Seznam demo uctu, mimo staging prazdny"),
+      },
+    },
+  },
+  "/api/municipalities": {
+    get: {
+      tags: ["Auth"],
+      summary: "Verejne naseptavani obci CR (RUIAN, CUZK, CC BY 4.0) pro vyber nejblizsi obce chaty",
+      parameters: [{
+        name: "q", in: "query", required: true, schema: { type: "string", minLength: 2, maxLength: 100 },
+        description: "Zacatek nazvu obce, bez ohledu na diakritiku; muze pokracovat okresem (nova ves benesov)",
+      }],
+      responses: {
+        "200": jsonResponse(ref("MunicipalitySearchResponse"), "Obce s okresem a krajem, bez souradnic"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Chybi dotaz nebo je kratsi nez 2 znaky"),
       },
     },
   },

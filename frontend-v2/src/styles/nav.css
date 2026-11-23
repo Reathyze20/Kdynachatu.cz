@@ -352,8 +352,9 @@
   border-top: 1px solid var(--border-strong);
 }
 
-/* Nápověda a profilové menu jsou <button>, vzhled berou z .app-sidebar-link */
+/* Nápověda, profilové menu a „Přidat na plochu“ jsou <button>, vzhled berou z .app-sidebar-link */
 .app-sidebar-help,
+.app-sidebar-install,
 .app-sidebar-profile-trigger {
   width: 100%;
   border: none;
@@ -538,5 +539,12 @@
   #page-container {
     padding-top: 64px !important;
     padding-bottom: calc(var(--mobile-nav-height) + 10px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Offline banner (skeleton.css) pod pevnou hlavičkou; záporný spodní okraj vrací odsazení výše */
+  .offline-banner {
+    position: relative;
+    z-index: 1;
+    margin: 56px 0 -56px;
   }
 }

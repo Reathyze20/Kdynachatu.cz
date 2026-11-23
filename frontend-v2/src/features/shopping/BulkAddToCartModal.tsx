@@ -42,8 +42,8 @@ export function BulkAddToCartModal({ items, onClose }: Props) {
       setSubmitError(
         getShoppingActionErrorMessage(
           error,
-          'Chybějící zásoby se nepodařilo přidat do nákupu. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se zásoby stihly přidat do nákupu. Zkuste to znovu po obnovení připojení.',
+          'Chybějící zásoby se nepodařilo přidat do nákupu. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zásoby stihly přidat do nákupu. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -75,7 +75,7 @@ export function BulkAddToCartModal({ items, onClose }: Props) {
       }
     >
       <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0 0 var(--space-md)' }}>
-        Vyberte seznam, do kterého chcete přidat všechny položky se stavem „Došlo":
+        Vyber seznam, do kterého chceš přidat všechny položky se stavem „Došlo":
       </p>
 
       {isLoading ? (
@@ -93,7 +93,7 @@ export function BulkAddToCartModal({ items, onClose }: Props) {
           actionLabel="Načíst seznamy"
         />
       ) : activeLists.length === 0 ? (
-        <p className="empty-state">Žádné aktivní nákupní seznamy. Nejdříve vytvořte seznam.</p>
+        <p className="empty-state">Žádné aktivní nákupní seznamy. Nejdřív vytvoř seznam.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {activeLists.map(list => (

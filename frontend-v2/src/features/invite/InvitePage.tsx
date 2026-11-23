@@ -5,6 +5,7 @@ import apiClient from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { AvatarPicker } from '@/components/shared/AvatarPicker';
 import { ColorPicker } from '@/components/shared/ColorPicker';
+import { MEMBER_PALETTE } from '@/lib/memberPalette';
 import cabinBg from '@/img/olivier-guillard-FKJgBUDoVC0-unsplash.jpg';
 
 interface ValidateResponse {
@@ -44,7 +45,7 @@ export function InvitePage() {
     password: '',
     email: '',
     animalIcon: 'liska',
-    color: '#0ea5e9'
+    color: MEMBER_PALETTE[0].hex
   });
   
   const [submitting, setSubmitting] = useState(false);
@@ -137,7 +138,7 @@ export function InvitePage() {
             Pozvánka na chatu
           </h1>
           <p className="invite-text" style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
-            <strong>{inviteInfo.invitedBy}</strong> vás zve na chatu
+            <strong>{inviteInfo.invitedBy}</strong> tě zve na chatu
           </p>
           <p style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text, #1a2721)', margin: '0 0 16px' }}>
             „{inviteInfo.cabinName}"
@@ -158,7 +159,7 @@ export function InvitePage() {
             </button>
           </div>
           <div className="invite-back-link">
-            Už máte účet? <a onClick={() => navigate('/login')} data-testid="invite-existing-login-link">Přihlásit se</a>
+            Už máš účet? <a onClick={() => navigate('/login')} data-testid="invite-existing-login-link">Přihlásit se</a>
           </div>
         </div>
       </div>
@@ -181,7 +182,7 @@ export function InvitePage() {
             <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </button>
           <h2 className="invite-heading" style={{ margin: 0, fontSize: '1.15rem' }}>
-            Vytvořte si účet — {inviteInfo.cabinName}
+            Vytvoř si účet — {inviteInfo.cabinName}
           </h2>
         </div>
 

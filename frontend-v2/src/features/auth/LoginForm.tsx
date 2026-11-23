@@ -88,7 +88,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
       const data = (err as { response?: { data?: AuthErrorResponse } }).response?.data
 
       if (data?.needsVerification) {
-        const msg = data.message || 'Nejprve ověřte svůj e-mail.'
+        const msg = data.message || 'Nejprve ověř svůj e-mail.'
         setError({ text: msg })
         showToast(msg, 'info')
         return
@@ -103,7 +103,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
         return
       }
 
-      const msg = data?.message || data?.error || 'Chyba sítě – zkuste to znovu'
+      const msg = data?.message || data?.error || 'Chyba sítě – zkus to znovu'
       setError({ text: msg })
       if (data) showToast(msg, 'error')
     } finally {
@@ -117,7 +117,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
         <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
         <h1 className="auth-brand-text">Kdy na chatu</h1>
       </div>
-      <p className="auth-subtitle">Přihlaste se ke svému účtu</p>
+      <p className="auth-subtitle">Přihlas se ke svému účtu</p>
 
       <form id="login-form" noValidate onSubmit={handleSubmit} data-testid="login-form">
         <div className="form-group">
@@ -189,7 +189,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
             onClick={(e) => { e.preventDefault(); onShowForgotPassword() }}
             data-testid="login-forgot-password-link"
           >
-            Zapomněli jste heslo?
+            Zapomenuté heslo?
           </a>
         </p>
 
@@ -234,14 +234,14 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
 
       {onShowRegister && (
         <p className="toggle-form-text">
-          Ještě nemáte účet?{' '}
+          Ještě nemáš účet?{' '}
           <a
             href="#"
             id="show-register-link"
             onClick={(e) => { e.preventDefault(); onShowRegister() }}
             data-testid="login-show-register-link"
           >
-            Zaregistrujte se
+            Zaregistruj se
           </a>
         </p>
       )}

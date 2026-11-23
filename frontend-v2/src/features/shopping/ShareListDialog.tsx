@@ -100,7 +100,7 @@ export function ShareListDialog({ listName, onClose }: Props) {
             seznam: „<strong>{listName}</strong>"
           </p>
 
-          <p className="share-note-step-label">1. Vyberte typ zprávy:</p>
+          <p className="share-note-step-label">1. Vyber typ zprávy:</p>
           <div className="share-note-options">
             <button
               id="share-note-new"
@@ -130,7 +130,7 @@ export function ShareListDialog({ listName, onClose }: Props) {
 
           {showTargetSection && (
             <div id="share-note-target-section" className="share-note-target-section">
-              <p className="share-note-step-label">2. Vyberte cíl:</p>
+              <p className="share-note-step-label">2. Vyber cíl:</p>
               {threadsLoading ? (
                 <div className="spinner-container"><div className="spinner" /></div>
               ) : (

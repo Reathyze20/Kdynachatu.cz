@@ -33,7 +33,7 @@ export function VerifyEmailPage() {
         })
 
         setState('success')
-        setMessage(data.message || 'Účet byl úspěšně ověřen!')
+        setMessage(data.message || 'Účet je ověřený!')
       } catch (err) {
         if ((err as Error).name === 'AbortError') return
         const data = (err as { response?: { data?: VerifyTokenResponse } }).response?.data
@@ -74,7 +74,7 @@ export function VerifyEmailPage() {
         {state === 'loading' && (
           <>
             <div className="spinner" style={{ margin: '2rem auto' }} />
-            <p style={{ color: 'var(--color-text-light)' }}>Ověřuji váš účet…</p>
+            <p style={{ color: 'var(--color-text-light)' }}>Ověřuji tvůj účet…</p>
           </>
         )}
 
@@ -139,7 +139,7 @@ export function VerifyEmailPage() {
               Chybí ověřovací odkaz
             </h2>
             <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Ověřovací odkaz je neplatný nebo chybí token. Zkontrolujte svůj e-mail a klikněte na správný odkaz.
+              Ověřovací odkaz je neplatný nebo chybí token. Zkontroluj svůj e-mail a klikni na správný odkaz.
             </p>
             <Link
               to="/login"

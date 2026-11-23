@@ -34,7 +34,7 @@ describe('HelpFab and OfflineBanner', () => {
 
     renderHelpFab('/reservations')
 
-    await user.click(screen.getByRole('button', { name: 'Potřebujete poradit?' }))
+    await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
 
     expect(await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).toBeInTheDocument()
     expect(screen.getByText('Rezervace')).toBeInTheDocument()
@@ -46,7 +46,7 @@ describe('HelpFab and OfflineBanner', () => {
 
     renderHelpFab('/admin/cabin')
 
-    await user.click(screen.getByRole('button', { name: 'Potřebujete poradit?' }))
+    await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
 
     expect(await screen.findByText('Nastavení chaty')).toBeInTheDocument()
     expect(screen.getByText(/součástí administrace chaty/)).toBeInTheDocument()
@@ -57,7 +57,7 @@ describe('HelpFab and OfflineBanner', () => {
 
     renderHelpFab('/admin/diagnostics')
 
-    await user.click(screen.getByRole('button', { name: 'Potřebujete poradit?' }))
+    await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
 
     expect(await screen.findByText('Diagnostika')).toBeInTheDocument()
     expect(screen.getByText(/samostatná provozní stránka/i)).toBeInTheDocument()
@@ -72,7 +72,7 @@ describe('HelpFab and OfflineBanner', () => {
       setNavigatorOnline(false)
     })
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Jste offline')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Jsi offline')
     expect(screen.getByRole('alert')).toHaveTextContent('Změny provedené offline se uloží po obnovení připojení.')
 
     act(() => {

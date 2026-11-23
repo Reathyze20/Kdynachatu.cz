@@ -34,7 +34,7 @@ Co hlídá CI (typecheck, build, `.only`/`.skip`, neměnné migrace, velikost PR
 
 ## Texty a jazyk
 
-- Vše, co uvidí uživatel (UI, chybové hlášky z API, e-maily), je česky, s diakritikou, vykání (vzor: „Zkuste to znovu.“). Kód, identifikátory, commity a titulky PR anglicky.
+- Vše, co uvidí uživatel (UI, chybové hlášky z API, e-maily), je česky, s diakritikou, tykání v aktivním hlasu (vzor: „Zkus to znovu.“). Kód, identifikátory, commity a titulky PR anglicky.
 - Komentáře česky, pokud je soubor nemá anglicky – drž jazyk okolí.
 
 ## Testy
