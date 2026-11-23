@@ -78,7 +78,7 @@ export function CabinHero({ cabinName, weather, region, coverPhotoUrl }: CabinHe
             <img
               src={coverPhotoUrl}
               srcSet={coverSrcSet(coverPhotoUrl)}
-              sizes="(max-width: 768px) 100vw, 1000px"
+              sizes="(max-width: 768px) calc(100vw - 24px), 1000px"
               width={1000}
               height={360}
               alt=""

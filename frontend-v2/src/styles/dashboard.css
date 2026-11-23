@@ -516,7 +516,7 @@
   overflow: hidden;
   /* do načtení fotky tmavě zelená, bílý text je čitelný hned */
   background: rgb(28 46 36);
-  color: #fff;
+  color: var(--raw-white);
 }
 
 .cabin-hero__strip img {
@@ -544,14 +544,14 @@
 }
 
 .cabin-hero__strip-text .cabin-hero__name {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   line-height: 1.15;
-  color: #fff;
+  color: var(--raw-white);
 }
 
 .cabin-hero__strip-text .cabin-hero__context {
   font-size: var(--font-size-base);
-  color: #fff;
+  color: var(--raw-white);
 }
 
 .cabin-hero__extras {
@@ -574,7 +574,7 @@
   }
 
   .cabin-hero__strip-text .cabin-hero__name {
-    font-size: 1.875rem;
+    font-size: var(--font-size-3xl);
   }
 }
 
