@@ -87,7 +87,7 @@
     "@types/sharp": "^0.32.0",
     "@types/supertest": "^7.2.1",
     "@types/uuid": "^10.0.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^9.2.5",
     "supertest": "^7.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.1.6"
