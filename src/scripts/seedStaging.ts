@@ -18,7 +18,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/password";
 import { DEMO_USERS, resolveSeedConfig, resolveUploadsPath } from "./seedStagingConfig";
-import { cleanSeedFiles, writeSeedImage, SEED_FILE_PREFIX, type SeedColor } from "./seedStagingFiles";
+import { cleanSeedFiles, writeSeedCoverPhoto, writeSeedImage, SEED_COVER_URL, SEED_FILE_PREFIX, type SeedColor } from "./seedStagingFiles";
 
 dotenv.config();
 
@@ -56,9 +56,9 @@ function yearMonth(offset: number): { year: number; month: number } {
 
 // ── Soubory ─────────────────────────────────────────────────────────────────
 
-// Jediný zdroj pravdy pro seed fotky: slug + barva. Cesty i fyzické soubory z něj nemůžou utéct.
+// Jediný zdroj pravdy pro jednobarevné seed fotky: slug + barva. Cesty i fyzické soubory z něj
+// nemůžou utéct. Titulní fotka je skutečná fotka (Koštálov) se dvěma variantami, viz SEED_COVER_URL.
 const SEED_IMAGE_SPECS: { slug: string; color: SeedColor }[] = [
-  { slug: "cover", color: { r: 94, g: 155, b: 98 } },
   { slug: "gallery-leto-1", color: { r: 126, g: 188, b: 232 } },
   { slug: "gallery-leto-2", color: { r: 244, g: 208, b: 111 } },
   { slug: "gallery-zima-1", color: { r: 176, g: 196, b: 222 } },
@@ -72,7 +72,7 @@ const seedSrc = (slug: string) => `/uploads/${SEED_FILE_PREFIX}${slug}.webp`;
 /** Deterministické cesty fotek pro DB (bez zápisu souborů) – aby šel seed „fail before write“. */
 function buildSeedImages(): SeedImages {
   return {
-    cover: seedSrc("cover"),
+    cover: SEED_COVER_URL,
     galleryLeto: [seedSrc("gallery-leto-1"), seedSrc("gallery-leto-2")],
     galleryZima: seedSrc("gallery-zima-1"),
     wallpapers: [seedSrc("wallpaper-1"), seedSrc("wallpaper-2")],
@@ -82,7 +82,10 @@ function buildSeedImages(): SeedImages {
 /** Přepíše fyzické seed soubory (prefix `seed-`). Volá se až po úspěšné DB transakci. */
 async function writeSeedImageFiles(uploadsPath: string): Promise<void> {
   await cleanSeedFiles(uploadsPath);
-  await Promise.all(SEED_IMAGE_SPECS.map((s) => writeSeedImage(uploadsPath, s.slug, s.color)));
+  await Promise.all([
+    writeSeedCoverPhoto(uploadsPath),
+    ...SEED_IMAGE_SPECS.map((s) => writeSeedImage(uploadsPath, s.slug, s.color)),
+  ]);
 }
 
 // ── Chata a uživatelé ─────────────────────────────────────────────────────────

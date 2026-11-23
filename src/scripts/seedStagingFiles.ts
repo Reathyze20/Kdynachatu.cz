@@ -5,9 +5,17 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { COVER_PHOTO_NARROW_SUFFIX, COVER_PHOTO_SIZES, encodeWithinBudget } from "../backend/routes/cabinCoverPhoto";
 
 export const SEED_FILE_PREFIX = "seed-";
+
+/** Titulní fotka demo chaty (hrad Koštálov). Leží pod `src/`, protože jen ten jde na staging. */
+export const SEED_COVER_SOURCE = fileURLToPath(new URL("./assets/kostalov_view.jpeg", import.meta.url));
+const SEED_COVER_NAME = `${SEED_FILE_PREFIX}cover`;
+/** `Cabin.coverPhotoUrl` demo chaty; mobilní varianta má stejné jméno s `-sm` (vzor `cabinCoverPhoto.ts`). */
+export const SEED_COVER_URL = `/uploads/${SEED_COVER_NAME}.webp`;
 
 export interface SeedColor {
   r: number;
@@ -50,4 +58,27 @@ export async function writeSeedImage(uploadsPath: string, slug: string, color: S
       .toFile(path.join(thumbsPath, fileName)),
   ]);
   return `/uploads/${fileName}`;
+}
+
+/**
+ * Vyrobí titulní fotku demo chaty ze skutečné fotky ve stejných variantách jako upload
+ * (`cabinCoverPhoto.ts`): `seed-cover.webp` (široká) a `seed-cover-sm.webp` (mobil),
+ * k oběma náhled. Vrací `SEED_COVER_URL`.
+ */
+export async function writeSeedCoverPhoto(uploadsPath: string): Promise<string> {
+  const thumbsPath = path.join(uploadsPath, "thumbs");
+  await fs.promises.mkdir(thumbsPath, { recursive: true }); // vytvoří i uploadsPath
+  const source = await fs.promises.readFile(SEED_COVER_SOURCE);
+  const thumb = await sharp(source).resize(400, 300, { fit: "cover", position: "centre" }).webp({ quality: 70 }).toBuffer();
+  const variants = [
+    { fileName: `${SEED_COVER_NAME}.webp`, size: COVER_PHOTO_SIZES.wide },
+    { fileName: `${SEED_COVER_NAME}${COVER_PHOTO_NARROW_SUFFIX}.webp`, size: COVER_PHOTO_SIZES.narrow },
+  ];
+  await Promise.all(
+    variants.map(async ({ fileName, size }) => {
+      await fs.promises.writeFile(path.join(uploadsPath, fileName), await encodeWithinBudget(source, size));
+      await fs.promises.writeFile(path.join(thumbsPath, fileName), thumb);
+    }),
+  );
+  return SEED_COVER_URL;
 }

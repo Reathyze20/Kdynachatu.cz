@@ -60,8 +60,11 @@ export async function createCoverPhotoVariants(sourcePath: string, coversDir: st
   return url;
 }
 
-/** Ořízne zdroj na střed do cílové velikosti a zakóduje ho do WebP v nejvyšší kvalitě, která se vejde. */
-async function encodeWithinBudget(source: Buffer, { width, height, maxBytes }: CoverPhotoVariantSize): Promise<Buffer> {
+/**
+ * Ořízne zdroj na střed do cílové velikosti a zakóduje ho do WebP v nejvyšší kvalitě, která se vejde.
+ * Používá ho i staging seed (`seedStagingFiles.ts`), aby demo titulní fotka měla stejné varianty.
+ */
+export async function encodeWithinBudget(source: Buffer, { width, height, maxBytes }: CoverPhotoVariantSize): Promise<Buffer> {
   const { data, info } = await sharp(source)
     .resize(width, height, { fit: "cover", position: "centre" })
     .raw()
