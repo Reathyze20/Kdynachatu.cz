@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.7.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.6.0...v1.7.0) (2026-11-23)
+
+
+### Features
+
+* **backups:** nightly off-site copy to Backblaze B2 with Healthchecks ping ([#311](https://github.com/Reathyze20/Kdynachatu.cz/issues/311)) ([4bb543d](https://github.com/Reathyze20/Kdynachatu.cz/commit/4bb543d7cfe254d467b71d214d91ab13706ba0f1)), closes [#95](https://github.com/Reathyze20/Kdynachatu.cz/issues/95)
+* **cabin:** add a municipality picker for the nearest municipality ([#298](https://github.com/Reathyze20/Kdynachatu.cz/issues/298)) ([d0ee9cf](https://github.com/Reathyze20/Kdynachatu.cz/commit/d0ee9cf32bd38283588fd634575503c4f41da566))
+* **cabin:** add a static list of Czech municipalities from RÚIAN ([#296](https://github.com/Reathyze20/Kdynachatu.cz/issues/296)) ([494833c](https://github.com/Reathyze20/Kdynachatu.cz/commit/494833cb545b71650b88ba452eb155e0a57473c6))
+* **cabin:** pick the nearest municipality from a list ([#299](https://github.com/Reathyze20/Kdynachatu.cz/issues/299)) ([042eb39](https://github.com/Reathyze20/Kdynachatu.cz/commit/042eb39f7e6b2c23592eb3a094e39684d91c2d20))
+* **cabin:** suggest Czech municipalities by name ([#297](https://github.com/Reathyze20/Kdynachatu.cz/issues/297)) ([7e9ccd4](https://github.com/Reathyze20/Kdynachatu.cz/commit/7e9ccd4ba296feaa1d9c405f0039e7cfa20cac6f))
+* **calendar:** richer reservation cards in the side panel ([#302](https://github.com/Reathyze20/Kdynachatu.cz/issues/302)) ([483cfb4](https://github.com/Reathyze20/Kdynachatu.cz/commit/483cfb463c9ec51254cd39fffe4a18ba67d82800))
+* **dashboard:** "Potřebuje pozornost" card with Koupím já ([#301](https://github.com/Reathyze20/Kdynachatu.cz/issues/301)) ([52df6cf](https://github.com/Reathyze20/Kdynachatu.cz/commit/52df6cfd1de42bbfd077174d5e1fd0029ccfe53f))
+* **dashboard:** attention data and Koupím já pledge endpoint ([#300](https://github.com/Reathyze20/Kdynachatu.cz/issues/300)) ([675abf8](https://github.com/Reathyze20/Kdynachatu.cz/commit/675abf8bf9d69c4b13918aa8805b6e1129c13ddd))
+* **dashboard:** link to the Kudy z nudy events calendar for the cabin's region ([#308](https://github.com/Reathyze20/Kdynachatu.cz/issues/308)) ([6bc1343](https://github.com/Reathyze20/Kdynachatu.cz/commit/6bc13435f3434c3b5e826e4723bc77cf749c206e))
+* **dashboard:** status header now → next ([#288](https://github.com/Reathyze20/Kdynachatu.cz/issues/288)) ([c5416bf](https://github.com/Reathyze20/Kdynachatu.cz/commit/c5416bfccb45ea064c2abdb07ba135c0e5e366ef))
+* **notes:** make "copy for WhatsApp" prominent and name it consistently ([#307](https://github.com/Reathyze20/Kdynachatu.cz/issues/307)) ([b084fb4](https://github.com/Reathyze20/Kdynachatu.cz/commit/b084fb46bf73c4bfb516f52fb5206474567fdbf2))
+* **profile:** verified 8-color member palette with initials everywhere ([#287](https://github.com/Reathyze20/Kdynachatu.cz/issues/287)) ([f3609da](https://github.com/Reathyze20/Kdynachatu.cz/commit/f3609da4b04bb1e3b9f0c0444fb0546b4d3f5e13))
+* **pwa:** install card after the third visit ([#295](https://github.com/Reathyze20/Kdynachatu.cz/issues/295)) ([f9b68ac](https://github.com/Reathyze20/Kdynachatu.cz/commit/f9b68ac336f2d4574ccf2655157405082691d4f6))
+* **pwa:** offline and stale-data notice with pending handover ([#289](https://github.com/Reathyze20/Kdynachatu.cz/issues/289)) ([809b4f0](https://github.com/Reathyze20/Kdynachatu.cz/commit/809b4f0e8703fd4671ee7c38b453f456687ba898))
+* **settings:** warn about unsaved cabin settings and keep Save reachable ([#306](https://github.com/Reathyze20/Kdynachatu.cz/issues/306)) ([77d94ea](https://github.com/Reathyze20/Kdynachatu.cz/commit/77d94ea7135c87e87d5618b55e726a9755e2b09a))
+* **theme:** 16 px body text and 48/56 px touch targets in tokens and shared components ([#284](https://github.com/Reathyze20/Kdynachatu.cz/issues/284)) ([348767e](https://github.com/Reathyze20/Kdynachatu.cz/commit/348767e4e1264805a55a72ea0405ef50c82ddd6e))
+
+
+### Bug Fixes
+
+* **a11y:** raise the contrast of small grey text to WCAG AA ([#305](https://github.com/Reathyze20/Kdynachatu.cz/issues/305)) ([9dca878](https://github.com/Reathyze20/Kdynachatu.cz/commit/9dca8785807bde1774f4e52f67bf012b463a4ab4))
+* **admin:** confirm before revoking an invite ([#303](https://github.com/Reathyze20/Kdynachatu.cz/issues/303)) ([d72d7fc](https://github.com/Reathyze20/Kdynachatu.cz/commit/d72d7fcdae6b505a9c64c53ba6a8db7aca472e28))
+* **dashboard:** show the departure nudge only to the member who is leaving ([#290](https://github.com/Reathyze20/Kdynachatu.cz/issues/290)) ([19193c2](https://github.com/Reathyze20/Kdynachatu.cz/commit/19193c2b78d51738b59295713c705dfa8a217f2e))
+* **diary:** drop the placeholder ○ icon and show the year in stay dates ([#304](https://github.com/Reathyze20/Kdynachatu.cz/issues/304)) ([724cb8b](https://github.com/Reathyze20/Kdynachatu.cz/commit/724cb8b728099e6353ae5d2ebbd926e0f567d374))
+* **theme:** status badge colors meet the 4.5:1 contrast ([#282](https://github.com/Reathyze20/Kdynachatu.cz/issues/282)) ([48390e9](https://github.com/Reathyze20/Kdynachatu.cz/commit/48390e9db371b21f78c220082a118198fc646bd0))
+
 ## [1.6.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.5.0...v1.6.0) (2026-11-22)
 
 
