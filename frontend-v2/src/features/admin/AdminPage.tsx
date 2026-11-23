@@ -143,6 +143,12 @@ function buildInviteShareText(invite: Invite): string {
   return `Ahoj, zvu tě do chaty „${invite.cabinName}“ v aplikaci Kdy na chatu. Připoj se přes tento odkaz: ${buildInviteUrl(invite.token)} Role po přijetí: ${roleLabel}. Platnost do ${formatDateLabel(invite.expiresAt)}. ${usageHint}`
 }
 
+function buildRevokeConfirmMessage(invite: Invite): string {
+  const roleLabel = getRoleLabel(invite.role).toLocaleLowerCase('cs-CZ')
+  const author = invite.createdBy?.username ? `, vytvořil ${invite.createdBy.username}` : ''
+  return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ (platí do ${formatDateLabel(invite.expiresAt)}${author}). Odkaz přestane fungovat a kdo ho už dostal, se přes něj nepřipojí.`
+}
+
 function isAdminWorkspace(value: string | null): value is AdminWorkspace {
   return value === 'members' || value === 'invites' || value === 'cabin'
 }
@@ -470,6 +476,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   const [createError, setCreateError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [emailInvite, setEmailInvite] = useState<Invite | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<Invite | null>(null)
   const [emailValue, setEmailValue] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -512,13 +519,14 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     )
   }
 
-  function handleRevoke(id: string) {
+  function handleRevoke(id: string, onDone?: () => void) {
     setActionError(null)
     revokeInvite.mutate(id, {
       onSuccess: () => {
         setActionError(null)
         showToast('Pozvánka zrušena', 'success')
       },
+      onSettled: onDone,
       onError: (error) => {
         setActionError(
           getNetworkAwareActionMessage(
@@ -704,8 +712,8 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleRevoke(inv.id)}
+                  className="btn btn-outline-danger btn-sm"
+                  onClick={() => setRevokeTarget(inv)}
                   disabled={revokeInvite.isPending}
                   title="Zrušit pozvánku"
                   data-testid="invite-revoke-button"
@@ -757,6 +765,20 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           </div>
         </details>
       )}
+
+      <ConfirmDialog
+        isOpen={revokeTarget !== null}
+        title="Zrušit pozvánku?"
+        message={revokeTarget ? buildRevokeConfirmMessage(revokeTarget) : ''}
+        confirmLabel="Zrušit pozvánku"
+        cancelLabel="Nechat platit"
+        danger
+        loading={revokeInvite.isPending}
+        onConfirm={() => {
+          if (revokeTarget) handleRevoke(revokeTarget.id, () => setRevokeTarget(null))
+        }}
+        onCancel={() => setRevokeTarget(null)}
+      />
 
       <Modal
         isOpen={emailInvite !== null}
