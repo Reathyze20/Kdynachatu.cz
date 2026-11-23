@@ -10,6 +10,7 @@ import { escapeHtml } from "@/lib/utils";
 import { toMemberColor } from "@/lib/memberPalette";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { showToast } from "@/lib/toast";
+import { RESERVATION_TYPE_LABEL } from "../reservationType";
 
 const MONTH_NAMES_GEN = [
   "Ledna", "Února", "Března", "Dubna", "Května", "Června",
@@ -49,12 +50,9 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
     ? Math.round((new Date(r.to + "T00:00:00").getTime() - new Date(r.from + "T00:00:00").getTime()) / 86400000)
     : 0;
 
-  const statusMap: Record<string, { label: string; cls: string }> = {
-    primary: { label: "POTVRZENO", cls: "bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
-    backup:  { label: "ZÁLOŽNÍ",   cls: "bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
-    soft:    { label: "PŘEDBĚŽNÁ", cls: "bg-slate-50 text-slate-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
-  };
-  const badge = statusMap[r.status ?? "primary"] ?? statusMap["primary"];
+  // Typ jako na kartě v seznamu; štítek 14 px (G3), velká písmena jen stylem.
+  const status = r.status ?? "primary";
+  const statusCls = { primary: "bg-emerald-50 text-emerald-700", backup: "bg-amber-50 text-amber-700", soft: "bg-slate-50 text-slate-700" }[status];
 
   // Watch status
   const { data: watchData, refetch: refetchWatch } = useQuery<WatchStatus>({
@@ -116,7 +114,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: memberColor }} />
           <strong className="text-[16px] font-bold text-slate-800">{r.username}</strong>
         </div>
-        <span className={badge.cls}>{badge.label}</span>
+        <span className={`${statusCls} px-2.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase`}>{RESERVATION_TYPE_LABEL[status]}</span>
       </div>
 
       {/* ── Timeline Widget ── */}
