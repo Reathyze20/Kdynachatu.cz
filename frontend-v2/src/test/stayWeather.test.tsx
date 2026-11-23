@@ -49,7 +49,7 @@ describe('předpověď na pobyt: API', () => {
     const stay = pickStayForecast(result, '2030-06-03', '2030-06-05', TODAY)
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/latitude=49\.5&longitude=15\.2.*forecast_days=16/)
     expect(stay.days.map((d) => [d.date, d.dayName])).toEqual([['2030-06-03', 'Po'], ['2030-06-04', 'Út'], ['2030-06-05', 'St']])
-    expect(stay.days[0]).toMatchObject({ tempMax: 18, tempMin: 8, precipProbability: 40, sunrise: '04:52', sunset: '21:07', uvIndex: 6, tentative: false })
+    expect(stay.days[0]).toMatchObject({ tempMax: 18.4, tempMin: 7.6, precipProbability: 40, sunrise: '04:52', sunset: '21:07', uvIndex: 6, tentative: false })
     expect(stay.days[0].hours).toHaveLength(24)
     expect(stay.days[0].hours[14]).toEqual({ time: '14:00', precipProbability: 30, windSpeed: 12, temp: 15 })
     expect(pickStayForecast(result, '2030-05-30', '2030-06-02', TODAY).days.map((d) => d.date)).toEqual(['2030-06-01', '2030-06-02'])

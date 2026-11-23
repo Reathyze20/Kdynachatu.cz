@@ -8,22 +8,23 @@ import {
 import type { StayForecastDay } from "@/api/stayWeather";
 import { useAuth } from "@/context/AuthContext";
 import { useCabinSettings } from "@/features/settings/hooks/useCabinSettings";
-import { formatShortDayDate } from "@/lib/dateUtils";
+import { formatShortDayDate, isoDateToLocalNoon } from "@/lib/dateUtils";
+import { DAY_NAMES_FULL } from "@/lib/utils";
 import { useStayForecast } from "./hooks/useStayForecast";
 
 const ICONS: Record<string, LucideIcon> = {
   sun: Sun, "cloud-sun": CloudSun, cloud: Cloud, fog: CloudFog, "cloud-drizzle": CloudDrizzle,
   "cloud-rain": CloudRain, snowflake: Snowflake, "cloud-sun-rain": CloudSunRain, "cloud-lightning": CloudLightning,
 };
-const DAY_NAMES_FULL = { Po: "Pondělí", Út: "Úterý", St: "Středa", Čt: "Čtvrtek", Pá: "Pátek", So: "Sobota", Ne: "Neděle" } as Record<string, string>;
 
-const deg = (t: number) => `${t < 0 ? "−" : ""}${Math.abs(t)}`;
+const deg = (t: number) => `${Math.round(t) < 0 ? "−" : ""}${Math.abs(Math.round(t))}`;
+const fullDayName = (iso: string) => DAY_NAMES_FULL[(isoDateToLocalNoon(iso).getDay() + 6) % 7];
 const dayMonth = (iso: string) => `${Number(iso.slice(8, 10))}. ${Number(iso.slice(5, 7))}.`;
 const uvLabel = (uv: number) => (uv < 3 ? "nízký" : uv < 6 ? "střední" : uv < 8 ? "vysoký" : "velmi vysoký");
 
 function DayCell({ day }: { day: StayForecastDay }) {
   const Icon = ICONS[day.icon] ?? Cloud;
-  const label = `${DAY_NAMES_FULL[day.dayName]} ${dayMonth(day.date)}: ${day.description}, ${deg(day.tempMax)} až ${deg(day.tempMin)} °C, srážky ${day.precipProbability} %${day.tentative ? ", orientační" : ""}`;
+  const label = `${fullDayName(day.date)} ${dayMonth(day.date)}: ${day.description}, ${deg(day.tempMax)} až ${deg(day.tempMin)} °C, srážky ${day.precipProbability} %${day.tentative ? ", orientační" : ""}`;
   return (
     <li className="flex flex-col items-center gap-1 rounded-xl bg-slate-50 px-1 py-2.5">
       <span className="sr-only">{label}</span>
@@ -51,22 +52,22 @@ export function StayWeatherCard({ from, to }: { from: string; to: string }) {
   const headingId = useId();
   const { user } = useAuth();
   const cabin = useCabinSettings();
-  const { window, stay, location, isError, isLoading } = useStayForecast(cabin.data ?? undefined, from, to);
+  const { horizon, stay, locationProblem, isError, isLoading } = useStayForecast(cabin.data ?? undefined, from, to);
 
   let body: ReactNode;
-  if (window.kind === "ended") return null;
-  if (window.kind === "later") {
+  if (horizon.kind === "ended") return null;
+  if (horizon.kind === "later") {
     body = (
       <p className="flex items-center gap-2.5 text-base text-slate-800">
         <CalendarDays aria-hidden="true" className="w-5 h-5 text-slate-600" />
-        <span>Předpověď bude k dispozici od <b>{formatShortDayDate(window.availableFrom)}</b></span>
+        <span>Předpověď bude k dispozici od <b>{formatShortDayDate(horizon.availableFrom)}</b></span>
       </p>
     );
-  } else if (location) {
+  } else if (locationProblem) {
     if (user?.role !== "admin") return null;
     body = (
       <p className="text-base text-slate-700">
-        Chata nemá nastavenou obec, předpověď nejde ukázat.{" "}
+        {locationProblem === "LOCATION_NOT_FOUND" ? "Obec chaty se nepodařilo najít." : "Chata nemá nastavenou obec."}{" "}
         <Link to="/admin/cabin" className="inline-flex min-h-12 items-center font-semibold text-[var(--brand-primary)] underline">Nastavit lokalitu počasí</Link>
       </p>
     );
@@ -76,14 +77,13 @@ export function StayWeatherCard({ from, to }: { from: string; to: string }) {
     const first = stay.days[0];
     body = (
       <>
-        <ul className="grid grid-flow-col auto-cols-[minmax(84px,1fr)] gap-1.5 overflow-x-auto">
+        <ul className="grid grid-cols-[repeat(auto-fit,minmax(84px,1fr))] gap-1.5">
           {stay.days.map((d) => <DayCell key={d.date} day={d} />)}
         </ul>
         {stay.days.some((d) => d.tentative) && <p className="text-sm text-slate-600">Dny 8–16 jsou orientační, předpověď se ještě změní.</p>}
         <p className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
-          <span className="sr-only">{DAY_NAMES_FULL[first.dayName]}: východ a západ slunce</span>
-          {first.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" />{first.sunrise}</span>}
-          {first.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" />{first.sunset}</span>}
+          {first.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Východ slunce</span>{first.sunrise}</span>}
+          {first.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{first.sunset}</span>}
           <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700"><Sun aria-hidden="true" className="w-4 h-4" />UV {first.uvIndex} {uvLabel(first.uvIndex)}</span>
         </p>
         {stay.frost && <Alert icon={ThermometerSnowflake} day={stay.frost} text={`v noci mráz až ${deg(stay.frost.tempMin)} °C. Před odjezdem vypusť vodu.`} />}

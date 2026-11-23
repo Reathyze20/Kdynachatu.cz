@@ -1,10 +1,10 @@
 /** Předpověď Open-Meteo na 16 dní pro místo chaty (sdílí ji detail pobytu i Přehled) a výběr dnů pobytu (#323). */
+import { DAY_NAMES } from "@/lib/utils";
 import { mapWMOCode, resolveWeatherCoords, type WeatherPlace } from "./dashboard";
 
 /** Horizont předpovědi: dnes + 15 dní. Od 8. dne (posun 7) je předpověď orientační. */
 const HORIZON_DAYS = 16;
 const TENTATIVE_FROM_OFFSET = 7;
-const DAY_NAMES_CZ = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
 
 export interface ForecastHour { time: string; precipProbability: number; windSpeed: number; temp: number }
 
@@ -63,9 +63,8 @@ export async function fetchCabinForecast(place: WeatherPlace | null | undefined)
       temp: Math.round(hourly.temperature_2m[h] ?? 0),
     }] : []);
     return {
-      date, dayName: DAY_NAMES_CZ[new Date(date + "T12:00:00").getDay()], weatherCode, ...mapWMOCode(weatherCode, false),
-      tempMax: Math.round(daily.temperature_2m_max[i] ?? 0),
-      tempMin: Math.round(daily.temperature_2m_min[i] ?? 0),
+      date, dayName: DAY_NAMES[(new Date(date + "T12:00:00").getDay() + 6) % 7], weatherCode, ...mapWMOCode(weatherCode, false),
+      tempMax: daily.temperature_2m_max[i] ?? 0, tempMin: daily.temperature_2m_min[i] ?? 0, // nezaokrouhlené kvůli výstraze mrazu
       precipProbability: daily.precipitation_probability_max[i] ?? 0,
       precipSum: Math.round((daily.precipitation_sum[i] ?? 0) * 10) / 10,
       sunrise: hhmm(daily.sunrise[i]), sunset: hhmm(daily.sunset[i]), uvIndex: Math.round(daily.uv_index_max[i] ?? 0),
