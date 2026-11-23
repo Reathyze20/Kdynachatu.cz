@@ -201,13 +201,6 @@
 }
 
 /* ── Folder card inner elements ────────────────────────────────────────────── */
-.folder-icon-large {
-  font-size: 1.8rem;
-  opacity: 0.4;
-  margin-bottom: 2px;
-  line-height: 1;
-}
-
 .folder-info {
   display: flex;
   flex-direction: column;

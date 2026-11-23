@@ -4,7 +4,7 @@ name: Deploy to Staging
 # Everything is built here; the server (2 GB RAM shared with production) only
 # runs `npm ci --omit=dev`, migrations and a PM2 restart, via the same
 # scripts/deploy/deploy-release.sh as production with DEPLOY_TARGET=staging.
-# Disabled until the server is prepared (docs/plans/SEP-1-staging-setup.md):
+# Disabled until the server is prepared (docs/STAGING-SETUP.md):
 # set repository variable STAGING_ENABLED=true.
 on:
   push:

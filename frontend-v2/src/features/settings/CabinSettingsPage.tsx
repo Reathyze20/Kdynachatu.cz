@@ -2,17 +2,20 @@
  * features/settings/CabinSettingsPage.tsx
  * Admin-only cabin configuration: name, description, checklist, features.
  */
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, GripVertical, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 import { useCabinSettings, useUpdateCabinSettings } from './hooks/useCabinSettings'
 import { showToast } from '@/lib/toast'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import type { CabinConfig } from '@/api/settings'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,6 +38,44 @@ const AVAILABLE_FEATURES = [
 ]
 
 type TabId = 'tab-basic' | 'tab-operations' | 'tab-modules'
+
+/** Hodnoty formuláře, podle kterých se pozná neuložená změna. */
+interface FormValues {
+  name: string
+  description: string
+  municipalityCode: number | null
+  municipalityPending: boolean
+  legacyLocationRemoved: boolean
+  welcomeMessage: string
+  rules: string
+  isWinterized: boolean
+  checklist: string[]
+  features: Record<string, boolean>
+}
+
+function checklistFromSettings(settings: CabinConfig): string[] {
+  return settings.departureChecklist?.length ? settings.departureChecklist : DEFAULT_CHECKLIST
+}
+
+/** Chybějící klíč modulu znamená zapnutý, proto se porovnává výsledný stav, ne objekt. */
+function formSnapshot(values: FormValues): string {
+  return JSON.stringify({ ...values, features: AVAILABLE_FEATURES.map((f) => values.features[f.key] !== false) })
+}
+
+function savedSnapshot(settings: CabinConfig): string {
+  return formSnapshot({
+    name: settings.name ?? '',
+    description: settings.description ?? '',
+    municipalityCode: settings.municipalityCode && settings.municipalityName ? settings.municipalityCode : null,
+    municipalityPending: false,
+    legacyLocationRemoved: false,
+    welcomeMessage: settings.welcomeMessage ?? '',
+    rules: settings.rules ?? '',
+    isWinterized: settings.isWinterized ?? false,
+    checklist: checklistFromSettings(settings),
+    features: settings.features ?? {},
+  })
+}
 
 interface CabinSettingsPanelProps {
   title?: string
@@ -191,6 +232,7 @@ export function CabinSettingsPanel({
     if (!settings) return
     setName(settings.name ?? '')
     setDescription(settings.description ?? '')
+    setLegacyLocationRemoved(false)
     setMunicipality(
       settings.municipalityCode && settings.municipalityName
         ? { code: settings.municipalityCode, name: settings.municipalityName, district: settings.municipalityDistrict ?? '', region: settings.municipalityRegion ?? '' }
@@ -199,9 +241,15 @@ export function CabinSettingsPanel({
     setWelcomeMessage(settings.welcomeMessage ?? '')
     setRules(settings.rules ?? '')
     setIsWinterized(settings.isWinterized ?? false)
-    setChecklist(settings.departureChecklist?.length ? settings.departureChecklist : DEFAULT_CHECKLIST)
+    setChecklist(checklistFromSettings(settings))
     setFeatures(settings.features ?? {})
   }, [settings])
+
+  const savedForm = useMemo(() => (settings ? savedSnapshot(settings) : null), [settings])
+  const currentForm = formSnapshot({ name, description, municipalityCode: municipality?.code ?? null, municipalityPending,
+    legacyLocationRemoved, welcomeMessage, rules, isWinterized, checklist, features })
+  const isDirty = savedForm !== null && currentForm !== savedForm
+  const leaveGuard = useUnsavedChangesGuard(isDirty)
 
   const clearSaveFeedback = useCallback(() => {
     if (saveError) setSaveError(null)
@@ -318,15 +366,6 @@ export function CabinSettingsPanel({
               <p className="cs-subtitle">{subtitle}</p>
             </div>
           </div>
-          <button
-            type="button"
-            className={`cs-btn-save${saveSuccess ? ' cs-btn-save--success' : ''}`}
-            onClick={doSave}
-            disabled={updateSettings.isPending}
-            data-testid="cabin-settings-save-button"
-          >
-            {saveBtnText}
-          </button>
         </div>
         {saveError ? (
           <div className="error-message show" role="alert" data-testid="cabin-settings-save-error">{saveError}</div>
@@ -527,7 +566,36 @@ export function CabinSettingsPanel({
           )}
         </div>
 
+        {/* ── Lišta s uložením: mimo záložky, aby byla po ruce na každé z nich (#260) ── */}
+        {panelState === 'ready' ? (
+          <div className="cs-save-bar" data-testid="cabin-settings-save-bar">
+            <span className="cs-save-status" role="status">
+              {isDirty ? 'Máš neuložené změny.' : ''}
+            </span>
+            <button
+              type="button"
+              className={`cs-btn-save${saveSuccess ? ' cs-btn-save--success' : ''}`}
+              onClick={doSave}
+              disabled={updateSettings.isPending}
+              data-testid="cabin-settings-save-button"
+            >
+              {saveBtnText}
+            </button>
+          </div>
+        ) : null}
+
       </div>
+
+      <ConfirmDialog
+        isOpen={leaveGuard.isBlocked}
+        title="Odejít bez uložení?"
+        message="V nastavení chaty máš neuložené změny. Když teď odejdeš, ztratíš je."
+        confirmLabel="Odejít bez uložení"
+        cancelLabel="Zůstat"
+        danger
+        onConfirm={leaveGuard.proceed}
+        onCancel={leaveGuard.stay}
+      />
     </div>
   )
 }

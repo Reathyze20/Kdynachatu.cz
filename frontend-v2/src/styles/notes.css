@@ -1566,7 +1566,7 @@
 
 .message-time {
   font-size: 0.65rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: var(--text-muted);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -1574,17 +1574,17 @@
 }
 
 .message-mine .message-time {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-on-primary);
 }
 
 .message-mine .message-edited-label {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-on-primary);
 }
 
 .message-edited-label {
   font-size: 0.6rem;
   font-style: italic;
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--text-muted);
 }
 
 .message-pin-badge {

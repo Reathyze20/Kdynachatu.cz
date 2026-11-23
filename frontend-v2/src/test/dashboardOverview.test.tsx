@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import apiClient from '@/api/client'
-import type { AttentionItem, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
+import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 import statusHeaderCss from '@/styles/status-header.css?raw'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
@@ -46,8 +46,8 @@ function reservations(overrides: Partial<DashboardReservationsData> = {}): Dashb
 
 const NO_SHOPPING: DashboardShoppingData = { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null }
 
-function renderOverview(data: DashboardReservationsData, shopping: DashboardShoppingData = NO_SHOPPING) {
-  responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [] })
+function renderOverview(data: DashboardReservationsData, shopping: DashboardShoppingData = NO_SHOPPING, cabin: Partial<CabinSettings> = {}) {
+  responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], ...cabin })
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', shopping)
   responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
@@ -234,13 +234,13 @@ describe('Přehled: „Potřebuje pozornost“ (#275)', () => {
     expect(await within(card).findByText('Toaleťák')).toBeInTheDocument()
   })
 
-  it('„Do WhatsAppu“ zkopíruje všechny věci i za souhrnem', async () => {
+  it('„Zkopírovat pro WhatsApp“ zkopíruje všechny věci i za souhrnem', async () => {
     const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     renderOverview(reservations(), withAttention(supply('D', true), supply('A'), supply('B'), supply('C')))
 
     const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
-    fireEvent.click(within(card).getByRole('button', { name: 'Do WhatsAppu' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Zkopírovat pro WhatsApp' }))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
       `Na chatě potřebuje pozornost:\n- Došlo: D\n- Dochází: A\n- Dochází: B\n- Dochází: C\n${window.location.origin}/shopping`,
     ))
@@ -295,6 +295,25 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
     expect(await within(hero).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
   })
 
+  it('s vybranou obcí nabídne pruh odkaz „Akce v kraji“ na kalendář Kudy z nudy v novém panelu (#283)', async () => {
+    renderOverview(reservations(), NO_SHOPPING, { municipalityName: 'Telč', municipalityRegion: 'Kraj Vysočina' })
+
+    const hero = await screen.findByTestId('cabin-hero')
+    const link = await within(hero).findByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })
+    expect(link).toHaveTextContent('Akce v kraji')
+    expect(link).toHaveAttribute('href', 'https://www.kudyznudy.cz/kalendar-akci/kraj-vysocina')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('bez vybrané obce odkaz „Akce v kraji“ není (#283)', async () => {
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })
+    expect(within(hero).queryByRole('link', { name: /Akce v kraji/ })).not.toBeInTheDocument()
+  })
+
   it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {
     renderOverview(reservations())
 
@@ -343,6 +362,21 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
     expect(within(card).getAllByRole('listitem')).toHaveLength(3)
     expect(card).toHaveTextContent('Zítra jedeš na chatu')
     expect(within(card).getByRole('button', { name: 'Zobrazit méně' })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('upozornění pro rodinu má tlačítko s textem „Zkopírovat pro WhatsApp“, které zkopíruje zprávu s odkazem (#264)', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    renderOverview(reservations({ lastStay: lastStay(20) }))
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    const copy = within(card).getByRole('button', { name: 'Zkopírovat pro WhatsApp' })
+    expect(copy).toHaveTextContent('Zkopírovat pro WhatsApp')
+    fireEvent.click(copy)
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`Na chatě už 20 dní nikdo nebyl\\. Nezajedeme\\?\\n${window.location.origin}/reservations$`)),
+    ))
+    expect(await within(card).findByRole('button', { name: 'Zkopírováno' })).toBeInTheDocument()
   })
 
   it('skryté upozornění zmizí a když nic nevisí, karta se nevykreslí', async () => {

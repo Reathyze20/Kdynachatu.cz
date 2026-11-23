@@ -297,7 +297,7 @@ export function DashboardPage() {
   // Kompaktní pruh chaty nad oběma sloupci (mock 01b: hero nad hlavním sloupcem i bočním panelem).
   return (
     <div className="dashboard-frame">
-      <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} />
+      <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} region={cabinQuery.data?.municipalityRegion} />
       <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
       {/* Výzva k instalaci jednou po 3. návštěvě, na konci stránky (#277) */}
       <InstallCard />

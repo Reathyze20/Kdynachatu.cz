@@ -2,7 +2,7 @@
  * features/admin/AdminPage.tsx
  * Admin panel: user management, invites and cabin settings.
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
@@ -24,8 +24,9 @@ import { Modal } from '@/components/shared/Modal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
-import { Check, Copy, Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
+import { Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 import { CabinSettingsPanel } from '@/features/settings/CabinSettingsPage'
@@ -141,6 +142,12 @@ function buildInviteShareText(invite: Invite): string {
       : `Pozvánku lze použít ${invite.maxUses}×.`
 
   return `Ahoj, zvu tě do chaty „${invite.cabinName}“ v aplikaci Kdy na chatu. Připoj se přes tento odkaz: ${buildInviteUrl(invite.token)} Role po přijetí: ${roleLabel}. Platnost do ${formatDateLabel(invite.expiresAt)}. ${usageHint}`
+}
+
+function buildRevokeConfirmMessage(invite: Invite): string {
+  const roleLabel = getRoleLabel(invite.role).toLocaleLowerCase('cs-CZ')
+  const author = invite.createdBy?.username ? `, autor: ${invite.createdBy.username}` : ''
+  return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ (platí do ${formatDateLabel(invite.expiresAt)}${author}). Odkaz přestane fungovat a kdo ho už dostal, se přes něj nepřipojí.`
 }
 
 function isAdminWorkspace(value: string | null): value is AdminWorkspace {
@@ -466,20 +473,13 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   const createInvite = useCreateInvite()
   const sendInviteEmail = useSendInviteEmail()
   const revokeInvite = useRevokeInvite()
-  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [emailInvite, setEmailInvite] = useState<Invite | null>(null)
+  const [revokeTarget, setRevokeTarget] = useState<Invite | null>(null)
+  const [revokeError, setRevokeError] = useState<string | null>(null)
   const [emailValue, setEmailValue] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-    }
-  }, [])
-
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setCreateError(null)
@@ -512,15 +512,16 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     )
   }
 
-  function handleRevoke(id: string) {
+  function handleRevoke(id: string, onError: (message: string) => void = setActionError, onSuccess?: () => void) {
     setActionError(null)
     revokeInvite.mutate(id, {
       onSuccess: () => {
         setActionError(null)
         showToast('Pozvánka zrušena', 'success')
+        onSuccess?.()
       },
       onError: (error) => {
-        setActionError(
+        onError(
           getNetworkAwareActionMessage(
             error,
             'Pozvánku se nepodařilo zrušit. Zkus to znovu.',
@@ -543,19 +544,6 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     setEmailInvite(null)
     setEmailValue('')
     setEmailError(null)
-  }
-
-  function copyShareMessage(invite: Invite) {
-    setActionError(null)
-    navigator.clipboard.writeText(buildInviteShareText(invite)).then(() => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-      setCopiedId(invite.id)
-      showToast('Text pozvánky zkopírován', 'success')
-      copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000)
-    }).catch(() => {
-      setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')
-      showToast('Nepodařilo se zkopírovat text', 'error')
-    })
   }
 
   function handleSendInviteEmail(e: React.FormEvent<HTMLFormElement>) {
@@ -684,15 +672,12 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 </div>
               </div>
               <div className="admin-invite-actions">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => copyShareMessage(inv)}
-                  title="Zkopírovat text pro WhatsApp nebo SMS"
-                  data-testid="invite-copy-message-button"
-                >
-                  {copiedId === inv.id ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Text zprávy</>}
-                </button>
+                <CopyForWhatsAppButton
+                  text={buildInviteShareText(inv)}
+                  onCopied={() => setActionError(null)}
+                  onError={() => setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')}
+                  testId="invite-copy-message-button"
+                />
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
@@ -704,8 +689,8 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 </button>
                 <button
                   type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleRevoke(inv.id)}
+                  className="btn btn-outline-danger btn-sm"
+                  onClick={() => setRevokeTarget(inv)}
                   disabled={revokeInvite.isPending}
                   title="Zrušit pozvánku"
                   data-testid="invite-revoke-button"
@@ -757,6 +742,26 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           </div>
         </details>
       )}
+
+      <ConfirmDialog
+        isOpen={revokeTarget !== null}
+        title="Zrušit pozvánku?"
+        message={revokeTarget ? buildRevokeConfirmMessage(revokeTarget) : ''}
+        confirmLabel="Zrušit pozvánku"
+        cancelLabel="Nechat platit"
+        danger
+        loading={revokeInvite.isPending}
+        errorMessage={revokeError}
+        onConfirm={() => {
+          if (!revokeTarget) return
+          setRevokeError(null)
+          handleRevoke(revokeTarget.id, setRevokeError, () => setRevokeTarget(null))
+        }}
+        onCancel={() => {
+          setRevokeTarget(null)
+          setRevokeError(null)
+        }}
+      />
 
       <Modal
         isOpen={emailInvite !== null}

@@ -107,7 +107,7 @@ const helpDictionary: Record<string, ReactNode> = {
       <p>Správa všech vstupů do chaty na jednom místě. Tady vytváříš nové odkazy, sdílíš je a uklízíš archiv.</p>
       <ul>
         <li><strong>Nová pozvánka</strong> — nastavíš roli, platnost a počet použití.</li>
-        <li><strong>Text zprávy</strong> — jedním klikem zkopíruješ krátký text pro WhatsApp nebo SMS.</li>
+        <li><strong>Zkopírovat pro WhatsApp</strong> — jedním klikem zkopíruješ text pozvánky pro WhatsApp nebo SMS.</li>
         <li><strong>Archiv</strong> — staré nebo vyčerpané pozvánky zůstávají dole, aby nepřekážely aktivním vstupům.</li>
       </ul>
     </>

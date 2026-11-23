@@ -1,13 +1,13 @@
 /**
  * AttentionCard — „Potřebuje pozornost“ na Přehledu (#275, návrh #6 díl 4 = A + C).
  * Nejvýš tři řádky se stavem slovem, u zásob „Koupím já“ = slib „Přivezu z domova“ s mým jménem
- * (#167), u víc věcí souhrn do Zásob. Nahoře „Do WhatsAppu“ zkopíruje celý seznam.
+ * (#167), u víc věcí souhrn do Zásob. Nahoře „Zkopírovat pro WhatsApp“ zkopíruje celý seznam (#264).
  * Když nic nepotřebuje pozornost, karta se nevykreslí.
  */
 import { useId } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { AttentionItem, DashboardShoppingData, HandoverFault } from "@/api/dashboard";
 import { inventoryApi, shoppingApi } from "@/api/shopping";
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
@@ -16,7 +16,8 @@ import { formatDayMonth } from "@/lib/dateUtils";
 import { handleMutationError } from "@/lib/mutationError";
 import { isNetworkError } from "@/lib/networkError";
 import { pluralize } from "@/lib/utils";
-import { copyForWhatsApp } from "@/lib/whatsapp";
+import { whatsAppMessage } from "@/lib/whatsapp";
+import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
 import { attentionKey, attentionWhatsApp, buildAttention, supplyStatus } from "./attention";
 
 /** Zásoba jde přes pledge (server položku případně přidá), samotná ★ položka přes stávající změnu stavu. */
@@ -66,10 +67,7 @@ export function AttentionCard({ shopping, fault }: Props) {
     <section className="glass-card attention-card" aria-labelledby={headingId} data-testid="dashboard-attention">
       <div className="dashboard-card-header">
         <h2 id={headingId} className="dashboard-card-header-title">Potřebuje pozornost</h2>
-        <button type="button" className="attention-whatsapp" onClick={() => void copyForWhatsApp(attentionWhatsApp(all), "/shopping")}>
-          <MessageCircle className="w-4 h-4" aria-hidden="true" />
-          Do WhatsAppu
-        </button>
+        <CopyForWhatsAppButton text={whatsAppMessage(attentionWhatsApp(all), "/shopping")} />
       </div>
       <ul className="attention-list">
         {rows.map((row) =>

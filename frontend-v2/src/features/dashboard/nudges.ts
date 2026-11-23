@@ -4,7 +4,7 @@
  * A pure selector over data the dashboard already fetches. It produces timely,
  * actionable nudges (departure prompt, upcoming stay, low supplies, long-empty)
  * WITHOUT any new backend call. Each nudge carries an in-app `href` and, where
- * it's worth broadcasting, a `whatsapp` message for the "Kopírovat pro WhatsApp"
+ * it's worth broadcasting, a `whatsapp` message for the "Zkopírovat pro WhatsApp"
  * bridge (the manual precursor to the Phase-3 bot).
  */
 import { Car, Flame, House, Luggage, ShoppingCart, type LucideIcon } from "lucide-react";
