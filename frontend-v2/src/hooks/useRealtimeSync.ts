@@ -57,6 +57,8 @@ export function useRealtimeSync() {
 
     function handleInventoryChange() {
       void qc.invalidateQueries({ queryKey: ['inventory'] })
+      // Došlo / Dochází na Přehledu bere server ze stavu propojené zásoby (#275)
+      void qc.invalidateQueries({ queryKey: DASHBOARD_SHOPPING_KEY })
     }
 
     function handleGalleryChange() {

@@ -3,7 +3,8 @@ import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
-import { calendarTodayIso, departureGate, nextFreeWeekend } from "./reservationHelpers";
+import { calendarTodayIso, departureGate, handoverFault, nextFreeWeekend } from "./reservationHelpers";
+import { attentionItems } from "./dashboardAttention";
 
 const router = Router();
 
@@ -31,7 +32,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
     const todayStr = calendarTodayIso(now);
     const cabinId = req.user!.cabinId!;
 
-    const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth] = await Promise.all([
+    const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth, lastHandover] = await Promise.all([
       prisma.reservation.findMany({
         where: { cabinId, dateFrom: { gte: new Date(todayStr) }, status: "primary" },
         include: {
@@ -85,7 +86,25 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
           dateTo: { gte: new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`) },
         },
       }),
+      // Last completed handover; its fault stays until the next handover overwrites it (#275)
+      prisma.reservation.findFirst({
+        where: { cabinId, isCheckoutCompleted: true },
+        orderBy: [{ dateTo: "desc" }, { checkoutCompletedAt: "desc" }],
+        select: { checkoutState: true, checkoutStateAt: true, checkoutCompletedAt: true, checkoutCompletedBy: true, dateTo: true, user: { select: { username: true } } },
+      }),
     ]);
+
+    // Who filled the handover (a co-traveller may have), only a member of this cabin
+    const handoverAuthor = lastHandover?.checkoutCompletedBy
+      ? await prisma.user.findFirst({ where: { id: lastHandover.checkoutCompletedBy, cabinId }, select: { username: true } })
+      : null;
+    const lastFault = lastHandover
+      ? handoverFault(
+          lastHandover.checkoutState,
+          handoverAuthor?.username ?? lastHandover.user.username,
+          lastHandover.checkoutStateAt ?? lastHandover.checkoutCompletedAt ?? lastHandover.dateTo,
+        )
+      : null;
 
     res.json({
       activeReservation: activeReservation ? {
@@ -141,6 +160,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         daysEmpty: Math.floor((new Date(todayStr).getTime() - lastStayReservation.dateTo.getTime()) / (1000 * 60 * 60 * 24)),
         checkoutState: lastStayReservation.checkoutState ?? null,
       } : null,
+      lastFault,
       stats: {
         myNightsThisYear: myStaysThisYear.reduce((sum, r) => {
           const nights = Math.max(0, Math.floor((r.dateTo.getTime() - r.dateFrom.getTime()) / (1000 * 60 * 60 * 24)));
@@ -166,7 +186,7 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
 
     // Nevyřízená položka = jen Koupit; „Přivezu z domova“ i Koupeno jsou vyřešené (#167 = A)
     const activeListFilter = { isResolved: false, isPantry: false, cabinId };
-    const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems] = await Promise.all([
+    const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems, lowInventory, pendingForAttention] = await Promise.all([
       prisma.shoppingListItem.findMany({
         where: { status: "pending", list: activeListFilter },
         include: { list: { select: { id: true, name: true } } },
@@ -183,7 +203,18 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
         where: { isEssential: true, status: "pending", list: activeListFilter },
         select: { id: true, name: true },
         take: 10,
-      })
+      }),
+      // "Potřebuje pozornost" (#275): supplies marked Dochází/Došlo + pending items that are linked or ★
+      prisma.inventoryItem.findMany({
+        where: { cabinId, status: { in: ["LOW", "EMPTY"] } },
+        select: { id: true, name: true, status: true, isEssential: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.shoppingListItem.findMany({
+        where: { status: "pending", list: activeListFilter, OR: [{ isEssential: true }, { linkedInventoryId: { not: null } }] },
+        select: { id: true, name: true, isEssential: true, linkedInventoryId: true },
+        orderBy: { createdAt: "asc" },
+      }),
     ]);
 
     res.json({
@@ -200,6 +231,7 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
         count: essentialPendingItems.length,
         items: essentialPendingItems.map((i) => ({ id: i.id, name: i.name })),
       } : null,
+      attention: attentionItems(lowInventory, pendingForAttention),
     });
   } catch (error) {
     logger.error("DASHBOARD", "Get shopping error", { error: String(error) });

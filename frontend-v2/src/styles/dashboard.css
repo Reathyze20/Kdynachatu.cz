@@ -545,11 +545,17 @@
   gap: 2px;
 }
 
-.running-low-card { gap: var(--space-sm); }
-.running-low-items { margin: 0; font-size: var(--font-size-sm); font-weight: 600; color: var(--text-main); }
-.running-low-more { font-weight: 500; color: var(--text-muted); }
-.running-low-summary { margin: 0; font-size: var(--font-size-sm); color: var(--text-muted); }
-.running-low-link { display: inline-flex; align-items: center; align-self: flex-start; min-height: var(--touch-target-min); font-size: var(--font-size-sm); font-weight: 600; color: var(--brand-primary); }
+/* „Potřebuje pozornost“ (#275): štítek stavu · celý název · akce; cíle dotyku ≥ 48 px */
+.attention-card { gap: var(--space-sm); }
+.attention-whatsapp { display: inline-flex; align-items: center; gap: 6px; min-height: var(--touch-target-min); padding: 0 var(--space-sm); border-radius: 999px; font-size: var(--font-size-sm); font-weight: 600; color: var(--brand-primary); background: transparent; }
+.attention-list { list-style: none; margin: 0; padding: 0; }
+.attention-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); padding: var(--space-xs) 0; border-top: 1px solid rgb(var(--rule-soft)); }
+.attention-row:first-child { border-top: 0; }
+.attention-name { flex: 1; min-width: 0; font-weight: 600; color: var(--text-main); overflow-wrap: anywhere; }
+.attention-meta { font-weight: 500; color: var(--text-muted); }
+.attention-pledge { min-height: var(--touch-target-min); }
+.attention-more { display: inline-flex; align-items: center; gap: var(--space-xs); align-self: flex-start; min-height: var(--touch-target-min); font-size: var(--font-size-sm); font-weight: 600; color: var(--brand-primary); }
+.badge-fault { background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
 
 /* Karta instalace na plochu (#277): v toku stránky na konci Přehledu, jen mobil */
 .install-card { gap: var(--space-sm); margin: 0 var(--space-md) var(--space-md); }

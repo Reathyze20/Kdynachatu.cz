@@ -143,3 +143,35 @@ describe("handover: PATCH /checkout notifies the cabin in realtime", () => {
     }
   });
 });
+
+describe("handover: the fault from the last handover (#275)", () => {
+  /** Dokončená předávka pobytu, který končí za `days` dní (dál než ostatní testy, aby byla poslední). */
+  async function completedHandover(owner: TestUser, days: number, broken: string | undefined, by: TestUser = owner): Promise<string> {
+    const dateTo = new Date(new Date(calendarTodayIso(new Date())).getTime() + days * 86_400_000);
+    const r = await prisma.reservation.create({
+      data: {
+        userId: owner.id, cabinId: owner.cabinId, dateFrom: dateTo, dateTo, purpose: "Předávka se závadou",
+        isCheckoutCompleted: true, checkoutCompletedBy: by.id, checkoutCompletedAt: new Date(), checkoutStateAt: new Date(),
+        checkoutState: broken === undefined ? { note: "Vše v pořádku" } : { broken },
+      },
+    });
+    return r.id;
+  }
+
+  test("shows who filled the handover and when, until the next handover overwrites it, only to the own cabin", async () => {
+    const ids = [await completedHandover(world.memberA, 900, " Kape kohoutek ", world.adminA)];
+    try {
+      const res = await dashboardAs(world.memberA);
+      assert.equal(res.status, 200);
+      assert.equal(res.body.lastFault.text, "Kape kohoutek");
+      assert.equal(res.body.lastFault.reportedBy, world.adminA.username);
+      assert.ok(!Number.isNaN(Date.parse(res.body.lastFault.reportedAt)));
+      assert.equal(JSON.stringify((await dashboardAs(world.memberB)).body).includes("Kape kohoutek"), false);
+
+      ids.push(await completedHandover(world.memberA, 901, undefined));
+      assert.equal((await dashboardAs(world.memberA)).body.lastFault, null);
+    } finally {
+      await prisma.reservation.deleteMany({ where: { id: { in: ids } } });
+    }
+  });
+});

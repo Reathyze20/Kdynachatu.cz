@@ -42,6 +42,12 @@ export function formatShortDayDate(iso: string): string {
   return `${DAY_NAMES_SHORT_CZ[d.getDay()].toLowerCase()} ${d.getDate()}. ${d.getMonth() + 1}.`;
 }
 
+/** Den a měsíc „15. 11.“ z ISO časového razítka, v místním čase. */
+export function formatDayMonth(isoTimestamp: string): string {
+  const d = new Date(isoTimestamp);
+  return `${d.getDate()}. ${d.getMonth() + 1}.`;
+}
+
 export function getTodayFormatted(): string {
   const today = new Date();
   const dayName = DAY_NAMES_CZ[today.getDay()];

@@ -4,14 +4,14 @@
  * rovnou do úkolu;
  * nejvýš dvě jsou vidět, zbytek je za „Zobrazit víc“. Upozornění, která stojí za to poslat
  * rodině, mají „Kopírovat pro WhatsApp“ (zpráva + odkaz), dokud nepřijde bot (fáze 3).
- * Docházející zásoby tu nejsou: ukazuje je karta „Dochází“ v bočním panelu (bez duplicity).
+ * Docházející zásoby tu nejsou: ukazuje je karta „Potřebuje pozornost“ (bez duplicity).
  * Když nic nevisí, karta se nevykreslí.
  */
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Copy } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { showToast } from "@/lib/toast";
+import { copyForWhatsApp } from "@/lib/whatsapp";
 import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
 import { buildNudges, type Nudge } from "./nudges";
 
@@ -66,17 +66,6 @@ export function NudgeTray({ reservations, shopping }: Props) {
     }
   };
 
-  const copyForWhatsApp = async (n: Pick<Nudge, "whatsapp" | "href">) => {
-    if (!n.whatsapp) return;
-    const link = `${window.location.origin}${n.href}`;
-    try {
-      await navigator.clipboard.writeText(`${n.whatsapp}\n${link}`);
-      showToast("Zkopírováno pro WhatsApp", "success");
-    } catch {
-      showToast("Kopírování se nepodařilo", "error");
-    }
-  };
-
   return (
     <section className="glass-card your-tasks" aria-labelledby={headingId} data-testid="dashboard-nudge-tray">
       <h2 id={headingId} className="dashboard-card-header-title">Visí na tobě</h2>
@@ -96,7 +85,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
                 )}
               </div>
               {n.whatsapp && (
-                <button className="nudge-btn" onClick={() => void copyForWhatsApp(n)} title="Kopírovat pro WhatsApp" aria-label="Kopírovat pro WhatsApp">
+                <button className="nudge-btn" onClick={() => void copyForWhatsApp(n.whatsapp!, n.href)} title="Kopírovat pro WhatsApp" aria-label="Kopírovat pro WhatsApp">
                   <Copy size={16} />
                 </button>
               )}

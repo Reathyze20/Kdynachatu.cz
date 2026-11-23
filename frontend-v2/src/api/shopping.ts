@@ -118,6 +118,10 @@ export const inventoryApi = {
 
   addToCart: (id: string, payload: { listId: string } | { newListName: string }): Promise<unknown> =>
     apiClient.post(`/inventory/${id}/add-to-cart`, payload).then(r => r.data),
+
+  /** „Koupím já“ (#275): slib „Přivezu z domova“; chybí-li položka na seznamu, server ji přidá */
+  pledge: (id: string): Promise<{ id: string; status: ItemStatus }> =>
+    apiClient.post<{ id: string; status: ItemStatus }>(`/inventory/${id}/pledge`).then(r => r.data),
 }
 
 // ─── Notes / Threads (pro Share dialog) ──────────────────────────────────────
