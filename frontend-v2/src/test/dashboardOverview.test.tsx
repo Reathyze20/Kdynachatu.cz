@@ -234,13 +234,13 @@ describe('Přehled: „Potřebuje pozornost“ (#275)', () => {
     expect(await within(card).findByText('Toaleťák')).toBeInTheDocument()
   })
 
-  it('„Do WhatsAppu“ zkopíruje všechny věci i za souhrnem', async () => {
+  it('„Zkopírovat pro WhatsApp“ zkopíruje všechny věci i za souhrnem', async () => {
     const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     renderOverview(reservations(), withAttention(supply('D', true), supply('A'), supply('B'), supply('C')))
 
     const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
-    fireEvent.click(within(card).getByRole('button', { name: 'Do WhatsAppu' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Zkopírovat pro WhatsApp' }))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
       `Na chatě potřebuje pozornost:\n- Došlo: D\n- Dochází: A\n- Dochází: B\n- Dochází: C\n${window.location.origin}/shopping`,
     ))
@@ -343,6 +343,21 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
     expect(within(card).getAllByRole('listitem')).toHaveLength(3)
     expect(card).toHaveTextContent('Zítra jedeš na chatu')
     expect(within(card).getByRole('button', { name: 'Zobrazit méně' })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('upozornění pro rodinu má tlačítko s textem „Zkopírovat pro WhatsApp“, které zkopíruje zprávu s odkazem (#264)', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    renderOverview(reservations({ lastStay: lastStay(20) }))
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    const copy = within(card).getByRole('button', { name: 'Zkopírovat pro WhatsApp' })
+    expect(copy).toHaveTextContent('Zkopírovat pro WhatsApp')
+    fireEvent.click(copy)
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`Na chatě už 20 dní nikdo nebyl\\. Nezajedeme\\?\\n${window.location.origin}/reservations$`)),
+    ))
+    expect(await within(card).findByRole('button', { name: 'Zkopírováno' })).toBeInTheDocument()
   })
 
   it('skryté upozornění zmizí a když nic nevisí, karta se nevykreslí', async () => {

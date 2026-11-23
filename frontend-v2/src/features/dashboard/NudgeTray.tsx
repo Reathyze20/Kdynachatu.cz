@@ -3,15 +3,16 @@
  * jako jedna akční karta. Upozornění s akcí jdou napřed; první je zvýrazněné a jeho tlačítko vede
  * rovnou do úkolu;
  * nejvýš dvě jsou vidět, zbytek je za „Zobrazit víc“. Upozornění, která stojí za to poslat
- * rodině, mají „Kopírovat pro WhatsApp“ (zpráva + odkaz), dokud nepřijde bot (fáze 3).
+ * rodině, mají „Zkopírovat pro WhatsApp“ (zpráva + odkaz, #264), dokud nepřijde bot (fáze 3).
  * Docházející zásoby tu nejsou: ukazuje je karta „Potřebuje pozornost“ (bez duplicity).
  * Když nic nevisí, karta se nevykreslí.
  */
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Copy } from "lucide-react";
+import { X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { copyForWhatsApp } from "@/lib/whatsapp";
+import { whatsAppMessage } from "@/lib/whatsapp";
+import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
 import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
 import { buildNudges, type Nudge } from "./nudges";
 
@@ -78,17 +79,19 @@ export function NudgeTray({ reservations, shopping }: Props) {
               <div className="nudge-body">
                 <span className="nudge-title">{n.title}</span>
                 {n.detail && <span className="nudge-detail">{n.detail}</span>}
-                {action && (
-                  <button className={i === 0 ? "status-cta status-cta-primary nudge-cta" : "status-cta status-cta-neutral nudge-cta"} onClick={() => navigate(n.href)}>
-                    {action}
-                  </button>
+                {(action || n.whatsapp) && (
+                  <div className="nudge-actions">
+                    {action && (
+                      <button className={i === 0 ? "status-cta status-cta-primary nudge-cta" : "status-cta status-cta-neutral nudge-cta"} onClick={() => navigate(n.href)}>
+                        {action}
+                      </button>
+                    )}
+                    {n.whatsapp && (
+                      <CopyForWhatsAppButton text={whatsAppMessage(n.whatsapp, n.href)} />
+                    )}
+                  </div>
                 )}
               </div>
-              {n.whatsapp && (
-                <button className="nudge-btn" onClick={() => void copyForWhatsApp(n.whatsapp!, n.href)} title="Kopírovat pro WhatsApp" aria-label="Kopírovat pro WhatsApp">
-                  <Copy size={16} />
-                </button>
-              )}
               <button className="nudge-btn" onClick={() => dismiss(n.id)} title="Skrýt" aria-label="Skrýt">
                 <X size={16} />
               </button>

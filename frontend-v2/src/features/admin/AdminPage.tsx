@@ -2,7 +2,7 @@
  * features/admin/AdminPage.tsx
  * Admin panel: user management, invites and cabin settings.
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
@@ -24,8 +24,9 @@ import { Modal } from '@/components/shared/Modal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
-import { Check, Copy, Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
+import { Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 import { CabinSettingsPanel } from '@/features/settings/CabinSettingsPage'
@@ -472,7 +473,6 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   const createInvite = useCreateInvite()
   const sendInviteEmail = useSendInviteEmail()
   const revokeInvite = useRevokeInvite()
-  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [emailInvite, setEmailInvite] = useState<Invite | null>(null)
@@ -480,14 +480,6 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   const [revokeError, setRevokeError] = useState<string | null>(null)
   const [emailValue, setEmailValue] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-    }
-  }, [])
-
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setCreateError(null)
@@ -552,19 +544,6 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     setEmailInvite(null)
     setEmailValue('')
     setEmailError(null)
-  }
-
-  function copyShareMessage(invite: Invite) {
-    setActionError(null)
-    navigator.clipboard.writeText(buildInviteShareText(invite)).then(() => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-      setCopiedId(invite.id)
-      showToast('Text pozvánky zkopírován', 'success')
-      copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000)
-    }).catch(() => {
-      setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')
-      showToast('Nepodařilo se zkopírovat text', 'error')
-    })
   }
 
   function handleSendInviteEmail(e: React.FormEvent<HTMLFormElement>) {
@@ -693,15 +672,12 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 </div>
               </div>
               <div className="admin-invite-actions">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => copyShareMessage(inv)}
-                  title="Zkopírovat text pro WhatsApp nebo SMS"
-                  data-testid="invite-copy-message-button"
-                >
-                  {copiedId === inv.id ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Text zprávy</>}
-                </button>
+                <CopyForWhatsAppButton
+                  text={buildInviteShareText(inv)}
+                  onCopied={() => setActionError(null)}
+                  onError={() => setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')}
+                  testId="invite-copy-message-button"
+                />
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
