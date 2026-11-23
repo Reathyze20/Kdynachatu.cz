@@ -371,14 +371,18 @@ describe("shopping: bring from home counts as resolved and restocks the linked i
   const attentionOf = async (user: TestUser) => (await as(app, user).get("/api/dashboard/shopping")).body.attention as Attention[];
 
   test("dashboard attention lists own supplies Dochází/Došlo and pending ★ items, not plain ones", async () => {
-    const empty = await createInventory(world.memberA, "Toaleťák P", "EMPTY", false);
-    const star = await createLinkedItem("Baterky P", null, { isEssential: true });
-    await createLinkedItem("Mléko P", null);
-    await createInventory(world.memberB, "Cizí P", "EMPTY", false);
-    const rows = await attentionOf(world.memberA);
-    assert.deepEqual(rows.find((r) => r.name === "Toaleťák P"), { name: "Toaleťák P", isEmpty: true, isEssential: false, inventoryId: empty, shoppingItemId: null });
-    assert.equal(rows.find((r) => r.name === "Baterky P")?.shoppingItemId, star);
-    assert.deepEqual(["Mléko P", "Cizí P"].map((n) => rows.some((r) => r.name === n)), [false, false]);
+    const supplies = [await createInventory(world.memberA, "Toaleťák P", "EMPTY", false), await createInventory(world.memberB, "Cizí P", "EMPTY", false)];
+    const items = [await createLinkedItem("Baterky P", null, { isEssential: true }), await createLinkedItem("Mléko P", null)];
+    try {
+      const rows = await attentionOf(world.memberA);
+      assert.deepEqual(rows.find((r) => r.name === "Toaleťák P"), { name: "Toaleťák P", isEmpty: true, isEssential: false, inventoryId: supplies[0], shoppingItemId: null });
+      assert.equal(rows.find((r) => r.name === "Baterky P")?.shoppingItemId, items[0]);
+      assert.deepEqual(["Mléko P", "Cizí P"].map((n) => rows.some((r) => r.name === n)), [false, false]);
+    } finally {
+      // Ostatní testy v souboru počítají nevyřízené ★ položky seznamu
+      await prisma.shoppingListItem.deleteMany({ where: { id: { in: items } } });
+      await prisma.inventoryItem.deleteMany({ where: { id: { in: supplies } } });
+    }
   });
 
   test("Koupím já marks the pending item or adds it with my pledge, restocks the supply and drops it from attention", async () => {
