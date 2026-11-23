@@ -110,8 +110,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Povrchy redesignu (#239, C4a) z variables.css: bg-sheet, border-rule-soft, shadow-lift */
+  /* Povrchy redesignu (#239, C4a) z variables.css: bg-sheet, bg-inset (#339), border-rule-soft, shadow-lift */
   --color-sheet: rgb(var(--sheet));
+  --color-inset: rgb(var(--inset));
   --color-rule-soft: rgb(var(--rule-soft));
   --shadow-lift: var(--lift);
 

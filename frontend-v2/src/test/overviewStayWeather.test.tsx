@@ -177,6 +177,19 @@ describe('Přehled: karta Počasí na pobyt', () => {
     expect(within(card).queryByRole('button', { name: 'Hodinový graf' })).not.toBeInTheDocument()
   })
 
+  it('vnořená pole karty (dny, slunce, záložky grafu) mají papír --inset, vybraná záložka povrch karty (#339)', async () => {
+    mockOpenMeteo()
+    responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: 'Lhota', latitude: 49.5, longitude: 15.2, departureChecklist: [] })
+    renderWith(new QueryClient({ defaultOptions: { queries: { retry: false } } }), <StayWeatherCard from="2030-06-03" to="2030-06-05" />)
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+
+    const days = await within(card).findAllByRole('button', { name: /\d+\. 6\./ })
+    expect(days.filter((d) => d.getAttribute('aria-pressed') === 'false').every((d) => d.classList.contains('bg-inset'))).toBe(true)
+    expect(within(card).getByRole('tablist', { name: 'Řada hodinového grafu' })).toHaveClass('bg-inset')
+    expect(within(card).getByRole('tab', { selected: true })).toHaveClass('bg-sheet')
+    expect(card.querySelector('.bg-slate-50, .bg-slate-100, .bg-white')).toBeNull()
+  })
+
   it('detail pobytu po Přehledu předpověď znovu nestahuje (sdílený klíč dotazu)', async () => {
     const forecastCalls = mockOpenMeteo()
     const qc = renderOverview(reservations(null, [stay('r-petr', 'Petr', '2030-06-03', '2030-06-05')]))

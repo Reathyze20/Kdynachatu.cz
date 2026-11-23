@@ -37,7 +37,7 @@ function DayCell({ day, selected, onSelect }: { day: StayForecastDay; selected: 
   return (
     <li><button
       type="button" aria-pressed={selected} onClick={onSelect}
-      className={`flex min-h-12 w-full flex-col items-center gap-1 rounded-xl border-[1.5px] px-1 py-2.5 focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] ${selected ? "border-[var(--brand-primary)] bg-[rgb(var(--sheet-alt))]" : "border-transparent bg-slate-50"}`}
+      className={`flex min-h-12 w-full flex-col items-center gap-1 rounded-xl border-[1.5px] px-1 py-2.5 focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] ${selected ? "border-[var(--brand-primary)] bg-[rgb(var(--sheet-alt))]" : "border-transparent bg-inset"}`}
     >
       <span className="sr-only">{label}</span>
       <span aria-hidden="true" className={`text-sm font-bold ${selected ? "text-slate-900" : "text-slate-700"}`}>{day.dayName} {Number(day.date.slice(8, 10))}.</span>
@@ -64,7 +64,7 @@ function Alert({ icon: Icon, day, text }: { icon: LucideIcon; day: StayForecastD
  * `title` = kdo a kdy (Přehled, #326), `frame` = rámeček karty (v detailu tenký obrys, na Přehledu samostatná karta).
  * `collapsibleChart` = hodinový graf je sbalený, otevře ho tlačítko „Hodinový graf“ nebo ťuknutí na den (Přehled, #338).
  */
-export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] border border-slate-100", collapsibleChart = false }: {
+export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] border border-rule-soft", collapsibleChart = false }: {
   from: string; to: string; title?: string; frame?: string; collapsibleChart?: boolean;
 }) {
   const headingId = useId();
@@ -114,10 +114,11 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
             ><StayHourlyChart day={day} dayName={fullDayName(day.date)} /></motion.div>
           )}
         </AnimatePresence>
-        <p className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+        {/* emerald-800: emerald-700 má na vnořeném poli --inset (#339) jen 4,43 : 1 */}
+        <p className="flex flex-wrap items-center gap-3 rounded-xl bg-inset px-3 py-2 text-sm font-medium text-slate-700">
           {day.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Východ slunce</span>{day.sunrise}</span>}
           {day.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{day.sunset}</span>}
-          <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700"><Sun aria-hidden="true" className="w-4 h-4" />UV {day.uvIndex} {uvLabel(day.uvIndex)}</span>
+          <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800"><Sun aria-hidden="true" className="w-4 h-4" />UV {day.uvIndex} {uvLabel(day.uvIndex)}</span>
           {length && <span className="ml-auto"><span className="sr-only">Délka dne </span>{length}</span>}
         </p>
         {stay.frost && <Alert icon={ThermometerSnowflake} day={stay.frost} text={`v noci mráz až ${deg(stay.frost.tempMin)} °C. Před odjezdem vypusť vodu.`} />}
@@ -125,7 +126,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
         {collapsibleChart && (
           <button
             type="button" aria-expanded={chartOpen} aria-controls={chartOpen ? chartId : undefined} onClick={() => setChartOpen((open) => !open)}
-            className="flex min-h-12 items-center justify-center gap-1.5 border-t border-slate-100 text-base font-bold text-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
+            className="flex min-h-12 items-center justify-center gap-1.5 border-t border-rule-soft text-base font-bold text-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
           >
             Hodinový graf<ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${chartOpen ? "rotate-180" : ""}`} />
           </button>
@@ -133,7 +134,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
       </>
     );
   } else if (isLoading || cabin.isLoading) {
-    body = <div className="h-28 rounded-xl bg-slate-50 animate-pulse" aria-busy="true" />;
+    body = <div className="h-28 rounded-xl bg-inset animate-pulse" aria-busy="true" />;
   } else return null;
 
   return (

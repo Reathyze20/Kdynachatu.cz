@@ -39,7 +39,8 @@ const SERIES: Series[] = [
     context: (max, _min, peak) => <>vítr nejvíc <b>{max} km/h</b> kolem <b>{peak}</b></>,
   },
   {
-    id: "temp", label: "Teplota", icon: Thermometer, text: "text-amber-700", fill: "bg-amber-200", peakFill: "bg-amber-500",
+    // amber-800: amber-700 má na papírové kartě (#339) jen 4,43 : 1
+    id: "temp", label: "Teplota", icon: Thermometer, text: "text-amber-800", fill: "bg-amber-200", peakFill: "bg-amber-500",
     value: (h) => h.temp, format: (v) => `${deg(v)}°`, height: (v, min, max) => 20 + ((v - min) / (max - min || 1)) * 80,
     context: (max, min, peak) => <>maximum <b>{deg(max)}°</b> kolem <b>{peak}</b>, minimum {deg(min)}°</>,
   },
@@ -76,13 +77,13 @@ export function StayHourlyChart({ day, dayName }: { day: StayForecastDay; dayNam
   };
 
   return (
-    <div className="@container flex flex-col gap-2 border-t border-slate-100 pt-2.5">
-      <div role="tablist" aria-label="Řada hodinového grafu" onKeyDown={onKeyDown} className="flex gap-2 rounded-xl bg-slate-100 p-[3px]">
+    <div className="@container flex flex-col gap-2 border-t border-rule-soft pt-2.5">
+      <div role="tablist" aria-label="Řada hodinového grafu" onKeyDown={onKeyDown} className="flex gap-2 rounded-xl bg-inset p-[3px]">
         {SERIES.map((s) => (
           <button
             key={s.id} id={`${id}-${s.id}`} type="button" role="tab" aria-selected={s.id === tab} aria-controls={`${id}-panel`}
             tabIndex={s.id === tab ? 0 : -1} onClick={() => setTab(s.id)}
-            className={`flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-[10px] text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] ${s.id === tab ? `bg-white shadow-sm ${s.text}` : "text-slate-600"}`}
+            className={`flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-[10px] text-sm font-semibold focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] ${s.id === tab ? `bg-sheet shadow-sm ${s.text}` : "text-slate-600"}`}
           >
             <s.icon aria-hidden="true" className="w-4 h-4" />{s.label}
           </button>
@@ -94,7 +95,7 @@ export function StayHourlyChart({ day, dayName }: { day: StayForecastDay; dayNam
           {hours.map((h, i) => (
             <div key={h.time} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <span className={`text-sm leading-none whitespace-nowrap ${i === peakIdx ? `font-extrabold ${series.text}` : "font-semibold text-slate-600"}`}>{series.format(values[i])}</span>
-              <div className="relative h-16 w-full overflow-hidden rounded-md bg-slate-100">
+              <div className="relative h-16 w-full overflow-hidden rounded-md bg-inset">
                 <div className={`absolute inset-x-0 bottom-0 rounded-t-md ${i === peakIdx ? series.peakFill : series.fill}`} style={{ height: `${series.height(values[i], min, max)}%` }} />
               </div>
               <span className={`text-sm leading-none tracking-tight ${i === peakIdx ? "font-bold text-slate-900" : "text-slate-600"}`}>{hourOf(h.time)}<span className={hideWhenNarrow}>:00</span></span>

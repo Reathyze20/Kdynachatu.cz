@@ -144,7 +144,8 @@ The app uses a two-layer design-token architecture defined in `variables.css`. W
 | Placeholder | `--text-placeholder` (#9ca3af) | `text-slate-400` |
 | Borders | `--border-strong` (#e5e7eb) | `border-slate-200` |
 | Soft backgrounds | `--bg-app` (#f6f0e6, warm paper = `--page`) | `bg-slate-50` |
-| Card background | `--bg-card` (#ffffff) | `bg-white` |
+| Card background (legacy; still inputs, modals, popovers) | `--bg-card` (#ffffff) | `bg-white` |
+| Redesign card / menu surface | `rgb(var(--sheet))` (246 240 230, full paper), nested fields `rgb(var(--inset))`, card line `--rule-soft`, shadow `--lift`; under the cards `--bg-app-backdrop` (warm paper gradient D, #339) | `bg-sheet`, `bg-inset`, `border-rule-soft`, `shadow-lift` |
 
 **shadcn semantic utilities** (`bg-primary`, `text-muted-foreground`, `border-input`, `ring-ring`, `bg-destructive`, …) are wired to these tokens by the theme bridge in `src/styles/shadcn-tokens.css` (light `:root` references `variables.css`, dark = `.dark` class). Prefer them in new components; do not redefine legacy `--color-*` aliases there.
 
