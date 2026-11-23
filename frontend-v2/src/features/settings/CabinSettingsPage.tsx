@@ -227,9 +227,11 @@ export function CabinSettingsPanel({
   const [saveError, setSaveError] = useState<string | null>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Populate form when data loads
-  useEffect(() => {
-    if (!settings) return
+  // Formulář se plní z nových dat ještě během vykreslení, ne v efektu: jinak by jedno vykreslení
+  // porovnávalo prázdný formulář s uloženým snímkem a na chvíli hlásilo neuložené změny (#327).
+  const [populatedFrom, setPopulatedFrom] = useState<CabinConfig | undefined>(undefined)
+  if (settings && settings !== populatedFrom) {
+    setPopulatedFrom(settings)
     setName(settings.name ?? '')
     setDescription(settings.description ?? '')
     setLegacyLocationRemoved(false)
@@ -243,7 +245,7 @@ export function CabinSettingsPanel({
     setIsWinterized(settings.isWinterized ?? false)
     setChecklist(checklistFromSettings(settings))
     setFeatures(settings.features ?? {})
-  }, [settings])
+  }
 
   const savedForm = useMemo(() => (settings ? savedSnapshot(settings) : null), [settings])
   const currentForm = formSnapshot({ name, description, municipalityCode: municipality?.code ?? null, municipalityPending,
