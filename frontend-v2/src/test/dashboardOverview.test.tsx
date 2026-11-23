@@ -103,7 +103,7 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     expect(chain).toHaveTextContent('Pak: Ty (po 28. 12.)')
     expect(chain).not.toHaveTextContent('Teď:')
     expect(document.body.textContent?.match(/14\. 12\./g)).toHaveLength(1)
-    expect(screen.queryByText(/Váš pobyt/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Tvůj pobyt/)).not.toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 
@@ -147,7 +147,7 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
       myNextReservation: { from: '2026-12-28', to: '2026-12-30', purpose: 'Víkend' },
     }))
 
-    expect(await screen.findByRole('region', { name: 'Na chatě teď' })).toHaveTextContent('Váš pobyt za 18 dní')
+    expect(await screen.findByRole('region', { name: 'Na chatě teď' })).toHaveTextContent('Tvůj pobyt za 18 dní')
   })
 
   it('detail pod osobou (účel, noci, s kým) ukazuje jen desktop od 1024 px', () => {
@@ -161,7 +161,7 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     }))
 
     await screen.findByText('Chata zatím čeká')
-    expect(screen.queryByText(/Váš pobyt/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Tvůj pobyt/)).not.toBeInTheDocument()
   })
 })
 
@@ -265,7 +265,7 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
     renderOverview(reservations())
 
     const invite = await screen.findByRole('region', { name: 'Chata zatím čeká' })
-    expect(within(invite).getByText('Zaberte termín a rozjeďte to.')).toBeInTheDocument()
+    expect(within(invite).getByText('Zaber termín a rozjeď to.')).toBeInTheDocument()
     expect(within(invite).getByTestId('overview-invite-media')).toBeInTheDocument()
     expect(within(invite).getByRole('button', { name: 'Zabrat termín' })).toBeInTheDocument()
   })
@@ -278,7 +278,7 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
   })
 })
 
-describe('Přehled: „Visí na vás“ jako akční karta (#172)', () => {
+describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
   const lastStay = (daysEmpty: number, gas: 'low' | 'empty' | null = null) => ({
     username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-10', to: '2026-11-12',
     isCheckoutCompleted: true, daysEmpty, checkoutState: gas ? { gas } : null,
@@ -287,7 +287,7 @@ describe('Přehled: „Visí na vás“ jako akční karta (#172)', () => {
   it('upozornění je v hlavním sloupci jako karta, první má tlačítko, které vede rovnou do úkolu', async () => {
     renderOverview(reservations({ lastStay: lastStay(20) }))
 
-    const card = await screen.findByRole('region', { name: 'Visí na vás' })
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     expect(screen.getByTestId('dashboard-page')).toContainElement(card)
     expect(card).toHaveTextContent('Chata je prázdná 20 dní')
     expect(within(card).getByRole('button', { name: 'Otevřít kalendář' })).toBeInTheDocument()
@@ -299,7 +299,7 @@ describe('Přehled: „Visí na vás“ jako akční karta (#172)', () => {
       { ...NO_SHOPPING, totalPendingShoppingCount: 1, essentialWarning: { count: 1, items: [{ name: 'Káva' }] } },
     )
 
-    const card = await screen.findByRole('region', { name: 'Visí na vás' })
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     const items = within(card).getAllByRole('listitem')
     expect(items).toHaveLength(2)
     expect(within(items[0]).getByRole('button', { name: 'Otevřít Zásoby' })).toBeInTheDocument()
@@ -314,8 +314,8 @@ describe('Přehled: „Visí na vás“ jako akční karta (#172)', () => {
   it('skryté upozornění zmizí a když nic nevisí, karta se nevykreslí', async () => {
     renderOverview(reservations({ lastStay: lastStay(20) }))
 
-    const card = await screen.findByRole('region', { name: 'Visí na vás' })
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     fireEvent.click(within(card).getByRole('button', { name: 'Skrýt' }))
-    expect(screen.queryByRole('region', { name: 'Visí na vás' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Visí na tobě' })).not.toBeInTheDocument()
   })
 })

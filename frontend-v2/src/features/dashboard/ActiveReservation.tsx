@@ -153,7 +153,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
         ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
         : departed
           ? <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>
-          : <div className="checkout-reminder checkout-reminder-warn"><span>Před odjezdem vyplňte <a href="/reservations">odjezdový checklist</a></span></div>;
+          : <div className="checkout-reminder checkout-reminder-warn"><span>Před odjezdem vyplň <a href="/reservations">odjezdový checklist</a></span></div>;
     }
 
     // Můj pevný pobyt, který hlavička ani řetězec neukazují.
@@ -191,7 +191,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           {!now && buildLastStayBlock(data.lastStay)}
           {myNext && !chain.some((n) => n.stay?.id === myNext.id) && (
             <p className="status-header__mine">
-              <strong>Váš pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}
+              <strong>Tvůj pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}
             </p>
           )}
           {checkoutReminderNode}
@@ -214,7 +214,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           {OVERVIEW_INVITE_ILLUSTRATION ? <img src={OVERVIEW_INVITE_ILLUSTRATION} alt="" /> : <DoorOpen className="w-5 h-5" />}
         </div>
         <h2 id="overview-invite-title" className="overview-invite__title">Chata zatím čeká</h2>
-        <p className="overview-invite__text">Zaberte termín a rozjeďte to.</p>
+        <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
         {buildLastStayBlock(data.lastStay)}
         <div className="status-cta-row overview-invite__actions">
           <button className="status-cta status-cta-primary" onClick={() => navigate("/reservations")}>

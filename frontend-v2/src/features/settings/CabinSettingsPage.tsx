@@ -152,7 +152,7 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 
 export function CabinSettingsPanel({
   title = 'Nastavení chaty',
-  subtitle = 'Přizpůsobte si svou chatu podle sebe',
+  subtitle = 'Přizpůsob si svou chatu podle sebe',
   showBackButton = false,
   onBack,
 }: CabinSettingsPanelProps) {
@@ -234,8 +234,8 @@ export function CabinSettingsPanel({
           setSaveError(
             getNetworkAwareActionMessage(
               error,
-              'Nastavení chaty se nepodařilo uložit. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se nastavení chaty stihlo uložit. Zkuste to znovu po obnovení připojení.',
+              'Nastavení chaty se nepodařilo uložit. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se nastavení chaty stihlo uložit. Zkus to znovu po obnovení připojení.',
             ),
           )
         },
@@ -354,7 +354,7 @@ export function CabinSettingsPanel({
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Základní informace</h2>
-                    <p>Jak se vaše chata jmenuje a kde se nachází</p>
+                    <p>Jak se chata jmenuje a kde se nachází</p>
                   </div>
 
                   <div className="cs-field">
@@ -403,7 +403,7 @@ export function CabinSettingsPanel({
                       data-testid="cabin-settings-weather-location-input"
                     />
                     <span className="cs-hint">
-                      Z bezpečnostních důvodů úmyslně neukládáme přesnou adresu ani GPS vaší chaty.
+                      Z bezpečnostních důvodů úmyslně neukládáme přesnou adresu ani GPS chaty.
                       K zobrazení počasí nám stačí pouze název nejbližší obce nebo PSČ.
                     </span>
                   </div>
@@ -412,7 +412,7 @@ export function CabinSettingsPanel({
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Uvítání a pravidla</h2>
-                    <p>Nastavte tón komunikace vaší chaty</p>
+                    <p>Nastav tón komunikace chaty</p>
                   </div>
 
                   <div className="cs-field">
@@ -489,7 +489,7 @@ export function CabinSettingsPanel({
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Aktivní moduly</h2>
-                    <p>Zapněte nebo vypněte funkce podle potřeb vaší rodiny</p>
+                    <p>Zapni nebo vypni funkce podle potřeb rodiny</p>
                   </div>
                   <FeatureToggles
                     features={features}

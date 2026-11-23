@@ -36,7 +36,7 @@ export function VerifyForm({ username, prefillCode = '', onShowLogin }: VerifyFo
     try {
       const { data } = await apiClient.post<VerifyEmailResponse>('/verify-email', { username, code })
 
-      setMessage({ text: data.message || 'Ověření úspěšné, můžete se přihlásit.', type: 'success' })
+      setMessage({ text: data.message || 'Ověření úspěšné, můžeš se přihlásit.', type: 'success' })
       timerRef.current = setTimeout(onShowLogin, 1500)
     } catch (err: unknown) {
       const data = (err as { response?: { data?: VerifyEmailResponse } }).response?.data
@@ -56,7 +56,7 @@ export function VerifyForm({ username, prefillCode = '', onShowLogin }: VerifyFo
         Ověření e-mailu
       </h2>
       <p style={{ textAlign: 'center', color: 'var(--color-text-light)', marginBottom: '1rem' }}>
-        Zadejte 6místný PIN kód, který vám byl zaslán na e-mail (nebo zobrazen v serverové konzoli pro testování).
+        Zadej 6místný PIN kód, který jsme ti poslali na e-mail (nebo ho najdeš v serverové konzoli pro testování).
       </p>
 
       <form id="verify-form" noValidate onSubmit={handleSubmit} data-testid="verify-form">

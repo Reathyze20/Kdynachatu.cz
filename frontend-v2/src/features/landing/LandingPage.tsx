@@ -153,7 +153,7 @@ export function LandingPage() {
           </h1>
 
           <p className="hero-subtitle">
-            Sdílejte kalendář, nakupujte chytře a&nbsp;plánujte údržbu vaší chalupy.
+            Sdílej kalendář, nakupuj chytře a&nbsp;plánuj údržbu chalupy.
             Jedna aplikace, která sjednotí celou rodinu.
           </p>
 
@@ -205,7 +205,7 @@ export function LandingPage() {
       {/* ========== FEATURES ========== */}
       <section id="funkce" className="landing-section landing-section--white">
         <div className="landing-section-inner">
-          <h2 className="landing-section-title reveal">Všechno co potřebujete, na jednom místě</h2>
+          <h2 className="landing-section-title reveal">Všechno, co potřebuješ, na jednom místě</h2>
           <p className="landing-section-subtitle reveal reveal-delay-1">
             Rezervace, nákupy, galerie, deník, nástěnka i plánování rekonstrukce — v jedné přehledné aplikaci.
           </p>
@@ -220,7 +220,7 @@ export function LandingPage() {
                 </svg>
               </div>
               <h3>Chytrý kalendář rezervací</h3>
-              <p>Okamžitě vidíte, kdo kdy jede na chatu. Přehled měsíců, konflikty i osobní volno na jednom místě.</p>
+              <p>Okamžitě vidíš, kdo kdy jede na chatu. Přehled měsíců, konflikty i osobní volno na jednom místě.</p>
             </article>
             <article className="feature-card reveal reveal-delay-2">
               <div className="feature-icon">
@@ -281,23 +281,23 @@ export function LandingPage() {
         <div className="landing-section-inner">
           <h2 className="landing-section-title reveal">Jak to funguje</h2>
           <p className="landing-section-subtitle reveal reveal-delay-1">
-            Nastavení zvládnete za pár minut. Pak už jen sdílíte termíny, úkoly a nákupy.
+            Nastavení zvládneš za pár minut. Pak už jen sdílíš termíny, úkoly a nákupy.
           </p>
           <div className="steps-grid">
             <article className="step-card reveal reveal-delay-1">
               <div className="step-number">1</div>
-              <h3>Vytvoříte účet</h3>
-              <p>Přihlásíte sebe a pozvete rodinu. Každý dostane vlastní přístup.</p>
+              <h3>Vytvoříš účet</h3>
+              <p>Přihlásíš sebe a pozveš rodinu. Každý dostane vlastní přístup.</p>
             </article>
             <article className="step-card reveal reveal-delay-2">
               <div className="step-number">2</div>
-              <h3>Nastavíte pravidla</h3>
-              <p>Definujete role, dostupnost a první seznamy. Všichni vidí stejná data.</p>
+              <h3>Nastavíš pravidla</h3>
+              <p>Určíš role, dostupnost a první seznamy. Všichni vidí stejná data.</p>
             </article>
             <article className="step-card reveal reveal-delay-3">
               <div className="step-number">3</div>
-              <h3>Používáte každý den</h3>
-              <p>Rezervace, nákupní seznamy a úkoly máte na jednom místě pro celou rodinu.</p>
+              <h3>Používáš každý den</h3>
+              <p>Rezervace, nákupní seznamy a úkoly máš na jednom místě pro celou rodinu.</p>
             </article>
           </div>
         </div>
@@ -324,7 +324,7 @@ export function LandingPage() {
                   vytvořil <strong>Kdy na chatu</strong>. Abychom se zbavili dohadování
                   a vrátili se k tomu hlavnímu — radosti z přírody.
                 </p>
-                <p>Věřím, že to pomůže i vám.</p>
+                <p>Věřím, že to pomůže i tobě.</p>
               </blockquote>
               <div className="founder-signature">
                 <span className="founder-name">Tomáš Rambousek</span>
@@ -340,7 +340,7 @@ export function LandingPage() {
         <div className="landing-section-inner">
           <h2 className="landing-section-title reveal">Jednoduchý ceník, žádné háčky</h2>
           <p className="landing-section-subtitle reveal reveal-delay-1">
-            Vyberte si, co vám sedí. Kdykoliv můžete změnit nebo zrušit.
+            Vyber si, co ti sedí. Kdykoli to můžeš změnit nebo zrušit.
           </p>
 
           <div className="pricing-cards-container reveal reveal-delay-2">
@@ -370,7 +370,7 @@ export function LandingPage() {
                   <span className="pricing-amount">89</span>
                   <span className="pricing-currency">Kč <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>/ měsíc</span></span>
                 </div>
-                <p className="pricing-plan-desc">Absolutní flexibilita. Zapněte si to třeba jen na prázdniny.</p>
+                <p className="pricing-plan-desc">Absolutní flexibilita. Zapni si to třeba jen na prázdniny.</p>
               </div>
               <ul className="pricing-list">
                 <li><CheckIcon /><span>Neomezeně členů</span></li>
@@ -403,7 +403,7 @@ export function LandingPage() {
           </div>
 
           <div className="pricing-community-note reveal reveal-delay-3">
-            <strong>Stavíme to společně.</strong> Jako předplatitel získáte pozvánku na náš soukromý Discord, kde můžete ovlivnit další vývoj.
+            <strong>Stavíme to společně.</strong> Jako předplatitel dostaneš pozvánku na náš soukromý Discord, kde můžeš ovlivnit další vývoj.
           </div>
         </div>
       </section>
@@ -411,8 +411,8 @@ export function LandingPage() {
       {/* ========== CTA SECTION ========== */}
       <section className="landing-cta-section reveal">
         <div className="landing-cta-inner">
-          <h2>Připraveni na pořádek na chatě?</h2>
-          <p>Začněte zdarma, bez závazků. Pozvěte rodinu a vše si vyzkoušejte.</p>
+          <h2>Chceš na chatě pořádek?</h2>
+          <p>Začni zdarma, bez závazků. Pozvi rodinu a všechno si vyzkoušej.</p>
           <div className="landing-cta-buttons">
             <button className="landing-btn landing-btn-primary landing-btn-lg" onClick={goToLogin}>Vyzkoušet zdarma</button>
             <a href="#funkce" className="landing-btn landing-btn-outline landing-btn-lg" onClick={smoothScroll('funkce')}>Prozkoumat funkce</a>

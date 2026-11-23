@@ -40,7 +40,7 @@ describe('FolderGrid – prázdný stav', () => {
 
   it('host tlačítko nevidí', () => {
     renderEmpty(true)
-    expect(screen.getByText('Zatím nemáte žádná alba')).toBeInTheDocument()
+    expect(screen.getByText('Zatím nemáš žádná alba')).toBeInTheDocument()
     expect(screen.queryByTestId('gallery-empty-create-folder-button')).toBeNull()
     expect(screen.queryByText('Vytvořit první album')).toBeNull()
   })

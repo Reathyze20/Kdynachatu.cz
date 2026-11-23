@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { MobileNav } from '@/components/layout/MobileNav'
 
 let features: Record<string, boolean> | null = null
+let canInstall: 'prompt' | 'ios' | null = null
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({ user: { cabinId: 'c-1' }, isAdmin: false, isSuperAdmin: false, logout: vi.fn() }),
@@ -12,6 +13,10 @@ vi.mock('@/context/AuthContext', () => ({
 vi.mock('@/hooks/useCabinFeatures', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/hooks/useCabinFeatures')>()),
   useCabinFeatures: () => ({ data: { features, isWinterized: false } }),
+}))
+
+vi.mock('@/hooks/usePwaInstall', () => ({
+  usePwaInstall: () => ({ isStandalone: false, canInstall }),
 }))
 
 /** Stránky chaty, které dnes žijí v AppShellu (App.tsx); admin a backoffice jsou v profilovém menu. */
@@ -30,6 +35,7 @@ const hrefOf = (el: HTMLElement) => el.getAttribute('href')?.split('?')[0]
 describe('MobileNav — dolní lišta (#171)', () => {
   beforeEach(() => {
     features = null
+    canInstall = null
   })
 
   it('je nav landmark s taby Přehled · Kalendář · Předávka · Zásoby · Víc', () => {
@@ -76,5 +82,26 @@ describe('MobileNav — dolní lišta (#171)', () => {
     renderNav('/dashboard')
     expect(screen.queryByRole('button', { name: /Víc/ })).not.toBeInTheDocument()
     expect(screen.getAllByRole('link')).toHaveLength(4)
+  })
+
+  it('„Víc“ trvale nabízí „Přidat na plochu“, i když chata nemá žádný doplněk (#277)', async () => {
+    const user = userEvent.setup()
+    canInstall = 'ios'
+    features = { notes: false, gallery: false, diary: false, reconstruction: false }
+    renderNav('/dashboard')
+
+    await user.click(screen.getByRole('button', { name: /Víc/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Víc' })
+    await user.click(within(sheet).getByRole('button', { name: 'Přidat na plochu' }))
+    expect(within(sheet).getByText('„Přidat na plochu“')).toBeInTheDocument()
+  })
+
+  it('v nainstalované appce „Přidat na plochu“ v „Víc“ není (#277)', async () => {
+    const user = userEvent.setup()
+    renderNav('/dashboard')
+
+    await user.click(screen.getByRole('button', { name: /Víc/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Víc' })
+    expect(within(sheet).queryByRole('button', { name: 'Přidat na plochu' })).not.toBeInTheDocument()
   })
 })

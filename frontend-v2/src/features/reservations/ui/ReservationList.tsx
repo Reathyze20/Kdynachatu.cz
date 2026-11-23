@@ -168,8 +168,8 @@ export function ReservationList({
       setNoteSaveError(
         getNetworkAwareActionMessage(
           error,
-          "Poznámku se nepodařilo uložit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se poznámka stihla uložit. Zkuste to znovu po obnovení připojení.",
+          "Poznámku se nepodařilo uložit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se poznámka stihla uložit. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -374,7 +374,7 @@ export function ReservationList({
       >
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            Tuto poznámku uvidí všichni členové chaty. Můžete ji kdykoliv upravit.
+            Tuto poznámku uvidí všichni členové chaty. Můžeš ji kdykoliv upravit.
           </p>
           <textarea
             value={noteText}

@@ -14,6 +14,7 @@ import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
 import { RunningLowCard } from "./RunningLowCard";
 import { CabinHero } from "./CabinHero";
+import { InstallCard } from "@/components/shared/InstallCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { DASHBOARD_SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
@@ -293,6 +294,8 @@ export function DashboardPage() {
     <div className="dashboard-frame">
       <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} />
       <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
+      {/* Výzva k instalaci jednou po 3. návštěvě, na konci stránky (#277) */}
+      <InstallCard />
     </div>
   );
 }

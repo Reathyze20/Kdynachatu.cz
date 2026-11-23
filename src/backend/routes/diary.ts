@@ -140,7 +140,7 @@ router.patch("/folders/:id", protect, requireCabin, validate(renameDiaryFolderSc
     }
 
     if (req.user!.role !== "admin" && folder.createdBy.id !== req.user!.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění přejmenovat tento deník." });
+      return res.status(403).json({ message: "Nemáš oprávnění přejmenovat tento deník." });
     }
 
     const updated = await prisma.diaryFolder.update({
@@ -204,7 +204,7 @@ router.delete("/folders/:id", protect, requireCabin, async (req: Request, res: R
     }
 
     if (req.user.role !== "admin" && folder.createdBy.id !== req.user.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění smazat toto období." });
+      return res.status(403).json({ message: "Nemáš oprávnění smazat toto období." });
     }
 
     // Delete folder (cascade will delete entries)
@@ -363,7 +363,7 @@ router.put("/entries/:id", protect, requireCabin, validate(updateDiaryEntrySchem
       return res.status(404).json({ message: "Záznam nenalezen." });
     }
     if (req.user.role !== "admin" && existing.authorId !== req.user.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění upravit tento záznam." });
+      return res.status(403).json({ message: "Nemáš oprávnění upravit tento záznam." });
     }
 
     // Update content + replace photo associations in a transaction
@@ -428,7 +428,7 @@ router.delete("/entries/:id", protect, requireCabin, async (req: Request, res: R
     }
 
     if (req.user.role !== "admin" && entry.authorId !== req.user.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění smazat tento záznam." });
+      return res.status(403).json({ message: "Nemáš oprávnění smazat tento záznam." });
     }
 
     await prisma.diaryEntry.delete({

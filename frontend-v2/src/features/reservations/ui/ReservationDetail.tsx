@@ -74,7 +74,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
         getNetworkAwareActionMessage(
           error,
           "Nepodařilo se změnit hlídání termínu.",
-          "Spojení vypadlo dřív, než se hlídání termínu stihlo změnit. Zkuste to znovu po obnovení připojení.",
+          "Spojení vypadlo dřív, než se hlídání termínu stihlo změnit. Zkus to znovu po obnovení připojení.",
         ),
         "error",
       );
@@ -93,8 +93,8 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          "Rezervaci se nepodařilo smazat. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se rezervace stihla smazat. Zkuste to znovu po obnovení připojení.",
+          "Rezervaci se nepodařilo smazat. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se rezervace stihla smazat. Zkus to znovu po obnovení připojení.",
         ),
       );
     } finally {
@@ -230,7 +230,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         title="Smazat rezervaci"
-        message="Opravdu chcete smazat tuto rezervaci? Tato akce je nevratná."
+        message="Opravdu chceš smazat tuto rezervaci? Tato akce je nevratná."
         confirmLabel="Smazat"
         danger
         loading={deleteSubmitting}

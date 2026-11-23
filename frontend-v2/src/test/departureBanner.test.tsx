@@ -65,7 +65,7 @@ describe('DepartureBanner: one handover flow with CheckoutSection', () => {
       expect(qc.getQueryState(RESERVATIONS_KEY)?.isInvalidated).toBe(true)
     })
     expect(onRefresh).toHaveBeenCalled()
-    expect(screen.queryByText('Dnes odjíždíte!')).toBeNull()
+    expect(screen.queryByText('Dnes odjíždíš!')).toBeNull()
   })
 
   it('without a note it completes the checkout without touching the structured state', async () => {
@@ -85,6 +85,6 @@ describe('DepartureBanner: one handover flow with CheckoutSection', () => {
 
     expect(await screen.findByRole('alert')).toBeTruthy()
     expect(api.post).not.toHaveBeenCalled()
-    expect(screen.getByText('Dnes odjíždíte!')).toBeTruthy()
+    expect(screen.getByText('Dnes odjíždíš!')).toBeTruthy()
   })
 })

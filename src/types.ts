@@ -148,3 +148,15 @@ export interface DemoAccount {
 export interface DemoAccountsResponse {
   accounts: DemoAccount[];
 }
+
+// GET /api/municipalities?q= – obce ČR z RÚIAN pro výběr nejbližší obce chaty (ADR-0006)
+export interface MunicipalityOption {
+  code: number; // kód obce v RÚIAN
+  name: string;
+  district: string; // okres
+  region: string; // kraj
+}
+
+export interface MunicipalitySearchResponse {
+  municipalities: MunicipalityOption[];
+}

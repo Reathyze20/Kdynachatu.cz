@@ -36,7 +36,7 @@ export const registerSchema = z.object({
 export const forgotPasswordSchema = z.object({
   identifier: z.string()
     .trim()
-    .min(2, "Zadejte e-mail nebo uživatelské jméno")
+    .min(2, "Zadej e-mail nebo uživatelské jméno")
     .max(255, "Zadaná hodnota je příliš dlouhá"),
 });
 
@@ -305,6 +305,11 @@ export const updateCabinSettingsSchema = z.object({
   weatherLocation: z.string().max(100).optional().nullable(),
   isWinterized: z.boolean().optional(),
   features: z.record(z.string(), z.boolean()).optional().nullable(),
+});
+
+// Municipalities — GET /api/municipalities?q= (našeptávání nejbližší obce chaty)
+export const municipalitySearchSchema = z.object({
+  q: z.string().trim().min(2, "Napiš aspoň dva znaky názvu obce.").max(100, "Název obce je příliš dlouhý."),
 });
 
 // Cabin create

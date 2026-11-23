@@ -168,7 +168,7 @@ router.post("/", protect, requireCabin, validate(createNoteSchema), async (req: 
 // ============================================================================
 router.patch("/:id/resolve", protect, requireCabin, async (req: Request, res: Response) => {
   if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Nemáte oprávnění." });
+    return res.status(403).json({ message: "Nemáš oprávnění." });
   }
 
   const { id } = req.params;
@@ -207,7 +207,7 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
     }
 
     if (req.user!.role !== "admin" && note.userId !== req.user!.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění." });
+      return res.status(403).json({ message: "Nemáš oprávnění." });
     }
 
     await prisma.note.delete({
@@ -241,7 +241,7 @@ router.patch("/:id", protect, requireCabin, async (req: Request, res: Response) 
     }
 
     if (note.userId !== req.user!.userId) {
-      return res.status(403).json({ message: "Můžete upravovat pouze vlastní zprávy." });
+      return res.status(403).json({ message: "Upravovat můžeš jen vlastní zprávy." });
     }
 
     const elapsed = Date.now() - note.createdAt.getTime();
@@ -273,7 +273,7 @@ router.patch("/:id", protect, requireCabin, async (req: Request, res: Response) 
 // ============================================================================
 router.patch("/:id/pin", protect, requireCabin, async (req: Request, res: Response) => {
   if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Nemáte oprávnění." });
+    return res.status(403).json({ message: "Nemáš oprávnění." });
   }
 
   const { id } = req.params;

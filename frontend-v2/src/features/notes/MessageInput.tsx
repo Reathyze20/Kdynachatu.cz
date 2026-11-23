@@ -59,8 +59,8 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
       setSendError(
         getNetworkAwareActionMessage(
           error,
-          "Zprávu se nepodařilo odeslat. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se zpráva stihla odeslat. Zkuste to znovu po obnovení připojení.",
+          "Zprávu se nepodařilo odeslat. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se zpráva stihla odeslat. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -253,7 +253,7 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
           <textarea
             ref={textareaRef}
             className="transparent-text-input"
-            placeholder="Napište zprávu…"
+            placeholder="Napiš zprávu…"
             rows={1}
             maxLength={2000}
             required

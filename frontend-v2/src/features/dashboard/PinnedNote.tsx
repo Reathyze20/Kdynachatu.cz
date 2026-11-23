@@ -54,8 +54,8 @@ export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
       setSaveError(
         getNetworkAwareActionMessage(
           error,
-          "Vzkaz se nepodařilo uložit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se vzkaz stihl uložit. Zkuste to znovu po obnovení připojení.",
+          "Vzkaz se nepodařilo uložit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se vzkaz stihl uložit. Zkus to znovu po obnovení připojení.",
         ),
       );
     },
@@ -143,13 +143,13 @@ export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
         }
       >
         <p style={{ color: 'var(--color-text-muted)', marginBottom: 12, fontSize: '0.9rem' }}>
-          Zanechte vzkaz pro ostatní návštěvníky (max 300 znaků).
+          Zanech vzkaz pro ostatní návštěvníky (max 300 znaků).
         </p>
         <textarea
           ref={textareaRef}
           className="handover-textarea"
           maxLength={300}
-          placeholder="Napište vzkaz…"
+          placeholder="Napiš vzkaz…"
           rows={5}
           value={draftText}
           onChange={(e) => {

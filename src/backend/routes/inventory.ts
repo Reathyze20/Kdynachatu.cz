@@ -167,7 +167,7 @@ router.post("/:id/add-to-cart", protect, requireCabin, validate(addToCartSchema)
 
   try {
     if (!listId && !newListName) {
-      return res.status(400).json({ message: "Zadejte existující seznam nebo název nového." });
+      return res.status(400).json({ message: "Zadej existující seznam nebo název nového." });
     }
     if (newListName && String(newListName).trim().length > 100) {
       return res.status(400).json({ message: "Název seznamu je příliš dlouhý (max 100 znaků)." });

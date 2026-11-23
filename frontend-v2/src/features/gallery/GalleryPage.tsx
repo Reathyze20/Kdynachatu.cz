@@ -129,8 +129,8 @@ export function GalleryPage() {
       setBulkDeleteError(
         getNetworkAwareActionMessage(
           error,
-          'Vybrané fotky se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se fotky stihly smazat. Zkuste to znovu po obnovení připojení.',
+          'Vybrané fotky se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se fotky stihly smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -152,8 +152,8 @@ export function GalleryPage() {
       setCreateFolderError(
         getNetworkAwareActionMessage(
           error,
-          'Album se nepodařilo vytvořit. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se album stihlo vytvořit. Zkuste to znovu po obnovení připojení.',
+          'Album se nepodařilo vytvořit. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se album stihlo vytvořit. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -185,8 +185,8 @@ export function GalleryPage() {
       setRenameFolderError(
         getNetworkAwareActionMessage(
           error,
-          'Album se nepodařilo přejmenovat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se album stihlo přejmenovat. Zkuste to znovu po obnovení připojení.',
+          'Album se nepodařilo přejmenovat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se album stihlo přejmenovat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -208,8 +208,8 @@ export function GalleryPage() {
       setDeleteFolderError(
         getNetworkAwareActionMessage(
           error,
-          'Album se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se album stihlo smazat. Zkuste to znovu po obnovení připojení.',
+          'Album se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se album stihlo smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -331,7 +331,7 @@ export function GalleryPage() {
       <ConfirmDialog
         isOpen={!!deleteFolderId}
         title="Smazat album"
-        message={`Opravdu chcete smazat album „${folders.find(f => f.id === deleteFolderId)?.name ?? ''}" a všechny jeho fotky? Tuto akci nelze vrátit.`}
+        message={`Opravdu chceš smazat album „${folders.find(f => f.id === deleteFolderId)?.name ?? ''}" a všechny jeho fotky? Tuto akci nelze vrátit.`}
         confirmLabel="Smazat album"
         danger
         loading={deleteFolder.isPending}
@@ -365,7 +365,7 @@ export function GalleryPage() {
       <ConfirmDialog
         isOpen={bulkDeleteConfirmOpen}
         title="Smazat fotky"
-        message={`Opravdu chcete smazat ${selectedPhotos.size} vybraných fotek? Tuto akci nelze vrátit.`}
+        message={`Opravdu chceš smazat ${selectedPhotos.size} vybraných fotek? Tuto akci nelze vrátit.`}
         confirmLabel="Smazat"
         danger
         loading={deletePhotos.isPending}
