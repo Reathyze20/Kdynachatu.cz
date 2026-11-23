@@ -293,6 +293,11 @@ export const addToCartSchema = z.object({
   newListName: z.string().trim().max(100).optional(),
 });
 
+// Inventory — POST /:id/pledge params („Koupím já“, #275)
+export const inventoryIdParamsSchema = z.object({
+  id: z.string().uuid("Neplatné ID zásoby"),
+});
+
 // Cabin settings
 export const updateCabinSettingsSchema = z.object({
   name: z.string().min(2).max(100).optional(),
