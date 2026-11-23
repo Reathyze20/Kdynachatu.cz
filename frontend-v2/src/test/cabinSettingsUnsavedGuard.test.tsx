@@ -69,18 +69,23 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     const addListener = vi.spyOn(window, 'addEventListener')
     const flashed: string[] = []
     // Záznamy mutací drží i uzly, které už další vykreslení stihlo odebrat.
-    const observer = new MutationObserver((records) => {
+    const collect = (records: MutationRecord[]) => {
       for (const record of records) {
         for (const node of [record.target, ...record.addedNodes, ...record.removedNodes]) {
           if (node.textContent?.includes('Máš neuložené změny')) flashed.push(node.textContent)
         }
       }
-    })
+    }
+    const observer = new MutationObserver(collect)
     observer.observe(document.body, { childList: true, subtree: true, characterData: true })
 
-    renderAt(<CabinSettingsPanel />)
-    await waitFor(() => expect(screen.getByTestId('cabin-settings-name-input')).toHaveValue('Chata U Lesa'))
-    observer.disconnect()
+    try {
+      renderAt(<CabinSettingsPanel />)
+      await waitFor(() => expect(screen.getByTestId('cabin-settings-name-input')).toHaveValue('Chata U Lesa'))
+    } finally {
+      collect(observer.takeRecords())
+      observer.disconnect()
+    }
 
     expect(addListener.mock.calls.filter(([type]) => type === 'beforeunload')).toHaveLength(0)
     expect(flashed).toHaveLength(0)
