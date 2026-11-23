@@ -137,13 +137,13 @@ The app uses a two-layer design-token architecture defined in `variables.css`. W
 
 | Purpose | CSS Custom Property | Tailwind Equivalent |
 |---|---|---|
-| Primary action | `--brand-primary` (#3f7b63) | `bg-emerald-600` / `hover:bg-emerald-700` |
+| Primary action | `--brand-primary` (#3d7861) | `bg-emerald-600` / `hover:bg-emerald-700` |
 | Primary dark | `--brand-primary-hover` (#1a2721) | `bg-emerald-900` |
 | Primary light bg | `--brand-primary-light` (#e8f4ef) | `bg-emerald-50` |
-| Muted text | `--text-muted` (#4b5563) | `text-slate-600` |
+| Muted text | `--text-muted` (#5e5246, warm) | `text-slate-600` |
 | Placeholder | `--text-placeholder` (#9ca3af) | `text-slate-400` |
 | Borders | `--border-strong` (#e5e7eb) | `border-slate-200` |
-| Soft backgrounds | `--bg-app` (#f4f7f5) | `bg-slate-50` |
+| Soft backgrounds | `--bg-app` (#f6f0e6, warm paper = `--page`) | `bg-slate-50` |
 | Card background | `--bg-card` (#ffffff) | `bg-white` |
 
 **shadcn semantic utilities** (`bg-primary`, `text-muted-foreground`, `border-input`, `ring-ring`, `bg-destructive`, …) are wired to these tokens by the theme bridge in `src/styles/shadcn-tokens.css` (light `:root` references `variables.css`, dark = `.dark` class). Prefer them in new components; do not redefine legacy `--color-*` aliases there.

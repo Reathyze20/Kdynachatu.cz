@@ -13,8 +13,9 @@
 
   --raw-color-1: #1a2721;
   /* Nejtmavší      — Velmi tmavá zeleno-šedá (Texty)       */
-  --raw-color-2: #3f7b63;
-  /* Výrazná/Akcent  — Svěží šalvějová zelená (Tlačítka)    */
+  --raw-color-2: #3d7861;
+  /* Výrazná/Akcent  — Svěží šalvějová zelená (Tlačítka). O kousek tmavší než #3f7b63,
+     aby odkaz měl kontrast ≥ 4,5 : 1 i na teplém --page (#320). */
   --raw-color-3: #6b7280;
   /* Střední tón     — Neutrální šedá (Sekundární texty)    */
   --raw-color-4: #e5e7eb;
@@ -26,6 +27,12 @@
   --raw-white: #ffffff;
   --raw-off-white: #f4f7f5;
   /* Jemně mentolově-bílý nádech — pozadí */
+
+  /* Teplý papír (D4, #320): text a pozadí stránky. Stejné barvy jako --page a text mocku 07-teplo-atomy. */
+  --raw-ink: #26211c;
+  /* 38 33 28 — teplá hnědočerná (hlavní text) */
+  --raw-paper: #f6f0e6;
+  /* 246 240 230 — starý papír, = --page */
   --raw-danger: #dc2626;
   --raw-danger-light: #fee2e2;
   --raw-danger-dark: #991b1c;
@@ -42,7 +49,8 @@
      ========================================================================= */
 
   /* ── Pozadí ────────────────────────────────────────────────────────── */
-  --bg-app: var(--raw-off-white);
+  --bg-app: var(--raw-paper);
+  /* Legacy pozadí stránky stejné teplé jako --page, ať legacy a redesign nemají dvě pozadí */
   --bg-card: var(--raw-white);
   --bg-card-hover: #edf1ee;
   /* Mírné ztmavení karet na hover        */
@@ -50,10 +58,10 @@
   /* Hover stav řádků, listů              */
 
   /* ── Texty ─────────────────────────────────────────────────────────── */
-  --text-main: var(--raw-color-1);
+  --text-main: var(--raw-ink);
   /* Hlavní text — max. kontrast */
-  --text-muted: #4b5563;
-  /* Sekundární, labely — zaručený kontrast na bílém */
+  --text-muted: #5e5246;
+  /* Sekundární, labely — teplá šedohnědá (94 82 70), kontrast ≥ 4,5 : 1 hlídají testy */
   --text-placeholder: #6b7280;
   /* Zvýšen kontrast: #9ca3af → #6b7280 pro WCAG AA */
   /* Placeholder inputů — viditelný, odlišený */
@@ -181,14 +189,17 @@
 
   /* ── Povrchy redesignu (C4a/C5a, mocky docs/design) ─────────────────────
      RGB trojice jako v mocku, aby šla přidat alfa: rgb(var(--sheet) / .96).
-     Stránka = jemný gradient v barvách lesa, obsah na plných kartách --sheet. */
-  --page: 244 247 245;
-  --sheet: 255 253 250;
-  --sheet-alt: 233 244 239;
-  --rule: 223 228 223;
-  --rule-soft: 233 237 232;
+     Teplý papír (D4, #320, spec #319): stránka = jemný gradient se světlem --glow v rohu,
+     obsah na plných kartách --sheet. --glow je zvlášť, aby plochy na --sheet-alt (vybraný den)
+     neměnily význam. */
+  --page: 246 240 230;
+  --sheet: 255 252 246;
+  --sheet-alt: 242 234 220;
+  --rule: 230 221 207;
+  --rule-soft: 238 231 220;
+  --glow: 252 232 204;
   --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
-  --bg-app-backdrop: radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%), rgb(var(--page));
+  --bg-app-backdrop: radial-gradient(1200px 520px at 82% -8%, rgb(var(--glow)), transparent 60%), rgb(var(--page));
 
   /* ── Stavové štítky zásob a plynu (Dostatek · Málo/Dochází · Došlo) ──────
      Hodnoty z mocku docs/design/06-prehled-v2-atomy.html, ztmavené kvůli kontrastu štítku
@@ -263,15 +274,17 @@
 }
 
 
-/* Tmavé povrchy podle mocku; třídu `.dark` appka zatím nenastavuje (viz shadcn-tokens.css). */
+/* Tmavý teplý papír podle mocku 07-teplo-atomy (#320); třídu `.dark` appka zatím nenastavuje
+   (viz shadcn-tokens.css). --ok je zároveň zelený odkaz redesignu (v mocku --accent). */
 .dark {
-  --page: 15 20 17;
-  --sheet: 26 32 28;
-  --sheet-alt: 31 41 35;
-  --rule: 52 62 54;
-  --rule-soft: 37 46 40;
+  --page: 24 20 17;
+  --sheet: 37 32 27;
+  --sheet-alt: 47 40 33;
+  --rule: 66 57 48;
+  --rule-soft: 52 45 38;
+  --glow: 58 42 28;
   --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
-  --ok: 94 186 134;
+  --ok: 110 191 144;
   --low: 234 179 8;
   --empty: 248 113 113;
 }

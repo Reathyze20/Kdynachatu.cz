@@ -80,7 +80,8 @@ describe('Design tokeny povrchů z mocku (C1)', () => {
   const variables = fileRules('variables.css')
   const tokensIn = (selector: string) => variables.filter((r) => r.selectors.includes(selector))
 
-  const LIGHT = { '--page': '244 247 245', '--sheet': '255 253 250', '--sheet-alt': '233 244 239', '--rule': '223 228 223', '--rule-soft': '233 237 232' }
+  // Teplý papír (D4, #320, tabulka ve specu #319) místo zelenošedé z C4a.
+  const LIGHT = { '--page': '246 240 230', '--sheet': '255 252 246', '--sheet-alt': '242 234 220', '--rule': '230 221 207', '--rule-soft': '238 231 220' }
 
   it.each(Object.entries(LIGHT))('světlý režim: %s = %s, tmavý (.dark) ho definuje taky', (token, value) => {
     expect(lastDecl(tokensIn(':root'), token)).toBe(value)
@@ -90,7 +91,58 @@ describe('Design tokeny povrchů z mocku (C1)', () => {
   it('jemný stín --lift (světlý i tmavý) a pozadí aplikace jsou tokeny', () => {
     expect(lastDecl(tokensIn(':root'), '--lift')).toMatch(/rgb\(16 40 28/)
     expect(lastDecl(tokensIn('.dark'), '--lift')).toBeTruthy()
-    expect(lastDecl(tokensIn(':root'), '--bg-app-backdrop')).toMatch(/radial-gradient\([^;]*var\(--sheet-alt\)/)
+    // Světlo v rohu bere --glow, ne --sheet-alt, aby plochy na --sheet-alt (vybraný den) neměnily význam (#320).
+    expect(lastDecl(tokensIn(':root'), '--bg-app-backdrop')).toMatch(/radial-gradient\([^;]*var\(--glow\)/)
+    expect(lastDecl(tokensIn(':root'), '--bg-app-backdrop')).not.toMatch(/--sheet-alt/)
+  })
+})
+
+/** Barva tokenu jako [r, g, b]: hex, RGB trojice nebo `var(--x)` dohledaná ve stejných pravidlech. */
+function rgbOf(rules: Rule[], name: string): number[] {
+  const value = lastDecl(rules, name) ?? ''
+  const ref = /^var\((--[\w-]+)\)$/.exec(value)
+  if (ref) return rgbOf(rules, ref[1])
+  if (/^#[0-9a-f]{6}$/i.test(value)) return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16))
+  const parts = value.split(/\s+/).map(Number)
+  if (parts.length === 3 && parts.every(Number.isFinite)) return parts
+  throw new Error(`${name}: neumím převést „${value}“ na barvu`)
+}
+
+describe('Teplý papír (D4, #320): hodnoty tokenů podle specu #319', () => {
+  const root = fileRules('variables.css').filter((r) => r.selectors.includes(':root'))
+  const dark = fileRules('variables.css').filter((r) => r.selectors.includes('.dark'))
+  const bridgeDark = fileRules('shadcn-tokens.css').filter((r) => r.selectors.includes('.dark'))
+
+  it.each([
+    ['--page', '24 20 17'], ['--sheet', '37 32 27'], ['--sheet-alt', '47 40 33'],
+    ['--rule', '66 57 48'], ['--rule-soft', '52 45 38'],
+  ])('tmavý režim: %s = %s', (token, value) => {
+    expect(lastDecl(dark, token)).toBe(value)
+  })
+
+  it('světlo v rohu pozadí --glow: světle 252 232 204, tmavě 58 42 28', () => {
+    expect(lastDecl(root, '--glow')).toBe('252 232 204')
+    expect(lastDecl(dark, '--glow')).toBe('58 42 28')
+  })
+
+  it('hlavní a vedlejší text: světle --text-main / --text-muted, tmavě --foreground / --muted-foreground mostu shadcn', () => {
+    expect(rgbOf(root, '--text-main')).toEqual([38, 33, 28])
+    expect(rgbOf(root, '--text-muted')).toEqual([94, 82, 70])
+    expect(rgbOf(bridgeDark, '--foreground')).toEqual([242, 236, 227])
+    expect(rgbOf(bridgeDark, '--muted-foreground')).toEqual([190, 177, 162])
+  })
+
+  it('legacy pozadí stránky --bg-app je stejné teplé jako --page', () => {
+    expect(rgbOf(root, '--bg-app')).toEqual(rgbOf(root, '--page'))
+  })
+
+  it('stavové barvy: světle beze změny, tmavě je --ok (zelený odkaz i Dostatek) 110 191 144', () => {
+    expect(lastDecl(root, '--ok')).toBe('47 107 82')
+    expect(lastDecl(root, '--low')).toBe('138 75 6')
+    expect(lastDecl(root, '--empty')).toBe('180 35 35')
+    expect(lastDecl(dark, '--ok')).toBe('110 191 144')
+    expect(lastDecl(dark, '--low')).toBe('234 179 8')
+    expect(lastDecl(dark, '--empty')).toBe('248 113 113')
   })
 })
 
@@ -194,5 +246,16 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
     const color = hex(tok(bridgeDark, token))
     expect(contrast(color, triplet(tok(dark, '--sheet')))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(color, triplet(tok(dark, '--page')))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  // Další dvojice z tabulky kontrastu v pickeru D4 (PR #318). Štítky Dochází/Došlo hlídá statusBadgeContrast.test.ts.
+  it('světlý: vybraný den (--text-main na --sheet-alt) a zelený odkaz --ok na kartě', () => {
+    expect(contrast(rgbOf(root, '--text-main'), rgbOf(root, '--sheet-alt'))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(rgbOf(root, '--ok'), rgbOf(root, '--sheet'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('tmavý: vybraný den (--foreground na --sheet-alt) a zelený odkaz --ok na kartě', () => {
+    expect(contrast(rgbOf(bridgeDark, '--foreground'), rgbOf(dark, '--sheet-alt'))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(rgbOf(dark, '--ok'), rgbOf(dark, '--sheet'))).toBeGreaterThanOrEqual(4.5)
   })
 })
