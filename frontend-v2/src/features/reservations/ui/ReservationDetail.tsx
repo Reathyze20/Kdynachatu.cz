@@ -11,6 +11,7 @@ import { toMemberColor } from "@/lib/memberPalette";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { showToast } from "@/lib/toast";
 import { RESERVATION_TYPE_LABEL } from "../reservationType";
+import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
 
 const MONTH_NAMES_GEN = [
   "Ledna", "Února", "Března", "Dubna", "Května", "Června",
@@ -178,6 +179,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
         </div>
       )}
 
+      <StayWeatherCard from={r.from} to={r.to} />
       {/* ── Checkout ── */}
       <CheckoutSection reservation={r} />
 
