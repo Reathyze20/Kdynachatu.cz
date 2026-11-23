@@ -10,9 +10,13 @@ import reservationsModuleCssRaw from '@/features/reservations/Reservations.modul
 /**
  * Drobný šedý text má kontrast ≥ 4,5 : 1 (WCAG AA, pravidlo G1, #257).
  *
- * Tlumený text jde přes sémantický token `--text-muted` (ve světlém i tmavém režimu),
- * ne přes lokální hex nebo poloprůhlednou černou. jsdom kaskádu nepočítá, proto se
- * kontrast počítá z hodnot tokenů vzorcem WCAG a u míst z ticketu se hlídá, že token berou.
+ * Tlumený text jde přes sémantický token `--text-muted`, ne přes lokální hex nebo
+ * poloprůhlednou černou. jsdom kaskádu nepočítá, proto se kontrast počítá z hodnot tokenů
+ * vzorcem WCAG a u míst z ticketu se hlídá, že token berou.
+ *
+ * Tmavý režim: `.dark` zatím mění jen plochy redesignu (`--sheet`, `--page`); tlumený text na nich
+ * je `--muted-foreground` mostu shadcn (kontrast hlídá lightSurfaces.test.tsx). Místa z ticketu
+ * leží na světlých plochách, které `.dark` nemění, takže `--text-muted` se v `.dark` přepsat nesmí.
  */
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -41,6 +45,12 @@ type Rgb = [number, number, number]
 const ROOT = bodiesFor(variablesCssRaw, ':root')
 const DARK = bodiesFor(variablesCssRaw, '.dark')
 const BRIDGE_DARK = bodiesFor(shadcnTokensCssRaw, '.dark')
+
+/** Barvy `rgba(r, g, b, a)` z hodnoty (třeba z gradientu) složené na plochu `bg`. */
+const rgbaOver = (value: string | undefined, bg: Rgb): Rgb[] =>
+  [...(value ?? '').matchAll(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/g)].map(
+    ([, r, g, b, a]) => [Number(r), Number(g), Number(b)].map((c, i) => c * Number(a) + bg[i] * (1 - Number(a))) as Rgb,
+  )
 
 /** Barva tokenu jako RGB: hex, `var(--x[, fallback])` (dohledá se ve stejném režimu) nebo trojice `R G B`. */
 function color(bodies: string[], value: string | undefined): Rgb {
@@ -76,19 +86,26 @@ describe('Token tlumeného textu --text-muted má kontrast ≥ 4,5 : 1 (#257)', 
     ['--sheet', token(ROOT, '--sheet')],
     ['--page', token(ROOT, '--page')],
     ['bublina cizí zprávy', color(ROOT, decl(bodiesFor(notesCssRaw, '.message-other .message-bubble'), 'background-color'))],
-    ['hotový úkol (#f1f5f9)', [241, 245, 249]],
+    ...rgbaOver(decl(bodiesFor(reconstructionCssRaw, '.kanban-item.task-done'), 'background'), token(ROOT, '--sheet'))
+      .map((bg, i): [string, Rgb] => [`podklad hotového úkolu (stop ${i + 1})`, bg]),
   ]
 
   it.each(lightSurfaces)('světlý režim: --text-muted na %s', (_name, bg) => {
     expect(contrast(token(ROOT, '--text-muted'), bg)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it.each(['--sheet', '--page'])('tmavý režim: --text-muted na tmavém %s', (surface) => {
-    expect(contrast(token(DARK, '--text-muted'), token(DARK, surface))).toBeGreaterThanOrEqual(4.5)
+  it('podklad hotového úkolu se z CSS opravdu načetl', () => {
+    expect(lightSurfaces.filter(([name]) => name.startsWith('podklad hotového úkolu')).length).toBeGreaterThan(0)
   })
 
-  it('tmavý --text-muted je stejný jako --muted-foreground v mostu shadcn (jeden tlumený text)', () => {
-    expect(token(DARK, '--text-muted')).toEqual(token(BRIDGE_DARK, '--muted-foreground'))
+  it('tmavý režim: .dark nepřepisuje --text-muted ani světlé plochy míst z ticketu, kontrast zůstává jako ve světlém', () => {
+    for (const name of ['--text-muted', '--bg-card', '--bg-app', '--bg-hover']) {
+      expect(decl(DARK, name), name).toBeUndefined()
+    }
+  })
+
+  it('tmavý režim: plochy redesignu mají vlastní tlumený text (--muted-foreground mostu shadcn)', () => {
+    expect(contrast(token(BRIDGE_DARK, '--muted-foreground'), token(DARK, '--sheet'))).toBeGreaterThanOrEqual(4.5)
   })
 })
 
