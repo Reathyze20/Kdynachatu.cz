@@ -67,7 +67,7 @@ export function AttentionCard({ shopping, fault }: Props) {
     <section className="glass-card attention-card" aria-labelledby={headingId} data-testid="dashboard-attention">
       <div className="dashboard-card-header">
         <h2 id={headingId} className="dashboard-card-header-title">Potřebuje pozornost</h2>
-        <CopyForWhatsAppButton className="attention-whatsapp" text={whatsAppMessage(attentionWhatsApp(all), "/shopping")} />
+        <CopyForWhatsAppButton text={whatsAppMessage(attentionWhatsApp(all), "/shopping")} />
       </div>
       <ul className="attention-list">
         {rows.map((row) =>

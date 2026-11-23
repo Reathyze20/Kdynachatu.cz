@@ -1,6 +1,6 @@
 /**
  * CopyForWhatsAppButton — jedna akce „Zkopírovat pro WhatsApp“ všude, kde jde text poslat
- * rodině (#264): tlačítko s textem, po zkopírování „Zkopírováno“ na tlačítku a hláška pro čtečku.
+ * rodině (#264): jeden vzhled (btn-secondary), tlačítko s textem, po zkopírování „Zkopírováno“ na tlačítku a hláška pro čtečku.
  */
 import { useEffect, useRef, useState } from "react";
 import { Check, MessageCircle } from "lucide-react";
@@ -11,13 +11,14 @@ const CONFIRM_MS = 2000;
 interface Props {
   /** Celý text, jak se vloží do WhatsAppu (odkaz do aplikace přidá `whatsAppMessage`). */
   text: string;
-  className?: string;
   /** Prohlížeč kopírování nepovolil; bez handleru se ukáže chybový toast. */
   onError?: () => void;
+  /** Text je ve schránce (např. schovat dřívější chybu). */
+  onCopied?: () => void;
   testId?: string;
 }
 
-export function CopyForWhatsAppButton({ text, className = "btn btn-secondary btn-sm", onError, testId }: Props) {
+export function CopyForWhatsAppButton({ text, onError, onCopied, testId }: Props) {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,6 +34,7 @@ export function CopyForWhatsAppButton({ text, className = "btn btn-secondary btn
       else showToast("Kopírování se nepodařilo. Zkus to znovu.", "error");
       return;
     }
+    onCopied?.();
     if (timerRef.current) clearTimeout(timerRef.current);
     setCopied(true);
     timerRef.current = setTimeout(() => setCopied(false), CONFIRM_MS);
@@ -41,7 +43,7 @@ export function CopyForWhatsAppButton({ text, className = "btn btn-secondary btn
   const Icon = copied ? Check : MessageCircle;
   return (
     <>
-      <button type="button" className={className} onClick={() => void copy()} data-testid={testId}>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={() => void copy()} data-testid={testId}>
         <Icon className="w-4 h-4" aria-hidden="true" />
         {copied ? "Zkopírováno" : "Zkopírovat pro WhatsApp"}
       </button>

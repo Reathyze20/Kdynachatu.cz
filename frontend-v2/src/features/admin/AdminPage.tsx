@@ -674,6 +674,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
               <div className="admin-invite-actions">
                 <CopyForWhatsAppButton
                   text={buildInviteShareText(inv)}
+                  onCopied={() => setActionError(null)}
                   onError={() => setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')}
                   testId="invite-copy-message-button"
                 />

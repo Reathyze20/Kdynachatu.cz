@@ -92,6 +92,16 @@ describe('CopyForWhatsAppButton (#264)', () => {
   })
 })
 
+it('po úspěšném zkopírování dá vědět volajícímu (třeba schovat starou chybu)', async () => {
+  mockClipboard(() => Promise.resolve())
+  const onCopied = vi.fn()
+  render(<CopyForWhatsAppButton text="Ahoj" onCopied={onCopied} />)
+
+  fireEvent.click(screen.getByRole('button', { name: 'Zkopírovat pro WhatsApp' }))
+
+  await waitFor(() => expect(onCopied).toHaveBeenCalledTimes(1))
+})
+
 describe('whatsAppMessage', () => {
   it('přidá pod zprávu odkaz do aplikace', () => {
     expect(whatsAppMessage('Dochází káva.', '/shopping')).toBe(`Dochází káva.\n${window.location.origin}/shopping`)

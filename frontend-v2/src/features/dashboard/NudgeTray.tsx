@@ -87,7 +87,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
                       </button>
                     )}
                     {n.whatsapp && (
-                      <CopyForWhatsAppButton className="status-cta status-cta-neutral nudge-cta" text={whatsAppMessage(n.whatsapp, n.href)} />
+                      <CopyForWhatsAppButton text={whatsAppMessage(n.whatsapp, n.href)} />
                     )}
                   </div>
                 )}
