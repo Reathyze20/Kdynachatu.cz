@@ -50,7 +50,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
     : 0;
 
   const statusMap: Record<string, { label: string; cls: string }> = {
-    primary: { label: "POTVRZENO", cls: "bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
+    primary: { label: "PEVNÁ",     cls: "bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
     backup:  { label: "ZÁLOŽNÍ",   cls: "bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
     soft:    { label: "PŘEDBĚŽNÁ", cls: "bg-slate-50 text-slate-700 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase" },
   };

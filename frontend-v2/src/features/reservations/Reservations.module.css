@@ -785,83 +785,6 @@ button.newReservationButton {
   color: var(--brand-primary);
 }
 
-/* ── Sidebar CTA button — overrides global button reset (Tailwind @layer loses) ── */
-
-button.ctaButton {
-  background-color: #3f7a63;
-  color: #ffffff;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-button.ctaButton:hover {
-  background-color: #356853;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-}
-
-button.ctaButton:active {
-  transform: scale(0.98);
-}
-
-.ctaButtonLayout {
-  margin-top: auto;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.ctaRow {
-  display: flex;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.ctaRow .ctaButtonLayout {
-  margin-top: 0;
-  flex: 1;
-}
-
-button.ctaButtonSecondary {
-  background-color: transparent;
-  color: #3f7a63;
-  border: 1.5px solid #3f7a63;
-  box-shadow: none;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 0.88rem;
-  padding: 0.75rem 1rem;
-}
-
-button.ctaButtonSecondary:hover {
-  background-color: rgba(63, 122, 99, 0.08);
-  box-shadow: none;
-}
-
-button.ctaButtonSecondary .ctaIcon {
-  background: rgba(63, 122, 99, 0.12);
-  color: #3f7a63;
-}
-
-.ctaIcon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 /* Reset for transparent/unstyled buttons inside the sidebar */
 button.btnReset {
   background: transparent;
@@ -1074,14 +997,22 @@ button.btnReset {
 }
 
 /* ── Reservation Card ──────────────────────────────────────────────── */
+/* Karta turnusu v bočním panelu (#209): avatar, účel + typ, termín, kdo.
+   Je to <button>, takže se otevře i klávesnicí. Barvy a písmo jen z tokenů. */
 
 .card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  background: #ffffff;
+  gap: 16px;
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 16px 18px;
+  border: 1px solid rgb(var(--rule-soft));
   border-radius: 16px;
+  background: rgb(var(--sheet));
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
   cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
@@ -1097,23 +1028,15 @@ button.btnReset {
 }
 
 .cardAvatar {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  border-radius: 50%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-}
-
-.cardAvatarLetter {
-  font-weight: 700;
-  font-size: 1.125rem;
+  flex-shrink: 0;
 }
 
 .cardContent {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -1122,60 +1045,63 @@ button.btnReset {
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .cardTitle {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 700;
-  color: #1e293b;
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
 }
 
 .cardMeta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
-.cardMetaDot {
-  color: #cbd5e1;
-}
-
-.cardMetaName {
+.cardWho {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ── Status Badges ─────────────────────────────────────────────────── */
+/* ── Typ rezervace: pevná plně, předběžná obrysem, záložní ────────── */
+/* Jako legenda mocku 04 (díl 1 A); tvar odliší typ i bez barvy. */
 
-.badgeConfirmed {
+.typeBadge {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  padding: 2px 10px;
+  padding: 1px 10px;
   border-radius: 9999px;
   white-space: nowrap;
-  background-color: #d1fae5;
-  color: #047857;
 }
 
-.badgeBackup {
-  composes: badgeConfirmed;
-  background-color: #fef3c7;
-  color: #b45309;
+.typeFirm {
+  composes: typeBadge;
+  border: 1px solid transparent;
+  background-color: var(--ok-bg);
+  color: rgb(var(--ok));
 }
 
-.badgePending {
-  composes: badgeConfirmed;
-  background-color: #ffe4e6;
-  color: #e11d48;
+.typeSoft {
+  composes: typeBadge;
+  border: 1px dashed rgb(var(--ok));
+  background-color: transparent;
+  color: rgb(var(--ok));
+}
+
+.typeBackup {
+  composes: typeBadge;
+  border: 1px solid transparent;
+  background-color: var(--low-bg);
+  color: rgb(var(--low));
 }
 
 /* ── Empty State ───────────────────────────────────────────────────── */
@@ -2436,24 +2362,6 @@ button.btnReset {
     margin-top: var(--space-md) !important;
   }
 
-  .ctaButtonLayout {
-    margin-top: var(--space-md) !important;
-  }
-
-  .ctaRow {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .ctaRow .ctaButtonLayout {
-    margin-top: 0 !important;
-  }
-
-  button.ctaButtonSecondary {
-    width: 100%;
-    padding: 0.7rem;
-  }
-
   .rangeHint {
     width: 100%;
     /* Clear the fixed help FAB (bottom:80px right:16px, 48px) which would
@@ -2465,12 +2373,6 @@ button.btnReset {
   .fabBtn {
     bottom: 80px;
     right: 16px;
-  }
-
-  /* ── CTA button: full width ──────────────────────────────────── */
-  button.ctaButton {
-    font-size: 0.9rem;
-    padding: 0.85rem 1rem;
   }
 
   /* ── Stat pills (if used separately): smaller ────────────────── */
