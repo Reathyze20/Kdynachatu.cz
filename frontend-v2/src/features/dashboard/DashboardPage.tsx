@@ -12,7 +12,8 @@ import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
-import { RunningLowCard } from "./RunningLowCard";
+import { AttentionCard } from "./AttentionCard";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { CabinHero } from "./CabinHero";
 import { InstallCard } from "@/components/shared/InstallCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
@@ -188,6 +189,13 @@ export function DashboardPage() {
   const cabinError = cabinQuery.isError;
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
+  // „Potřebuje pozornost“: na mobilu pod „Visí na tobě“, na desktopu v bočním panelu (#275)
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const attention = shoppingQuery.isError ? (
+    <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
+  ) : shoppingQuery.data ? (
+    <AttentionCard shopping={shoppingQuery.data} fault={reservationsQuery.data?.lastFault} />
+  ) : null;
 
   const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
@@ -223,6 +231,7 @@ export function DashboardPage() {
 
       {/* Nudge tray — timely coordination prompts derived from existing data */}
       <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />
+      {!isDesktop && attention}
 
       {/* Hlavní sloupec: prioritní stack karet (#172), karty se nenatahují do výšky sousedů */}
       <motion.div
@@ -260,14 +269,10 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, vzkaz). Další příjezd je jen v hlavičce (#272). Počasí je jen řádek v pruhu nahoře (mock 01).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (pozornost, vzkaz). Další příjezd je jen v hlavičce (#272). Počasí je jen řádek v pruhu nahoře (mock 01).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
-      {shoppingQuery.isError ? (
-        <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
-      ) : shoppingQuery.data ? (
-        <RunningLowCard data={shoppingQuery.data} />
-      ) : null}
+      {isDesktop && attention}
       <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />
