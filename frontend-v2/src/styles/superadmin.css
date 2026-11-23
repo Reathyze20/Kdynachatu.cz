@@ -2,13 +2,6 @@
    Super Admin Backoffice — scoped styles layered on top of admin cockpit
    ============================================================================ */
 
-.superadmin-overview-card {
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 30%),
-    radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.14), transparent 26%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 255, 0.95));
-}
-
 .superadmin-layout-grid {
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
 }
@@ -50,11 +43,6 @@
 
 .superadmin-sidebar-stack {
   align-items: start;
-}
-
-.superadmin-handoff-card {
-  background:
-    linear-gradient(180deg, rgba(247, 249, 255, 0.96), rgba(255, 255, 255, 0.94));
 }
 
 .superadmin-secret-stack {

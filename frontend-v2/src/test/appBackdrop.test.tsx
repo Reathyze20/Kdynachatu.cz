@@ -101,8 +101,11 @@ describe('Titulní fotka jako pozadí appky (#341)', () => {
     expect(backdrop).toHaveAttribute('data-visible', 'false')
   })
 
-  // Text mimo karty a průhledné panely tu dostaly plný papír (#341, druhý řez)
-  it.each(['/shopping', '/notes', '/reconstruction', '/gallery', '/diary'])('na %s je fotka vidět', async (path) => {
+  // Text mimo karty a průhledné panely tu dostaly plný papír (#341, druhý a třetí řez)
+  it.each([
+    '/shopping', '/notes', '/reconstruction', '/gallery', '/diary',
+    '/admin', '/admin/invites', '/admin/cabin', '/admin/diagnostics', '/superadmin',
+  ])('na %s je fotka vidět', async (path) => {
     mockCabin(COVER)
     renderBackdrop(path)
     const { backdrop, img } = await findPhoto()
@@ -111,17 +114,15 @@ describe('Titulní fotka jako pozadí appky (#341)', () => {
     expect(backdrop).toHaveAttribute('data-visible', 'true')
   })
 
-  it.each(['/admin', '/admin/invites', '/admin/cabin', '/admin/diagnostics', '/superadmin'])(
-    'na %s s textem mimo karty fotku zatím neukazuje',
-    async (path) => {
-      mockCabin(COVER)
-      renderBackdrop(path)
-      const { backdrop, img } = await findPhoto()
+  // Nová obrazovka ukáže fotku, až ji někdo projde a zařadí do PHOTO_PAGES
+  it('na obrazovce mimo seznam fotku neukazuje', async () => {
+    mockCabin(COVER)
+    renderBackdrop('/nova-obrazovka')
+    const { backdrop, img } = await findPhoto()
 
-      loadImage(img, 1920, 1200)
-      expect(backdrop).toHaveAttribute('data-visible', 'false')
-    },
-  )
+    loadImage(img, 1920, 1200)
+    expect(backdrop).toHaveAttribute('data-visible', 'false')
+  })
 
   it('změna titulní fotky správcem se projeví bez obnovení stránky', async () => {
     mockCabin(COVER, NEW_COVER)

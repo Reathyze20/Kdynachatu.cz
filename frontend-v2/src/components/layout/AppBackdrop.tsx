@@ -13,9 +13,12 @@ const BACKDROP_MIN_SIDE = 1500
 
 /**
  * Stránky, kde je všechen text na kartách a papírových plochách, takže fotka smí být vidět.
- * Správa a Superadmin mají zatím skleněné karty a text mimo karty: tam podklad D (#341).
+ * Novou obrazovku sem přidej, až u ní žádný text neleží na fotce ani pod průsvitným panelem (#341).
  */
-const PHOTO_PAGES = ['/dashboard', '/reservations', '/shopping', '/notes', '/reconstruction', '/gallery', '/diary']
+const PHOTO_PAGES = [
+  '/dashboard', '/reservations', '/shopping', '/notes', '/reconstruction', '/gallery', '/diary',
+  '/admin', '/admin/invites', '/admin/cabin', '/admin/diagnostics', '/superadmin',
+]
 
 /** Mobilní varianta má stejné jméno s příponou `-sm` (#340); cesta mimo dohodnutý tvar jde bez ní. */
 function mobileCoverUrl(url: string): string | null {
