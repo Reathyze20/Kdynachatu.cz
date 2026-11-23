@@ -226,7 +226,7 @@
 
 .kanban-column.col-probehlo .kanban-column-header {
   border-bottom-color: #6ee7b7;
-  color: #047857;
+  color: rgb(var(--ok));
 }
 
 .kanban-column.col-probehlo .kanban-column-icon {
