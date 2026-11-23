@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Pozadí appky a karty – picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Tokeny z frontend-v2/src/styles/variables.css (stav main po #331) */
+:root {
+  --page: 246 240 230; --sheet: 255 252 246; --sheet-alt: 242 234 220;
+  --rule: 230 221 207; --rule-soft: 238 231 220; --glow: 252 232 204;
+  --ink: 38 33 28; --ink-2: 94 82 70; --brand: 61 120 97; --ok: 47 107 82;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); background: #ece6dc; }
+.wrap { max-width: 1500px; margin: 0 auto; padding: 24px; }
+h1 { margin: 0 0 4px; font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.lead { margin: 0 0 18px; color: rgb(var(--ink-2)); max-width: 900px; }
+.controls { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 0; z-index: 10; background: #ece6dcf2; padding: 12px 0; backdrop-filter: blur(6px); }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ctl > b { width: 110px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--ink-2)); }
+.ctl button { border: 1px solid rgb(var(--rule)); background: #fffdf8; color: rgb(var(--ink)); font: 600 14px/1.2 inherit; padding: 9px 14px; border-radius: 999px; cursor: pointer; min-height: 40px; }
+.ctl button[aria-pressed="true"] { background: rgb(var(--brand)); color: #fff; border-color: rgb(var(--brand)); }
+.ctl button .rec { font-size: 11px; font-weight: 700; margin-left: 6px; opacity: .8; }
+.note { font-size: 14px; color: rgb(var(--ink-2)); margin: 4px 0 0 118px; max-width: 980px; }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start; margin-top: 8px; }
+.frame { border-radius: 14px; overflow: hidden; box-shadow: 0 20px 50px -20px rgb(0 0 0 / .4); background: #000; }
+.frame-label { font-size: 13px; font-weight: 600; color: rgb(var(--ink-2)); margin: 0 0 6px; }
+.scaler { transform-origin: top left; }
+
+/* ---------- Mockup appky ---------- */
+.app { position: relative; overflow: hidden; color: rgb(var(--ink)); }
+.app.desk { width: 1440px; height: 900px; }
+.app.mob { width: 390px; height: 844px; }
+.bg { position: absolute; inset: 0; z-index: 0; }
+.bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bg .veil { position: absolute; inset: 0; }
+.ui { position: relative; z-index: 1; height: 100%; }
+
+/* povrch karet: --card nastavuje JS podle volby */
+.card { background: var(--card); border: 1px solid var(--card-rule); border-radius: 18px; box-shadow: var(--card-shadow); }
+.app.glass .card { backdrop-filter: blur(14px) saturate(1.1); -webkit-backdrop-filter: blur(14px) saturate(1.1); }
+
+.desk .ui { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 0; padding: 16px; }
+.side { display: flex; flex-direction: column; padding: 18px 12px; height: 868px; }
+.side .brand { display: flex; gap: 10px; align-items: center; font-weight: 800; font-size: 16px; padding: 0 8px; }
+.side .brand svg { flex: none; }
+.side .today { padding: 6px 8px 0; font-size: 13px; color: rgb(var(--ink-2)); line-height: 1.4; }
+.side .today b { color: rgb(var(--ink)); font-weight: 700; }
+.side .ext { padding: 4px 8px 12px; font-size: 13px; font-weight: 700; color: rgb(var(--brand)); border-bottom: 1px solid var(--card-rule); margin-bottom: 8px; }
+.side nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; font-size: 15px; color: rgb(var(--ink)); text-decoration: none; }
+.side nav a.on { background: color-mix(in srgb, rgb(var(--brand)) 13%, transparent); color: rgb(var(--brand)); font-weight: 700; }
+.side nav .sub { padding: 14px 12px 4px; font-size: 13px; color: rgb(var(--ink-2)); }
+.side .me { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--card-rule); display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.ico { width: 18px; height: 18px; border: 1.8px solid currentColor; border-radius: 5px; opacity: .8; flex: none; }
+.av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 14px; flex: none; }
+
+.main { padding: 14px 40px 0 160px; display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 24px 36px; align-content: start; }
+.main.right-weather { grid-template-columns: minmax(0, 1fr) 520px; }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.pad { padding: 16px 18px; }
+.eyebrow { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: rgb(var(--ink-2)); }
+.now { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: start; margin-top: 10px; }
+.who { display: flex; gap: 10px; align-items: center; }
+.who b { font-size: 18px; font-weight: 800; display: block; line-height: 1.2; }
+.who small { color: rgb(var(--ink-2)); font-size: 14px; }
+.meta { border-top: 1px solid var(--card-rule); margin-top: 12px; padding-top: 10px; font-size: 14px; color: rgb(var(--ink-2)); display: grid; gap: 8px; }
+.chips { display: flex; gap: 8px; border-top: 1px solid var(--card-rule); margin-top: 10px; padding-top: 12px; }
+.chip { border: 1px solid var(--card-rule-strong); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; background: transparent; }
+.chip.g { border-color: color-mix(in srgb, rgb(var(--brand)) 45%, transparent); }
+.att { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 15px; }
+.att .btn { border: 1px solid var(--card-rule-strong); border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 14px; }
+.tag { border: 1px solid rgb(var(--ink)); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+.quote { border-left: 3px solid rgb(var(--brand)); padding-left: 14px; font-style: italic; margin: 12px 0; }
+.foot { display: flex; justify-content: space-between; border-top: 1px solid var(--card-rule); padding-top: 10px; font-size: 14px; color: rgb(var(--ink-2)); }
+.foot a { color: rgb(var(--brand)); font-weight: 600; }
+
+.wx h4 { margin: 2px 0 10px; font-size: 17px; font-weight: 800; }
+.days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.day { border-radius: 14px; padding: 10px 6px; text-align: center; background: var(--inset); border: 1.5px solid transparent; }
+.day.on { border-color: rgb(var(--ok)); background: color-mix(in srgb, rgb(var(--sheet-alt)) 80%, var(--inset)); }
+.day b { display: block; font-size: 14px; }
+.day .sym { font-size: 20px; line-height: 1.6; }
+.day .t { font-weight: 800; font-size: 15px; }
+.day .t span { font-weight: 500; color: rgb(var(--ink-2)); }
+.day .p { color: #1d4ed8; font-size: 13px; font-weight: 700; min-height: 18px; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--inset); border-radius: 12px; padding: 4px; margin-top: 12px; }
+.tabs span { text-align: center; padding: 9px; border-radius: 9px; font-size: 14px; font-weight: 600; color: rgb(var(--ink-2)); }
+.tabs span.on { background: rgb(var(--sheet)); color: #c2410c; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+.chart-cap { font-size: 13px; color: rgb(var(--ink-2)); margin: 10px 0 4px; }
+.bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 92px; }
+.bar { display: flex; flex-direction: column; justify-content: end; align-items: center; height: 100%; font-size: 12px; }
+.bar i { display: block; width: 100%; border-radius: 6px; background: #fde68a; }
+.bar.pk i { background: #f59e0b; }
+.bar em { font-style: normal; margin-top: 4px; color: rgb(var(--ink-2)); }
+.sun { display: flex; gap: 14px; background: var(--inset); border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 600; margin-top: 10px; }
+.sun .r { margin-left: auto; color: rgb(var(--ink-2)); }
+.alert { margin-top: 10px; border-radius: 12px; padding: 9px 12px; font-size: 13px; background: #eef6ff; color: #1e3a8a; border: 1px solid #c7dcf7; }
+.more { margin-top: 10px; display: flex; justify-content: center; font-size: 14px; font-weight: 700; color: rgb(var(--brand)); border-top: 1px solid var(--card-rule); padding-top: 10px; }
+
+/* mobil */
+.mob .ui { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; }
+.mob .bar-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; margin: 10px 0 0; }
+.mob .bar-top .t1 { font-weight: 800; font-size: 16px; line-height: 1.2; }
+.mob .bar-top .t2 { font-size: 12px; color: rgb(var(--ink-2)); }
+.mob .now { grid-template-columns: 1fr; gap: 10px; }
+.mob .now .arrow { display: none; }
+.mob .days { gap: 6px; }
+.mob .day { padding: 8px 2px; }
+.mob .tabbar { margin-top: auto; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 6px; font-size: 11px; text-align: center; font-weight: 600; color: rgb(var(--ink-2)); }
+.mob .tabbar .on { color: rgb(var(--brand)); }
+
+.why { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.why div { background: #fffdf8; border: 1px solid rgb(var(--rule)); border-radius: 14px; padding: 14px 16px; font-size: 14px; }
+.why h3 { margin: 0 0 6px; font-size: 15px; }
+.why ul { margin: 0; padding-left: 18px; }
+table { border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+td, th { border-bottom: 1px solid rgb(var(--rule)); padding: 4px 10px 4px 0; text-align: left; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Pozadí appky a karty (08)</h1>
+  <p class="lead">Horní pruh s názvem chaty zmizí, název je vlevo v menu. Datum a počasí dnes se přesunou pod název chaty v menu, „Akce v kraji“ pod ně. Pozadí appky jde přes celou obrazovku a karty dostanou dnešní barvu pozadí (papír 246 240 230). Vyber pozadí, povrch karet a rozložení. Žádný text neleží přímo na fotce, jen na kartách.</p>
+
+  <div class="controls">
+    <div class="ctl" id="c-bg"><b>Pozadí</b></div>
+    <div class="ctl" id="c-card"><b>Karty</b></div>
+    <div class="ctl" id="c-lay"><b>Rozložení</b></div>
+    <p class="note" id="note"></p>
+  </div>
+
+  <div class="stage">
+    <div><p class="frame-label">Desktop 1440 × 900 (bez scrollování musí být vidět vše)</p><div class="frame" id="f-desk"><div class="scaler" id="s-desk"></div></div></div>
+    <div><p class="frame-label">Mobil 390 × 844</p><div class="frame" id="f-mob"><div class="scaler" id="s-mob"></div></div></div>
+  </div>
+
+  <div class="why">
+    <div><h3>Co se mění v kódu</h3><ul>
+      <li><code>CabinHero</code> z Přehledu pryč (a s ním pruh fotky z PR #336). Datum, počasí dnes a „Akce v kraji“ do hlavičky menu.</li>
+      <li>Fotka chaty (<code>coverPhotoUrl</code> z #321) jako pozadí celé appky, ne jen Přehledu. Úzká varianta <code>-sm</code> na mobilu.</li>
+      <li>Tokeny: <code>--sheet</code> (povrch karet) = dnešní <code>--page</code>; nový podklad pod kartami.</li>
+      <li>Bez fotky: varianta D (teplý gradient přes celou appku).</li>
+    </ul></div>
+    <div><h3>Kontrast (WCAG, text jen na kartách)</h3>
+      <table>
+        <tr><th>Dvojice</th><th>Plný papír</th></tr>
+        <tr><td>hlavní text #26211c na 246 240 230</td><td>14,1 : 1</td></tr>
+        <tr><td>vedlejší text #5e5246 na 246 240 230</td><td>6,7 : 1</td></tr>
+        <tr><td>akční zelená #3d7861 na 246 240 230</td><td>4,57 : 1</td></tr>
+        <tr><td>vedlejší text na vnořeném poli 238 230 217</td><td>6,1 : 1</td></tr>
+      </table>
+      <p style="margin:8px 0 0">Varianta „sklo“ nechá prosvítat fotku; kontrast pak závisí na fotce. Papír je 92 % neprůhledný a rozostřený, takže změna je malá, ale před výběrem skla bych ho změřil na reálných fotkách.</p>
+    </div>
+    <div><h3>Moje doporučení</h3><ul>
+      <li><b>B</b> – rozostřená fotka se ztlumeným závojem. Chata je poznat, ale nekřičí a nepere se s kartami.</li>
+      <li><b>Plný papír</b> – jistý kontrast na jakékoli fotce.</li>
+      <li><b>L2</b> – počasí v hlavním sloupci, graf sbalený; vejde se i s výstrahou, vpravo zůstane klid.</li>
+    </ul></div>
+  </div>
+</div>
+
+<script>
+const PHOTO = "07-teplo-chata.webp"; // zástupná fotka z pickeru 07 (fiktivní chata)
+const BG = [
+  { id: "A", label: "A · Fotka ostrá", note: "Fotka přes celou appku, jen lehký teplý závoj. Nejvíc „naše chata“, ale nejrušivější.",
+    html: `<img src="${PHOTO}" alt=""><div class="veil" style="background:linear-gradient(180deg,rgb(30 22 14/.10),rgb(30 22 14/.35))"></div>` },
+  { id: "B", label: "B · Fotka rozmazaná", rec: true, note: "Fotka rozostřená (blur 18 px) a ztlumená teplým závojem. Barvy chaty zůstanou, detail nerozptyluje.",
+    html: `<img src="${PHOTO}" alt="" style="filter:blur(18px) saturate(1.05);transform:scale(1.08)"><div class="veil" style="background:rgb(60 42 24/.28)"></div>` },
+  { id: "C", label: "C · Fotka nahoře", note: "Fotka jen v horní třetině, plynule přechází do teplého papíru. Klidnější dole, kde jsou dlouhé seznamy.",
+    html: `<img src="${PHOTO}" alt="" style="height:52%;object-position:center 40%"><div class="veil" style="background:linear-gradient(180deg,rgb(40 28 16/.15) 0%,rgb(225 211 190/.0) 20%,rgb(225 211 190) 52%,rgb(225 211 190) 100%)"></div>` },
+  { id: "D", label: "D · Bez fotky", note: "Bez fotky (nebo když chata titulní fotku nemá): tmavší teplý papír s papírovou září v rohu. Karty jsou světlejší než podklad.",
+    html: `<div class="veil" style="background:radial-gradient(1200px 700px at 85% -10%,rgb(var(--glow)),transparent 60%),linear-gradient(180deg,#e6dac6,#dccdb5)"></div>` },
+];
+const CARD = [
+  { id: "paper", label: "Plný papír", rec: true, vars: { "--card": "rgb(246 240 230)", "--card-rule": "rgb(230 221 207)", "--card-rule-strong": "rgb(214 202 184)", "--inset": "rgb(238 230 217)", "--card-shadow": "0 1px 2px rgb(0 0 0/.06), 0 14px 32px -16px rgb(30 20 10/.45)" }, glass: false },
+  { id: "glass", label: "Papír 92 % + rozostření (sklo)", vars: { "--card": "rgb(246 240 230/.92)", "--card-rule": "rgb(255 255 255/.45)", "--card-rule-strong": "rgb(214 202 184)", "--inset": "rgb(236 227 213/.85)", "--card-shadow": "0 14px 32px -16px rgb(30 20 10/.5)" }, glass: true },
+  { id: "white", label: "Dnešní bílý papír (pro srovnání)", vars: { "--card": "rgb(255 252 246)", "--card-rule": "rgb(238 231 220)", "--card-rule-strong": "rgb(224 214 199)", "--inset": "rgb(246 240 230)", "--card-shadow": "var(--lift)" }, glass: false },
+];
+const LAY = [
+  { id: "L1", label: "L1 · Počasí vlevo, graf otevřený", note: "Bez horního pruhu se to na 900 px vejde i s grafem, ale těsně – výstraha mrazu je na hraně." },
+  { id: "L2", label: "L2 · Počasí vlevo, graf sbalený", rec: true, note: "Graf se otevře ťuknutím na den (v detailu pobytu zůstane otevřený). Rezerva i pro dlouhý pobyt a výstrahy." },
+  { id: "L3", label: "L3 · Počasí vpravo, graf otevřený", note: "Vpravo je místa dost; hlavní sloupec pak drží jen „Na chatě teď“." },
+];
+const state = { bg: "B", card: "paper", lay: "L2" };
+
+const icoBrand = `<svg width="26" height="22" viewBox="0 0 26 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 21 13 2l12 19z"/><path d="M7 21 13 11l6 10"/></svg>`;
+const navItems = [["Přehled", 1], ["Kalendář"], ["Předávka"], ["Zásoby"], ["Víc"], ["Chat"], ["Galerie"], ["Deník"], ["Rekonstrukce"]];
+
+function weather(open, mob) {
+  const days = [["St 25.", "☁", "1°", "−3°", ""], ["Čt 26.", "❄", "−1°", "−2°", "75 %"], ["Pá 27.", "❄", "−1°", "−3°", "76 %"], ["So 28.", "☁", "−1°", "−3°", ""]];
+  const bars = [["−3°", 10], ["−1°", 30], ["0°", 45], ["1°", 100, 1], ["0°", 45], ["−1°", 30], ["−2°", 20]];
+  return `<section class="card pad wx">
+    <div class="eyebrow">Počasí na pobyt</div>
+    <h4>Pobyt: demo-petr · st 25. – so 28. 11.</h4>
+    <div class="days">${days.map((d, i) => `<div class="day${i === 0 ? " on" : ""}"><b>${d[0]}</b><div class="sym">${d[1]}</div><div class="t">${d[2]} <span>/ ${d[3]}</span></div><div class="p">${d[4]}</div></div>`).join("")}</div>
+    ${open ? `<div class="tabs"><span>Srážky</span><span>Vítr</span><span class="on">Teplota</span></div>
+      <p class="chart-cap">Středa · maximum <b>1°</b> kolem <b>14:00</b>, minimum −3°</p>
+      <div class="bars">${bars.map((b, i) => `<div class="bar${b[2] ? " pk" : ""}"><span>${b[0]}</span><i style="height:${b[1] * .6}%"></i><em>${8 + i * 2}:00</em></div>`).join("")}</div>` : ""}
+    <div class="sun"><span>🌅 07:29</span><span>🌇 16:07</span><span style="color:rgb(var(--ok))">UV 1 nízký</span>${mob ? "" : `<span class="r">8 h 38 min</span>`}</div>
+    <div class="alert"><b>Pá 27.:</b> v noci mráz až −3 °C. Před odjezdem vypusť vodu.</div>
+    ${open ? "" : `<div class="more">Hodinový graf ▾</div>`}
+  </section>`;
+}
+function nowCard(mob) {
+  return `<section class="card pad">
+    <div class="eyebrow">Na chatě teď</div>
+    <div class="now">
+      <div class="who"><span class="av" style="background:rgb(var(--brand))">⌂</span><b>Chata je volná</b></div>
+      <div class="arrow" style="padding-top:6px">→</div>
+      <div class="who"><span class="av" style="background:#b7794a">P</span><div><b>demo-petr</b><small>od st 25. 11. · Rybaření s kamarády · 3 noci</small></div></div>
+    </div>
+    <div class="meta"><span>Pak: <b style="color:rgb(var(--ink))">Ty</b> (pá 4. 12.)</span><span>Prázdná 1 den · Checklist nevyplněn</span></div>
+    <div class="chips"><span class="chip g">Volný víkend So 12. – Ne 13. prosince</span>${mob ? "" : `<span class="chip">Kalendář</span>`}</div>
+  </section>`;
+}
+const attention = `<section class="card pad"><div class="att">Potřebuje pozornost <span class="btn">Zkopírovat pro WhatsApp</span></div><div style="margin-top:12px;font-size:15px"><span class="tag">ZÁVADA</span><b>Kape kohoutek v koupelně.</b> <span style="color:rgb(var(--ink-2))">· demo-jana 13. 11.</span></div></section>`;
+const note = `<section class="card pad"><div class="att">Vzkaz <span style="font-weight:400;color:rgb(var(--ink-2))">✎</span></div><div class="quote">test</div><div class="foot"><span>— demo-spravce, 22. listopadu</span><a>Přejít do chatu →</a></div></section>`;
+
+function desk() {
+  const L = state.lay;
+  const left = L === "L3" ? nowCard() : nowCard() + weather(L === "L1");
+  const right = L === "L3" ? attention + note + weather(true) : attention + note;
+  return `<div class="app desk ${CARD.find(c => c.id === state.card).glass ? "glass" : ""}">
+    <div class="bg">${BG.find(b => b.id === state.bg).html}</div>
+    <div class="ui">
+      <aside class="card side">
+        <div class="brand">${icoBrand}Testovací chata</div>
+        <div class="today"><b>Pondělí 23. listopadu</b><br>0 °C · Zataženo</div>
+        <div class="ext">Akce v kraji ↗</div>
+        <nav>${navItems.map(([n, on]) => n === "Víc" ? `<div class="sub">Víc</div>` : `<a class="${on ? "on" : ""}"><span class="ico"></span>${n}</a>`).join("")}</nav>
+        <div class="me"><span class="av" style="background:#c0703a">S</span>demo-spravce</div>
+      </aside>
+      <div class="main"><div class="col">${left}</div><div class="col">${right}</div></div>
+    </div></div>`;
+}
+function mob() {
+  return `<div class="app mob ${CARD.find(c => c.id === state.card).glass ? "glass" : ""}">
+    <div class="bg">${BG.find(b => b.id === state.bg).html.replace(PHOTO, PHOTO)}</div>
+    <div class="ui">
+      <div class="card bar-top">${icoBrand}<div><div class="t1">Testovací chata</div><div class="t2">Po 23. 11. · 0 °C Zataženo · Akce v kraji ↗</div></div></div>
+      ${nowCard(true)}
+      ${weather(state.lay === "L1" || state.lay === "L3", true).replace("Pobyt: demo-petr · st 25. – so 28. 11.", "Pobyt: demo-petr · st 25. – so 28.")}
+      <div class="card tabbar"><span class="on">Přehled</span><span>Kalendář</span><span>Předávka</span><span>Zásoby</span><span>Víc</span></div>
+    </div></div>`;
+}
+
+function controls(id, list, key) {
+  const el = document.getElementById(id);
+  el.querySelectorAll("button").forEach(b => b.remove());
+  list.forEach(o => {
+    const b = document.createElement("button");
+    b.innerHTML = o.label + (o.rec ? `<span class="rec">doporučuji</span>` : "");
+    b.setAttribute("aria-pressed", String(state[key] === o.id));
+    b.onclick = () => { state[key] = o.id; render(); };
+    el.appendChild(b);
+  });
+}
+function fit(frameId, scalerId, w, h, maxW) {
+  const f = document.getElementById(frameId), s = document.getElementById(scalerId);
+  const k = Math.min(1, maxW / w);
+  s.style.transform = `scale(${k})`; f.style.width = w * k + "px"; f.style.height = h * k + "px";
+}
+function render() {
+  controls("c-bg", BG, "bg"); controls("c-card", CARD, "card"); controls("c-lay", LAY, "lay");
+  const c = CARD.find(x => x.id === state.card);
+  document.getElementById("s-desk").innerHTML = desk();
+  document.getElementById("s-mob").innerHTML = mob();
+  document.querySelectorAll(".app").forEach(a => Object.entries(c.vars).forEach(([k, v]) => a.style.setProperty(k, v)));
+  document.getElementById("note").textContent = BG.find(b => b.id === state.bg).note + " " + LAY.find(l => l.id === state.lay).note;
+  const avail = Math.max(600, Math.min(1500, window.innerWidth) - 48 - 24 - 290);
+  fit("f-desk", "s-desk", 1440, 900, avail);
+  fit("f-mob", "s-mob", 390, 844, 270);
+  location.hash = `${state.bg}-${state.card}-${state.lay}`;
+}
+const h = location.hash.slice(1).split("-");
+if (h.length === 3) { state.bg = h[0] || state.bg; state.card = h[1] || state.card; state.lay = h[2] || state.lay; }
+window.addEventListener("resize", render);
+render();
+</script>
+</body>
+</html>
