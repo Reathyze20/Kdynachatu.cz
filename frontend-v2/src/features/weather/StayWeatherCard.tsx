@@ -98,7 +98,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
   return (
     <section aria-labelledby={headingId} className={`flex flex-col gap-3 p-4 ${frame}`} data-testid="stay-weather-card">
       <h3 id={headingId} className="text-sm font-bold uppercase tracking-wide text-slate-600">Počasí na pobyt</h3>
-      {title && <p className="-mt-2 text-[17px] font-extrabold text-slate-900">{title}</p>}
+      {title && <p className="-mt-2 text-[17px] font-extrabold text-[var(--text-main)]">{title}</p>}
       {body}
     </section>
   );

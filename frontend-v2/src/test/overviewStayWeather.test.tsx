@@ -24,7 +24,10 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { ...ME, role:
 function stay(id: string, username: string, from: string, to: string, extra: Partial<UpcomingReservation> = {}): UpcomingReservation {
   return { id, userId: `u-${username.toLowerCase()}`, username, userColor: null, userAnimalIcon: null, from, to, purpose: 'Víkend', status: 'primary', ...extra }
 }
-const active = (s: UpcomingReservation): ActiveReservation => ({ ...s, handoverNote: null, isCheckoutCompleted: false })
+/** Probíhající pobyt jako z API: bez userId autora a bez stavu. */
+function active({ userId: _userId, status: _status, ...s }: UpcomingReservation): ActiveReservation {
+  return { ...s, handoverNote: null, isCheckoutCompleted: false }
+}
 
 describe('Přehled: výběr pobytu pro počasí', () => {
   const pick = (act: ActiveReservation | null, upcoming: UpcomingReservation[], today = TODAY) =>
@@ -45,6 +48,7 @@ describe('Přehled: výběr pobytu pro počasí', () => {
     const mine = stay('r-eva', 'Eva', '2030-06-06', '2030-06-07')
     const withMe = stay('r-karel', 'Karel', '2030-06-04', '2030-06-06', { participants: [{ ...ME, userColor: null, userAnimalIcon: null }] })
     expect(pick(now, [petr])?.stay.id).toBe('r-jana')
+    expect(pick(active(stay('r-moje', 'Eva', '2030-05-31', '2030-06-02')), [withMe])).toMatchObject({ mine: true, stay: { id: 'r-moje' } })
     expect(pick(now, [petr, mine])).toMatchObject({ stay: mine, mine: true })
     expect(pick(now, [petr, withMe, mine])).toMatchObject({ stay: withMe, mine: true })
     expect(pick(null, [stay('r-zaloha', 'Eva', '2030-06-03', '2030-06-04', { status: 'backup' }), petr])?.stay.id).toBe('r-petr')

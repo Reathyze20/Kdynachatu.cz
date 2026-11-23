@@ -262,12 +262,12 @@ export function DashboardPage() {
         </motion.div>
 
         {stayPick && (
-          <motion.div variants={cardVariants} data-testid="dashboard-stay-weather-widget">
+          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-stay-weather-widget">
             <StayWeatherCard
               from={stayPick.stay.from}
               to={stayPick.stay.to}
               title={overviewStayTitle(stayPick)}
-              frame="rounded-2xl border border-[rgb(var(--rule-soft))] bg-[rgb(var(--sheet))] shadow-[var(--lift)]"
+              frame="rounded-2xl border border-rule-soft bg-sheet shadow-lift"
             />
           </motion.div>
         )}

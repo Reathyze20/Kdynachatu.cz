@@ -1,7 +1,6 @@
 /** Který pobyt ukáže karta Počasí na pobyt na Přehledu (#326). Čisté funkce, data z dotazu Přehledu na pobyty. */
 import type { ActiveReservation, UpcomingReservation } from "@/api/dashboard";
-import { addDays } from "@/api/stayWeather";
-import { formatShortDayDate } from "@/lib/dateUtils";
+import { addIsoDays, formatShortDayDate } from "@/lib/dateUtils";
 
 /** Karta se ukáže od 7 dní před příjezdem do dne odjezdu. */
 const DAYS_BEFORE_ARRIVAL = 7;
@@ -16,14 +15,17 @@ export function pickOverviewStay(
   me: { userId: string; username: string } | null | undefined,
   today: string,
 ): OverviewStayPick | null {
+  // Probíhající pobyt z API nemá userId autora, porovná se jménem (jako nudges.ts); účastníci mají userId.
   const isMine = (s: OverviewStay) =>
     !!me && (("userId" in s ? s.userId === me.userId : s.username === me.username) || !!s.participants?.some((p) => p.userId === me.userId));
-  const rank = (p: OverviewStayPick) => `${p.mine ? 0 : 1}${p.stay.from <= today ? 0 : 1}${p.stay.from}`;
   const stays: OverviewStay[] = [...(active ? [active] : []), ...upcoming.filter((s) => s.status === "primary" && s.id !== active?.id)];
   const candidates = stays
-    .filter((s) => addDays(s.from, -DAYS_BEFORE_ARRIVAL) <= today && today <= s.to)
+    .filter((s) => addIsoDays(s.from, -DAYS_BEFORE_ARRIVAL) <= today && today <= s.to)
     .map((stay) => ({ stay, mine: isMine(stay) }))
-    .sort((a, b) => rank(a).localeCompare(rank(b)));
+    .sort((a, b) =>
+      Number(b.mine) - Number(a.mine) ||
+      Number(b.stay.from <= today) - Number(a.stay.from <= today) ||
+      a.stay.from.localeCompare(b.stay.from));
   return candidates[0] ?? null;
 }
 
