@@ -220,7 +220,7 @@ const COL_SNOW = "#4dd0e1";
 const COL_SHOWER = "#42a5f5";
 const COL_THUNDER = "#7c4dff";
 
-function mapWMOCode(code: number, isNight: boolean): { description: string; icon: string; color: string } {
+export function mapWMOCode(code: number, isNight: boolean): { description: string; icon: string; color: string } {
   const rainSun = isNight ? "cloud-moon-rain" : "cloud-sun-rain";
   if (code === 0) return { description: "Jasno", icon: isNight ? "moon" : "sun", color: COL_SUN };
   if (code <= 2) return { description: "Polojasno", icon: isNight ? "cloud-moon" : "cloud-sun", color: COL_CLOUD };
@@ -239,28 +239,22 @@ function mapWMOCode(code: number, isNight: boolean): { description: string; icon
 
 export type WeatherPlace = Pick<CabinSettings, "weatherLocation" | "municipalityName" | "latitude" | "longitude">;
 
+/** Souřadnice pro předpověď: uložený střed vybrané obce, jinak geokódování textové lokality. */
+export async function resolveWeatherCoords(place: WeatherPlace | null | undefined): Promise<{ lat: number; lon: number; city: string } | "EMPTY_LOCATION" | "LOCATION_NOT_FOUND"> {
+  const location = place?.weatherLocation?.trim() ?? "";
+  if (place?.latitude != null && place.longitude != null) return { lat: place.latitude, lon: place.longitude, city: place.municipalityName ?? location };
+  if (!location) return "EMPTY_LOCATION";
+  const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=cs&format=json`);
+  const geo = (await geoRes.json() as { results?: { latitude: number; longitude: number; name: string }[] }).results?.[0];
+  return geo ? { lat: geo.latitude, lon: geo.longitude, city: geo.name } : "LOCATION_NOT_FOUND";
+}
+
 /** Počasí pro uložený střed vybrané obce; chata bez vybrané obce geokóduje textovou lokalitu jako dřív. */
 export async function fetchWeather(place: WeatherPlace | null | undefined): Promise<WeatherResult> {
-  const location = place?.weatherLocation?.trim() ?? "";
-  const storedLat = place?.latitude ?? null;
-  const storedLon = place?.longitude ?? null;
-  if ((storedLat === null || storedLon === null) && !location) return "EMPTY_LOCATION";
-
   try {
-    let lat: number, lon: number, city: string;
-    if (storedLat !== null && storedLon !== null) {
-      [lat, lon, city] = [storedLat, storedLon, place?.municipalityName ?? location];
-    } else {
-      // Step 1: Geocoding
-      const geoRes = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=cs&format=json`,
-      );
-      const geoData = await geoRes.json() as { results?: { latitude: number; longitude: number; name: string }[] };
-
-      if (!geoData.results || geoData.results.length === 0) return "LOCATION_NOT_FOUND";
-
-      ({ latitude: lat, longitude: lon, name: city } = geoData.results[0]);
-    }
+    const coords = await resolveWeatherCoords(place);
+    if (typeof coords === "string") return coords;
+    const { lat, lon, city } = coords;
 
     // Step 2: Forecast
     const fxRes = await fetch(
