@@ -109,3 +109,18 @@ export function sanitizeCheckoutState(raw: unknown): CheckoutStateShape | undefi
   if (typeof r.note === "string") state.note = r.note.slice(0, MAX_TEXT);
   return state;
 }
+
+export interface HandoverFault {
+  text: string;
+  reportedBy: string;
+  reportedAt: string;
+}
+
+/**
+ * Závada z poslední dokončené předávky pro kartu „Potřebuje pozornost“ (#275).
+ * Platí, dokud ji nepřepíše další předávka: prázdné nebo chybějící pole „rozbité“ = žádná závada.
+ */
+export function handoverFault(state: unknown, reportedBy: string, reportedAt: Date): HandoverFault | null {
+  const text = sanitizeCheckoutState(state)?.broken?.trim();
+  return text ? { text, reportedBy, reportedAt: reportedAt.toISOString() } : null;
+}

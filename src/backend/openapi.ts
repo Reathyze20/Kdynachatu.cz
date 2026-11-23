@@ -777,13 +777,74 @@ const paths: Record<string, OpenApiObject> = {
             properties: {
               departingToday: { type: "boolean", description: "Muj pobyt dnes konci a predavka (isCheckoutCompleted) jeste neni dokoncena" },
               departingReservationId: { type: "string", nullable: true, description: "ID tohoto pobytu pro dokonceni predavky (PATCH /api/reservations/{id}/checkout), jinak null" },
+              lastFault: {
+                type: "object",
+                nullable: true,
+                description: "Zavada (pole broken) z posledni dokoncene predavky; null, kdyz ji dalsi predavka neuvadi",
+                properties: {
+                  text: { type: "string" },
+                  reportedBy: { type: "string", description: "Kdo predavku vyplnil" },
+                  reportedAt: { type: "string", format: "date-time" },
+                },
+              },
             },
             additionalProperties: true,
           },
-          "Data pro dashboard; zde jsou popsana jen pole gate odjezdu",
+          "Data pro dashboard; zde jsou popsana jen pole gate odjezdu a zavady",
         ),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+      },
+    },
+  },
+  "/api/dashboard/shopping": {
+    get: {
+      tags: ["Dashboard"],
+      summary: "Nakupni cast dashboardu: nevyrizene polozky, pocty a karta Potrebuje pozornost",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(
+          {
+            type: "object",
+            properties: {
+              attention: {
+                type: "array",
+                description: "Zasoby LOW/EMPTY a nevyrizene dulezite polozky bez takove zasoby; Doslo pred Dochazi, dulezite napred",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    isEmpty: { type: "boolean", description: "Doslo (EMPTY), jinak Dochazi" },
+                    isEssential: { type: "boolean" },
+                    inventoryId: { type: "string", nullable: true, description: "Zasoba pro POST /api/inventory/{id}/pledge" },
+                    shoppingItemId: { type: "string", nullable: true, description: "Nevyrizena polozka nakupu, pokud uz na seznamu je" },
+                  },
+                },
+              },
+            },
+            additionalProperties: true,
+          },
+          "Data pro dashboard; zde je popsano jen pole karty Potrebuje pozornost",
+        ),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+      },
+    },
+  },
+  "/api/inventory/{id}/pledge": {
+    post: {
+      tags: ["Shopping"],
+      summary: "Koupim ja: slib Privezu z domova pro zasobu; chybi-li polozka na aktivnim seznamu, prida ji",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {
+        "200": jsonResponse(
+          { type: "object", properties: { id: { type: "string" }, status: { type: "string", enum: ["bring_from_home"] }, purchasedById: { type: "string" } } },
+          "Polozka nakupu je slibena a zasoba doplnena (OK)",
+        ),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatne ID"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "404": jsonResponse(ref("ErrorResponse"), "Zasoba neni v chate uzivatele"),
       },
     },
   },

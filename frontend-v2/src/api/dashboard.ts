@@ -8,6 +8,25 @@ export interface PendingShoppingItem {
   isEssential: boolean;
 }
 
+/** Věc pro kartu „Potřebuje pozornost“ (#275): zásoba Dochází/Došlo nebo nevyřízená důležitá položka */
+export interface AttentionItem {
+  name: string;
+  /** Došlo, jinak Dochází */
+  isEmpty: boolean;
+  isEssential: boolean;
+  /** Zásoba pro „Koupím já“ (POST /inventory/:id/pledge) */
+  inventoryId: string | null;
+  /** Nevyřízená položka nákupu, pokud na seznamu už je */
+  shoppingItemId: string | null;
+}
+
+/** Závada z poslední dokončené předávky (#275) */
+export interface HandoverFault {
+  text: string;
+  reportedBy: string;
+  reportedAt: string;
+}
+
 export interface ReservationParticipantLite {
   userId: string;
   username: string;
@@ -71,6 +90,7 @@ export interface DashboardReservationsData {
   departingReservationId?: string | null;
   nextFreeWeekend: { start: string; end: string } | null;
   lastStay: LastStay | null;
+  lastFault?: HandoverFault | null;
   stats: {
     myNightsThisYear: number;
     totalStaysThisMonth: number;
@@ -92,6 +112,7 @@ export interface DashboardShoppingData {
   totalPendingShoppingCount: number;
   totalItemsCount: number;
   essentialWarning: { count: number; items: { name: string }[] } | null;
+  attention?: AttentionItem[];
 }
 
 export interface DashboardNotesData {

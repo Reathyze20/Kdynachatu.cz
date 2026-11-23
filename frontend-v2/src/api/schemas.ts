@@ -63,6 +63,8 @@ const CheckoutStateLiteSchema = z.object({
   note: z.string().optional(),
 })
 
+const HandoverFaultSchema = z.object({ text: z.string(), reportedBy: z.string(), reportedAt: z.string() })
+
 const LastStaySchema = z.object({
   username: z.string(),
   userColor: z.string().nullable(),
@@ -88,6 +90,7 @@ export const DashboardReservationsSchema = z.object({
     .nullable()
     .optional(),
   lastStay: LastStaySchema.nullable().optional(),
+  lastFault: HandoverFaultSchema.nullable().optional(),
   stats: z.object({
     myNightsThisYear: z.number(),
     totalStaysThisMonth: z.number(),
@@ -112,6 +115,18 @@ export const DashboardShoppingSchema = z.object({
     .object({ count: z.number(), items: z.array(z.object({ name: z.string() })) })
     .nullable()
     .optional(),
+  attention: z
+    .array(
+      z.object({
+        name: z.string(),
+        isEmpty: z.boolean(),
+        isEssential: z.boolean(),
+        inventoryId: z.string().nullable(),
+        shoppingItemId: z.string().nullable(),
+      }),
+    )
+    .optional()
+    .default([]),
 })
 
 export const DashboardNotesSchema = z.object({
