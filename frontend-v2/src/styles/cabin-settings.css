@@ -472,9 +472,7 @@
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
-/* ── Lišta s uložením (#260) ──────────────────────────────────────────── */
-/* Lepí se ke spodku .main-content-admin, takže „Uložit změny“ je vidět na každé
-   záložce i u dlouhého formuláře. */
+/* ── Lišta s uložením (#260): „Uložit změny“ po ruce na každé záložce ── */
 
 .cs-save-bar {
   position: sticky;
@@ -497,8 +495,7 @@
   color: var(--color-warning);
 }
 
-/* Sticky potřebuje, aby obaly panelu ve správě nebyly vlastní scroll kontejner;
-   clip ořízne rohy jako hidden, ale scroll kontejner nevytvoří. */
+/* Sticky: obaly panelu ve správě nesmí být scroll kontejner (clip ořízne rohy, ale ten nevytvoří) */
 .admin-settings-shell.settings-page-card {
   overflow: clip;
 }
@@ -508,8 +505,7 @@
   overflow: visible;
 }
 
-/* Na mobilu stránka scrolluje oknem a obaly sticky neudrží: lišta je pevná
-   nad spodní navigací včetně bezpečné zóny (výška lišty je v nav.css). */
+/* Mobil scrolluje oknem, sticky by neudržel: pevně nad spodní navigací a bezpečnou zónou (nav.css) */
 @media (max-width: 768px) {
   .cs-save-bar {
     position: fixed;
@@ -521,7 +517,7 @@
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
   }
 
-  /* Poslední pole formuláře nesmí zůstat schované pod lištou (vyšší specificita přebije 600px blok níže) */
+  /* Poslední pole nesmí zůstat pod lištou; specificita přebije 600px blok níže */
   .settings-page-card .cs-body {
     padding-bottom: calc(var(--touch-target-primary) + 40px);
   }

@@ -57,9 +57,10 @@ function fireBeforeUnload() {
 describe('nastavení chaty: neuložené změny (#260)', () => {
   beforeEach(() => vi.restoreAllMocks())
 
-  it('bez změn odejde odkazem hned, bez potvrzení', async () => {
+  it('bez změn odejde odkazem hned a zavření okna nezdržuje', async () => {
     renderAt(<CabinSettingsPanel />)
     await waitFor(() => expect(screen.getByTestId('cabin-settings-name-input')).toHaveValue('Chata U Lesa'))
+    expect(fireBeforeUnload().defaultPrevented).toBe(false)
 
     await userEvent.click(screen.getByRole('link', { name: 'Nástěnka' }))
 
@@ -67,38 +68,25 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('s neuloženou změnou se odkaz v aplikaci nejdřív zeptá a Zůstat změnu nechá', async () => {
+  it('s neuloženou změnou se odchod ptá: Zůstat změnu nechá, Odejít bez uložení odejde', async () => {
     const name = await renderEdited()
+    expect(fireBeforeUnload().defaultPrevented).toBe(true)
+
+    // Kotva na stejné stránce formulář neodmountuje, ta se neptá.
+    await userEvent.click(screen.getByRole('link', { name: 'Kotva na stejné stránce' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('link', { name: 'Nástěnka' }))
-
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveTextContent('neuložené změny')
-    expect(screen.queryByText('Stránka nástěnky')).not.toBeInTheDocument()
-
     await userEvent.click(within(dialog).getByRole('button', { name: 'Zůstat' }))
-
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(name).toHaveValue('Chata U Lesa a Potoka')
     expect(screen.queryByText('Stránka nástěnky')).not.toBeInTheDocument()
-  })
-
-  it('Odejít bez uložení dokončí podrženou navigaci', async () => {
-    await renderEdited()
 
     await userEvent.click(screen.getByRole('link', { name: 'Nástěnka' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Odejít bez uložení' }))
-
     expect(await screen.findByText('Stránka nástěnky')).toBeInTheDocument()
-  })
-
-  it('kotva na stejné stránce se neptá, formulář zůstane', async () => {
-    const name = await renderEdited()
-
-    await userEvent.click(screen.getByRole('link', { name: 'Kotva na stejné stránce' }))
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(name).toHaveValue('Chata U Lesa a Potoka')
   })
 
   it('tlačítko Zpět (programová navigace) se s neuloženou změnou taky zeptá', async () => {
@@ -113,24 +101,15 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     expect(screen.queryByText('Stránka správy')).not.toBeInTheDocument()
   })
 
-  it('zavření nebo obnovení okna zastaví jen s neuloženou změnou', async () => {
-    renderAt(<CabinSettingsPanel />)
-    const name = await screen.findByTestId('cabin-settings-name-input')
-    await waitFor(() => expect(name).toHaveValue('Chata U Lesa'))
-    expect(fireBeforeUnload().defaultPrevented).toBe(false)
-
-    await userEvent.type(name, '!')
-    expect(fireBeforeUnload().defaultPrevented).toBe(true)
-  })
-
   it('po uložení už odchod nic nezdržuje', async () => {
     const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: { ...CABIN, name: 'Chata U Lesa a Potoka' } })
     await renderEdited()
-    expect(screen.getByTestId('cabin-settings-save-bar')).toHaveTextContent('Máš neuložené změny')
+    const bar = screen.getByTestId('cabin-settings-save-bar')
+    expect(bar).toHaveTextContent('Máš neuložené změny')
 
-    await userEvent.click(screen.getByTestId('cabin-settings-save-button'))
+    await userEvent.click(within(bar).getByTestId('cabin-settings-save-button'))
     await waitFor(() => expect(patch).toHaveBeenCalled())
-    await waitFor(() => expect(screen.getByTestId('cabin-settings-save-bar')).not.toHaveTextContent('Máš neuložené změny'))
+    await waitFor(() => expect(bar).not.toHaveTextContent('Máš neuložené změny'))
 
     expect(fireBeforeUnload().defaultPrevented).toBe(false)
     await userEvent.click(screen.getByRole('link', { name: 'Nástěnka' }))
@@ -148,10 +127,13 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     expect(screen.getByTestId('cabin-settings-save-bar')).not.toHaveTextContent('Máš neuložené změny')
   })
 
-  it('přepnutí záložky změny neztratí a uloží se změny ze všech záložek', async () => {
+  it('přepnutí záložky změny neztratí a Uložit změny je mimo záložky, po ruce na každé', async () => {
     const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: CABIN })
     const name = await renderEdited()
     const tab = (id: string) => screen.getAllByTestId('cabin-settings-tab-button').find((b) => b.dataset.tabId === id)!
+    const save = screen.getByTestId('cabin-settings-save-button')
+    expect(save).toHaveTextContent('Uložit změny')
+    expect(save.closest('.cs-tab-pane')).toBeNull()
 
     await userEvent.click(tab('tab-operations'))
     await userEvent.click(screen.getByTestId('cabin-settings-winterized-toggle'))
@@ -159,17 +141,9 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     await userEvent.click(tab('tab-basic'))
 
     expect(name).toHaveValue('Chata U Lesa a Potoka')
-    await userEvent.click(screen.getByTestId('cabin-settings-save-button'))
+    await userEvent.click(save)
     await waitFor(() => expect(patch).toHaveBeenCalled())
     expect(patch.mock.calls[0][1]).toMatchObject({ name: 'Chata U Lesa a Potoka', isWinterized: true })
-  })
-
-  it('Uložit změny je v liště mimo záložky, takže je po ruce na každé z nich', async () => {
-    renderAt(<CabinSettingsPanel />)
-    const bar = await screen.findByTestId('cabin-settings-save-bar')
-
-    expect(within(bar).getByTestId('cabin-settings-save-button')).toHaveTextContent('Uložit změny')
-    expect(bar.closest('.cs-tab-pane')).toBeNull()
   })
 })
 
