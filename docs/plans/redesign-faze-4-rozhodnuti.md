@@ -47,6 +47,7 @@ export z pickeru.
 | 3 | `docs/design/03-prijezd-atomy.html` — Příjezdová karta (B1) | ✅ odsouhlaseno (všech 5 dílů = A) |
 | 4 | `docs/design/04-rezervace-atomy.html` — Rezervace + kalendář + řetězec (A1/A2) | ✅ odsouhlaseno (všech 5 dílů = A) |
 | 5 | `docs/design/05-zasoby-atomy.html` — Zásoby / nákupy (C1) | ✅ odsouhlaseno (všech 5 dílů = A) · **V1 rozsah hotov** |
+| 6 | `docs/design/06-prehled-v2-atomy.html` — Přehled v2 podle průzkumu + vizuální detaily (13 dílů) | ✅ odsouhlaseno 2026-11-22 (vše A, kromě: pozornost A+C, instalace B), upřesnění 1 a 2 potvrzena |
 
 ## Rozhodnutí #0 — navigace a mapa appky (odsouhlaseno)
 
@@ -248,6 +249,89 @@ soubory** nákupu (`shoppingList.ts` singular legacy × `shoppingLists.ts` plura
 `purchased` Boolean × `status` enum na položce; `category` je volný string (ne enum); **tři různé
 definice „co chybí/dochází"** (pantry = jen EMPTY, nudge = LOW+EMPTY, dashboard z nákupního seznamu);
 rozbitá diakritika v backend stringech (mojibake).
+
+## Návrh #6 — Přehled v2 podle průzkumu (čeká na volbu)
+
+Soubor `docs/design/06-prehled-v2-atomy.html`. Vznikl 2026-11-22 spojením dvou ranních pickerů
+Přehledu (`~/.gstack/projects/Reathyze20-Cabin_Reservation_App/designs/prehled-mobil-20261122` a
+`prehled-uupm-20261122`, nikdy nevyplněné) s externím UX/UI průzkumem domovské obrazovky. Průzkum
+potvrdil směr #1 (stav → akce → pozornost, akční karta, dva sloupce, bez skla) a přinesl revizi
+pravidel E3, E4, B2, G3, G4 (viz [pravidla](redesign-faze-4-pravidla.md), sekce „Revize 2026-11-22“).
+Situace v náhledech: ne 22. 11., „ty“ odjíždíš, ve středu přijede Petr, dochází plynová bomba,
+došel toaleťák, Petr nahlásil kapající kohoutek. Fiktivní data, barvy z navržené palety.
+
+**Skupina 1 — Co je na Přehledu** (mobil + desktop, červená čára = konec první obrazovky):
+1. **Kostra** — A Štafeta: stav → visí na tobě → pozornost → osa s volnem *(dop.)* · B Osa chaty (ranní ui-ux-pro-max) · C Jeden velký úkol.
+2. **Stavová hlavička** — A teď → příště v jedné kartě *(dop.)* · B dvě dlaždice · C karta + řádek řetězce (dnešní).
+3. **Visí na tobě** — A karta s jedním tlačítkem *(dop.)* · B tlačítko u „Teď“ v ose · C přilepené dole.
+4. **Potřebuje pozornost** — A max. 3 řádky s „Koupím já“ + Do WhatsAppu *(dop.)* · B jeden pruh + „další“ · C souhrnný řádek.
+5. **Kdo jede a kdy je volno** — A osa s piny a volnem v toku *(dop.)* · B řádky jako diář · C pobyty + karta volného víkendu (dnešní).
+6. **Čerstvost dat** — A jen offline / staré údaje + „Čeká na odeslání“ *(dop.)* · B vždy tichý řádek · C ikona v liště.
+7. **Instalace na plochu** — A lišta na konci *(dop.)* · B karta po 3. návštěvě · C plovoucí banner (dnešní).
+
+**Skupina 2 — Vzhled v celé aplikaci** (vzorky ve skutečné velikosti):
+8. **Barvy členů** — A ověřená paleta 8 barev (bílý text 5,7–7,6:1) *(dop.)* · B moje × ostatní · C dnešních 14.
+9. **Velikost textu** — A 16/14 px *(dop.)* · B 18/16 px · C 15/13 px (dnešní).
+10. **Dotyk** — A 56 hlavní / 48 ostatní *(dop.)* · B 48 všude · C 44 px.
+11. **Písmo** — A Plus Jakarta Sans *(dop.)* · B Atkinson Hyperlegible Next · C Figtree.
+12. **Pozadí** — A lesní mlha (dnešní) *(dop.)* · B teplý papír · C bílá.
+
+**Skupina 3 — Texty:** 13. **Oslovení** — A tykání *(dop.)* · B vykání.
+
+**Odsouhlaseno 2026-11-22:** kostra **A Štafeta** · hlavička **A teď → příště** · visí na tobě
+**A karta s tlačítkem** · pozornost **A + C** · osa **A s piny a volnem** · čerstvost **A jen když je
+to důležité** · instalace **B karta jednou po 3. návštěvě** · barvy **A paleta 8** · text **A 16/14 px**
+· dotyk **A 56/48 px** · písmo **A Plus Jakarta Sans** · pozadí **A lesní mlha** · oslovení **A tykání**.
+
+> **Upřesnění 1 – duplicita (poznámka uživatele ke kostře) — potvrzeno 2026-11-22:** *„Hodně se tam ale duplikuje kdy
+> jede Petr atp.“* Petr je ve variantě A čtyřikrát: v hlavičce (příště), v textu akce, jako první
+> zastávka osy a v bočním panelu „Další příjezd“. **Rozhodnuto:** každý údaj má jedno
+> místo. Hlavička = teď → příště, a to je jediné místo s jménem a datem dalšího. Osa začíná **až za
+> ním** (nadpis „Potom“, první zastávka je volno nebo další pobyt). Karta „Další příjezd“ zaniká
+> a její detail (účel · noci · s kým) jde na desktopu do hlavičky pod „příště“. Jméno v textu akce
+> („Předej chatu Petrovi“) zůstává, protože říká, pro koho to dělám.
+>
+> **Upřesnění 2 – pozornost A + C — potvrzeno 2026-11-22:** nejvýš 3 řádky s akcí (A). Když je
+> věcí víc, poslední řádek je souhrn C „+ N dalších potřebuje pozornost →“ místo „Všechny zásoby“.
+> Při 0 věcech karta není.
+
+> **Upřesnění 3 – akce v okolí chaty (nápad uživatele u kostry):** *„přemýšlím o další zajímavé
+> funkcionalitě, že bychom tam mohli mít akce, co jsou v okolí chaty, a filtr třeba do 10 km, do
+> 20 km, do 50 km jako další část přehledu.“* Agent navrhl parkoviště (nová oblast). **Uživatel
+> 2026-11-22: „se bude dělat v rámci redesignu.“** → nová položka **D3 (mini-design): Akce v okolí**.
+> Před tickety rozhodnout: (a) **zdroj dat** o akcích v ČR (research, nic se nevymýšlí), (b) kde
+> přesně na Přehledu je a kdy se ukazuje (pravidlo „co patří na dashboard“), (c) filtr
+> 10 / 20 / 50 km, (d) poloha chaty (dnes `address` a `weatherLocation` jako text, souřadnice nejsou).
+>
+> **(d) rozhodnuto 2026-11-22 → [ADR-0006](../adr/0006-chata-je-anonymni.md) Chata je anonymní.**
+> Poloha = **nejbližší obec**, vybraná ze seznamu (název + okres) při zadávání chaty. Její
+> souřadnice slouží filtru akcí i počasí. Přesnou adresu appka nesbírá; sloupec `Cabin.address`
+> jde k odstranění (contract migrace, schvaluje člověk).
+
+> **(a) rozhodnuto 2026-11-22 („podle doporučení“).** Research zdrojů je v #281. Jediný zdroj,
+> který pokrývá akce na venkově (poutě, trhy, akce obcí) a má u akcí polohu, je **Kudy z nudy**
+> (CzechTourism). Přístup k jejich API mají jen smluvní partneři a přidělování je podle jejich
+> FAQ pozastavené. Ticketmaster vrací skoro jen velké akce ve městech a podmínky zakazují komerci,
+> proto ho **nebereme**. Ruční zadávání akcí rodinou také ne.
+> 1. **Uživatel požádá CzechTourism o přístup** (katalog@czechtourism.cz). Text e-mailu připraví agent.
+> 2. **Do té doby jen odkaz ven:** na Přehledu odkaz „Akce v okolí“ na kalendář Kudy z nudy pro kraj
+>    chaty, `https://www.kudyznudy.cz/kalendar-akci/<kraj>` (např. `jihocesky-kraj`, `kraj-vysocina`).
+>    Nic se nestahuje ani neukládá. Kraj se odvodí z vybrané obce (#279, číselník RÚIAN). Filtr podle
+>    okresu ani okruhu v km Kudy z nudy v URL nemá. Ticket #283 (blokuje #279).
+> 3. **(b) a (c) až podle odpovědi CzechTourism.** Karta s akcemi a filtrem 10 / 20 / 50 km dává smysl
+>    jen s daty s polohou. Když přístup nedostanou, zůstane odkaz.
+
+**Tickety (2026-11-22):** nadřazené #268 (sub-issue #66). #269 kontrast štítků · #270 text 16 px +
+dotyk 48/56 · #271 paleta členů · #272 hlavička teď → příště · #273 osa „Potom“ s volnem (blokuje
+#272) · #274 jedna výzva „Visí na tobě“ (blokuje #255) · #275 „Potřebuje pozornost“ · #276 offline a
+stáří dat · #277 karta instalace · #278 tykání · #279 výběr nejbližší obce · #280 odstranit
+`Cabin.address` (pro člověka) · #281 mini-design D3 akce v okolí. „Koupím já“ = slib „Přivezu
+z domova“ (#167), rozhodl uživatel 2026-11-22.
+
+Poznámky pro stavbu: „Koupím já“ (díl 4A) je tentýž slib jako „Přivezu z domova“ z #167. Navržená paleta: `#1D5FA8`
+modrá, `#B3401A` cihlová, `#7A3FA0` fialová, `#1F6F4A` jedlová, `#0E6F7C` petrolejová, `#8A5A00`
+okrová, `#A6306A` vínová, `#4B5563` břidlicová. Stávající barvy členů se přemapují na nejbližší
+barvu z palety, bez migrace.
 
 ## Rozhodnutí o ikonografii (odsouhlaseno 2026-11-21)
 
