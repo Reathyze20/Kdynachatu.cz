@@ -1,4 +1,5 @@
 /** Předpověď Open-Meteo na 16 dní pro místo chaty (sdílí ji detail pobytu i Přehled) a výběr dnů pobytu (#323). */
+import { addIsoDays } from "@/lib/dateUtils";
 import { DAY_NAMES } from "@/lib/utils";
 import { mapWMOCode, resolveWeatherCoords, type WeatherPlace } from "./dashboard";
 
@@ -25,18 +26,12 @@ export interface StayForecastDay extends ForecastDay { tentative: boolean }
 export interface StayForecast { days: StayForecastDay[]; frost: StayForecastDay | null; storm: StayForecastDay | null }
 export type StayForecastWindow = { kind: "ended" } | { kind: "later"; availableFrom: string } | { kind: "open" };
 
-/** Posun kalendářního dne YYYY-MM-DD o `n` dní (počítá se v UTC, takže bez posunu času). */
-function addDays(iso: string, n: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
-}
-
 const hhmm = (timestamp: string | undefined) => timestamp?.split("T")[1]?.slice(0, 5) ?? null;
 
 /** Skončený pobyt kartu nemá, pobyt za horizontem dostane datum, od kdy bude předpověď. */
 export function stayForecastWindow(from: string, to: string, today: string): StayForecastWindow {
   if (to < today) return { kind: "ended" };
-  const availableFrom = addDays(from, -(HORIZON_DAYS - 1));
+  const availableFrom = addIsoDays(from, -(HORIZON_DAYS - 1));
   return availableFrom > today ? { kind: "later", availableFrom } : { kind: "open" };
 }
 
@@ -77,7 +72,7 @@ export async function fetchCabinForecast(place: WeatherPlace | null | undefined)
 /** Dny pobytu z předpovědi (u probíhajícího pobytu od dneška) s příznakem „orientační“ a výstrahami. */
 export function pickStayForecast(forecast: CabinForecast, from: string, to: string, today: string): StayForecast {
   const start = from > today ? from : today;
-  const tentativeFrom = addDays(today, TENTATIVE_FROM_OFFSET);
+  const tentativeFrom = addIsoDays(today, TENTATIVE_FROM_OFFSET);
   const days = forecast.days
     .filter((d) => d.date >= start && d.date <= to)
     .map((d) => ({ ...d, tentative: d.date >= tentativeFrom }));

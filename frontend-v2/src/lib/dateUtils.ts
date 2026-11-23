@@ -100,6 +100,12 @@ export function isoRangesOverlap(aFrom: string, aTo: string, bFrom: string, bTo:
   return aFrom <= bTo && bFrom <= aTo;
 }
 
+/** Posun kalendářního dne YYYY-MM-DD o `n` dní (počítá se v UTC, takže bez posunu času). */
+export function addIsoDays(iso: string, n: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+
 /** Date v lokální poledne daného dne – jen pro zobrazení (den v týdnu, měsíc). */
 export function isoDateToLocalNoon(day: string): Date {
   return new Date(day + "T12:00:00");

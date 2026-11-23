@@ -15,11 +15,14 @@ import { NudgeTray } from "./NudgeTray";
 import { AttentionCard } from "./AttentionCard";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { CabinHero } from "./CabinHero";
+import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
+import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
 import { InstallCard } from "@/components/shared/InstallCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { DASHBOARD_SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
+import { getLocalTodayIso } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
 
@@ -115,7 +118,7 @@ const cardVariants = {
 
 export function DashboardPage() {
   useDocumentTitle('Přehled');
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [pinnedNote, setPinnedNote] = useState<string | null>(null);
   const [pinnedNoteAuthor, setPinnedNoteAuthor] = useState<string | null>(null);
   const [pinnedNoteUpdatedAt, setPinnedNoteUpdatedAt] = useState<string | null>(null);
@@ -189,6 +192,10 @@ export function DashboardPage() {
   const cabinError = cabinQuery.isError;
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
+  // Počasí na pobyt (#326): nejbližší pobyt v okně 7 dní před příjezdem, vlastní má přednost
+  const stayPick = reservationsQuery.data
+    ? pickOverviewStay(reservationsQuery.data.activeReservation, reservationsQuery.data.upcomingReservations, user, getLocalTodayIso())
+    : null;
   // „Potřebuje pozornost“: na mobilu pod „Visí na tobě“, na desktopu v bočním panelu (#275)
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const attention = shoppingQuery.isError ? (
@@ -253,6 +260,17 @@ export function DashboardPage() {
             <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} />
           ) : null}
         </motion.div>
+
+        {stayPick && (
+          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-stay-weather-widget">
+            <StayWeatherCard
+              from={stayPick.stay.from}
+              to={stayPick.stay.to}
+              title={overviewStayTitle(stayPick)}
+              frame="rounded-2xl border border-rule-soft bg-sheet shadow-lift"
+            />
+          </motion.div>
+        )}
       </motion.div>
 
       {isAdmin && (activationQuery.isLoading ? (
