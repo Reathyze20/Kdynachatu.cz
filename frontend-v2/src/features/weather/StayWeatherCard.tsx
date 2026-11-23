@@ -1,6 +1,7 @@
 /** „Počasí na pobyt“ (#324, vizuál docs/design/07-teplo-atomy.html díl 2): dny pobytu, hodinový graf vybraného dne (#325), slunce a UV, výstrahy. */
 import { useId, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   CalendarDays, ChevronDown, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSun, CloudSunRain,
   Droplets, Snowflake, Sun, Sunrise, Sunset, ThermometerSnowflake, TriangleAlert, type LucideIcon,
@@ -69,6 +70,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
   const headingId = useId();
   const chartId = useId();
   const [chartOpen, setChartOpen] = useState(!collapsibleChart);
+  const reduceMotion = useReducedMotion();
   const { user } = useAuth();
   const cabin = useCabinSettings();
   const { horizon, stay, locationProblem, isError, isLoading } = useStayForecast(cabin.data ?? undefined, from, to);
@@ -103,7 +105,15 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
           {stay.days.map((d) => <DayCell key={d.date} day={d} selected={d.date === day.date} onSelect={() => { setSelectedDate(d.date); setChartOpen(true); }} />)}
         </ul>
         {stay.days.some((d) => d.tentative) && <p className="text-sm text-slate-600">Dny 8–16 jsou orientační, předpověď se ještě změní.</p>}
-        <div id={chartId} hidden={!chartOpen}><StayHourlyChart day={day} dayName={fullDayName(day.date)} /></div>
+        <AnimatePresence initial={false}>
+          {chartOpen && (
+            <motion.div
+              id={chartId} className="overflow-hidden"
+              initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+            ><StayHourlyChart day={day} dayName={fullDayName(day.date)} /></motion.div>
+          )}
+        </AnimatePresence>
         <p className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
           {day.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Východ slunce</span>{day.sunrise}</span>}
           {day.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{day.sunset}</span>}
@@ -114,7 +124,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
         {stay.storm && <Alert icon={TriangleAlert} day={stay.storm} text="hrozí bouřka." />}
         {collapsibleChart && (
           <button
-            type="button" aria-expanded={chartOpen} aria-controls={chartId} onClick={() => setChartOpen((open) => !open)}
+            type="button" aria-expanded={chartOpen} aria-controls={chartOpen ? chartId : undefined} onClick={() => setChartOpen((open) => !open)}
             className="flex min-h-12 items-center justify-center gap-1.5 border-t border-slate-100 text-base font-bold text-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
           >
             Hodinový graf<ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${chartOpen ? "rotate-180" : ""}`} />

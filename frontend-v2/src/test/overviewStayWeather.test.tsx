@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -151,7 +151,7 @@ describe('Přehled: karta Počasí na pobyt', () => {
     renderOverview(reservations(null, [stay('r-petr', 'Petr', '2030-06-03', '2030-06-05')]))
     const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
     const toggle = await within(card).findByRole('button', { name: 'Hodinový graf' })
-    const chart = () => within(card).queryByRole('tablist', { name: 'Hodinový graf' })
+    const chart = () => within(card).queryByRole('tablist', { name: 'Řada hodinového grafu' })
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(chart()).not.toBeInTheDocument()
@@ -159,7 +159,7 @@ describe('Přehled: karta Počasí na pobyt', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
     expect(chart()).toBeInTheDocument()
     fireEvent.click(toggle)
-    expect(chart()).not.toBeInTheDocument()
+    await waitFor(() => expect(chart()).not.toBeInTheDocument())
 
     fireEvent.click(within(card).getByRole('button', { name: /^Úterý 4\. 6\./ }))
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
@@ -173,7 +173,7 @@ describe('Přehled: karta Počasí na pobyt', () => {
     renderWith(new QueryClient({ defaultOptions: { queries: { retry: false } } }), <StayWeatherCard from="2030-06-03" to="2030-06-05" />)
     const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
 
-    expect(await within(card).findByRole('tablist', { name: 'Hodinový graf' })).toBeInTheDocument()
+    expect(await within(card).findByRole('tablist', { name: 'Řada hodinového grafu' })).toBeInTheDocument()
     expect(within(card).queryByRole('button', { name: 'Hodinový graf' })).not.toBeInTheDocument()
   })
 

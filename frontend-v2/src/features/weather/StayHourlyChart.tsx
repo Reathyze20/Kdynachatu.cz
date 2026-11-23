@@ -77,7 +77,7 @@ export function StayHourlyChart({ day, dayName }: { day: StayForecastDay; dayNam
 
   return (
     <div className="@container flex flex-col gap-2 border-t border-slate-100 pt-2.5">
-      <div role="tablist" aria-label="Hodinový graf" onKeyDown={onKeyDown} className="flex gap-2 rounded-xl bg-slate-100 p-[3px]">
+      <div role="tablist" aria-label="Řada hodinového grafu" onKeyDown={onKeyDown} className="flex gap-2 rounded-xl bg-slate-100 p-[3px]">
         {SERIES.map((s) => (
           <button
             key={s.id} id={`${id}-${s.id}`} type="button" role="tab" aria-selected={s.id === tab} aria-controls={`${id}-panel`}
