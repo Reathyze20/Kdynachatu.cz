@@ -6,6 +6,8 @@ import { Modal } from "@/components/shared/Modal";
 import { useMonthlyNote, useUpdateMonthlyNote } from "../hooks/useReservations";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { RESERVATION_TYPE_LABEL } from "../reservationType";
 import css from "../Reservations.module.css";
 
 const MONTH_NAMES = [
@@ -398,6 +400,9 @@ export function ReservationList({
 
 // ── Reservation card sub-component ──────────────────────────────────
 
+/** Pevná plně, předběžná obrysem, záložní (#209). */
+const TYPE_CLASS = { primary: css.typeFirm, soft: css.typeSoft, backup: css.typeBackup } as const;
+
 function ReservationCard({
   reservation: r,
   index,
@@ -407,25 +412,16 @@ function ReservationCard({
   index: number;
   onClick: (r: Reservation) => void;
 }) {
-  const uColor = r.userColor || undefined;
   const d1 = new Date(r.from + "T00:00:00");
   const d2 = new Date(r.to + "T00:00:00");
   const isPast = d2 < new Date();
-
+  const nights = nightsBetween(r.from, r.to);
   const dateLabel = `${d1.getDate()}. ${d1.getMonth() + 1}. – ${d2.getDate()}. ${d2.getMonth() + 1}.`;
-
-  let badgeClass = css.badgeConfirmed;
-  let statusLabel = "Potvrzeno";
-  if (r.status === "backup") {
-    badgeClass = css.badgeBackup;
-    statusLabel = "Záložní";
-  } else if (r.status === "soft") {
-    badgeClass = css.badgePending;
-    statusLabel = "Čeká";
-  }
+  const status = r.status ?? "primary";
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
       initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
@@ -435,31 +431,21 @@ function ReservationCard({
       data-reservation-status={r.status}
       onClick={() => onClick(r)}
     >
-      {/* Avatar */}
-      <AnimalAvatar
-        icon={r.userAnimalIcon}
-        username={r.username}
-        color={uColor}
-        size={52}
-        className={css.cardAvatar}
-      />
+      {/* Avatar je jen ozdoba, jméno nese řádek „kdo" */}
+      <span className={css.cardAvatar} aria-hidden="true">
+        <AnimalAvatar icon={r.userAnimalIcon} username={r.username} color={r.userColor || undefined} size={52} />
+      </span>
 
-      {/* Content */}
-      <div className={css.cardContent}>
-        <div className={css.cardTopRow}>
-          <span className={css.cardTitle}>
-            {r.purpose || "Bez názvu"}
-          </span>
-          <span className={badgeClass}>
-            {statusLabel}
-          </span>
-        </div>
-        <div className={css.cardMeta}>
-          <span>{dateLabel}</span>
-          <span className={css.cardMetaDot}>&bull;</span>
-          <span className={css.cardMetaName}>{r.username}</span>
-        </div>
-      </div>
-    </motion.div>
+      <span className={css.cardContent}>
+        <span className={css.cardTopRow}>
+          <span className={css.cardTitle}>{r.purpose || "Bez názvu"}</span>
+          <span className={TYPE_CLASS[status]}>{RESERVATION_TYPE_LABEL[status]}</span>
+        </span>
+        <span className={css.cardMeta}>
+          {dateLabel}{nights > 0 && ` · ${nights} ${nightsLabel(nights)}`}
+        </span>
+        <span className={css.cardWho}>{r.username}</span>
+      </span>
+    </motion.button>
   );
 }
