@@ -7,6 +7,8 @@ import { describe, it, expect } from 'vitest'
  *
  * jsdom kaskádu nepočítá, proto se hlídá CSS a třídy/inline styly v TSX přímo.
  * Neviditelný okraj (`none`, `0`, `transparent`) proužek není a projde.
+ * Nehlídá se: holé `border-l` s barvou celého okraje, `box-shadow: inset …` a `::before`
+ * proužky; na ty myslí pravidlo ve skillu CabinSaaS Architect.
  */
 
 const CSS = import.meta.glob<string>('../**/*.css', { query: '?raw', import: 'default', eager: true })
@@ -17,10 +19,7 @@ const TSX = import.meta.glob<string>(['../**/*.tsx', '!../test/**', '!../**/*.te
 })
 
 /** Pravidla, kde levý okraj není dekorativní proužek; klíč `soubor|selektor`. */
-const ALLOWED: Record<string, string> = {
-  '../styles/diary.css|.folder-card.diary-folder': 'hřbet knihy u složky deníku (metafora knihy, ne proužek karty)',
-  '../styles/diary.css|.folder-card.diary-folder:hover': 'hřbet knihy u složky deníku při najetí',
-}
+const ALLOWED: Record<string, string> = {}
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
 
@@ -28,7 +27,7 @@ const LEFT_BORDER_PROP = /^border-(left|inline-start)(-(width|color|style))?$/
 const INVISIBLE_VALUE = /^(none|0(px)?)$|transparent/
 
 /** Tailwind levý okraj s barvou nebo šířkou (`border-l-4`, `md:border-s-amber-400`); `border-l-transparent` je neviditelný. */
-const TW_LEFT_BORDER = /\bborder-[ls]-(?!transparent\b)[\w[\]/#.%-]+/
+const TW_LEFT_BORDER = /\bborder-[ls]-(?!(transparent|0)\b)[\w[\]/#.%-]+/
 /** Inline styl levého okraje (`borderLeft`, `borderLeftColor`, `borderInlineStart…`). */
 const INLINE_LEFT_BORDER = /\bborder(Left|InlineStart)\w*\s*:/
 

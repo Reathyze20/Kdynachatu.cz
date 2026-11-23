@@ -133,7 +133,7 @@ The page renders inside `AppShell`'s `<main id="page-container">`, which already
 
 ### No Coloured Left Stripes
 
-**Never** put a coloured left border on a card, field, banner, quote or list row (`border-left: 3px solid …`, `border-l-4 border-l-amber-400`, inline `borderLeftColor`). The user finds it a well-known AI trick (#355). Show tone (warning, info, selected) with what already exists: a tinted `lucide` icon, a label, or a soft token background (`--status-warning-light`, `--brand-primary-light`). Allowed: invisible left borders (`border-l-transparent` in `scroll-area`), neutral full-height dividers (`border-l` on `sheet`), and the diary folder's book spine. `src/test/noLeftStripes.test.ts` enforces this; add an exception there only with a reason.
+**Never** put a coloured left border on a card, field, banner, quote or list row (`border-left: 3px solid …`, `border-l-4 border-l-amber-400`, inline `borderLeftColor`). The user finds it a well-known AI trick (#355). Show tone (warning, info, selected) with what already exists: a tinted `lucide` icon, a label, or a soft token background (`--status-warning-light`, `--brand-primary-light`). Allowed: invisible left borders (`border-l-transparent` in `scroll-area`), and neutral full-height dividers (`border-l` on `sheet`). `src/test/noLeftStripes.test.ts` enforces this; add an exception there only with a reason.
 
 ### Color System
 

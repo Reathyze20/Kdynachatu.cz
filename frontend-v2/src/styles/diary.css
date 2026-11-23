@@ -160,7 +160,6 @@
     4px 4px 12px rgba(0, 0, 0, 0.06),
     inset 2px 0 5px rgba(255, 255, 255, 1);
   border: 1px solid var(--border-strong, #e5e7eb);
-  border-left: 10px solid var(--brand-primary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,7 +196,6 @@
     -3px 2px 8px rgba(0, 0, 0, 0.05),
     8px 8px 20px rgba(0, 0, 0, 0.1),
     inset 2px 0 5px rgba(255, 255, 255, 1);
-  border-left-color: var(--brand-primary-hover);
 }
 
 /* ── Folder card inner elements ────────────────────────────────────────────── */
@@ -752,7 +750,6 @@
   .folder-card.diary-folder {
     min-height: 140px;
     padding: var(--space-md) var(--space-md) var(--space-md) 22px;
-    border-left-width: 8px;
   }
 
   .folder-name {
