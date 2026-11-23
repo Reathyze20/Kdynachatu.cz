@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import apiClient from '@/api/client'
-import type { AttentionItem, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
+import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 import statusHeaderCss from '@/styles/status-header.css?raw'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
@@ -46,8 +46,8 @@ function reservations(overrides: Partial<DashboardReservationsData> = {}): Dashb
 
 const NO_SHOPPING: DashboardShoppingData = { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null }
 
-function renderOverview(data: DashboardReservationsData, shopping: DashboardShoppingData = NO_SHOPPING) {
-  responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [] })
+function renderOverview(data: DashboardReservationsData, shopping: DashboardShoppingData = NO_SHOPPING, cabin: Partial<CabinSettings> = {}) {
+  responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], ...cabin })
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', shopping)
   responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
@@ -293,6 +293,25 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
 
     const hero = await screen.findByTestId('cabin-hero')
     expect(await within(hero).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
+  })
+
+  it('s vybranou obcí nabídne pruh odkaz „Akce v kraji“ na kalendář Kudy z nudy v novém panelu (#283)', async () => {
+    renderOverview(reservations(), NO_SHOPPING, { municipalityName: 'Telč', municipalityRegion: 'Kraj Vysočina' })
+
+    const hero = await screen.findByTestId('cabin-hero')
+    const link = await within(hero).findByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })
+    expect(link).toHaveTextContent('Akce v kraji')
+    expect(link).toHaveAttribute('href', 'https://www.kudyznudy.cz/kalendar-akci/kraj-vysocina')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('bez vybrané obce odkaz „Akce v kraji“ není (#283)', async () => {
+    renderOverview(reservations())
+
+    const hero = await screen.findByTestId('cabin-hero')
+    await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })
+    expect(within(hero).queryByRole('link', { name: /Akce v kraji/ })).not.toBeInTheDocument()
   })
 
   it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {
