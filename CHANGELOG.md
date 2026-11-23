@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.9.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.8.0...v1.9.0) (2026-11-23)
+
+
+### Features
+
+* **dashboard:** collapse the overview hourly chart and drop the cover strip ([#343](https://github.com/Reathyze20/Kdynachatu.cz/issues/343)) ([4edd0ee](https://github.com/Reathyze20/Kdynachatu.cz/commit/4edd0eeca972e42287b4c7d4c15ec7793ba23982))
+* **dashboard:** move today's date and weather from CabinHero into the sidebar and a mobile card ([#345](https://github.com/Reathyze20/Kdynachatu.cz/issues/345)) ([89cbc60](https://github.com/Reathyze20/Kdynachatu.cz/commit/89cbc6078953044c5dad3a2e5ac4590513ad3446))
+* **gallery:** cover photo variants sized for a full-screen background ([#346](https://github.com/Reathyze20/Kdynachatu.cz/issues/346)) ([2a29fe4](https://github.com/Reathyze20/Kdynachatu.cz/commit/2a29fe4a377ed0709f6dd6f4cc5ffc1992bd465b))
+* **theme:** cabin cover photo as the app background on Přehled and Kalendář ([#348](https://github.com/Reathyze20/Kdynachatu.cz/issues/348)) ([3b4d6ac](https://github.com/Reathyze20/Kdynachatu.cz/commit/3b4d6ac55d995450ed66c146184f4e4fa9e61fd8))
+* **theme:** paper card surfaces and the warm under-card background (D) ([#347](https://github.com/Reathyze20/Kdynachatu.cz/issues/347)) ([19678b5](https://github.com/Reathyze20/Kdynachatu.cz/commit/19678b52d3b6f96ab441d921ea864bb4561ce924))
+
 ## [1.8.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.7.0...v1.8.0) (2026-11-23)
 
 
