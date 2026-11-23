@@ -96,6 +96,16 @@ describe('Nastavení chaty: titulní fotka (#321)', () => {
     expect(name).toHaveValue('Chata U Lesa a Potoka')
   })
 
+  it('náhled je zmenšená desktopová varianta pozadí 16 : 10 s ořezem na střed (#340)', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({ data: CABIN })
+    renderWithClient(<CabinSettingsPanel />)
+
+    const preview = await screen.findByTestId('cabin-settings-cover-photo-preview')
+    expect(preview).toHaveAttribute('width', '1920')
+    expect(preview).toHaveAttribute('height', '1200')
+    expect(preview).toHaveClass('aspect-[16/10]', 'object-cover', 'object-center', 'max-w-md')
+  })
+
   it('bez titulní fotky napoví, kde ji nastavit', async () => {
     vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { ...CABIN, coverPhotoUrl: null } })
     renderWithClient(<CabinSettingsPanel />)

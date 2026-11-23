@@ -33,6 +33,29 @@ describe("coverPhotoFileNames: jen vlastní titulní fotky, nikdy cesta zvenku",
   }
 });
 
+/** Fiktivní „fotka“ 2400 × 1800 s přechody, vlnami a šumem: komprimuje se hůř než běžná fotka chaty. */
+async function detailedPhoto(dir: string): Promise<string> {
+  const width = 2400;
+  const height = 1800;
+  const raw = Buffer.alloc(width * height * 3);
+  let seed = 1;
+  const noise = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff - 0.5) * 60;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 3;
+      const t = y / height;
+      const wave = 30 * Math.sin(x / 37) * Math.cos(y / 53);
+      const n = noise();
+      raw[i] = Math.max(0, Math.min(255, 90 + 100 * t + wave + n));
+      raw[i + 1] = Math.max(0, Math.min(255, 140 - 40 * t + wave + n));
+      raw[i + 2] = Math.max(0, Math.min(255, 200 - 150 * t - wave + n));
+    }
+  }
+  const file = path.join(dir, "fotka-s-detaily.jpg");
+  await sharp(raw, { raw: { width, height, channels: 3 } }).blur(0.8).jpeg({ quality: 90 }).toFile(file);
+  return file;
+}
+
 describe("createCoverPhotoVariants a removeCoverPhotoFiles", () => {
   let dir: string;
   let source: string;
@@ -47,7 +70,7 @@ describe("createCoverPhotoVariants a removeCoverPhotoFiles", () => {
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-  test("vyrobí úzkou a širokou WebP variantu v poměru pruhu pod novým jménem", async () => {
+  test("vyrobí desktopovou a mobilní WebP variantu ve velikosti pozadí pod novým jménem", async () => {
     const coversDir = path.join(dir, "covers");
     const url = await createCoverPhotoVariants(source, coversDir);
     const names = coverPhotoFileNames(url);
@@ -61,6 +84,22 @@ describe("createCoverPhotoVariants a removeCoverPhotoFiles", () => {
     assert.deepEqual([narrow.width, narrow.height], [COVER_PHOTO_SIZES.narrow.width, COVER_PHOTO_SIZES.narrow.height]);
 
     assert.notEqual(await createCoverPhotoVariants(source, coversDir), url, "každé nastavení má nové jméno");
+  });
+
+  test("fiktivní fotka s detaily: pozadí 1920 × 1200 do 200 kB a mobil 1080 × 1920 do 150 kB (#340)", async () => {
+    const coversDir = path.join(dir, "covers-photo");
+    const names = coverPhotoFileNames(await createCoverPhotoVariants(await detailedPhoto(dir), coversDir))!;
+
+    for (const [name, size, maxBytes] of [
+      [names.wide, [1920, 1200], 200_000],
+      [names.narrow, [1080, 1920], 150_000],
+    ] as const) {
+      const file = fs.readFileSync(path.join(coversDir, name));
+      const meta = await sharp(file).metadata();
+      assert.equal(meta.format, "webp");
+      assert.deepEqual([meta.width, meta.height], size);
+      assert.ok(file.length <= maxBytes, `${name}: ${file.length} B > ${maxBytes} B`);
+    }
   });
 
   test("odebrání smaže obě varianty, cizí URL nesmaže nic", async () => {

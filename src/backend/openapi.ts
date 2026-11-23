@@ -256,7 +256,7 @@ const schemas: Record<string, JsonSchema> = {
       },
       coverPhotoUrl: {
         type: "string", nullable: true, example: "/uploads/covers/0f8fad5b-d9cb-469f-a165-70867728950e.webp",
-        description: "Titulni fotka: siroka WebP varianta (desktop); uzka pro mobil ma stejne jmeno s priponou -sm. Meni se jen pres /api/cabin/cover-photo.",
+        description: "Titulni fotka ve velikosti pozadi appky: WebP varianta pro desktop 1920x1200 (do ~200 kB); varianta pro mobil 1080x1920 (do ~150 kB) ma stejne jmeno s priponou -sm. Meni se jen pres /api/cabin/cover-photo.",
       },
       weatherLocation: { type: "string", nullable: true, example: "Třebenice", description: "Nazev obce; u chat bez vybrane obce stary volny text" },
       municipalityCode: { type: "integer", nullable: true, example: 565768 },
@@ -685,7 +685,7 @@ const paths: Record<string, OpenApiObject> = {
     put: {
       tags: ["Cabin"],
       summary: "Nastav fotku z Galerie chaty jako titulni fotku (jen spravce)",
-      description: "Server z fotky vyrobi dve WebP varianty (siroka 1000x360, uzka 750x280 s priponou -sm, orez na stred) pod novym jmenem a smaze soubory predchozi titulni fotky. Titulni fotka je kopie, smazani zdrojove fotky ji nezrusi. Chate odejde realtime event cabin:changed.",
+      description: "Server z fotky vyrobi dve WebP varianty ve velikosti pozadi appky (desktop 1920x1200 do ~200 kB, mobil 1080x1920 do ~150 kB s priponou -sm; orez na stred, kvalita se snizuje, dokud se varianta nevejde) pod novym jmenem a smaze soubory predchozi titulni fotky. Titulni fotka je kopie, smazani zdrojove fotky ji nezrusi. Chate odejde realtime event cabin:changed.",
       security: bearerSecurity,
       requestBody: jsonRequestBody({ type: "object", required: ["photoId"], properties: { photoId: { type: "string", format: "uuid" } } }),
       responses: {
