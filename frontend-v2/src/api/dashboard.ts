@@ -205,6 +205,7 @@ export interface CabinSettings {
   latitude?: number | null; // definiční bod vybrané obce (ADR-0006)
   longitude?: number | null;
   departureChecklist: string[];
+  coverPhotoUrl?: string | null; // titulní fotka (#321): široká WebP varianta, úzká má příponu -sm
   isWinterized?: boolean;
   features?: Record<string, boolean> | null;
 }
