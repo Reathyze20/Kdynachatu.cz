@@ -101,7 +101,17 @@ describe('Titulní fotka jako pozadí appky (#341)', () => {
     expect(backdrop).toHaveAttribute('data-visible', 'false')
   })
 
-  it.each(['/notes', '/shopping', '/gallery', '/diary', '/reconstruction', '/admin'])(
+  // Text mimo karty a průhledné panely tu dostaly plný papír (#341, druhý řez)
+  it.each(['/shopping', '/notes', '/reconstruction', '/gallery', '/diary'])('na %s je fotka vidět', async (path) => {
+    mockCabin(COVER)
+    renderBackdrop(path)
+    const { backdrop, img } = await findPhoto()
+
+    loadImage(img, 1920, 1200)
+    expect(backdrop).toHaveAttribute('data-visible', 'true')
+  })
+
+  it.each(['/admin', '/admin/invites', '/admin/cabin', '/admin/diagnostics', '/superadmin'])(
     'na %s s textem mimo karty fotku zatím neukazuje',
     async (path) => {
       mockCabin(COVER)

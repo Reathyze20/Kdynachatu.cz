@@ -24,17 +24,6 @@
   box-shadow: var(--lift);
 }
 
-.reconstruction-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 220px;
-  background:
-    radial-gradient(circle at top left, rgba(232, 244, 239, 0.9) 0%, rgba(232, 244, 239, 0) 56%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 100%);
-  pointer-events: none;
-}
-
 .reconstruction-card > * {
   position: relative;
   z-index: 1;
@@ -49,7 +38,6 @@
   align-items: center;
   flex-shrink: 0;
   min-height: 64px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.18) 100%);
 }
 
 .reconstruction-header-left {
@@ -79,7 +67,6 @@
   gap: 6px;
   padding: var(--space-md) var(--space-xl) var(--space-lg);
   border-bottom: 1px solid var(--border-light, #f1f5f9);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.12) 100%);
 }
 
 .budget-labels {
@@ -141,7 +128,8 @@
   flex: 1 1 0;
   min-width: 300px;
   max-width: 420px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%);
+  /* Full paper, no glass: the cover photo is behind the page (#341) */
+  background: rgb(var(--sheet));
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
@@ -149,10 +137,8 @@
   overflow: hidden;
   min-height: 0;
   scroll-snap-align: start;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    0 14px 28px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgb(var(--rule-soft));
+  box-shadow: var(--lift);
 }
 
 .kanban-column-header {
@@ -209,10 +195,6 @@
 }
 
 /* �� Column variants ��������������������������������������������������������� */
-.kanban-column.col-navrzeno {
-  background: linear-gradient(180deg, rgba(219, 234, 254, 0.35) 0%, rgba(255, 255, 255, 0.5) 100%);
-}
-
 .kanban-column.col-navrzeno .kanban-column-header {
   border-bottom-color: #93c5fd;
   color: #1d4ed8;
@@ -227,13 +209,10 @@
   color: #1d4ed8;
 }
 
-.kanban-column.col-schvaleno {
-  background: linear-gradient(180deg, rgba(232, 244, 239, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
-}
-
 .kanban-column.col-schvaleno .kanban-column-header {
   border-bottom-color: #86efac;
-  color: #15803d;
+  /* --ok: green-700 on paper drops to 4.4 : 1 (#341) */
+  color: rgb(var(--ok));
 }
 
 .kanban-column.col-schvaleno .kanban-column-icon {
@@ -242,16 +221,12 @@
 
 .kanban-column.col-schvaleno .kanban-count {
   background: rgba(34, 197, 94, 0.1);
-  color: #15803d;
-}
-
-.kanban-column.col-probehlo {
-  background: linear-gradient(180deg, rgba(209, 250, 229, 0.3) 0%, rgba(255, 255, 255, 0.5) 100%);
+  color: rgb(var(--ok));
 }
 
 .kanban-column.col-probehlo .kanban-column-header {
   border-bottom-color: #6ee7b7;
-  color: #047857;
+  color: rgb(var(--ok));
 }
 
 .kanban-column.col-probehlo .kanban-column-icon {
@@ -260,7 +235,7 @@
 
 .kanban-column.col-probehlo .kanban-count {
   background: rgba(16, 185, 129, 0.1);
-  color: #047857;
+  color: rgb(var(--ok));
 }
 
 /* �� Column body (scrollable) ������������������������������������������������ */
