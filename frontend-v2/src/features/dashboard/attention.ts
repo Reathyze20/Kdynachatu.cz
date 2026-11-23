@@ -17,7 +17,7 @@ export interface Attention {
   rows: AttentionRow[];
   /** Kolik zásob se nevešlo (souhrn „+ N dalších“). */
   more: number;
-  /** Všechno pro „Do WhatsAppu“. */
+  /** Všechno pro „Zkopírovat pro WhatsApp“. */
   all: AttentionRow[];
 }
 
