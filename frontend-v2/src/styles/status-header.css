@@ -52,6 +52,15 @@
   .status-header__detail { display: none; }
 }
 
+/* Desktop: menší svislé mezery, ať se Přehled vejde bez scrollování (#356). Obsah beze změny. */
+@media (min-width: 1024px) {
+  .status-header .status-content { gap: 10px; }
+  .status-header .last-stay-inline { margin-top: 0; }
+  .status-header .status-cta-row { padding-top: 10px; }
+  .status-header .arrival-briefing { margin-top: 0; padding: 8px 12px; line-height: 1.4; }
+  .status-header .arrival-briefing-title { margin-bottom: 2px; }
+}
+
 /* Úzký telefon: avatar nad jménem, ať se jméno a datum vejdou do poloviny karty */
 @media (max-width: 400px) {
   .status-header__person { flex-direction: column; align-items: flex-start; }

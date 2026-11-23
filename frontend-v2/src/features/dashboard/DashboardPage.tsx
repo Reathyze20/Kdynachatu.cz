@@ -187,8 +187,10 @@ export function DashboardPage() {
   const stayPick = reservationsQuery.data
     ? pickOverviewStay(reservationsQuery.data.activeReservation, reservationsQuery.data.upcomingReservations, user, getLocalTodayIso())
     : null;
-  // „Potřebuje pozornost“: na mobilu pod „Visí na tobě“, na desktopu v bočním panelu (#275)
+  // „Visí na tobě“ a „Potřebuje pozornost“: na mobilu nahoře v hlavním sloupci, na desktopu
+  // v bočním panelu nad vzkazem, aby se Přehled vešel bez scrollování (#275, #356)
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
+  const nudges = <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />;
   const attention = shoppingQuery.isError ? (
     <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
   ) : shoppingQuery.data ? (
@@ -231,7 +233,7 @@ export function DashboardPage() {
       )}
 
       {/* Nudge tray — timely coordination prompts derived from existing data */}
-      <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />
+      {!isDesktop && nudges}
       {!isDesktop && attention}
 
       {/* Hlavní sloupec: prioritní stack karet (#172), karty se nenatahují do výšky sousedů */}
@@ -282,9 +284,10 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (pozornost, vzkaz). Další příjezd je jen v hlavičce (#272).
+  // Rám #1b: hlavní sloupec = stav chaty a pobytu, boční panel = co visí na mně, pozornost a vzkaz (#356). Další příjezd je jen v hlavičce (#272).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
+      {isDesktop && nudges}
       {isDesktop && attention}
       <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (

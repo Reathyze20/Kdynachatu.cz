@@ -37,11 +37,14 @@ function DayCell({ day, selected, onSelect }: { day: StayForecastDay; selected: 
   return (
     <li><button
       type="button" aria-pressed={selected} onClick={onSelect}
-      className={`flex min-h-12 w-full flex-col items-center gap-1 rounded-xl border-[1.5px] px-1 py-2.5 focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] ${selected ? "border-[var(--brand-primary)] bg-[rgb(var(--sheet-alt))]" : "border-transparent bg-inset"}`}
+      className={`flex min-h-12 w-full flex-col items-center gap-1 rounded-xl border-[1.5px] px-1 py-2 focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] ${selected ? "border-[var(--brand-primary)] bg-[rgb(var(--sheet-alt))]" : "border-transparent bg-inset"}`}
     >
       <span className="sr-only">{label}</span>
-      <span aria-hidden="true" className={`text-sm font-bold ${selected ? "text-slate-900" : "text-slate-700"}`}>{day.dayName} {Number(day.date.slice(8, 10))}.</span>
-      {day.tentative && <span aria-hidden="true" className="text-sm italic text-slate-600">orientační</span>}
+      {/* „orientační“ vedle dne, když se vejde, jinak pod ním (#356) */}
+      <span aria-hidden="true" className="flex flex-wrap items-baseline justify-center gap-x-1.5">
+        <span className={`text-sm font-bold ${selected ? "text-slate-900" : "text-slate-700"}`}>{day.dayName} {Number(day.date.slice(8, 10))}.</span>
+        {day.tentative && <span className="text-sm italic text-slate-600">orientační</span>}
+      </span>
       <Icon aria-hidden="true" className="w-7 h-7" style={{ color: day.color }} />
       <span aria-hidden="true" className="text-base"><b>{deg(day.tempMax)}°</b><span className="text-slate-600"> / {deg(day.tempMin)}°</span></span>
       <span aria-hidden="true" className={`inline-flex items-center gap-1 text-sm font-semibold text-blue-700 ${day.precipProbability >= 5 ? "" : "invisible"}`}>
@@ -53,7 +56,7 @@ function DayCell({ day, selected, onSelect }: { day: StayForecastDay; selected: 
 
 function Alert({ icon: Icon, day, text }: { icon: LucideIcon; day: StayForecastDay; text: string }) {
   return (
-    <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-base text-amber-900">
+    <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-base text-amber-900">
       <Icon aria-hidden="true" className="mt-0.5 w-5 h-5 shrink-0" />
       <span><b>{day.dayName} {dayMonth(day.date)}:</b> {text}</span>
     </p>
@@ -77,6 +80,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   let body: ReactNode;
+  let chartToggle: ReactNode = null;
   if (horizon.kind === "ended") return null;
   if (horizon.kind === "later") {
     body = (
@@ -99,12 +103,20 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
     // Vybraný den: první zobrazený den pobytu, dokud člen neťukne na jiný.
     const day = stay.days.find((d) => d.date === selectedDate) ?? stay.days[0];
     const length = dayLength(day.sunrise, day.sunset);
+    // Přepínač grafu je v hlavičce vedle názvu pobytu, ať karta na Přehledu nemá řádek navíc (#356)
+    if (collapsibleChart) chartToggle = (
+      <button
+        type="button" aria-expanded={chartOpen} aria-controls={chartOpen ? chartId : undefined} onClick={() => setChartOpen((open) => !open)}
+        className="flex min-h-12 shrink-0 items-center gap-1.5 text-base font-bold text-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
+      >
+        Hodinový graf<ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${chartOpen ? "rotate-180" : ""}`} />
+      </button>
+    );
     body = (
       <>
         <ul className="grid grid-cols-[repeat(auto-fit,minmax(84px,1fr))] gap-2">
           {stay.days.map((d) => <DayCell key={d.date} day={d} selected={d.date === day.date} onSelect={() => { setSelectedDate(d.date); setChartOpen(true); }} />)}
         </ul>
-        {stay.days.some((d) => d.tentative) && <p className="text-sm text-slate-600">Dny 8–16 jsou orientační, předpověď se ještě změní.</p>}
         <AnimatePresence initial={false}>
           {chartOpen && (
             <motion.div
@@ -120,17 +132,11 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
           {day.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{day.sunset}</span>}
           <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800"><Sun aria-hidden="true" className="w-4 h-4" />UV {day.uvIndex} {uvLabel(day.uvIndex)}</span>
           {length && <span className="ml-auto"><span className="sr-only">Délka dne </span>{length}</span>}
+          {/* Poznámka k orientačním dnům ve stejném poli jako slunce, ne na vlastním řádku (#356) */}
+          {stay.days.some((d) => d.tentative) && <span className="font-normal italic text-slate-600">Dny 8–16 jsou orientační, předpověď se ještě změní.</span>}
         </p>
         {stay.frost && <Alert icon={ThermometerSnowflake} day={stay.frost} text={`v noci mráz až ${deg(stay.frost.tempMin)} °C. Před odjezdem vypusť vodu.`} />}
         {stay.storm && <Alert icon={TriangleAlert} day={stay.storm} text="hrozí bouřka." />}
-        {collapsibleChart && (
-          <button
-            type="button" aria-expanded={chartOpen} aria-controls={chartOpen ? chartId : undefined} onClick={() => setChartOpen((open) => !open)}
-            className="flex min-h-12 items-center justify-center gap-1.5 border-t border-rule-soft text-base font-bold text-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
-          >
-            Hodinový graf<ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${chartOpen ? "rotate-180" : ""}`} />
-          </button>
-        )}
       </>
     );
   } else if (isLoading || cabin.isLoading) {
@@ -139,8 +145,13 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
 
   return (
     <section aria-labelledby={headingId} className={`flex flex-col gap-3 p-4 ${frame}`} data-testid="stay-weather-card">
-      <h3 id={headingId} className="text-sm font-bold uppercase tracking-wide text-slate-600">Počasí na pobyt</h3>
-      {title && <p className="-mt-2 text-[17px] font-extrabold text-[var(--text-main)]">{title}</p>}
+      <div className="flex flex-wrap items-center justify-between gap-x-3">
+        <div className="min-w-0">
+          <h3 id={headingId} className="text-sm font-bold uppercase tracking-wide text-slate-600">Počasí na pobyt</h3>
+          {title && <p className="mt-1 text-[17px] font-extrabold text-[var(--text-main)]">{title}</p>}
+        </div>
+        {chartToggle}
+      </div>
       {body}
     </section>
   );

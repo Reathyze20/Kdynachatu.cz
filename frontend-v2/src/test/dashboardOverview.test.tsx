@@ -432,6 +432,37 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
     expect(await within(card).findByRole('button', { name: 'Zkopírováno' })).toBeInTheDocument()
   })
 
+  // Přehled bez scrollování na desktopu (#356): hlavní sloupec nese stav pobytu, akce jdou do bočního panelu
+  const oneAttentionRow: DashboardShoppingData = {
+    ...NO_SHOPPING,
+    attention: [{ name: 'Káva', isEmpty: false, isEssential: false, inventoryId: 'inv-k', shoppingItemId: null }],
+  }
+
+  it('na desktopu je v bočním panelu nad „Potřebuje pozornost“, v hlavním sloupci není (#356)', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    try {
+      renderOverview(reservations({ lastStay: lastStay(20) }), oneAttentionRow)
+      const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
+      const card = await within(aside).findByRole('region', { name: 'Visí na tobě' })
+      const attention = within(aside).getByRole('region', { name: 'Potřebuje pozornost' })
+      expect(screen.getByTestId('dashboard-page')).not.toContainElement(card)
+      expect(card.compareDocumentPosition(attention) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('na mobilu zůstává nahoře v hlavním sloupci před „Potřebuje pozornost“ a „Na chatě teď“ (#356)', async () => {
+    renderOverview(reservations({ lastStay: lastStay(20), upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-17')] }), oneAttentionRow)
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    const page = screen.getByTestId('dashboard-page')
+    expect(page).toContainElement(card)
+    const order = within(page).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+    expect(order.indexOf('Visí na tobě')).toBeLessThan(order.indexOf('Potřebuje pozornost'))
+    expect(order.indexOf('Potřebuje pozornost')).toBeLessThan(order.indexOf('Na chatě teď'))
+  })
+
   it('skryté upozornění zmizí a když nic nevisí, karta se nevykreslí', async () => {
     renderOverview(reservations({ lastStay: lastStay(20) }))
 
