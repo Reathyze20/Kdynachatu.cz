@@ -145,7 +145,8 @@ fi
 
 if [ "$DEPLOY_TARGET" = "production" ]; then
   echo "=== Installing backup cron ==="
-  CRON_LINE="0 3 * * * /usr/bin/flock -n /tmp/cabin-backup.lock /bin/bash -lc '. $NVM_DIR/nvm.sh && cd $CURRENT && BACKUP_ROOT=$BACKUP_ROOT BACKUP_RETENTION_DAYS=14 npm run backup:all >> $APP_PATH/data/logs/backup-cron.log 2>&1'"
+  # Local backup + off-site copy to B2 + Healthchecks ping (scripts/backup/offsite-backup.sh, #95).
+  CRON_LINE="0 3 * * * /usr/bin/flock -n /tmp/cabin-backup.lock /bin/bash -lc '. $NVM_DIR/nvm.sh && cd $CURRENT && APP_PATH=$APP_PATH BACKUP_ROOT=$BACKUP_ROOT BACKUP_RETENTION_DAYS=14 bash scripts/backup/offsite-backup.sh >> $APP_PATH/data/logs/backup-cron.log 2>&1'"
   { crontab -l 2>/dev/null | grep -v 'cabin-backup.lock' || true; echo "$CRON_LINE"; } | crontab -
 fi
 

@@ -78,7 +78,7 @@ jobs:
         run: |
           echo "$TAG $(git rev-parse HEAD)" > RELEASE
           tar -czf release.tgz RELEASE package.json package-lock.json tsconfig.json \
-            prisma.config.ts prisma src dist/frontend scripts/deploy
+            prisma.config.ts prisma src dist/frontend scripts/deploy scripts/backup
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v7

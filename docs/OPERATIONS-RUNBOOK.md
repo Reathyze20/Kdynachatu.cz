@@ -286,3 +286,110 @@ Monitoring a alerting minimum je hotove az kdyz plati vsechno:
 - PM2 log rotation je aktivni,
 - fast smoke check po deployi je sepsany a spustitelny,
 - incident postup je sepsany a nekdo podle nej umi jit.
+## 7. Off-site zálohy (Backblaze B2)
+
+Každou noc ve 03:00 (čas serveru) spustí cron uživatele `reathyze` skript `scripts/backup/offsite-backup.sh`. Cron instaluje produkční deploy (`deploy-release.sh`).
+
+Co skript udělá:
+1. Pingne Healthchecks `/start`.
+2. Lokální záloha `npm run backup:all` → `/home/reathyze/backups/cabin/{db,uploads}`, lokálně se drží 14 dní.
+3. Nahraje nový dump a archiv uploadů přes rclone do `OFFSITE_REMOTE/daily/`, v neděli i do `weekly/`.
+4. Na B2 smaže denní kopie starší 7 dní a týdenní starší 28 dní (7 denních + 4 týdenní).
+5. Pingne Healthchecks (úspěch). Při jakékoli chybě pingne `/fail` a nic nemaže.
+
+Log: `/home/reathyze/chata/data/logs/backup-cron.log`.
+
+### 7.1 Jednorázové nastavení
+
+1. **Backblaze B2:** soukromý bucket `kdynachatu-backups`, region EU (Central). V **Lifecycle Settings** zvolit „Keep only the last version of the file“, jinak B2 smazané soubory jen skryje a místo dál roste.
+2. **Application key:** jen pro tento bucket, oprávnění Read and Write. `keyID` a `applicationKey` uložit do správce hesel.
+3. **rclone na serveru:**
+
+   ```bash
+   root$ apt-get install -y rclone
+   reathyze$ rclone config create b2 b2 account <keyID> key <applicationKey>
+   reathyze$ chmod 600 ~/.config/rclone/rclone.conf
+   reathyze$ rclone lsd b2:kdynachatu-backups      # musí projít bez chyby
+   ```
+
+   Klíč B2 je jen v `rclone.conf`, nikdy v repu ani v `.env`.
+4. **Healthchecks.io:** check „kdynachatu – noční záloha“, Period 1 den, Grace 3 hodiny. Notifikace: e-mail + mobil (aplikace ntfy nebo Telegram). Zkopírovat ping URL.
+5. **`/home/reathyze/chata/.env`** doplnit:
+
+   ```env
+   OFFSITE_REMOTE=b2:kdynachatu-backups/production
+   HEALTHCHECKS_PING_URL=https://hc-ping.com/<uuid>
+   ```
+
+6. **Cron** se přepíše při nejbližším produkčním deployi. Hned ověřit ručním během:
+
+   ```bash
+   reathyze$ cd /home/reathyze/chata/current
+   reathyze$ . ~/.nvm/nvm.sh && APP_PATH=/home/reathyze/chata bash scripts/backup/offsite-backup.sh
+   reathyze$ rclone ls b2:kdynachatu-backups/production/daily
+   reathyze$ crontab -l | grep offsite-backup      # po deployi
+   ```
+
+   V Healthchecks musí být check zelený.
+
+### 7.2 Alert: selhaná nebo stará záloha
+
+- **`/fail` (hned):** skript doběhl s chybou. Poslední řádky logu ukážou příčinu:
+  `tail -n 50 /home/reathyze/chata/data/logs/backup-cron.log`
+- **Zmeškaný ping (po 27 h):** cron neběžel vůbec, server stojí nebo se zasekl předchozí běh (`/tmp/cabin-backup.lock`).
+
+| Hláška v logu | Co udělat |
+|---|---|
+| `OFFSITE_REMOTE is not set` | doplnit `.env` (7.1 bod 5); lokální záloha proběhla |
+| `no new DB dump` | `pg_dump` selhal: `DATABASE_URL` v `.env`, běží Postgres (`systemctl status postgresql`), místo na disku (`df -h`) |
+| chyba `rclone copyto` / `401` / `403` | klíč B2 vypršel nebo nemá právo na bucket → nový klíč, `rclone config update b2 account … key …` |
+| `crontab -l` neobsahuje `offsite-backup` | spustit produkční deploy (cron instaluje `deploy-release.sh`) |
+
+Po opravě spustit ruční běh z 7.1 bodu 6 a ověřit zelený check.
+
+### 7.3 Obnova z B2
+
+```bash
+reathyze$ rclone ls b2:kdynachatu-backups/production/daily        # vybrat soubory
+reathyze$ mkdir -p /home/reathyze/restore && cd /home/reathyze/restore
+reathyze$ rclone copy b2:kdynachatu-backups/production/daily/db_<čas>.dump .
+reathyze$ rclone copy b2:kdynachatu-backups/production/daily/uploads_<čas>.tar.gz .
+reathyze$ cd /home/reathyze/chata/current && . ~/.nvm/nvm.sh
+reathyze$ npx tsx src/scripts/backupManager.ts restore db --file /home/reathyze/restore/db_<čas>.dump --yes
+reathyze$ npx tsx src/scripts/backupManager.ts restore uploads --file /home/reathyze/restore/uploads_<čas>.tar.gz --yes
+```
+
+Obnova přepíše produkční data. Před ní zastavit appku (`pm2 stop chata-app`), po ní ji spustit a projít `docs/SMOKE-TEST.md`. Podrobnosti k `backupManager.ts` jsou v `docs/BACKUP-AND-RESTORE.md`.
+
+### 7.4 Měsíční zkušební obnova
+
+Jednou měsíčně ověřit, že záloha z B2 jde obnovit. **Nikdy ne do staging DB:** staging drží jen fiktivní data. Obnovuje se do dočasné databáze, kterou žádná appka nepoužívá, a po kontrole se smaže.
+
+```bash
+reathyze$ cd /home/reathyze/restore
+reathyze$ rclone copy b2:kdynachatu-backups/production/daily/db_<nejnovější>.dump .
+root$ sudo -u postgres createdb -O <produkční_role> kdynachatu_restore_test
+reathyze$ pg_restore --no-owner -d "postgresql://<produkční_role>:<heslo>@localhost:5432/kdynachatu_restore_test" db_<nejnovější>.dump
+```
+
+Porovnat počty řádků se živou DB (stejný dotaz proti oběma databázím):
+
+```sql
+SELECT 'users', count(*) FROM users UNION ALL
+SELECT 'reservations', count(*) FROM reservations UNION ALL
+SELECT 'shopping_list_items', count(*) FROM shopping_list_items UNION ALL
+SELECT 'notes', count(*) FROM notes UNION ALL
+SELECT 'gallery_photos', count(*) FROM gallery_photos UNION ALL
+SELECT 'diary_entries', count(*) FROM diary_entries;
+```
+
+Rozdíl smí odpovídat jen změnám od 03:00. Uploady: `tar -tzf uploads_<čas>.tar.gz | wc -l` přibližně odpovídá `find /home/reathyze/chata/data/uploads -type f | wc -l`.
+
+Úklid:
+
+```bash
+root$ sudo -u postgres dropdb kdynachatu_restore_test
+reathyze$ rm -rf /home/reathyze/restore
+```
+
+**Poslední zkušební obnova:** zatím neproběhla. Po každé sem zapsat datum, soubor a výsledek, např. „2026-12-01 · db_2026-12-01T03-00-00.dump · počty sedí“.
