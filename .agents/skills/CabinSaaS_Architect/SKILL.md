@@ -351,7 +351,7 @@ When you see a hardcoded hex in code, replace it with the corresponding CSS vari
 
 | Hex | CSS Variable | Usage |
 |-----|-------------|-------|
-| `#3f7b63` | `var(--brand-primary)` | Primary buttons, links, accents |
+| `#3f7b63` / `#3d7861` | `var(--brand-primary)` | Primary buttons, links, accents |
 | `#1a2721` | `var(--brand-primary-hover)` | Button hover states |
 | `#1e293b` | `var(--text-main)` | Main text color |
 | `#64748b` / `#4b5563` | `var(--text-muted)` | Secondary text |
