@@ -21,10 +21,12 @@ interface OpenMeteoResponse {
   daily: OpenMeteoDaily;
 }
 
+type Coordinates = { lat: number; lon: number };
+
 /**
  * Fetch coordinates from Open-Meteo Geocoding API by location string.
  */
-async function fetchCoordinates(location: string): Promise<{ lat: number; lon: number } | null> {
+async function fetchCoordinates(location: string): Promise<Coordinates | null> {
   const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=cs&format=json`;
   try {
     const res = await fetch(geoUrl);
@@ -39,6 +41,18 @@ async function fetchCoordinates(location: string): Promise<{ lat: number; lon: n
     logger.error(MODULE, "Open-Meteo Geocoding failed", { error: String(error), location });
     return null;
   }
+}
+
+/**
+ * Souřadnice pro předpověď: uložený střed vybrané obce (ADR-0006, #279). Chata, která obec ještě
+ * nevybrala, geokóduje textovou lokalitu jako dřív (první výsledek Open-Meteo).
+ */
+export async function cabinForecastCoordinates(
+  cabin: { latitude: number | null; longitude: number | null; weatherLocation: string | null },
+  geocode: (location: string) => Promise<Coordinates | null> = fetchCoordinates,
+): Promise<Coordinates | null> {
+  if (cabin.latitude !== null && cabin.longitude !== null) return { lat: cabin.latitude, lon: cabin.longitude };
+  return cabin.weatherLocation ? geocode(cabin.weatherLocation) : null;
 }
 
 /**
@@ -83,14 +97,13 @@ export async function checkFrostAlerts(): Promise<void> {
     const cooldownDate = new Date();
     cooldownDate.setDate(cooldownDate.getDate() - ALERT_COOLDOWN_DAYS);
 
-    // 1) Find eligible cabins — has weatherLocation, not winterized, cooldown expired
+    // 1) Find eligible cabins — picked municipality or legacy weatherLocation, not winterized, cooldown expired
     const cabins = await prisma.cabin.findMany({
       where: {
-        weatherLocation: { not: null },
         isWinterized: false,
-        OR: [
-          { lastFrostAlertAt: null },
-          { lastFrostAlertAt: { lt: cooldownDate } },
+        AND: [
+          { OR: [{ latitude: { not: null } }, { weatherLocation: { not: null } }] },
+          { OR: [{ lastFrostAlertAt: null }, { lastFrostAlertAt: { lt: cooldownDate } }] },
         ],
       },
       include: {
@@ -122,9 +135,7 @@ export async function checkFrostAlerts(): Promise<void> {
       // Skip cabins with no members with email
       if (cabin.users.length === 0) continue;
 
-      if (!cabin.weatherLocation) continue;
-
-      const coords = await fetchCoordinates(cabin.weatherLocation);
+      const coords = await cabinForecastCoordinates(cabin);
       if (!coords) {
         logger.warn(MODULE, `Could not geocode location for cabin "${cabin.name}"`, { location: cabin.weatherLocation });
         continue;

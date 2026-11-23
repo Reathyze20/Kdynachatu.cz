@@ -3,12 +3,13 @@
  * Překlad: #register-section z index.html + bindRegisterForm() z main.ts
  */
 import { useEffect, useRef, useState } from 'react'
-import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { Eye, EyeOff, Mail } from 'lucide-react'
 import { MEMBER_PALETTE } from '@/lib/memberPalette'
+import type { MunicipalityOption } from '@/api/municipalities'
+import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
 
 interface RegisterFormProps {
   onShowLogin: () => void
@@ -23,28 +24,6 @@ interface RegisterResponse {
   testCode?: string
 }
 
-/** Validates weather location against Open-Meteo geocoding API */
-async function validateWeatherLocation(location: string): Promise<boolean> {
-  if (!location) return true
-  try {
-    const { data } = await axios.get<{ results?: unknown[] }>(
-      'https://geocoding-api.open-meteo.com/v1/search',
-      {
-        params: {
-          name: location,
-          count: 1,
-          language: 'cs',
-          format: 'json',
-        },
-      },
-    )
-
-    return Array.isArray(data.results) && data.results.length > 0
-  } catch {
-    return true // Let it pass on network error
-  }
-}
-
 export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
   const navigate = useNavigate()
   const [selectedColor, setSelectedColor] = useState(MEMBER_PALETTE[0].hex)
@@ -54,7 +33,7 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
   const [emailSent, setEmailSent] = useState<string | null>(null) // email address → show confirmation
 
   const cabinNameRef = useRef<HTMLInputElement>(null)
-  const weatherLocationRef = useRef<HTMLInputElement>(null)
+  const [municipality, setMunicipality] = useState<MunicipalityOption | null>(null)
   const usernameRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -71,7 +50,6 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const cabinName = cabinNameRef.current!.value.trim()
-    const weatherLocation = weatherLocationRef.current!.value.trim()
     const username = usernameRef.current!.value.trim()
     const email = emailRef.current!.value.trim()
     const password = passwordRef.current!.value
@@ -80,25 +58,18 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
       showMsg('Název chaty musí mít alespoň 2 znaky.', 'error')
       return
     }
-    if (weatherLocation.length < 2) {
-      showMsg('Lokalita (Město/PSČ) musí mít alespoň 2 znaky.', 'error')
+    if (!municipality) {
+      showMsg('Vyber nejbližší obec ze seznamu.', 'error')
       return
     }
 
     setLoading(true)
     setMessage(null)
 
-    const isLocationValid = await validateWeatherLocation(weatherLocation)
-    if (!isLocationValid) {
-      showMsg('Zadanou lokalitu jsme nenašli. Zkus existující město nebo PSČ.', 'error')
-      setLoading(false)
-      return
-    }
-
     try {
       const { data } = await apiClient.post<RegisterResponse>('/register', {
         cabinName,
-        weatherLocation,
+        municipalityCode: municipality.code,
         username,
         password,
         color: selectedColor,
@@ -193,12 +164,10 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
         </div>
 
         <div className="form-group">
-          <label htmlFor="register-weather-location">Nejbližší město nebo PSČ (pro počasí)</label>
-          <input
-            type="text" id="register-weather-location" name="weatherLocation" maxLength={100}
-            autoComplete="off" placeholder="např. Liberec nebo 46001"
-            required minLength={2} ref={weatherLocationRef}
-            data-testid="register-weather-location-input"
+          <label htmlFor="register-municipality">Nejbližší obec (pro počasí)</label>
+          <MunicipalityPicker
+            id="register-municipality" value={municipality} onChange={setMunicipality}
+            placeholder="např. Třebenice" required testId="register-municipality-input"
           />
         </div>
 
