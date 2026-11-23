@@ -322,3 +322,65 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
     expect(contrast(rgbOf(bridgeDark, '--muted-foreground'), rgbOf(dark, surface))).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+/**
+ * Obrazovky s titulní fotkou (#341, spec #337 D4): fotka je za celou stránkou, takže text mimo karty
+ * i poloprůhledné panely by ležely na fotce. Všechno s textem musí stát na plném papíře.
+ */
+describe('Obrazovky s fotkou: text jen na plném papíře (#341)', () => {
+  const isMobile = (r: Rule) => r.media?.includes('max-width: 768px') ?? false
+  /** Výsledná hodnota na mobilu: výchozí pravidla, pak mobilní (pořadí ve zdroji). */
+  const onMobile = (file: string, selector: string, prop: string) =>
+    lastDecl(rulesFor(file, selector).filter((r) => r.media === null || isMobile(r)), prop)
+  const onDesktop = (file: string, selector: string, prop: string) =>
+    lastDecl(rulesFor(file, selector).filter((r) => r.media === null), prop)
+
+  it.each([
+    ['shopping.css', '.detail-view-switcher-track'],
+    ['shopping.css', '.shopping-master'],
+    ['notes.css', '.notes-sidebar'],
+    ['notes.css', '.notes-chat-area-wrapper'],
+    ['reconstruction.css', '.reconstruction-card'],
+  ])('mobil: %s %s má plný papír --sheet', (file, selector) => {
+    expect(onMobile(file, selector, 'background')).toBe('rgb(var(--sheet))')
+  })
+
+  it('Zásoby na mobilu: seznamy jsou papírová karta, ne průhledná plocha přes celou šířku', () => {
+    expect(onMobile('shopping.css', '.shopping-master', 'border-radius')).toBe('var(--radius-xl)')
+    expect(onMobile('shopping.css', '.shopping-master', 'box-shadow')).toBe('var(--lift)')
+    // Zásoby na chatě: stejná papírová karta .detail-inner-container jako detail seznamu, mobil ji nepřebíjí
+    for (const prop of ['background', 'border', 'box-shadow']) {
+      expect(lastDecl(rulesFor('shopping.css', '.pantry-inner-container.detail-inner-container'), prop)).toBeUndefined()
+    }
+  })
+
+  it('Chat: panel zpráv je plná papírová karta, hlavička bez skla', () => {
+    expect(onDesktop('notes.css', '.notes-chat-area-wrapper', 'background')).toBe('rgb(var(--sheet))')
+    expect(onDesktop('notes.css', '.notes-chat-area-wrapper', 'border')).toBe('1px solid rgb(var(--rule-soft))')
+    expect(onDesktop('notes.css', '.notes-chat-area-wrapper', 'box-shadow')).toBe('var(--lift)')
+    expect(onDesktop('notes.css', '.chat-header', 'background')).toBe('rgb(var(--sheet))')
+  })
+
+  it('Rekonstrukce: sloupce, hlavička a rozpočet bez skla z bílé s alfou', () => {
+    expect(onDesktop('reconstruction.css', '.kanban-column', 'background')).toBe('rgb(var(--sheet))')
+    expect(onDesktop('reconstruction.css', '.kanban-column', 'border')).toBe('1px solid rgb(var(--rule-soft))')
+    const glass = fileRules('reconstruction.css')
+      .filter((r) => /rgba\(255, 255, 255, 0\.[0-8]\d*\)/.test(lastDecl([r], 'background') ?? ''))
+      .flatMap((r) => r.selectors)
+      .filter((s) => /^\.(reconstruction-(card|header)|budget-container|kanban-column)\b/.test(s))
+    expect(glass).toEqual([])
+    expect(rulesFor('reconstruction.css', '.reconstruction-card::before')).toEqual([])
+  })
+
+  it.each(['col-navrzeno', 'col-schvaleno', 'col-probehlo'])('Rekonstrukce: nadpis a počet sloupce %s na papíře ≥ 4,5 : 1', (col) => {
+    const root = fileRules('variables.css').filter((r) => r.selectors.includes(':root'))
+    const colorOf = (value: string | undefined) => {
+      const token = /^rgb\(var\((--[\w-]+)\)\)$/.exec(value ?? '')
+      return token ? rgbOf(root, token[1]) : hex(value ?? '')
+    }
+    for (const part of ['.kanban-column-header', '.kanban-count']) {
+      const color = colorOf(onDesktop('reconstruction.css', `.kanban-column.${col} ${part}`, 'color'))
+      expect(contrast(color, rgbOf(root, '--sheet'))).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+})

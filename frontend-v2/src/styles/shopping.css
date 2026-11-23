@@ -2054,6 +2054,12 @@
     display: none;
   }
 
+  /* Tabs sit above the cover photo (#341): solid paper, not translucent white */
+  .detail-view-switcher-track {
+    background: rgb(var(--sheet));
+    box-shadow: var(--lift);
+  }
+
   .shopping-modal-actions {
     flex-direction: column-reverse;
   }
@@ -2063,16 +2069,18 @@
     width: 100%;
   }
 
-  /* Master: full width, no fixed width */
+  /* Master: full-width paper card, the cover photo shows around it (#341) */
   .shopping-master {
-    width: 100%;
+    width: auto;
     min-width: unset;
     max-width: unset;
-    border-right: none;
-    border-bottom: none;
-    border-radius: 0;
-    flex: 1;
-    background: transparent;
+    margin: 8px 16px 16px;
+    padding-bottom: 8px;
+    border: 1px solid rgb(var(--rule-soft));
+    border-radius: var(--radius-xl);
+    box-shadow: var(--lift);
+    flex: none;
+    background: rgb(var(--sheet));
   }
 
   /* Heading above lists — tighter on mobile */
@@ -2290,13 +2298,9 @@
     padding: 8px 0 0;
   }
 
-  /* Edge-to-edge on mobile — no glass card, no radius */
+  /* Paper card like the list detail: the cover photo is behind the page (#341) */
   .pantry-inner-container.detail-inner-container {
     padding: 14px 14px 28px;
-    border-radius: 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
   }
 
   /* Show toggle button on mobile */
