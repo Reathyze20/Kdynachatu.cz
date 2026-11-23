@@ -309,7 +309,8 @@ Check `references/component-inventory.md` — it lists every existing component,
 
 ## Rule 7 — Accessibility & Mobile-First
 
-- **Touch targets:** Minimum 44×44px for all interactive elements.
+- **Touch targets (B2):** Minimum 48×48px (`--touch-target-min`) for buttons, list rows and icon buttons, 8px apart (`--touch-target-gap`). The screen's main action is 56px tall and fully rounded (`--touch-target-primary`, `.btn-lg`).
+- **Text size (G3):** Body text 16px (`--font-size-base`), secondary 14px (`--font-size-sm`), nothing smaller. `src/test/textAndTouchTokens.test.ts` tracks the files that still have smaller sizes.
 - **Mobile-first:** Start from 320px width, scale up. Use `md:` and `lg:` breakpoints.
 - The app has a fixed bottom `<MobileNav>` with 5 tabs on mobile. Its space is handled by the shell, see "The Core Wrapper Pattern" in Rule 2.
 - All modals must be scrollable on short viewports.
@@ -415,7 +416,7 @@ Before finishing any component, verify:
 - [ ] Inline styles use CSS custom properties (`var(--brand-primary)`) — no hardcoded hex
 - [ ] No `window.confirm()` / `window.prompt()` — use `<ConfirmDialog>` / `<PromptDialog>`
 - [ ] Icons from `lucide-react`, sized `w-4 h-4` or `w-5 h-5`
-- [ ] Touch targets ≥ 44px, tested at 320px viewport
+- [ ] Touch targets ≥ 48px (main action 56px), text ≥ 14px, tested at 320px viewport
 - [ ] API calls go through `@/api/client.ts`, never raw `fetch()`
 - [ ] Czech language for all user-facing strings
 - [ ] No direct localStorage/sessionStorage for auth — use `AuthContext`

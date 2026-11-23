@@ -142,9 +142,10 @@
   --font-family: "Plus Jakarta Sans", sans-serif;
   --font-diary: "Kalam", cursive;
 
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.85rem;
-  --font-size-base: 0.9375rem;
+  /* G3 (#270): běžný text 16 px, vedlejší 14 px, nic menšího. xs zůstává jako alias pro starý kód. */
+  --font-size-xs: var(--font-size-sm);
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
@@ -173,8 +174,10 @@
   --z-toast: 3000;
   --z-max: 9999;
 
-  /* ── Touch target ───────────────────────────────────────────────────── */
-  --touch-target-min: 44px;
+  /* ── Touch target (B2, #270) ────────────────────────────────────────── */
+  --touch-target-min: 48px;      /* tlačítka, řádky seznamů, ikonová tlačítka */
+  --touch-target-primary: 56px;  /* hlavní akce obrazovky, plně kulatá */
+  --touch-target-gap: 8px;       /* rozestup mezi dotykovými cíli */
 
   /* ── Povrchy redesignu (C4a/C5a, mocky docs/design) ─────────────────────
      RGB trojice jako v mocku, aby šla přidat alfa: rgb(var(--sheet) / .96).
