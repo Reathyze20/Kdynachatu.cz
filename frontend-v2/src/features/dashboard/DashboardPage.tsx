@@ -268,6 +268,7 @@ export function DashboardPage() {
               to={stayPick.stay.to}
               title={overviewStayTitle(stayPick)}
               frame="rounded-2xl border border-rule-soft bg-sheet shadow-lift"
+              collapsibleChart
             />
           </motion.div>
         )}
@@ -315,7 +316,7 @@ export function DashboardPage() {
   // Kompaktní pruh chaty nad oběma sloupci (mock 01b: hero nad hlavním sloupcem i bočním panelem).
   return (
     <div className="dashboard-frame">
-      <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} region={cabinQuery.data?.municipalityRegion} coverPhotoUrl={cabinQuery.data?.coverPhotoUrl} />
+      <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} region={cabinQuery.data?.municipalityRegion} />
       <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
       {/* Výzva k instalaci jednou po 3. návštěvě, na konci stránky (#277) */}
       <InstallCard />

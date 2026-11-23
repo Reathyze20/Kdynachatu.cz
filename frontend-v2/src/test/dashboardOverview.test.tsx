@@ -6,7 +6,6 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import apiClient from '@/api/client'
 import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 import statusHeaderCss from '@/styles/status-header.css?raw'
-import dashboardCss from '@/styles/dashboard.css?raw'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
 const { responses, weather } = vi.hoisted(() => ({ responses: new Map<string, unknown>(), weather: { current: null as unknown } }))
@@ -330,68 +329,6 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
 
     await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(screen.queryByRole('region', { name: 'Chata zatím čeká' })).not.toBeInTheDocument()
-  })
-})
-
-describe('Přehled: titulní fotka chaty v pruhu (#322)', () => {
-  const COVER = '/uploads/covers/0f8fad5b-d9cb-469f-a165-70867728950e.webp'
-  const COVER_SM = '/uploads/covers/0f8fad5b-d9cb-469f-a165-70867728950e-sm.webp'
-
-  it('s titulní fotkou ukáže pruh s fotkou (úzká a široká varianta), jménem chaty jako h1, datem a počasím', async () => {
-    weather.current = { temp: 4, description: 'Polojasno' }
-    renderOverview(reservations(), NO_SHOPPING, { coverPhotoUrl: COVER })
-
-    const hero = await screen.findByTestId('cabin-hero')
-    await waitFor(() => expect(hero.querySelector('img')).not.toBeNull())
-    const img = hero.querySelector('img')!
-    expect(img).toHaveAttribute('alt', '')
-    expect(img).toHaveAttribute('src', COVER)
-    expect(img).toHaveAttribute('srcset', `${COVER_SM} 750w, ${COVER} 1000w`)
-    expect(img).toHaveAttribute('loading', 'lazy')
-    expect(within(hero).getByRole('heading', { level: 1, name: 'Chata U Lesa' })).toBeInTheDocument()
-    await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · 4 °C · Polojasno'))
-  })
-
-  it('bez titulní fotky zůstane placeholder bez obrázku', async () => {
-    renderOverview(reservations(), NO_SHOPPING, { coverPhotoUrl: null })
-
-    const hero = await screen.findByTestId('cabin-hero')
-    await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })
-    expect(within(hero).getByTestId('cabin-hero-media')).toBeInTheDocument()
-    expect(hero.querySelector('img')).toBeNull()
-  })
-
-  it('výstraha na bouřku, „Akce v kraji“ i odkaz na lokalitu zůstávají pod pruhem s fotkou', async () => {
-    weather.current = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
-    renderOverview(reservations(), NO_SHOPPING, { coverPhotoUrl: COVER, municipalityRegion: 'Kraj Vysočina' })
-
-    const hero = await screen.findByTestId('cabin-hero')
-    expect(await within(hero).findByText('Zítra: Bouřka')).toBeInTheDocument()
-    expect(within(hero).getByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })).toBeInTheDocument()
-  })
-
-  it('bez lokality počasí má správce odkaz do nastavení i pod pruhem s fotkou', async () => {
-    weather.current = 'EMPTY_LOCATION'
-    auth.isAdmin = true
-    renderOverview(reservations(), NO_SHOPPING, { coverPhotoUrl: COVER })
-
-    const hero = await screen.findByTestId('cabin-hero')
-    expect(await within(hero).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
-  })
-
-  it('nová titulní fotka se ukáže po zneplatnění nastavení chaty (realtime cabin:changed) bez obnovení stránky', async () => {
-    const qc = renderOverview(reservations(), NO_SHOPPING, { coverPhotoUrl: null })
-    const hero = await screen.findByTestId('cabin-hero')
-    await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })
-
-    responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], coverPhotoUrl: COVER })
-    await qc.invalidateQueries({ queryKey: ['cabin'] })
-
-    await waitFor(() => expect(hero.querySelector('img')).toHaveAttribute('src', COVER))
-  })
-
-  it('přechod přes fotku drží kontrast z pickeru (neslabí se)', () => {
-    expect(dashboardCss).toContain('linear-gradient(to top, rgb(12 20 16 / 0.82) 0%, rgb(12 20 16 / 0.55) 55%, rgb(12 20 16 / 0.1) 100%)')
   })
 })
 
