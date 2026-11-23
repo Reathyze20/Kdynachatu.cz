@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="cs" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kdy na chatu — návrh D4: teplo (fotka chaty, teplé pozadí, počasí na pobyt)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---- tokeny pickeru (obal, ne návrh) ---- */
+:root {
+  --page: 244 247 245; --sheet: 255 253 250; --sheet-alt: 233 244 239; --rule: 223 228 223; --rule-soft: 233 237 232;
+  --ink: 30 41 59; --ink-2: 75 85 99; --ink-3: 120 128 138; --accent: 47 107 82;
+  --lc: 4 120 87; --on-lc: 255 255 255; --low: 138 75 6; --empty: 180 35 35;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: 15 20 17; --sheet: 26 32 28; --sheet-alt: 31 41 35; --rule: 52 62 54; --rule-soft: 37 46 40;
+  --ink: 230 234 229; --ink-2: 160 170 160; --ink-3: 120 130 121; --accent: 94 186 134; --low: 234 179 8; --empty: 248 113 113;
+  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: radial-gradient(1200px 520px at 82% -8%, rgb(var(--sheet-alt)), transparent 60%), rgb(var(--page)); min-height: 100%; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); }
+.wrap { max-width: 1840px; margin: 0 auto; padding: 22px 28px 120px; }
+.display { font-weight: 800; letter-spacing: -.02em; }
+.top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.top h1 { margin: 0; font-size: 29px; font-weight: 800; letter-spacing: -.02em; }
+.top h1 span { font-size: 16px; font-weight: 400; color: rgb(var(--ink-2)); margin-left: 8px; }
+.seg { margin-left: auto; display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); }
+.seg button { border: 0; background: none; color: rgb(var(--ink-2)); font: 500 13px/1 inherit; padding: 7px 13px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: rgb(var(--ink)); color: rgb(var(--page)); }
+.howto { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 16px; padding: 20px 24px; box-shadow: var(--lift); }
+.howto h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.08; }
+.howto p { margin: 0 0 8px; font-size: 14px; }
+.howto ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.howto li { margin-bottom: 6px; }
+.given { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgb(var(--sheet-alt)); border: 1px solid rgb(var(--rule-soft)); font-size: 12.5px; line-height: 1.5; }
+.given ul { margin: 4px 0 0; padding-left: 18px; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.toc a { font-size: 12.5px; text-decoration: none; color: rgb(var(--ink)); border: 1px solid rgb(var(--rule)); border-radius: 999px; padding: 3px 10px; background: rgb(var(--sheet)); }
+.toc a.done { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+.group-h { margin: 46px 2px 0; padding-top: 18px; border-top: 2px solid rgb(var(--ink)); }
+.group-h h2 { margin: 0; font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.group-h p { margin: 6px 0 0; font-size: 14.5px; color: rgb(var(--ink-2)); max-width: 80em; }
+.sec { margin: 32px 0 0; scroll-margin-top: 16px; }
+.sec-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 2px 6px; }
+.sec-h h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+.sec-h .q { font-size: 14px; color: rgb(var(--ink-2)); }
+.sec-h .picked { margin-left: auto; font-size: 13px; color: rgb(var(--ink-2)); }
+.sec-h .picked b { color: rgb(var(--ink)); }
+.rules { margin: 0 2px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.rule { font-size: 12px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule)); border-radius: 10px; padding: 5px 9px; color: rgb(var(--ink-2)); max-width: 620px; }
+.rule code { font: 700 11px/1 inherit; color: rgb(var(--ink)); background: rgb(var(--sheet-alt)); padding: 2px 6px; border-radius: 5px; margin-right: 5px; }
+.scroll-x { overflow-x: auto; padding-bottom: 6px; }
+.cols { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(var(--min, 0px), 1fr)); gap: 14px; }
+.col { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-shadow: var(--lift); }
+.col.on { border-color: rgb(var(--lc)); box-shadow: 0 0 0 2px rgb(var(--lc)); }
+.col-h { display: flex; align-items: center; gap: 9px; }
+.col-h .lt { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgb(var(--sheet-alt)); font-weight: 800; font-size: 15px; flex-shrink: 0; }
+.col.on .col-h .lt { background: rgb(var(--lc)); color: rgb(var(--on-lc)); }
+.col-h .nm { font-size: 14px; font-weight: 600; line-height: 1.2; }
+.col-h .st { display: block; font-size: 11.5px; color: rgb(var(--ink-2)); font-weight: 400; }
+.col-h .st.rec { color: rgb(var(--accent)); font-weight: 700; }
+.col .idea { margin: 0; font-size: 13.5px; line-height: 1.45; }
+.col .lab2 { font-size: 11.5px; color: rgb(var(--ink-2)); display: block; margin-bottom: 2px; }
+.col ul { margin: 0 0 4px; padding-left: 16px; font-size: 12.5px; line-height: 1.45; }
+.col .meta-c { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.col .meta-c .choose { margin-top: auto; }
+.facts { font-size: 12.5px; line-height: 1.45; background: rgb(var(--sheet-alt)); border-radius: 10px; padding: 8px 10px; }
+.facts b { font-weight: 700; }
+.choose { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid rgb(var(--rule)); cursor: pointer; font-weight: 600; font-size: 14px; background: rgb(var(--sheet-alt)); }
+.choose input { width: 18px; height: 18px; accent-color: rgb(var(--lc)); margin: 0; }
+.choose.on { border-color: rgb(var(--lc)); background: rgb(var(--lc) / .14); }
+.note { width: 100%; min-height: 48px; margin-top: 10px; resize: vertical; border-radius: 10px; border: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); color: rgb(var(--ink)); font-family: inherit; font-size: 13px; line-height: 1.4; padding: 8px 10px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgb(var(--sheet) / .96); border-top: 1px solid rgb(var(--rule)); backdrop-filter: blur(6px); }
+.bar-in { max-width: 1840px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.bar .sum { font-size: 13px; color: rgb(var(--ink-2)); flex: 1; min-width: 300px; }
+.bar .sum b { color: rgb(var(--ink)); }
+.bar .copied { font-size: 13px; color: rgb(var(--accent)); font-weight: 600; }
+.xbtn { border-radius: 999px; border: 1px solid rgb(var(--rule)); padding: 9px 16px; font: 600 13.5px/1 inherit; background: rgb(var(--sheet)); color: rgb(var(--ink)); cursor: pointer; }
+.xbtn.p { background: rgb(var(--lc)); color: rgb(var(--on-lc)); border-color: transparent; }
+svg.lucide { width: 1em; height: 1em; vertical-align: middle; display: inline-block; flex-shrink: 0; }
+.frl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: rgb(var(--ink-3)); font-weight: 700; display: block; margin-bottom: 4px; }
+.dk-block { margin-top: 18px; display: flex; flex-direction: column; gap: 22px; }
+.dk-item { overflow-x: auto; }
+.dk-item h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+.dk-item h3 span { font-weight: 400; color: rgb(var(--ink-2)); font-size: 14px; margin-left: 6px; }
+table.t { border-collapse: collapse; font-size: 13.5px; background: rgb(var(--sheet)); border-radius: 12px; overflow: hidden; box-shadow: var(--lift); }
+table.t th, table.t td { padding: 7px 12px; border-bottom: 1px solid rgb(var(--rule-soft)); text-align: left; vertical-align: middle; }
+table.t th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--ink-2)); background: rgb(var(--sheet-alt)); }
+table.t td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.t code { font-size: 12.5px; white-space: nowrap; }
+.tables > div:first-child { grid-column: 1 / -1; }
+.chip { display: inline-block; width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgb(0 0 0 / .15); vertical-align: middle; margin-right: 8px; }
+.tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 18px; margin-top: 14px; align-items: start; }
+.tables h3 { margin: 0 0 8px; font-size: 18px; }
+.tables p.k { margin: 8px 0 0; font-size: 12.5px; color: rgb(var(--ink-2)); }
+
+/* =====================================================================
+   NÁVRH — vše uvnitř .app je ve skutečné velikosti (CSS px = px telefonu)
+   ===================================================================== */
+.app {
+  /* A = dnešní „lesní mlha“ (variables.css) */
+  --page: 244 247 245; --sheet: 255 253 250; --sheet-alt: 233 244 239; --rule: 223 228 223; --rule-soft: 233 237 232;
+  --ink: 26 39 33; --ink-2: 75 85 99; --accent: 47 107 82; --lc: 4 120 87; --glow: 233 244 239;
+  --ok: 47 107 82; --low: 138 75 6; --empty: 180 35 35; --warn: 120 53 15; --rain: 29 78 216; --temp: 180 83 9; --sunc: 217 119 6;
+  --lift: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px -14px rgb(16 40 28 / .28);
+  font: 400 16px/1.45 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink));
+  background: radial-gradient(900px 380px at 85% -10%, rgb(var(--glow)), transparent 60%), rgb(var(--page));
+  position: relative; overflow: hidden; isolation: isolate;
+}
+:root[data-theme="dark"] .app {
+  --page: 15 20 17; --sheet: 26 32 28; --sheet-alt: 31 41 35; --rule: 52 62 54; --rule-soft: 37 46 40;
+  --ink: 230 234 229; --ink-2: 160 170 160; --accent: 94 186 134; --glow: 31 41 35;
+  --ok: 94 186 134; --low: 234 179 8; --empty: 248 113 113; --warn: 251 191 36; --rain: 147 197 253; --temp: 251 191 36; --sunc: 251 191 36;
+  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
+}
+/* B–D = navržený „teplý papír“ */
+.app.warm { --page: 246 240 230; --sheet: 255 252 246; --sheet-alt: 242 234 220; --rule: 230 221 207; --rule-soft: 238 231 220; --ink: 38 33 28; --ink-2: 94 82 70; --glow: 252 232 204; }
+:root[data-theme="dark"] .app.warm { --page: 24 20 17; --sheet: 37 32 27; --sheet-alt: 47 40 33; --rule: 66 57 48; --rule-soft: 52 45 38; --ink: 242 236 227; --ink-2: 190 177 162; --accent: 110 191 144; --ok: 110 191 144; --glow: 58 42 28; }
+/* C = lesní textura s nízkým krytím (chat-bg-forest.webp, 20 kB) */
+.app.tex::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: url("../../frontend-v2/public/chat-bg-forest.webp") center bottom / cover no-repeat; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 35%); mask-image: linear-gradient(to bottom, transparent 0, #000 35%); opacity: .14; }
+:root[data-theme="dark"] .app.tex::before { opacity: .10; }
+.app svg.lucide { width: 20px; height: 20px; }
+
+/* ---- telefon 390 px ---- */
+.phone { width: 390px; margin: 0 auto; border-radius: 30px; border: 1px solid rgb(var(--rule)); box-shadow: var(--lift); display: flex; flex-direction: column; }
+.ph-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 12px 20px; position: relative; }
+.fold { position: absolute; left: 0; right: 0; border-top: 2px dashed rgb(220 38 38 / .6); pointer-events: none; z-index: 5; }
+.fold span { position: absolute; right: 8px; top: -11px; font: 700 11px/1 "Plus Jakarta Sans", sans-serif; color: #b91c1c; background: #fff; padding: 3px 6px; border-radius: 4px; }
+.ph-nav { display: flex; border-top: 1px solid rgb(var(--rule)); background: rgb(var(--sheet)); margin-top: auto; border-radius: 0 0 29px 29px; }
+.ph-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 10px; min-height: 64px; font-size: 14px; color: rgb(var(--ink-2)); }
+.ph-tab.on { color: rgb(var(--accent)); font-weight: 700; }
+.ph-tab svg.lucide { width: 24px; height: 24px; }
+
+/* ---- hero s fotkou (A–C) ---- */
+.hero { position: relative; border-radius: 16px; overflow: hidden; height: 148px; background: rgb(28 46 36); color: #fff; }
+.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgb(12 20 16 / .82) 0%, rgb(12 20 16 / .55) 55%, rgb(12 20 16 / .10) 100%); }
+.hero-tx { position: absolute; left: 16px; right: 16px; bottom: 12px; z-index: 1; }
+.hero-name { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; text-shadow: 0 1px 2px rgb(0 0 0 / .35); }
+.hero-ctx { margin: 2px 0 0; font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgb(0 0 0 / .35); }
+.hero-ctx svg.lucide { width: 18px; height: 18px; }
+.dk .hero { height: 200px; }
+.dk .hero-tx { left: 28px; bottom: 18px; }
+.dk .hero-name { font-size: 30px; }
+
+/* ---- D: rozmazaná fotka nahoře přechází do teplého pozadí ---- */
+.blurbg { position: absolute; left: 0; right: 0; top: 0; height: 320px; z-index: -1; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%); mask-image: linear-gradient(to bottom, #000 55%, transparent 100%); }
+.blurbg img { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: fill; filter: blur(14px) saturate(1.15); }
+.blurbg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(22 16 12 / .50) 0%, rgb(22 16 12 / .30) 55%, rgb(22 16 12 / .20) 100%); }
+.dk .blurbg { height: 340px; }
+.dhead { display: flex; align-items: center; gap: 12px; color: #fff; padding: 12px 4px 18px; }
+.dhead .thumb { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; object-position: 48% 50%; border: 2px solid rgb(255 255 255 / .85); flex-shrink: 0; }
+.dk .dhead { padding: 8px 4px 22px; }
+.dk .dhead .thumb { width: 64px; height: 64px; }
+
+/* ---- karty Přehledu ---- */
+.card { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--lift); }
+.lbl { font-size: 14px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: rgb(var(--ink-2)); }
+.lbl.acc { color: rgb(var(--accent)); }
+.k { color: rgb(var(--ink-2)); font-size: 14px; }
+.av { width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 17px; font-weight: 800; display: inline-grid; place-items: center; flex-shrink: 0; }
+.status { display: flex; align-items: center; gap: 10px; }
+.status .who { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.status b { display: block; font-size: 18px; line-height: 1.15; }
+.status .arr { color: rgb(var(--ink-2)); }
+.act-t { font-size: 18px; font-weight: 800; line-height: 1.25; margin: 0; }
+.btn-p { min-height: 56px; border-radius: 999px; background: rgb(var(--lc)); color: #fff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-s { min-height: 48px; padding: 0 16px; border-radius: 999px; border: 1.5px solid rgb(var(--accent)); color: rgb(var(--accent)); background: rgb(var(--sheet)); font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.badge { font-size: 14px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+.badge.low { background: color-mix(in srgb, rgb(var(--low)) 16%, rgb(var(--sheet))); color: rgb(var(--low)); }
+.badge.empty { background: color-mix(in srgb, rgb(var(--empty)) 16%, rgb(var(--sheet))); color: rgb(var(--empty)); }
+.badge.fault { border: 1.5px solid rgb(var(--ink-2)); color: rgb(var(--ink)); }
+.att { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgb(var(--rule-soft)); min-height: 64px; }
+.att:first-of-type { border-top: 0; }
+.att .nm { flex: 1; min-width: 0; font-weight: 600; }
+.att .nm .k { display: block; font-weight: 400; }
+.more { font-weight: 700; color: rgb(var(--accent)); display: flex; align-items: center; gap: 4px; min-height: 48px; }
+.card-h { display: flex; align-items: center; gap: 8px; }
+.card-h .lbl { flex: 1; }
+.wa { display: inline-flex; align-items: center; gap: 6px; background: rgb(var(--sheet-alt)); color: rgb(var(--accent)); font-weight: 700; border-radius: 999px; padding: 0 14px; min-height: 48px; font-size: 14px; }
+
+/* ---- karta Počasí na pobyt (vizuál staré WeatherCard, jen dny pobytu) ---- */
+.wx-title { font-size: 17px; font-weight: 800; margin: 0; }
+.wx-days { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.wx-day { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; border: 1.5px solid transparent; min-height: 48px; }
+.wx-day.sel { border-color: rgb(var(--accent)); background: rgb(var(--sheet-alt)); }
+.wx-day .dn { font-size: 14px; font-weight: 700; color: rgb(var(--ink-2)); }
+.wx-day.sel .dn { color: rgb(var(--ink)); }
+.wx-day svg.lucide { width: 28px; height: 28px; margin: 2px 0; }
+.wx-day .tt { font-size: 16px; }
+.wx-day .tt b { font-weight: 800; }
+.wx-day .tt span { color: rgb(var(--ink-2)); }
+.wx-day .pr { font-size: 14px; font-weight: 600; color: rgb(var(--rain)); display: inline-flex; align-items: center; gap: 3px; min-height: 20px; }
+.wx-day .pr svg.lucide { width: 14px; height: 14px; margin: 0; }
+.wx-day .pr.none { visibility: hidden; }
+.wx-day .ori { font-size: 14px; color: rgb(var(--ink-2)); font-style: italic; }
+.wx-chart { border-top: 1px solid rgb(var(--rule-soft)); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.wx-tabs { display: flex; gap: 4px; background: rgb(var(--ink) / .05); border-radius: 12px; padding: 3px; }
+.wx-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border-radius: 10px; font-size: 14px; font-weight: 600; color: rgb(var(--ink-2)); }
+.wx-tab svg.lucide { width: 16px; height: 16px; }
+.wx-tab.on { background: rgb(var(--sheet)); color: rgb(var(--temp)); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.wx-ctx { font-size: 14px; color: rgb(var(--ink-2)); }
+.wx-ctx b { color: rgb(var(--ink)); }
+.wx-bars { display: flex; align-items: flex-end; gap: 4px; }
+.wx-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.wx-col .v { font-size: 14px; font-weight: 600; color: rgb(var(--ink-2)); line-height: 1; }
+.wx-col.pk .v { color: rgb(var(--temp)); font-weight: 800; }
+.wx-track { width: 100%; height: 64px; background: rgb(var(--ink) / .045); border-radius: 6px; position: relative; overflow: hidden; }
+.wx-fill { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 6px 6px 0 0; background: rgb(245 158 11 / .32); }
+.wx-col.pk .wx-fill { background: linear-gradient(to top, #d97706, #fbbf24); }
+.wx-col .h { font-size: 14px; color: rgb(var(--ink-2)); line-height: 1; }
+.wx-col.pk .h { color: rgb(var(--ink)); font-weight: 700; }
+.wx-sun { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; font-weight: 500; color: rgb(var(--ink-2)); background: rgb(var(--ink) / .035); border-radius: 12px; padding: 8px 12px; }
+.wx-sun span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.wx-sun svg.lucide { width: 16px; height: 16px; color: rgb(var(--sunc)); }
+.wx-sun .uv { color: rgb(var(--ok)); font-weight: 700; }
+.wx-sun .uv svg.lucide { color: rgb(var(--ok)); }
+.wx-sun .dl { margin-left: auto; }
+.wx-alert { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 12px; font-size: 15px; font-weight: 500; color: rgb(var(--warn)); background: color-mix(in srgb, rgb(234 179 8) 14%, rgb(var(--sheet))); border: 1px solid rgb(234 179 8 / .3); }
+.wx-alert svg.lucide { margin-top: 1px; }
+.wx-hint { font-size: 14px; color: rgb(var(--ink-2)); display: flex; align-items: center; gap: 6px; }
+.wx-later { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.wx-later svg.lucide { color: rgb(var(--ink-2)); }
+
+/* ---- desktop 1280 × 800 ---- */
+.dk { width: 1280px; border-radius: 14px; border: 1px solid rgb(var(--rule)); box-shadow: var(--lift); }
+.dk-chrome { height: 28px; background: rgb(var(--sheet)); border-bottom: 1px solid rgb(var(--rule-soft)); display: flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 13px 13px 0 0; position: relative; z-index: 2; }
+.dk-chrome i { width: 10px; height: 10px; border-radius: 50%; background: rgb(var(--rule)); display: inline-block; }
+.dk-chrome span { margin-left: 14px; font-size: 12px; color: rgb(var(--ink-2)); }
+.dk-wrap { display: flex; align-items: flex-start; position: relative; min-height: 772px; }
+.dk-wrap .blurbg { top: 0; }
+.side { flex: 0 0 216px; margin: 20px 0 20px 20px; padding: 16px 12px; border-radius: 16px; background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule-soft)); box-shadow: var(--lift); display: flex; flex-direction: column; gap: 2px; min-height: 732px; }
+.side .br { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; font-weight: 800; margin-bottom: 12px; }
+.side .ni { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; border-radius: 10px; color: rgb(var(--ink-2)); font-weight: 500; }
+.side .ni.on { color: rgb(var(--accent)); background: rgb(var(--accent) / .12); font-weight: 600; }
+.side .hd { padding: 16px 12px 4px; font-size: 14px; font-weight: 600; color: rgb(var(--ink-2)); }
+.side .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 0 12px; min-height: 48px; font-weight: 600; }
+.side .me .av { width: 32px; height: 32px; font-size: 14px; }
+.dk-main { flex: 1; min-width: 0; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 16px; position: relative; }
+.dk-cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
+.dk-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="display">Kdy na chatu — teplo<span>Fáze 4 · mini-design D4 · issue #317 a #316 · 2026-11-23 · fiktivní data</span></h1>
+    <div class="seg" id="seg-t"><button data-v="light" aria-pressed="true">Světlé</button><button data-v="dark" aria-pressed="false">Tmavé</button></div>
+  </header>
+
+  <section class="howto">
+    <div>
+      <h2 class="display">Po přihlášení má appka působit jako naše chata, ne jako tabulka.</h2>
+      <p>Zpětná vazba z 23. 11.: Přehled působí <b>chladně</b>. Fullscreen fotka lesa zmizela v #245 (pravidlo C5a: kontrast a 3G). Pravidlo <b>H1a</b> ale počítá s <b>jednou fotkou chaty v hlavičce Přehledu</b> a ta nikdy nevznikla: dnes je tam jen ikonka stromu. Tady vybíráš, jak teplo vrátit.</p>
+      <p>Všechny čtyři varianty ukazují <b>stejný Přehled v2</b>: dnes je <b>pondělí 23. 11.</b>, Eva dnes odjíždí, v pátek jedeš ty, došel toaleťák, dochází plyn a Eva nahlásila kapající kohoutek. Pod tím je nová karta <b>Počasí na pobyt</b> (#316) ve vzhledu staré karty počasí, jen pro tvůj pobyt pá–ne.</p>
+      <div class="given"><b>Dané (nerozhoduje se tu):</b> C5a: žádná fullscreen fotka po celé appce · G1: text ≥ 4,5 : 1 (čísla níž jsou spočítaná skriptem podle WCAG) · H1a: jedna fotka chaty · G3: text 16 px, nic pod 14 px · B2: dotyk 48 px, hlavní tlačítko 56 px · G4: barva člena vždy s iniciálou a jménem.
+      <ul>
+        <li><b>Fotka je za každou chatu jiná.</b> Vybírá ji správce, nejlépe „Nastavit jako titulní“ v Galerii, server ji zmenší na WebP kolem 50 kB.</li>
+        <li><b>Zástupná fotka</b> v náhledu je veřejná fotka z Unsplash (Olivier Guillard), stejná jako na stránce pozvánky. Žádné rodinné fotky.</li>
+        <li><b>Telefon a desktop jsou ve skutečné velikosti</b> (390 px a 1280 × 800). Posuzuj je z obvyklé vzdálenosti. Červená čárkovaná čára = konec první obrazovky.</li>
+      </ul></div>
+      <nav class="toc" id="toc"></nav>
+    </div>
+    <ol>
+      <li>U dílu zaškrtni <b>„Tuhle chci“</b>. Můžeš zaškrtnout víc variant a do poznámky napsat, jak je spojit (např. „A, ale s teplým pozadím jen v tmavém režimu“).</li>
+      <li>Díl, na kterém ti nezáleží, nech prázdný. Postavím doporučenou variantu.</li>
+      <li>Přepínač <b>Světlé / Tmavé</b> nahoře přepne všechny náhledy. Teplé tokeny mají i tmavou verzi.</li>
+      <li>U každé varianty je <b>kontrast</b> textu (WCAG) a <b>co se stáhne na 3G</b>. Souhrnné tabulky jsou na konci.</li>
+      <li>Volba se ukládá v prohlížeči. Nakonec dole <b>Zkopírovat volbu</b> a vlož mi ji do chatu (nebo <b>Stáhnout</b>).</li>
+    </ol>
+  </section>
+
+  <main id="sections"></main>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <div class="sum" id="sum"></div>
+  <span class="copied" id="copied"></span>
+  <button class="xbtn" id="copy">Zkopírovat volbu</button>
+  <button class="xbtn p" id="dl">Stáhnout volbu</button>
+</div></div>
+
+<script>
+(() => {
+const TITLE   = 'Kdy na chatu — návrh D4: teplo';
+const KEY     = 'kdynachatu.design.07-teplo';
+const DL_NAME = 'kdynachatu-07-teplo-volba.txt';
+
+/* ---- ikony Lucide (inline SVG z lucide-react 0.577, ISC) ---- */
+const ICONS = {
+  'trees': '<path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/><path d="M7 16v6"/><path d="M13 19v3"/><path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/>',
+  'house': '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  'calendar-days': '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
+  'key-round': '<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>',
+  'shopping-cart': '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+  'ellipsis': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  'arrow-right': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+  'message-circle': '<path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/>',
+  'cloud-sun': '<path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/>',
+  'cloud-rain': '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/>',
+  'cloud': '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  'snowflake': '<path d="m10 20-1.25-2.5L6 18"/><path d="M10 4 8.75 6.5 6 6"/><path d="m14 20 1.25-2.5L18 18"/><path d="m14 4 1.25 2.5L18 6"/><path d="m17 21-3-6h-4"/><path d="m17 3-3 6 1.5 3"/><path d="M2 12h6.5L10 9"/><path d="m20 10-1.5 2 1.5 2"/><path d="M22 12h-6.5L14 15"/><path d="m4 10 1.5 2L4 14"/><path d="m7 21 3-6-1.5-3"/><path d="m7 3 3 6h4"/>',
+  'wind': '<path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/>',
+  'thermometer': '<path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>',
+  'sunrise': '<path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
+  'sunset': '<path d="M12 10V2"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m16 6-4 4-4-4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
+  'triangle-alert': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'thermometer-snowflake': '<path d="m10 20-1.25-2.5L6 18"/><path d="M10 4 8.75 6.5 6 6"/><path d="M10.585 15H10"/><path d="M2 12h6.5L10 9"/><path d="M20 14.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z"/><path d="m4 10 1.5 2L4 14"/><path d="m7 21 3-6-1.5-3"/><path d="m7 3 3 6h2"/>',
+  'droplets': '<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>',
+  'plus': '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  'book-open': '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  'users': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
+  'notebook-pen': '<path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>',
+  'images': '<path d="m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16"/><path d="M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2"/><circle cx="13" cy="7" r="1" fill="currentColor"/><rect x="8" y="2" width="14" height="14" rx="2"/>',
+  'settings': '<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/>',
+  'wrench': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>',
+  'check': '<path d="M20 6 9 17l-5-5"/>',
+  'cloud-drizzle': '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 19v1"/><path d="M8 14v1"/><path d="M16 19v1"/><path d="M16 14v1"/><path d="M12 21v1"/><path d="M12 16v1"/>',
+  'image': '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+};
+const I = (n, cls = '') => `<svg class="lucide ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+
+/* ---- obrázky: zástupná fotka chaty (1000 × 367, 53 kB) a rozmazaný náhled pro D (48 × 18, 204 B) ---- */
+const PHOTO = '07-teplo-chata.webp';
+const TINY = 'data:image/webp;base64,UklGRsQAAABXRUJQVlA4ILgAAADQBgCdASowABIAPtFeqU8oJSQiJWsxABoJZQDLiSAEIn7AUsyLY5KQctZ9N7kk2Ma1ViiaFIRXLkWS1YmNJAAA/uj1OPEJ4GCu+gJJlx4FAlujR/YLky6ci7m2nkhQ0RXzG0FagXrCcNDAflkSpNTqwk2kARAjfXXaiMSbgzeUrP/eAh5aZzW02iX8FxK8Dd+QI4aCTsWazb/FlWoi6mZxRSzw8tzyNYWDVawb5fIz2CEn5eAWpgAA';
+
+const C = { ty: '#1D5FA8', eva: '#7A3FA0' };
+const AV = (l, c) => `<span class="av" style="background:${c}">${l}</span>`;
+const CTX = `po 23. 11. · ${I('cloud-sun')} 2 °C, polojasno`;
+
+/* ---- karty Přehledu ---- */
+const STATUS = () => `<div class="card"><span class="lbl">Na chatě teď</span><div class="status">
+  <div class="who">${AV('E', C.eva)}<div><b>Eva</b><span class="k">odjíždí dnes</span></div></div>
+  <span class="arr">${I('arrow-right')}</span>
+  <div class="who">${AV('J', C.ty)}<div><b>Ty</b><span class="k">od pá 27. 11.</span></div></div></div></div>`;
+const ACTION = () => `<div class="card"><span class="lbl acc">Visí na tobě</span><p class="act-t">V pátek jedeš ty. Eva ti nechala předávku.</p><span class="k">Přečti si ji před cestou, ať víš, co dovézt.</span><div class="btn-p">${I('key-round')}Přečíst předávku</div></div>`;
+const att = (badge, cls, name, meta, act) => `<div class="att"><span class="badge ${cls}">${badge}</span><span class="nm">${name}${meta ? `<span class="k">${meta}</span>` : ''}</span>${act ? `<span class="btn-s">${act}</span>` : ''}</div>`;
+const ATTN = () => `<div class="card"><div class="card-h"><span class="lbl">Potřebuje pozornost</span><span class="wa">${I('message-circle')}Do WhatsAppu</span></div>
+  ${att('Došlo', 'empty', 'Toaleťák', '', 'Koupím já')}
+  ${att('Dochází', 'low', 'Plynová bomba', '', 'Koupím já')}
+  ${att('Závada', 'fault', 'Kape kohoutek', 'nahlásila Eva 23. 11.', '')}
+  <div class="more">Všechny zásoby (12) ${I('chevron-right')}</div></div>`;
+
+/* ---- karta Počasí na pobyt ---- */
+const DAYS = [
+  { d: 'Pá 27.', i: 'cloud-sun', c: 'rgb(var(--sunc))', mx: '6°', mn: '−1°', p: 10 },
+  { d: 'So 28.', i: 'cloud-rain', c: 'rgb(var(--rain))', mx: '4°', mn: '1°', p: 70 },
+  { d: 'Ne 29.', i: 'sun', c: 'rgb(var(--sunc))', mx: '3°', mn: '−4°', p: 0 },
+];
+const HOURS = [['8:00', '−1°', 10], ['10:00', '2°', 40], ['12:00', '5°', 75], ['14:00', '6°', 88], ['16:00', '4°', 62], ['18:00', '2°', 40], ['20:00', '0°', 22]];
+const dayCell = (x, sel, ori) => `<div class="wx-day ${sel ? 'sel' : ''}"><span class="dn">${x.d}</span>${ori ? '<span class="ori">orientační</span>' : ''}<span style="color:${x.c};display:inline-flex">${I(x.i)}</span><span class="tt"><b>${x.mx}</b><span> / ${x.mn}</span></span><span class="pr ${x.p >= 5 ? '' : 'none'}">${I('droplets')}${x.p} %</span></div>`;
+const CHART = () => `<div class="wx-chart">
+  <div class="wx-tabs"><span class="wx-tab">${I('cloud-rain')}Srážky</span><span class="wx-tab">${I('wind')}Vítr</span><span class="wx-tab on">${I('thermometer')}Teplota</span></div>
+  <span class="wx-ctx">Pátek · maximum <b>6°</b> kolem <b>14:00</b></span>
+  <div class="wx-bars">${HOURS.map(([h, v, pct], i) => `<div class="wx-col ${i === 3 ? 'pk' : ''}"><span class="v">${v}</span><div class="wx-track"><div class="wx-fill" style="height:${pct}%"></div></div><span class="h">${h}</span></div>`).join('')}</div></div>`;
+const SUN = () => `<div class="wx-sun"><span>${I('sunrise')}7:24</span><span>${I('sunset')}16:03</span><span class="uv">${I('sun')}UV 1 nízký</span><span class="dl">8 h 39 min</span></div>`;
+const ALERT = () => `<div class="wx-alert">${I('thermometer-snowflake')}<span><b>Ne 29. 11.:</b> v noci mráz až −4 °C. Před odjezdem vypusť vodu.</span></div>`;
+const WEATHER = (o = {}) => `<div class="card"><span class="lbl">Počasí na pobyt</span><p class="wx-title">Tvůj pobyt · pá 27. – ne 29. 11.</p>
+  <div class="wx-days">${DAYS.map((x, i) => dayCell(x, o.chart !== false && i === 0, false)).join('')}</div>
+  ${o.chart === false ? `<span class="wx-hint">${I('chevron-right')}Ťukni na den a uvidíš hodinový graf.</span>` : CHART()}
+  ${SUN()}${ALERT()}</div>`;
+const WEATHER_ORI = () => `<div class="card"><span class="lbl">Počasí na pobyt</span><p class="wx-title">Pobyt Petra · čt 3. – so 5. 12.</p>
+  <div class="wx-days">${[
+    { d: 'Čt 3.', i: 'cloud', c: 'rgb(var(--ink-2))', mx: '3°', mn: '−2°', p: 20 },
+    { d: 'Pá 4.', i: 'cloud-drizzle', c: 'rgb(var(--rain))', mx: '5°', mn: '1°', p: 55 },
+    { d: 'So 5.', i: 'cloud-sun', c: 'rgb(var(--sunc))', mx: '4°', mn: '−3°', p: 5 },
+  ].map((x) => dayCell(x, false, true)).join('')}</div>
+  <span class="wx-hint">Dny 8–16 jsou orientační, předpověď se ještě změní.</span></div>`;
+const WEATHER_LATER = () => `<div class="card"><span class="lbl">Počasí na pobyt</span><p class="wx-title">Tvůj pobyt · pá 18. – ne 20. 12.</p>
+  <div class="wx-later">${I('calendar-days')}<span>Předpověď bude k dispozici od <b>st 2. 12.</b></span></div></div>`;
+
+/* ---- hlavička podle varianty ---- */
+const HERO = () => `<div class="hero"><img src="${PHOTO}" alt=""><div class="hero-tx"><p class="hero-name">Chata Pod Lípou</p><p class="hero-ctx">${CTX}</p></div></div>`;
+const DHEAD = () => `<div class="dhead"><img class="thumb" src="${PHOTO}" alt=""><div><p class="hero-name">Chata Pod Lípou</p><p class="hero-ctx">${CTX}</p></div></div>`;
+const BLUR = () => `<div class="blurbg" aria-hidden="true"><img src="${TINY}" alt=""></div>`;
+const VCLS = { A: '', B: 'warm', C: 'warm tex', D: 'warm' };
+
+const NAV = [['house', 'Přehled', true], ['calendar-days', 'Kalendář'], ['key-round', 'Předávka'], ['shopping-cart', 'Zásoby'], ['ellipsis', 'Víc']];
+const phone = (v, o = {}) => `<div class="app phone ${VCLS[v]}">${v === 'D' ? BLUR() : ''}<div class="ph-body">
+  ${v === 'D' ? DHEAD() : HERO()}${STATUS()}${ACTION()}${ATTN()}${WEATHER(o)}
+  <div class="fold" style="top:780px"><span>konec 1. obrazovky (390 × 844)</span></div></div>
+  <nav class="ph-nav">${NAV.map(([i, l, on]) => `<span class="ph-tab ${on ? 'on' : ''}">${I(i)}${l}</span>`).join('')}</nav></div>`;
+
+const SIDE = [['house', 'Přehled', true], ['calendar-days', 'Kalendář'], ['key-round', 'Předávka'], ['shopping-cart', 'Zásoby'], ['notebook-pen', 'Poznámky'], ['images', 'Galerie']];
+const desk = (v) => `<div class="app dk ${VCLS[v]}"><div class="dk-chrome"><i></i><i></i><i></i><span>kdynachatu.cz · Přehled</span></div><div class="dk-wrap">
+  ${v === 'D' ? BLUR() : ''}
+  <nav class="side"><div class="br">${I('trees')}Pod Lípou</div>${SIDE.map(([i, l, on]) => `<div class="ni ${on ? 'on' : ''}">${I(i)}${l}</div>`).join('')}
+    <div class="hd">Chata</div><div class="ni">${I('users')}Členové</div><div class="ni">${I('settings')}Nastavení</div>
+    <div class="me">${AV('J', C.ty)}Jana</div></nav>
+  <div class="dk-main">${v === 'D' ? DHEAD() : HERO()}
+    <div class="dk-cols"><div class="dk-stack">${STATUS()}${ACTION()}${ATTN()}</div><div class="dk-stack">${WEATHER()}</div></div>
+    <div class="fold" style="top:772px"><span>konec obrazovky 1280 × 800</span></div></div>
+  </div></div>`;
+
+/* ---- spočítané kontrasty (scratch skript, WCAG 2.x; foto = nejsvětlejší pixel pod textem s překryvem) ---- */
+const CR = {"rows":[["Hlavní text na pozadí","14,36 : 1","15,30 : 1","14,07 : 1","15,59 : 1"],["Hlavní text na kartě","15,25 : 1","13,62 : 1","15,57 : 1","13,74 : 1"],["Vedlejší text na pozadí","7,01 : 1","7,76 : 1","6,68 : 1","8,72 : 1"],["Vedlejší text na kartě","7,44 : 1","6,91 : 1","7,40 : 1","7,69 : 1"],["Vybraný den (text na --sheet-alt)","5,95 : 1","8,32 : 1","5,61 : 1","8,05 : 1"],["Zelený odkaz a obrys tlačítka na kartě","6,18 : 1","6,98 : 1","6,13 : 1","7,32 : 1"],["Bílý text na hlavním tlačítku","5,48 : 1","5,48 : 1","5,48 : 1","5,48 : 1"],["Štítek Dochází","5,25 : 1","6,23 : 1","5,21 : 1","6,02 : 1"],["Štítek Došlo","4,94 : 1","4,72 : 1","4,90 : 1","4,54 : 1"],["Srážky (modrá) na kartě","6,60 : 1","9,19 : 1","6,54 : 1","8,95 : 1"],["Teplota (oranžová) na kartě","4,95 : 1","9,93 : 1","4,90 : 1","9,67 : 1"],["Neaktivní záložka grafu","6,77 : 1","6,09 : 1","6,73 : 1","6,74 : 1"],["UV a slunce v liště","5,79 : 1","6,34 : 1","5,74 : 1","6,69 : 1"],["Výstraha mrazu","8,17 : 1","7,49 : 1","8,11 : 1","7,24 : 1"]],"stripM":"5,07 : 1","stripD":"5,81 : 1","blurM":"9,02 : 1","blurD":"9,01 : 1","texL":"5,64 : 1","texD":"6,81 : 1","coolMin":"4,72 : 1","allMin":"4,54 : 1","wInkPage":"14,07 : 1","wInk2Page":"6,68 : 1","wInk2Sheet":"7,40 : 1","wdInk2Sheet":"7,69 : 1","kbM":"31 kB","kbD":"53 kB","data":[["A · Fotka v pruhu","31 kB","53 kB","0,6 s / 1,1 s","Střední: „Nastavit jako titulní“ v Galerii, zmenšení na serveru (2 velikosti), sloupec u chaty (migrace), nový CabinHero"],["B · + teplý papír","31 kB","53 kB","0,6 s / 1,1 s","A + tokeny ve variables.css a test kontrastu; projít obrazovky ve světlém i tmavém režimu"],["C · + textura","52 kB","74 kB","1,0 s / 1,5 s","B + jedna vrstva pozadí (obrázek už v appce je)"],["D · Rozmazaná fotka","3 kB","3 kB","< 0,1 s","Backend jako A + náhled 48 × 18 a miniatura 112 × 112; v CSS vrstva s maskou přechodu"]]};
+
+const SECS = [];
+const G = (name, p) => SECS.push({ group: name, p });
+const A = (s) => SECS.push(s);
+
+G('1 · Teplo po přihlášení', 'Jedna volba pro Přehled a barvy celé appky. Nahoře telefon ve skutečné velikosti (390 px), pod variantami stejné varianty na desktopu (1280 × 800). Obsah je všude stejný, liší se jen hlavička a pozadí.');
+
+A({ id: 'teplo', name: 'Fotka chaty a pozadí', q: 'Jak vrátit teplo, aniž by utrpěl kontrast a 3G?', n: 4, min: '414px', desk: true,
+  rules: [['H1a', 'Appka zná jméno a jednu fotku chaty, hero na Přehledu.'], ['C5a', 'Žádná fullscreen fotka po celé appce; 3G výkon a kontrast.'], ['G1', 'Text ≥ 4,5 : 1, i na fotce.'], ['A2', 'Osobnost, ne generická SaaS šeď.']],
+  v: [
+  { k: 'A', name: 'Fotka v pruhu', st: 'nejmenší změna',
+    r: () => phone('A'),
+    idea: 'Dnešní malou hlavičku nahradí pruh s fotkou chaty (148 px na mobilu, 200 px na desktopu). Přes spodek fotky jde tmavý přechod, na něm jméno chaty, datum a počasí bílým písmem. Zbytek appky zůstává v dnešní „lesní mlze“.',
+    plus: ['Splní H1a doslova: jedna fotka, jen na Přehledu', 'Chata je hned poznat, pro každou rodinu jiná', 'Dnešní tokeny a testy kontrastu se nemění'],
+    minus: ['Pozadí pod kartami zůstane chladné zelenošedé', 'Pruh posune karty o 100 px níž (Visí na tobě je pořád na první obrazovce)'],
+    facts: () => `<b>Kontrast:</b> bílý text na fotce ${CR.stripM} (mobil), ${CR.stripD} (desktop), nejhorší pixel · texty na kartách beze změny (${CR.coolMin} a víc)<br><b>3G:</b> fotka ${CR.kbM} na mobilu, ${CR.kbD} na desktopu, načte se až po textu, pak z mezipaměti` },
+  { k: 'B', name: 'Fotka + teplý papír', st: 'doporučeno', rec: true,
+    r: () => phone('B'),
+    idea: 'Jako A a k tomu teplé „papírové“ tokeny: pozadí jako starý papír, karty krémově bílé, text do teplé hnědočerné. Zelená zůstává pro akce. Jen změna tokenů v variables.css, světle i tmavě.',
+    plus: ['Největší rozdíl v pocitu za nejmenší cenu (0 kB navíc)', 'Teplo je v celé appce, ne jen na Přehledu', 'Kontrast textu stejný nebo lepší než dnes'],
+    minus: ['Mění tokeny v celé appce, je potřeba projít obrazovky', 'Bílé karty se od pozadí liší o něco méně než dnes'],
+    facts: () => `<b>Kontrast:</b> fotka jako A · hlavní text ${CR.wInkPage} na pozadí, vedlejší ${CR.wInk2Page} na pozadí a ${CR.wInk2Sheet} na kartě (tmavě ${CR.wdInk2Sheet})<br><b>3G:</b> jako A, tokeny 0 kB` },
+  { k: 'C', name: 'Teplý papír + lesní textura', st: 'nejvíc „chata“',
+    r: () => phone('C'),
+    idea: 'Jako B a k tomu jemná lesní textura (stromy v mlze) s krytím 14 % pod kartami. Stejný obrázek, jaký už používá pozadí chatu v Poznámkách (#253).',
+    plus: ['Atmosféra i mimo pruh s fotkou', 'Obrázek už v appce je (v mezipaměti, kdo otevřel Poznámky)'],
+    minus: ['+20 kB na první načtení', 'Textura je vidět jen mezi kartami, na mobilu skoro vůbec', 'Riziko „šablony“ (A2), když ji uvidíš všude'],
+    facts: () => `<b>Kontrast:</b> vedlejší text přímo na textuře ${CR.texL} (světle), ${CR.texD} (tmavě), nejtmavší místo stromu<br><b>3G:</b> fotka ${CR.kbM} + textura 20 kB` },
+  { k: 'D', name: 'Rozmazaná fotka nahoře', st: 'nejměkčí, nejlehčí na data',
+    r: () => phone('D'),
+    idea: 'Horní část stránky má jako pozadí rozmazanou fotku chaty, která plynule přejde do teplého papíru. Ostrá je jen malá miniatura vedle jména. Karty začínají přímo na rozmazaném pozadí.',
+    plus: ['Nejmíň dat: rozmazaný obrázek má 0,2 kB, miniatura asi 3 kB', 'Působí měkce a „domácky“, fotka nepřekřičí obsah', 'Barvy pozadí se přizpůsobí každé chatě'],
+    minus: ['Samotnou chatu poznáš jen z malé miniatury', 'Nejsložitější CSS (vrstvy, maska přechodu, tmavý režim)', 'Barva rozmazání se u každé fotky liší, kontrast se musí hlídat překryvem'],
+    facts: () => `<b>Kontrast:</b> bílý text na rozmazané fotce ${CR.blurM} (mobil), ${CR.blurD} (desktop) · karty jako B<br><b>3G:</b> rozmazaný náhled 0,2 kB (lze poslat rovnou v datech chaty) + miniatura ~3 kB` },
+] });
+
+G('2 · Karta Počasí na pobyt', 'Vzhled staré karty počasí (smazaná v #242): řádek dní, hodinový graf, slunce a UV, výstraha. Jen dny pobytu, ukáže se od 7 dní před příjezdem do konce pobytu (#316). Náhled je v teplých tokenech varianty B.');
+
+A({ id: 'pocasi', name: 'Hodinový graf', q: 'Má být graf vybraného dne vidět hned, nebo až po ťuknutí?', n: 3, min: '414px',
+  rules: [['#316', 'Ťuknutí na den otevře hodinový graf toho dne.'], ['A1', 'Klid: míň prvků, jasná hierarchie.'], ['B2', 'Dny a záložky grafu jsou dotykové cíle 48 px.']],
+  v: [
+  { k: 'A', name: 'Graf prvního dne otevřený', st: 'doporučeno · jako stará karta', rec: true,
+    r: () => `<div class="app warm" style="padding:12px;border-radius:16px;width:390px;margin:0 auto">${WEATHER()}</div>`,
+    idea: 'Vybraný je první den pobytu (během pobytu dnešek) a pod řádkem dní je rovnou jeho hodinový graf. Záložky Srážky / Vítr / Teplota jako dřív; když nemá pršet, otevře se Teplota.',
+    plus: ['Přesně stará karta, kterou postrádáš', 'Na první pohled víš, kdy v pátek vyrazit'],
+    minus: ['Karta je vysoká (asi 520 px)'] },
+  { k: 'B', name: 'Graf až po ťuknutí', st: 'kompaktní',
+    r: () => `<div class="app warm" style="padding:12px;border-radius:16px;width:390px;margin:0 auto">${WEATHER({ chart: false })}</div>`,
+    idea: 'Jen řádek dní, slunce a výstraha. Hodinový graf se rozbalí pod dnem, na který ťukneš.',
+    plus: ['O 200 px nižší, Přehled zůstane kratší', 'Výstraha je víc vidět'],
+    minus: ['Graf, který byl na staré kartě to hlavní, je schovaný'] },
+  { k: 'C', name: 'Stavy karty', st: 'jen ukázka, nevybírá se',
+    r: () => `<div class="app warm" style="padding:12px;border-radius:16px;width:390px;margin:0 auto;display:flex;flex-direction:column;gap:12px">${WEATHER_ORI()}${WEATHER_LATER()}</div>`,
+    idea: 'Cizí pobyt v okně (karta ukáže čí je), dny 8–16 označené „orientační“ (v detailu pobytu v Kalendáři) a pobyt za horizontem předpovědi.',
+    plus: ['Karta nikdy nelže o přesnosti'],
+    minus: ['Na Přehledu se karta mimo okno 7 dní neukáže vůbec, „Předpověď bude od…“ je jen v detailu pobytu'], noPick: true },
+] });
+
+/* ---- souhrnné tabulky ---- */
+const TOKENS = [["page","244 247 245","15 20 17","246 240 230","24 20 17","Pozadí stránky"],["sheet","255 253 250","26 32 28","255 252 246","37 32 27","Karty"],["sheet-alt","233 244 239","31 41 35","242 234 220","47 40 33","Podbarvení (vybraný den, čipy)"],["rule","223 228 223","52 62 54","230 221 207","66 57 48","Linky a rámečky"],["rule-soft","233 237 232","37 46 40","238 231 220","52 45 38","Jemné linky karet"],["ink","26 39 33","230 234 229","38 33 28","242 236 227","Hlavní text (--text-main)"],["ink-2","75 85 99","160 170 160","94 82 70","190 177 162","Vedlejší text (--text-muted)"],["glow","233 244 239","31 41 35","252 232 204","58 42 28","Světlo v rohu pozadí (gradient)"]];
+const tableTokens = () => `<div><h3>Navržené teplé tokeny (B–D)</h3><table class="t"><tr><th>Token</th><th>Dnes (A) · světle</th><th>Dnes (A) · tmavě</th><th>Teplý papír · světle</th><th>Teplý papír · tmavě</th><th>K čemu</th></tr>
+  ${TOKENS.map(([n, a, ad, l, d, what]) => `<tr><td><code>--${n}</code></td><td><span class="chip" style="background:rgb(${a})"></span><code>${a}</code></td><td><span class="chip" style="background:rgb(${ad})"></span><code>${ad}</code></td><td><span class="chip" style="background:rgb(${l})"></span><code>${l}</code></td><td><span class="chip" style="background:rgb(${d})"></span><code>${d}</code></td><td>${what}</td></tr>`).join('')}
+  </table><p class="k">RGB trojice jako v <code>variables.css</code> (<code>rgb(var(--page) / .96)</code>). <code>--ink</code> a <code>--ink-2</code> odpovídají dnešním <code>--text-main</code> a <code>--text-muted</code>. Akční zelená <code>--lc 4 120 87</code> a stavové barvy zůstávají; v tmavém teplém režimu je <code>--accent</code> a <code>--ok</code> o kousek světlejší (110 191 144).</p></div>`;
+const tableCR = () => `<div><h3>Kontrast textu (WCAG 2.x, spočítáno skriptem)</h3><table class="t"><tr><th>Dvojice</th><th>A světle</th><th>A tmavě</th><th>B–D světle</th><th>B–D tmavě</th></tr>
+  ${CR.rows.map(([n, a, b, c, d]) => `<tr><td>${n}</td><td class="n">${a}</td><td class="n">${b}</td><td class="n">${c}</td><td class="n">${d}</td></tr>`).join('')}
+  </table><p class="k">Fotka: bílý text na fotce s tmavým překryvem, změřeno na každém pixelu pod textem; uvedený je <b>nejhorší pixel</b>. Pruh A–C: ${CR.stripM} mobil, ${CR.stripD} desktop. Rozmazaná fotka D: ${CR.blurM} mobil, ${CR.blurD} desktop. Textura C: vedlejší text na nejtmavším místě textury ${CR.texL} světle, ${CR.texD} tmavě. Všechno ≥ 4,5 : 1.</p></div>`;
+const tableData = () => `<div><h3>Datová náročnost (co se stáhne navíc)</h3><table class="t"><tr><th>Varianta</th><th>Mobil</th><th>Desktop</th><th>Pomalá 3G (400 kbit/s)</th><th>Složitost</th></tr>
+  ${CR.data.map((r) => `<tr>${r.map((c, i) => `<td class="${i && i < 4 ? 'n' : ''}">${c}</td>`).join('')}</tr>`).join('')}
+  </table><p class="k">Fotka se načítá až po textu (<code>loading="lazy"</code>, rozměry pevné, nic neposkočí), do té doby je pruh tmavě zelený. Service worker ji pak drží v mezipaměti, další otevření nestojí nic. Velikosti jsou změřené na zástupné fotce (WebP, kvalita 50).</p></div>`;
+
+/* ---- vykreslení ---- */
+const ATOMS = SECS.filter((s) => s.id);
+let state = { pick: {}, note: {} };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* prázdné */ }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* bez úložiště */ } };
+const picks = (id) => (state.pick[id] || []).slice().sort();
+const recOf = (s) => (s.v.find((x) => x.rec) || s.v[0]).k;
+
+function renderSec(sec) {
+  const chosen = picks(sec.id);
+  const el = document.getElementById('s-' + sec.id);
+  el.innerHTML = `
+    <div class="sec-h"><h2 class="display">${sec.name}</h2><span class="q">${sec.q}</span><span class="picked">${chosen.length ? `Vybráno: <b>${chosen.join(' + ')}</b>` : `Zatím nevybráno · doporučuji ${recOf(sec)}`}</span></div>
+    <div class="rules">${sec.rules.map(([id, t]) => `<span class="rule"><code>${id}</code>${t}</span>`).join('')}</div>
+    <div class="scroll-x"><div class="cols" style="--n:${sec.n};--min:${sec.min || '0px'}">${sec.v.map((v) => { const on = chosen.includes(v.k); return `
+      <div class="col ${on ? 'on' : ''}" id="v-${sec.id}-${v.k}">
+        <div class="col-h"><span class="lt">${on ? I('check') : v.k}</span><span class="nm">${v.name}<span class="st ${v.rec ? 'rec' : ''}">${v.st}</span></span></div>
+        <div><span class="frl">${sec.desk ? 'Mobil · 390 px, skutečná velikost' : 'Skutečná velikost'}</span>${v.r()}</div>
+        <div class="meta-c">
+          <p class="idea">${v.idea}</p>
+          ${v.facts ? `<div class="facts">${v.facts()}</div>` : ''}
+          ${v.plus.length ? `<div><span class="lab2">Proč ano</span><ul>${v.plus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          ${v.minus.length ? `<div><span class="lab2">Proč ne</span><ul>${v.minus.map((t) => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+          ${v.noPick ? '' : `<label class="choose ${on ? 'on' : ''}"><input type="checkbox" data-pick="${sec.id}" data-v="${v.k}" ${on ? 'checked' : ''}> Tuhle chci</label>`}
+        </div>
+      </div>`; }).join('')}</div></div>
+    ${sec.desk ? `<div class="dk-block">${sec.v.map((v) => `<div class="dk-item" id="d-${v.k}"><h3>${v.k} · ${v.name}<span>desktop 1280 × 800, skutečná velikost</span></h3>${desk(v.k)}</div>`).join('')}</div>` : ''}
+    <textarea class="note" data-note="${sec.id}" placeholder="Poznámka (nepovinné), např. „B, ale pruh na mobilu nižší“">${state.note[sec.id] || ''}</textarea>`;
+}
+function renderToc() {
+  document.getElementById('toc').innerHTML = ATOMS.map((s) => { const p = picks(s.id); return `<a href="#s-${s.id}" class="${p.length ? 'done' : ''}">${s.name}${p.length ? ' · ' + p.join('+') : ''}</a>`; }).join('') + '<a href="#s-tabulky">Tokeny, kontrast, data</a>';
+}
+function renderSum() {
+  const done = ATOMS.filter((s) => picks(s.id).length);
+  document.getElementById('sum').innerHTML = `Vybráno <b>${done.length} z ${ATOMS.length}</b> dílů${done.length ? ' · ' + done.map((s) => `${s.name} <b>${picks(s.id).join('+')}</b>`).join(', ') : ' — u každého dílu zaškrtni „Tuhle chci“'}`;
+}
+function summaryText() {
+  const line = (s) => {
+    const p = picks(s.id);
+    const names = p.map((k) => `${k} — ${s.v.find((x) => x.k === k).name}`).join(' + ');
+    return `${s.name}: ${p.length ? names : `nevybráno (postavím ${recOf(s)})`}${state.note[s.id] ? `\n   poznámka: ${state.note[s.id].trim()}` : ''}`;
+  };
+  return `${TITLE} — volba dílů (${new Date().toLocaleString('cs-CZ')})\n\n${ATOMS.map(line).join('\n')}\n`;
+}
+
+document.getElementById('sections').innerHTML = SECS.map((s) => s.group
+  ? `<div class="group-h"><h2 class="display">${s.group}</h2><p>${s.p}</p></div>`
+  : `<section class="sec" id="s-${s.id}"></section>`).join('')
+  + `<div class="group-h"><h2 class="display">3 · Tokeny, kontrast a data</h2><p>Podklad pro specifikaci. Čísla spočítal skript podle vzorce WCAG 2.x z hodnot v tomto souboru a ze zástupné fotky.</p></div><section class="sec tables" id="s-tabulky">${tableTokens()}${tableCR()}${tableData()}</section>`;
+ATOMS.forEach(renderSec); renderToc(); renderSum();
+
+document.addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-pick]');
+  if (!cb) return;
+  const id = cb.dataset.pick;
+  const set = new Set(state.pick[id] || []);
+  if (cb.checked) set.add(cb.dataset.v); else set.delete(cb.dataset.v);
+  if (set.size) state.pick[id] = [...set]; else delete state.pick[id];
+  save(); renderSec(ATOMS.find((s) => s.id === id)); renderToc(); renderSum();
+});
+document.addEventListener('input', (e) => {
+  const t = e.target.closest('[data-note]');
+  if (!t) return;
+  state.note[t.dataset.note] = t.value; save();
+});
+const setTheme = (v) => {
+  document.querySelectorAll('#seg-t button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.v === v)));
+  document.documentElement.dataset.theme = v;
+};
+document.querySelectorAll('#seg-t button').forEach((b) => b.addEventListener('click', () => setTheme(b.dataset.v)));
+if (new URLSearchParams(location.search).get('theme') === 'dark') setTheme('dark');
+const flash = (t) => { const c = document.getElementById('copied'); c.textContent = t; setTimeout(() => { c.textContent = ''; }, 2500); };
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(summaryText()); flash('Zkopírováno — vlož mi to do chatu.'); }
+  catch { flash('Kopírování nejde — použij Stáhnout.'); }
+});
+document.getElementById('dl').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([summaryText()], { type: 'text/plain;charset=utf-8' }));
+  a.download = DL_NAME;
+  a.click();
+  flash('Uloženo do Stažených — napiš mi, že je hotovo.');
+});
+})();
+</script>
+</body>
+</html>
