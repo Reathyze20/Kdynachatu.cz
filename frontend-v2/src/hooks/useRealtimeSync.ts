@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useSocket } from './useSocket'
 import { RESERVATIONS_KEY } from '@/features/reservations/hooks/useReservations'
 import { DASHBOARD_SHOPPING_KEY } from '@/features/shopping/hooks/useShoppingLists'
+import { CABIN_SETTINGS_KEY } from '@/features/settings/hooks/useCabinSettings'
 
 export function useRealtimeSync() {
   const { user } = useAuth()
@@ -71,6 +72,11 @@ export function useRealtimeSync() {
       void qc.invalidateQueries({ queryKey: ['diary-entries'] })
     }
 
+    function handleCabinChange() {
+      // Titulní fotka chaty (#321); prefix zasáhne i ['cabin', activeCabinId] z useCabinFeatures
+      void qc.invalidateQueries({ queryKey: CABIN_SETTINGS_KEY })
+    }
+
     on('reservation:created', handleReservationChange)
     on('reservation:updated', handleReservationChange)
     on('reservation:deleted', handleReservationChange)
@@ -91,6 +97,7 @@ export function useRealtimeSync() {
     on('inventory:deleted', handleInventoryChange)
     on('gallery:changed', handleGalleryChange)
     on('diary:changed', handleDiaryChange)
+    on('cabin:changed', handleCabinChange)
 
     return () => {
       off('reservation:created', handleReservationChange)
@@ -113,6 +120,7 @@ export function useRealtimeSync() {
       off('inventory:deleted', handleInventoryChange)
       off('gallery:changed', handleGalleryChange)
       off('diary:changed', handleDiaryChange)
+      off('cabin:changed', handleCabinChange)
     }
   }, [on, off, qc, user, socketGeneration])
 }

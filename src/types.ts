@@ -160,3 +160,10 @@ export interface MunicipalityOption {
 export interface MunicipalitySearchResponse {
   municipalities: MunicipalityOption[];
 }
+
+// PUT /api/cabin/cover-photo – titulní fotka chaty z vlastní Galerie (jen správce, #321).
+// Odpověď (i u DELETE) je nastavení chaty; coverPhotoUrl je široká WebP varianta,
+// úzká pro mobil má stejné jméno s příponou -sm (…/<uuid>-sm.webp).
+export interface SetCabinCoverPhotoRequest {
+  photoId: string;
+}

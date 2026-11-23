@@ -21,6 +21,7 @@ export interface CabinConfig {
   longitude: number | null
   rules: string | null
   departureChecklist: string[] | null
+  /** Titulní fotka: široká WebP varianta, úzká pro mobil má stejné jméno s příponou -sm (#321). */
   coverPhotoUrl: string | null
   isWinterized: boolean
   features: Record<string, boolean> | null
@@ -38,6 +39,11 @@ export interface CabinConfigUpdate {
   features?: Record<string, boolean>
 }
 
+/** PUT /api/cabin/cover-photo – fotka z Galerie vlastní chaty, jen správce. */
+export interface SetCabinCoverPhotoRequest {
+  photoId: string
+}
+
 // ─── API functions ─────────────────────────────────────────────────────────────
 
 export const settingsApi = {
@@ -46,4 +52,10 @@ export const settingsApi = {
 
   updateCabin: (data: CabinConfigUpdate) =>
     apiClient.patch<CabinConfig>('/cabin', data).then((r) => r.data),
+
+  setCoverPhoto: (data: SetCabinCoverPhotoRequest) =>
+    apiClient.put<CabinConfig>('/cabin/cover-photo', data).then((r) => r.data),
+
+  removeCoverPhoto: () =>
+    apiClient.delete<CabinConfig>('/cabin/cover-photo').then((r) => r.data),
 }

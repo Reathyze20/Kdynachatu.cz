@@ -1,18 +1,21 @@
 /* ============================================================================
    routes/cabin.ts — Cabin settings CRUD (admin-only configuration)
    ============================================================================ */
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import crypto from "crypto";
+import path from "path";
 import { signAuthToken } from "../../utils/authToken";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import { validate } from "../../validators/validate";
-import { updateCabinSettingsSchema, createCabinSchema } from "../../validators/schemas";
+import { updateCabinSettingsSchema, createCabinSchema, setCabinCoverPhotoSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
-import { CABIN_SIGNUP_ENABLED } from "../../config/config";
+import { emitToCabin } from "../../utils/socket";
+import { CABIN_SIGNUP_ENABLED, UPLOADS_PATH } from "../../config/config";
 import { requireCabinSignupOpen } from "./cabinSignup";
 import { cabinMunicipalityFields, NO_CABIN_MUNICIPALITY } from "./municipalities";
+import { createCoverPhotoVariants, removeCoverPhotoFiles } from "./cabinCoverPhoto";
 
 const router = Router();
 
@@ -160,7 +163,6 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
       welcomeMessage,
       rules,
       departureChecklist,
-      coverPhotoUrl,
       municipalityCode,
       isWinterized,
       features,
@@ -235,7 +237,6 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
         ? departureChecklist.map((item: string) => item.trim()).filter((item: string) => item.length > 0)
         : null;
     }
-    if (coverPhotoUrl !== undefined) data.coverPhotoUrl = coverPhotoUrl || null;
     if (municipalityCode !== undefined) Object.assign(data, municipality ?? NO_CABIN_MUNICIPALITY);
     if (isWinterized !== undefined) data.isWinterized = isWinterized;
     if (features !== undefined) data.features = features;
@@ -267,6 +268,74 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
 
     logger.error("CABIN", "Failed to update cabin settings", { error: String(error) });
     res.status(500).json({ message: "Interní chyba serveru" });
+  }
+});
+
+// ============================================================================
+//  PUT / DELETE /api/cabin/cover-photo — Titulní fotka chaty z Galerie (admin only, #321)
+// ============================================================================
+const coversPath = path.join(UPLOADS_PATH, "covers");
+
+function requireCabinAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Titulní fotku může měnit jen správce chaty." });
+  }
+  next();
+}
+
+router.put("/cover-photo", protect, requireCabin, requireCabinAdmin, validate(setCabinCoverPhotoSchema), async (req: Request, res: Response) => {
+  const cabinId = req.user!.cabinId!;
+  try {
+    // Fotka se hledá jen v Galerii chaty přihlášeného uživatele; cizí i neexistující → 404.
+    const photo = await prisma.galleryPhoto.findFirst({
+      where: { id: req.body.photoId, folder: { cabinId } },
+      select: { src: true },
+    });
+    const fileName = photo?.src.startsWith("/uploads/") ? photo.src.slice("/uploads/".length) : "";
+    if (!fileName || path.basename(fileName) !== fileName) {
+      return res.status(404).json({ message: "Fotka nenalezena." });
+    }
+
+    let coverPhotoUrl: string;
+    try {
+      coverPhotoUrl = await createCoverPhotoVariants(path.join(UPLOADS_PATH, fileName), coversPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      return res.status(404).json({ message: "Fotka nenalezena." });
+    }
+
+    const previous = await prisma.cabin.findUnique({ where: { id: cabinId }, select: { coverPhotoUrl: true } });
+    let updated;
+    try {
+      updated = await prisma.cabin.update({ where: { id: cabinId }, select: CABIN_SELECT, data: { coverPhotoUrl } });
+    } catch (error) {
+      await removeCoverPhotoFiles(coverPhotoUrl, coversPath);
+      throw error;
+    }
+    await removeCoverPhotoFiles(previous?.coverPhotoUrl, coversPath);
+
+    logger.info("CABIN", "Cover photo set from gallery", { cabinId, userId: req.user!.userId });
+    emitToCabin(cabinId, "cabin:changed", {});
+    res.json(updated);
+  } catch (error) {
+    logger.error("CABIN", "Failed to set cover photo", { error: String(error) });
+    res.status(500).json({ message: "Titulní fotku se nepodařilo nastavit. Zkus to znovu." });
+  }
+});
+
+router.delete("/cover-photo", protect, requireCabin, requireCabinAdmin, async (req: Request, res: Response) => {
+  const cabinId = req.user!.cabinId!;
+  try {
+    const previous = await prisma.cabin.findUnique({ where: { id: cabinId }, select: { coverPhotoUrl: true } });
+    const updated = await prisma.cabin.update({ where: { id: cabinId }, select: CABIN_SELECT, data: { coverPhotoUrl: null } });
+    await removeCoverPhotoFiles(previous?.coverPhotoUrl, coversPath);
+
+    logger.info("CABIN", "Cover photo removed", { cabinId, userId: req.user!.userId });
+    emitToCabin(cabinId, "cabin:changed", {});
+    res.json(updated);
+  } catch (error) {
+    logger.error("CABIN", "Failed to remove cover photo", { error: String(error) });
+    res.status(500).json({ message: "Titulní fotku se nepodařilo odebrat. Zkus to znovu." });
   }
 });
 

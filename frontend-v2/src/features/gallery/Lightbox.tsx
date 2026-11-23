@@ -1,14 +1,15 @@
 /**
  * Lightbox.tsx — Premium fullscreen photo viewer
- * Top toolbar: counter + download + delete + close
+ * Top toolbar: counter + download + cover photo (admin) + delete + close
  * Keyboard: Escape/←/→, touch swipe, description (vzpomínka)
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Download, Trash2, X, MessageSquarePlus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, ImageUp, Trash2, X, MessageSquarePlus } from 'lucide-react'
 import type { GalleryPhoto } from '@/api/gallery'
 import { useUpdatePhoto, useDeletePhoto } from './hooks/useGallery'
+import { useSetCoverPhoto } from '@/features/settings/hooks/useCabinSettings'
 import { useAuth } from '@/context/AuthContext'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { showToast } from '@/lib/toast'
@@ -41,9 +42,11 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
   const { user } = useAuth()
   const updatePhoto = useUpdatePhoto(folderId)
   const deletePhoto = useDeletePhoto(folderId)
+  const setCoverPhoto = useSetCoverPhoto()
 
   const photo = photos[index]
-  const isOwnerOrAdmin = user?.role === 'admin' || photo?.uploadedBy === user?.username
+  const isAdmin = user?.role === 'admin'
+  const isOwnerOrAdmin = isAdmin || photo?.uploadedBy === user?.username
 
   // Auto-hide controls after inactivity
   const resetHideTimer = useCallback(() => {
@@ -131,6 +134,13 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
     }
   }
 
+  function handleSetCover() {
+    if (!photo) return
+    setCoverPhoto.mutate(photo.id, {
+      onSuccess: () => showToast('Fotka je teď titulní fotkou chaty.', 'success'),
+    })
+  }
+
   async function handleConfirmedDelete() {
     if (!photo) return
     setDeleteError(null)
@@ -206,6 +216,18 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
                 >
                   <Download size={18} />
                 </a>
+                {isAdmin && (
+                  <button
+                    className="lb-action-btn"
+                    onClick={e => { e.stopPropagation(); handleSetCover() }}
+                    disabled={setCoverPhoto.isPending}
+                    title="Nastavit jako titulní"
+                    aria-label="Nastavit jako titulní"
+                    data-testid="gallery-lightbox-set-cover-button"
+                  >
+                    <ImageUp size={18} />
+                  </button>
+                )}
                 {isOwnerOrAdmin && (
                   <button
                     className="lb-action-btn lb-action-btn--danger"

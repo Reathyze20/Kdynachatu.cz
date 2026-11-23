@@ -153,6 +153,8 @@ Complete map of all backend endpoints. Read this when building API modules or co
 |---|---|---|---|---|---|
 | GET | `/api/cabin` | yes | all | — | `{ id, name, subdomain, description, welcomeMessage, rules, departureChecklist, coverPhotoUrl, weatherLocation, municipalityCode, municipalityName, municipalityDistrict, municipalityRegion, latitude, longitude, isWinterized, features }` |
 | PATCH | `/api/cabin` | yes | admin | `{ name?, description?, welcomeMessage?, rules?, departureChecklist?, municipalityCode?, ... }` (code from `/api/municipalities`, `null` clears; free-text `weatherLocation` is ignored) | cabin object |
+| PUT | `/api/cabin/cover-photo` | yes | admin | `{ photoId }` (photo from the cabin's own Gallery, else 404) | cabin object; `coverPhotoUrl` = wide WebP, narrow variant has the `-sm` suffix; emits `cabin:changed` |
+| DELETE | `/api/cabin/cover-photo` | yes | admin | — | cabin object with `coverPhotoUrl: null`, files deleted; emits `cabin:changed` |
 | POST | `/api/cabin/create` | yes | — | `{ name }` | `{ token, cabinId, cabinName, ... }`; 403 when CABIN_SIGNUP_ENABLED is off |
 
 ## Invites (`/api/invites`)

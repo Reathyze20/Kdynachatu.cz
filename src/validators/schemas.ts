@@ -305,10 +305,15 @@ export const updateCabinSettingsSchema = z.object({
   welcomeMessage: z.string().max(300).optional().nullable(),
   rules: z.string().max(5000).optional().nullable(),
   departureChecklist: z.array(z.string().max(100)).max(15).optional().nullable(),
-  coverPhotoUrl: z.string().max(1000).optional().nullable(),
+  // coverPhotoUrl se tu záměrně nepřijímá (#321): titulní fotka jde nastavit jen z Galerie.
   municipalityCode: z.number().int().positive().optional().nullable(),
   isWinterized: z.boolean().optional(),
   features: z.record(z.string(), z.boolean()).optional().nullable(),
+});
+
+// PUT /api/cabin/cover-photo — titulní fotka chaty z vlastní Galerie (#321)
+export const setCabinCoverPhotoSchema = z.object({
+  photoId: z.string().uuid("Neplatné ID fotky"),
 });
 
 // Municipalities — GET /api/municipalities?q= (našeptávání nejbližší obce chaty)

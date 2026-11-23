@@ -6,7 +6,8 @@ import { settingsApi, type CabinConfigUpdate } from '@/api/settings'
 import { handleMutationError } from '@/lib/mutationError'
 
 // Use same QK as useCabinFeatures so nav auto-updates after save
-const QK = ['cabin'] as const
+export const CABIN_SETTINGS_KEY = ['cabin'] as const
+const QK = CABIN_SETTINGS_KEY
 
 export function useCabinSettings() {
   return useQuery({
@@ -25,5 +26,24 @@ export function useUpdateCabinSettings() {
       qc.setQueryData(QK, updated)
     },
     onError: handleMutationError('Nepodařilo se uložit nastavení'),
+  })
+}
+
+/** Titulní fotka chaty z Galerie (#321); odpověď je nové nastavení chaty. */
+export function useSetCoverPhoto() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (photoId: string) => settingsApi.setCoverPhoto({ photoId }),
+    onSuccess: (updated) => qc.setQueryData(QK, updated),
+    onError: handleMutationError('Titulní fotku se nepodařilo nastavit'),
+  })
+}
+
+export function useRemoveCoverPhoto() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: settingsApi.removeCoverPhoto,
+    onSuccess: (updated) => qc.setQueryData(QK, updated),
+    onError: handleMutationError('Titulní fotku se nepodařilo odebrat'),
   })
 }
