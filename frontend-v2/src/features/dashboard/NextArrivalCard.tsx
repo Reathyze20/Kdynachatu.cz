@@ -2,7 +2,7 @@
  * NextArrivalCard — „Další příjezd“ v bočním panelu Přehledu (#172, lehký kontext).
  * Další pevný pobyt po tom aktuálním; vlastní pobyt jako „Ty“. Ukazuje i to, co řetězec turnusu
  * neřekne: účel, počet nocí a kdo jede s ním. Když můj nejbližší pobyt
- * není hned další, přidá řádek „Váš pobyt…“. Jen pevné pobyty. Bez obojího se karta nevykreslí.
+ * není hned další, přidá řádek „Tvůj pobyt…“. Jen pevné pobyty. Bez obojího se karta nevykreslí.
  */
 import { useId } from "react";
 import type { DashboardReservationsData } from "@/api/dashboard";
@@ -58,7 +58,7 @@ export function NextArrivalCard({ data }: { data: DashboardReservationsData }) {
       {next && <ParticipantStack participants={next.participants} />}
       {showMyNext && myNext && (
         <div className="next-arrival-mine">
-          <span className="status-next-label-personal">Váš pobyt {inDaysLabel(myNext.from)}</span>
+          <span className="status-next-label-personal">Tvůj pobyt {inDaysLabel(myNext.from)}</span>
           <span className="status-next-date">{formatDateRange(myNext.from, myNext.to)}</span>
         </div>
       )}

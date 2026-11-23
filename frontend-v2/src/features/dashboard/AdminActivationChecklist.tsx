@@ -26,13 +26,13 @@ export function AdminActivationChecklist({ data }: Props) {
     {
       id: "invite",
       label: "Pozvánky",
-      title: "Pozvěte prvního člena rodiny",
-      description: "Pošlete první pozvánku, ať v aplikaci nejste sami a může začít společné plánování.",
+      title: "Pozvi prvního člena rodiny",
+      description: "Pošli první pozvánku, ať může začít společné plánování.",
       detail: additionalMembersCount > 0
         ? `Další připojení členové v chatě: ${additionalMembersCount}.`
         : data.activeInviteCount > 0
           ? `Aktivní pozvánky čekající na přijetí: ${data.activeInviteCount}.`
-          : "Zatím jste v chatě sami a žádná aktivní pozvánka neběží.",
+          : "Zatím jsi v chatě jen ty a žádná aktivní pozvánka neběží.",
       done: additionalMembersCount > 0,
       href: additionalMembersCount > 0 ? "/admin" : "/admin/invites#admin-invites",
       ctaLabel: additionalMembersCount > 0 ? "Správa členů" : data.activeInviteCount > 0 ? "Zobrazit pozvánky" : "Pozvat člena",
@@ -41,8 +41,8 @@ export function AdminActivationChecklist({ data }: Props) {
     {
       id: "reservation",
       label: "Rezervace",
-      title: "Vytvořte první rezervaci",
-      description: "Naplánujte první termín, aby bylo hned jasné, kdy se chata poprvé používá.",
+      title: "Vytvoř první rezervaci",
+      description: "Naplánuj první termín, aby bylo hned jasné, kdy se chata poprvé používá.",
       detail: data.reservationsCount > 0
         ? `Rezervace v systému: ${data.reservationsCount}.`
         : "První pobyt zatím nikdo nenaplánoval.",
@@ -54,8 +54,8 @@ export function AdminActivationChecklist({ data }: Props) {
     {
       id: "shopping",
       label: "Nákupy",
-      title: "Založte první nákupní seznam",
-      description: "Připravte první sdílený seznam, ať rodina nemusí řešit zásoby po telefonu.",
+      title: "Založ první nákupní seznam",
+      description: "Připrav první sdílený seznam, ať rodina nemusí řešit zásoby po telefonu.",
       detail: data.shoppingListsCount > 0
         ? `Nákupní seznamy v systému: ${data.shoppingListsCount}.`
         : "Zatím neexistuje žádný běžný nákupní seznam.",

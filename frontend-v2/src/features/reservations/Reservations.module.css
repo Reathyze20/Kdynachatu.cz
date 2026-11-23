@@ -432,6 +432,11 @@ button.newReservationButton {
   text-overflow: ellipsis;
 }
 
+/* G4: na mobilu se jméno do pruhu nevejde, nese aspoň iniciálu. */
+.calBarInitial {
+  display: none;
+}
+
 .calBarWithOverflow {
   padding-right: 28px;
 }
@@ -496,6 +501,14 @@ button.newReservationButton {
   margin-left: 0;
   margin-right: 4px;
   color: transparent !important;
+}
+
+/* G4: pruh, který pokračuje do dalšího týdne, nese jméno i v pondělí. */
+.calBarMiddle .calBarLabel,
+.calBarEnd .calBarLabel,
+.calBarMiddle .calBarInitial,
+.calBarEnd .calBarInitial {
+  color: var(--text-main);
 }
 
 .calBarBackup {
@@ -2354,6 +2367,15 @@ button.btnReset {
     margin-top: 0;
     margin-bottom: 0;
     line-height: 1;
+  }
+
+  .calBarLabel {
+    display: none;
+  }
+
+  .calBarInitial {
+    display: inline;
+    font-size: 0.6rem;
   }
 
   .calBarWithOverflow {

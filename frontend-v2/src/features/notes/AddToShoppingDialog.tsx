@@ -49,7 +49,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
         setLoadError(
           getNetworkAwareLoadMessage(
             error,
-            "Nákupní seznamy se nepodařilo načíst. Zkuste to znovu.",
+            "Nákupní seznamy se nepodařilo načíst. Zkus to znovu.",
           ),
         );
       })
@@ -89,8 +89,8 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          "Položku se nepodařilo přidat do nákupního seznamu. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se položka stihla přidat do nákupního seznamu. Zkuste to znovu po obnovení připojení.",
+          "Položku se nepodařilo přidat do nákupního seznamu. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se položka stihla přidat do nákupního seznamu. Zkus to znovu po obnovení připojení.",
         ),
       );
     } finally {
@@ -140,7 +140,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
                 </button>
               </div>
             ) : lists.length === 0 ? (
-              <p>Nejsou žádné aktivní nákupní seznamy. Vytvořte nejprve seznam.</p>
+              <p>Nejsou žádné aktivní nákupní seznamy. Nejdřív vytvoř seznam.</p>
             ) : (
               <>
                 <div className="form-group">

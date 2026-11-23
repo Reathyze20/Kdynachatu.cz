@@ -145,8 +145,8 @@ export function NotesPage() {
       setNewThreadError(
         getNetworkAwareActionMessage(
           error,
-          "Téma se nepodařilo vytvořit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se téma stihlo vytvořit. Zkuste to znovu po obnovení připojení.",
+          "Téma se nepodařilo vytvořit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se téma stihlo vytvořit. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -168,8 +168,8 @@ export function NotesPage() {
       setDeleteThreadError(
         getNetworkAwareActionMessage(
           error,
-          "Téma se nepodařilo smazat. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se téma stihlo smazat. Zkuste to znovu po obnovení připojení.",
+          "Téma se nepodařilo smazat. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se téma stihlo smazat. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -320,7 +320,7 @@ export function NotesPage() {
       <ConfirmDialog
         isOpen={showDeleteThread}
         title="Odstranit téma"
-        message={`Opravdu chcete smazat téma „${activeThreadName}"? Všechny zprávy v tomto tématu budou trvale odstraněny.`}
+        message={`Opravdu chceš smazat téma „${activeThreadName}"? Všechny zprávy v tomto tématu budou trvale odstraněny.`}
         confirmLabel="Smazat"
         danger
         loading={deleteThread.isPending}

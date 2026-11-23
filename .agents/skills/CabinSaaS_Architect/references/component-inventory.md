@@ -51,9 +51,11 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **GlobalFallback** | App-wide fatal error screen | `error, resetErrorBoundary` |
 | **OfflineBanner** | Yellow "Jste offline" banner at top | — (uses `useOnline`) |
 | **HelpFab** | Floating help button + modal with app guide | — |
+| **InstallCard** / **InstallMenuItem** | „Přidat na plochu“ (#277): in-flow card at the end of Přehled from the 3rd visit, „Teď ne“ hides it for good (mobile only); permanent item in the „Víc“ menu. Native prompt on Android, Share hint on iOS; nothing in the installed app | card: —; item: `className, labelClassName?` |
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
-| **ColorPicker** | Grid of 18 swatch colors for profile | `value, onChange` |
+| **ColorPicker** | Grid of the 8 verified member colors (`MEMBER_PALETTE`); a stored off-palette color shows as the nearest one (#271) | `value, onChange, size?` |
 | **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y (po 14. 12.) → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
+| **MunicipalityPicker** | Nearest municipality of the cabin from the Czech list (#279, ADR-0006): ARIA combobox over `GET /api/municipalities`, offers name + district + region; the value is only a picked municipality (typing drops it, unpicked text sets a validity error, `noValidate` forms must check `value === null`). Credits ČÚZK (CC BY 4.0) | `id, value, onChange, placeholder?, required?, testId?` |
 
 ---
 
@@ -190,6 +192,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | `client.ts` | `apiClient` (Axios) | JWT interceptor, 401 handler |
 | `auth.ts` | `SignupStatusResponse`, `authApi` | getSignupStatus |
+| `municipalities.ts` | `MunicipalityOption`, `municipalitiesApi` | search (public, Czech municipalities from RÚIAN) |
 | `admin.ts` | `CabinUser`, `adminApi` | getUsers, getSystemInfo, getLogs, getInvites, createInvite, updateUserRole, deactivateUser |
 | `dashboard.ts` | `DashboardData`, `dashboardApi` | getDashboard, getWeather, getWeatherForecast, getFreeWeekends |
 | `diary.ts` | `DiaryFolder`, `DiaryEntry`, `diaryApi` | getFolders, createFolder, renameFolder, getEntriesInFolder, createEntry, updateEntry, deleteEntry |
@@ -209,6 +212,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|
 | `useOnline` | `navigator.onLine` + event listeners → `boolean` |
 | `useCabinFeatures` | Query cabin feature flags → `{ features, isLoading }` |
+| `useMunicipalitySearch` | Municipality suggestions, 250 ms debounce, from 2 characters → `{ results, hasFinalResults }`; `MUNICIPALITY_KEYS` |
 
 ---
 
@@ -216,8 +220,9 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 
 | File | Key Exports |
 |---|---|
-| `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `SWATCH_COLORS`, `MONTH_NAMES`, `DAY_NAMES` |
+| `utils.ts` | `cn()` (clsx+twMerge), `formatDate()`, `timeAgo()`, `escapeHtml()`, `ANIMAL_EMOJIS`, `MONTH_NAMES`, `DAY_NAMES` |
 | `dateUtils.ts` | `formatDateRange()`, `formatWeekendRange()`, `nightsBetween()`, `nightsLabel()`, `daysUntil()`, `formatShortDayDate()`, `getTodayFormatted()`, `getLocalTodayIso()` |
+| `memberPalette.ts` | `MEMBER_PALETTE` (8 verified member colors, white text ≥ 4.5:1), `toMemberColor()` (stored color → nearest palette color, CIEDE2000), `memberInitial()` — G4: member color never alone (#271) |
 | `toast.ts` | `showToast(message, type)` — dispatches window event |
 | `turnusChain.ts` | `buildTurnusChain(stays, today)` — nodes teď/další/pak from firm (`primary`) stays only, own stay `isMine` |
 | `navRoutes.ts` | `PRIMARY_NAV[]`, `MORE_NAV[]`, `visibleNavItems()`, `findActiveNavItem()` — global navigation model |

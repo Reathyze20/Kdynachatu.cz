@@ -5,7 +5,7 @@
  *   <ConfirmDialog
  *     isOpen={showConfirm}
  *     title="Smazat položku"
- *     message="Opravdu chcete tuto položku smazat?"
+ *     message="Opravdu chceš tuto položku smazat?"
  *     confirmLabel="Smazat"
  *     danger
  *     onConfirm={handleConfirmedDelete}

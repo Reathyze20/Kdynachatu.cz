@@ -97,7 +97,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   // ── Stav C: Occupied ─────────────────────────────────────────────────
   if (active && isValidReservation(active)) {
     const departingToday = active.to === todayStr;
-    const userColor = active.userColor || "#ea580c";
+    const userColor = active.userColor || undefined;
 
     let title: string;
     let subtitle: string;
@@ -129,7 +129,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           ? <div className="checkout-reminder checkout-reminder-done">Odjezdový checklist splněn</div>
           : (
             <div className="checkout-reminder checkout-reminder-warn">
-              <span>Před odjezdem vyplňte <a href="/reservations">odjezdový checklist</a></span>
+              <span>Před odjezdem vyplň <a href="/reservations">odjezdový checklist</a></span>
             </div>
           );
       }
@@ -149,7 +149,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     }
 
     return (
-      <div className={cardClass} id="dashboard-active-reservation" style={{ "--status-user-color": userColor } as React.CSSProperties}>
+      <div className={cardClass} id="dashboard-active-reservation">
         <div className="card-body-full status-content">
           <div className="status-hero-row">
             {avatarNode}
@@ -212,7 +212,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           {OVERVIEW_INVITE_ILLUSTRATION ? <img src={OVERVIEW_INVITE_ILLUSTRATION} alt="" /> : <DoorOpen className="w-5 h-5" />}
         </div>
         <h2 id="overview-invite-title" className="overview-invite__title">Chata zatím čeká</h2>
-        <p className="overview-invite__text">Zaberte termín a rozjeďte to.</p>
+        <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
         {buildLastStayBlock(data.lastStay)}
         <div className="status-cta-row overview-invite__actions">
           <button className="status-cta status-cta-primary" onClick={() => navigate("/reservations")}>

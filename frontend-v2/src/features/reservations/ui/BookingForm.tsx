@@ -36,7 +36,7 @@ const startsWithMoreOpen = (existing?: Reservation | null) =>
   !!existing && (!!existing.notes || !!existing.handoverNote || existing.status === "soft" || existing.status === "backup");
 
 function validatePurpose(purpose: string): string | undefined {
-  if (!purpose.trim()) return "Vyplňte účel návštěvy.";
+  if (!purpose.trim()) return "Vyplň účel návštěvy.";
   if (purpose.length > PURPOSE_MAX) return `Účel může mít nejvýš ${PURPOSE_MAX} znaků.`;
   return undefined;
 }
@@ -139,7 +139,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!from || !to) { showToast("Vyplňte datum příjezdu a odjezdu.", "error"); return; }
+    if (!from || !to) { showToast("Vyplň datum příjezdu a odjezdu.", "error"); return; }
     if (to < from) { showToast("Datum odjezdu nesmí být před příjezdem.", "error"); return; }
     const purposeError = validatePurpose(purpose);
     if (purposeError) {
@@ -182,8 +182,8 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
         setSubmitError(
           getNetworkAwareActionMessage(
             error,
-            "Rezervaci se nepodařilo uložit. Zkuste to znovu.",
-            "Spojení vypadlo dřív, než se rezervace stihla uložit. Zkuste to znovu po obnovení připojení.",
+            "Rezervaci se nepodařilo uložit. Zkus to znovu.",
+            "Spojení vypadlo dřív, než se rezervace stihla uložit. Zkus to znovu po obnovení připojení.",
           ),
         );
       }
@@ -206,8 +206,8 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          "Rezervaci se nepodařilo smazat. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se rezervace stihla smazat. Zkuste to znovu po obnovení připojení.",
+          "Rezervaci se nepodařilo smazat. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se rezervace stihla smazat. Zkus to znovu po obnovení připojení.",
         ),
       );
     } finally {
@@ -259,7 +259,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
 
           {backupWarning && (
             <div className="backup-warning-message" role="status">
-              V tomto termínu existuje jiná rezervace. Vaše bude uložena jako záložní.
+              V tomto termínu existuje jiná rezervace. Tvoji uložíme jako záložní.
             </div>
           )}
 
@@ -481,7 +481,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         title="Smazat rezervaci"
-        message="Opravdu chcete smazat tuto rezervaci? Tato akce je nevratná."
+        message="Opravdu chceš smazat tuto rezervaci? Tato akce je nevratná."
         confirmLabel="Smazat"
         danger
         loading={deleting}

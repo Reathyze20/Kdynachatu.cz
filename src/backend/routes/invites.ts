@@ -355,7 +355,7 @@ router.post("/:id/send-email", protect, requireCabin, validate(sendInviteEmailSc
         <div style="font-family: 'Segoe UI', sans-serif; max-width: 500px; margin: 0 auto; padding: 32px; background: #f8faf9; border-radius: 16px;">
           <h2 style="color: #1a2721; margin-bottom: 8px;">Pozvánka na chatu</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            <strong>${invite.createdBy.username}</strong> vás zve na chatu <strong>„${invite.cabin.name}"</strong>.
+            <strong>${invite.createdBy.username}</strong> tě zve na chatu <strong>„${invite.cabin.name}"</strong>.
           </p>
           <div style="text-align: center; margin: 24px 0;">
             <a href="${inviteUrl}" style="display: inline-block; padding: 14px 32px; background: #3f7b63; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px;">

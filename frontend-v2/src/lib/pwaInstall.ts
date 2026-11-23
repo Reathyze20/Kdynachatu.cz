@@ -24,8 +24,13 @@ export interface PwaInstallState {
   canInstall: InstallMode
 }
 
-const DISMISS_KEY = 'pwa-install-dismissed-at'
-const DISMISS_DAYS = 30
+const VISITS_KEY = 'pwa-install-visits'
+const LAST_VISIT_KEY = 'pwa-install-last-visit-at'
+const CARD_DISMISSED_KEY = 'pwa-install-card-dismissed'
+/** Načtení do půl hodiny od posledního je pořád tatáž návštěva. */
+const VISIT_GAP_MS = 30 * 60 * 1000
+/** Na kolikáté návštěvě se poprvé nabídne karta instalace. */
+const CARD_FROM_VISIT = 3
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null
 let state: PwaInstallState = { isStandalone: false, canInstall: null }
@@ -85,6 +90,7 @@ export function initPwaInstall() {
 
   window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', recompute)
 
+  recordVisit()
   recompute()
 }
 
@@ -111,14 +117,27 @@ export async function promptPwaInstall(): Promise<'accepted' | 'dismissed' | 'un
   return outcome
 }
 
-export function isInstallBannerDismissed(now = Date.now()): boolean {
-  const raw = localStorage.getItem(DISMISS_KEY)
-  if (!raw) return false
-  const dismissedAt = Number(raw)
-  if (!Number.isFinite(dismissedAt)) return false
-  return now - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000
+function readNumber(key: string): number {
+  const value = Number(localStorage.getItem(key))
+  return Number.isFinite(value) ? value : 0
 }
 
-export function dismissInstallBanner(now = Date.now()) {
-  localStorage.setItem(DISMISS_KEY, String(now))
+/** Započítá návštěvu v tomto zařízení; opakované načtení do půl hodiny se nepočítá. */
+export function recordVisit(now = Date.now()) {
+  const lastAt = readNumber(LAST_VISIT_KEY)
+  if (!lastAt || now - lastAt >= VISIT_GAP_MS) {
+    localStorage.setItem(VISITS_KEY, String(readNumber(VISITS_KEY) + 1))
+  }
+  localStorage.setItem(LAST_VISIT_KEY, String(now))
+}
+
+/** Karta instalace na Přehledu: od 3. návštěvy, dokud ji člověk neodmítne. */
+export function shouldOfferInstallCard(): boolean {
+  if (localStorage.getItem(CARD_DISMISSED_KEY)) return false
+  return readNumber(VISITS_KEY) >= CARD_FROM_VISIT
+}
+
+/** „Teď ne“ — karta se už nikdy neukáže, instalovat jde dál z menu Víc. */
+export function dismissInstallCard() {
+  localStorage.setItem(CARD_DISMISSED_KEY, '1')
 }

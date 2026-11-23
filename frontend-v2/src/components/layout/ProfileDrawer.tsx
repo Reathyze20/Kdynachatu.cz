@@ -11,21 +11,10 @@ import { membersApi } from '@/api/members'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
+import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { useNavigate } from 'react-router-dom'
-import { Download, ScrollText, Settings, Shield } from 'lucide-react'
-import { usePwaInstall } from '@/hooks/usePwaInstall'
-import { promptPwaInstall } from '@/lib/pwaInstall'
-
-// ─── Konstanty ────────────────────────────────────────────────────────────────
-const SWATCH_COLORS = [
-  '#2d6a4f', '#40916c', '#52b788',
-  '#bf6c3d', '#c68b3f', '#7a5b42',
-  '#a0522d', '#6b7c47', '#8fa37a',
-  '#c1877a', '#d4956a', '#6b7280',
-  '#5c7a6b', '#7d6c5a', '#8b6914',
-  '#4a6741',
-]
+import { ScrollText, Settings, Shield } from 'lucide-react'
 
 interface ProfileData {
   email: string
@@ -42,7 +31,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, user, token, login } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { canInstall } = usePwaInstall()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
 
   // ─── Email state ────────────────────────────────────────────────────────────
@@ -51,7 +39,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [emailMessage, setEmailMessage] = useState('')
 
   // ─── Color / Avatar state ───────────────────────────────────────────────────
-  const [selectedColor, setSelectedColor] = useState('#8BB88B')
+  const [selectedColor, setSelectedColor] = useState(FALLBACK_MEMBER_COLOR)
   const [selectedAnimal, setSelectedAnimal] = useState('')
 
   // ─── Security form ──────────────────────────────────────────────────────────
@@ -87,7 +75,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   useEffect(() => {
     if (profileData) {
       setEmail(profileData.email ?? '')
-      setSelectedColor(profileData.color ?? '#8BB88B')
+      setSelectedColor(profileData.color ?? FALLBACK_MEMBER_COLOR)
       setSelectedAnimal(profileData.animalIcon ?? '')
     }
   }, [profileData])
@@ -99,7 +87,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setEmail(profileData?.email ?? '')
     setEmailError(false)
     setEmailMessage('')
-    setSelectedColor(profileData?.color ?? '#8BB88B')
+    setSelectedColor(profileData?.color ?? FALLBACK_MEMBER_COLOR)
     setSelectedAnimal(profileData?.animalIcon ?? '')
     setSecurityMessage('')
     setSecurityError(false)
@@ -121,7 +109,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       showToast('Změny uloženy', 'success')
       queryClient.invalidateQueries({ queryKey: ['profile'] })
     },
-    onError: () => showToast('Nepodařilo se uložit, zkuste to prosím znovu.', 'error'),
+    onError: () => showToast('Nepodařilo se uložit, zkus to prosím znovu.', 'error'),
   })
 
   function handleColorSelect(color: string) {
@@ -219,7 +207,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setDeleteLoading(true)
     try {
       await apiClient.delete('/users/me', { data: { password } })
-      showToast('Váš účet byl smazán', 'success')
+      showToast('Účet jsme smazali', 'success')
       logout()
       navigate('/')
     } catch (err: unknown) {
@@ -254,7 +242,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       queryClient.clear()
       setShowLeaveCabinConfirm(false)
       onClose()
-      showToast(response.message || 'Úspěšně jste opustili chatu.', 'success')
+      showToast(response.message || 'Už nejsi v této chatě.', 'success')
       navigate(user.isSuperAdmin ? '/superadmin' : '/onboarding', { replace: true })
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -293,28 +281,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         </div>
 
         <div className="drawer-body">
-          {canInstall ? (
-            <div className="drawer-section" data-testid="profile-install-app">
-              <h3>Aplikace v telefonu</h3>
-              {canInstall === 'prompt' ? (
-                <div className="drawer-quicklinks">
-                  <button
-                    type="button"
-                    className="button-secondary drawer-quicklink"
-                    onClick={() => { void promptPwaInstall() }}
-                  >
-                    <Download size={16} />
-                    <span>Nainstalovat na plochu</span>
-                  </button>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-600">
-                  V Safari klepněte na tlačítko Sdílet a zvolte <strong>„Přidat na plochu“</strong>.
-                </p>
-              )}
-            </div>
-          ) : null}
-
           {(isAdmin || isSuperAdmin) && (
             <div className="drawer-section">
               <h3>Správa a diagnostika</h3>
@@ -412,7 +378,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 </div>
                 {emailError && (
                   <div id="profile-email-error" className="error-message" style={{ marginTop: '5px', textAlign: 'left' }}>
-                    Zadejte e-mail ve správném formátu.
+                    Zadej e-mail ve správném formátu.
                   </div>
                 )}
                 {emailMessage && !emailError && (
@@ -426,17 +392,20 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             <div className="drawer-section">
               <h3>Vzhled profilu</h3>
               <div className="form-group">
-                <label>Vyberte si barvu:</label>
+                <label>Vyber si barvu:</label>
                 <div id="profile-color-grid" className="swatch-grid">
-                  {SWATCH_COLORS.map((color) => (
+                  {MEMBER_PALETTE.map(({ hex, name }) => (
                     <div
-                      key={color}
-                      className={`color-swatch${selectedColor.toLowerCase() === color.toLowerCase() ? ' active' : ''}`}
-                      style={{ backgroundColor: color }}
+                      key={hex}
+                      className={`color-swatch${toMemberColor(selectedColor) === hex ? ' active' : ''}`}
+                      style={{ backgroundColor: hex }}
                       tabIndex={0}
                       role="button"
-                      onClick={() => handleColorSelect(color)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleColorSelect(color) } }}
+                      aria-label={name}
+                      aria-pressed={toMemberColor(selectedColor) === hex}
+                      title={name}
+                      onClick={() => handleColorSelect(hex)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleColorSelect(hex) } }}
                     />
                   ))}
                 </div>
@@ -444,7 +413,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               </div>
 
               <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                <label>Váš Avatar:</label>
+                <label>Tvůj avatar:</label>
                 <div id="profile-avatar-grid" className="avatar-grid">
                   {AVATARS.map((avatar) => (
                     <div
@@ -509,10 +478,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             <div className="drawer-section" style={{ marginTop: '2rem' }}>
               <h3>Členství v chatě</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0 1rem' }}>
-                Opustíte aktuální chatu, ale účet vám zůstane. Potom můžete přijmout novou pozvánku nebo založit vlastní chatu.
+                Opustíš aktuální chatu, ale účet ti zůstane. Potom můžeš přijmout novou pozvánku nebo založit vlastní chatu.
               </p>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
-                Pokud jste poslední admin, nejdřív předejte roli admina jinému členovi.
+                Pokud jsi poslední admin, nejdřív předej roli admina jinému členovi.
               </p>
 
               <button
@@ -531,7 +500,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <ConfirmDialog
                 isOpen={showLeaveCabinConfirm}
                 title="Opravdu opustit chatu?"
-                message="Ztratíte přístup k rezervacím, nákupům, poznámkám a dalším datům této chaty. Účet vám zůstane a po potvrzení přejdete do onboardingu."
+                message="Ztratíš přístup k rezervacím, nákupům, poznámkám a dalším datům této chaty. Účet ti zůstane a po potvrzení přejdeš do onboardingu."
                 errorMessage={leaveCabinError || undefined}
                 confirmLabel="Opustit chatu"
                 cancelLabel="Zůstat"
@@ -550,9 +519,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
             {/* GDPR — Export & Delete */}
             <div className="drawer-section" style={{ marginTop: '2rem' }}>
-              <h3>Vaše data (GDPR)</h3>
+              <h3>Tvoje data (GDPR)</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0 1rem' }}>
-                Máte právo si stáhnout svá data nebo smazat svůj účet.
+                Máš právo si stáhnout svá data nebo smazat svůj účet.
               </p>
 
               <button
@@ -576,8 +545,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <PromptDialog
                 isOpen={showDeleteConfirm}
                 title="Smazat můj účet"
-                description="Tato akce je nevratná. Všechna vaše data budou smazána."
-                label="Potvrďte heslem"
+                description="Tato akce je nevratná. Smažeme všechna tvoje data."
+                label="Potvrď heslem"
                 inputType="password"
                 autoComplete="current-password"
                 submitLabel="Nenávratně smazat"

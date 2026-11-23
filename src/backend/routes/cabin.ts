@@ -253,7 +253,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
         userId: req.user?.userId,
       });
       return res.status(409).json({
-        message: "Databáze není aktualizovaná pro nové nastavení chaty. Spusťte prosím migrace.",
+        message: "Databáze není aktualizovaná pro nové nastavení chaty. Spusť migrace.",
       });
     }
 
@@ -271,7 +271,7 @@ router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, va
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
     if (req.user.cabinId) {
-      return res.status(400).json({ message: "Váš účet již má přiřazenou chatu." });
+      return res.status(400).json({ message: "Tvůj účet už má přiřazenou chatu." });
     }
 
     const { name } = req.body;
@@ -330,7 +330,7 @@ router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, va
     });
   } catch (error) {
     logger.error("CABIN", "Failed to create cabin via onboarding", { error: String(error) });
-    res.status(500).json({ message: "Nepodařilo se vytvořit chatu. Zkuste to znovu." });
+    res.status(500).json({ message: "Nepodařilo se vytvořit chatu. Zkus to znovu." });
   }
 });
 

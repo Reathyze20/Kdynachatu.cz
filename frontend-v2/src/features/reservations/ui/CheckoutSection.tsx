@@ -5,6 +5,9 @@ import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservati
 import { useCheckoutReservation } from "../hooks/useReservations";
 import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
 import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/gasLevel";
+import { isQueuedOffline } from "@/lib/offlineQueue";
+import { useCheckoutPending } from "@/hooks/useOfflineQueue";
+import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 import styles from "../Reservations.module.css";
 
 function chipStyle(active: boolean): React.CSSProperties {
@@ -38,6 +41,7 @@ export function CheckoutSection({ reservation }: Props) {
   const isPrimary = reservation.status === "primary";
   const eligible = isPrimary && isReservationActiveOrRecent(reservation);
   const checkout = useCheckoutReservation();
+  const checkoutPending = useCheckoutPending(reservation.id); // E4, #276
 
   const [tasks, setTasks] = useState<string[]>([]);
   const [checked, setChecked] = useState<Set<number>>(new Set());
@@ -69,7 +73,7 @@ export function CheckoutSection({ reservation }: Props) {
           setLoadError(
             getNetworkAwareLoadMessage(
               error,
-              "Nepodařilo se načíst stav potvrzeného odjezdu. Zkuste to znovu.",
+              "Nepodařilo se načíst stav potvrzeného odjezdu. Zkus to znovu.",
             ),
           );
         })
@@ -87,7 +91,7 @@ export function CheckoutSection({ reservation }: Props) {
           setLoadError(
             getNetworkAwareLoadMessage(
               error,
-              "Nepodařilo se načíst výjezdový protokol. Zkuste to znovu.",
+              "Nepodařilo se načíst výjezdový protokol. Zkus to znovu.",
             ),
           );
         })
@@ -96,6 +100,16 @@ export function CheckoutSection({ reservation }: Props) {
   }, [eligible, reservation.id, reservation.isCheckoutCompleted, reloadKey]);
 
   if (!eligible) return null;
+
+  if (checkoutPending) {
+    return (
+      <div className={styles.checkoutSection}>
+        <h4 className={styles.checkoutTitle}>Předávka je vyplněná</h4>
+        <p className={styles.checkoutHint}>Odešle se, jakmile bude signál.</p>
+        <PendingSyncBadge />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -184,11 +198,12 @@ export function CheckoutSection({ reservation }: Props) {
     try {
       await checkout.mutateAsync({ id: reservation.id, state: buildState() });
     } catch (error) {
+      if (isQueuedOffline(error)) return; // offline: předávka je ve frontě, místo chyby štítek
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          "Odjezd se nepodařilo potvrdit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se odjezd stihl potvrdit. Zkuste to znovu po obnovení připojení.",
+          "Odjezd se nepodařilo potvrdit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se odjezd stihl potvrdit. Zkus to znovu po obnovení připojení.",
         ),
       );
     }

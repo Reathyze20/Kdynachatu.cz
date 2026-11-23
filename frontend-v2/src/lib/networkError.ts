@@ -28,10 +28,10 @@ export function isNetworkError(err: unknown): boolean {
 
 export function getNetworkAwareLoadMessage(
   err: unknown,
-  fallback = 'Data se teď nepodařilo načíst. Zkuste to prosím znovu.',
+  fallback = 'Data se teď nepodařilo načíst. Zkus to prosím znovu.',
 ): string {
   if (isNetworkError(err)) {
-    return 'Vypadá to na problém s připojením. Obnovte spojení a zkuste načtení zopakovat.'
+    return 'Vypadá to na problém s připojením. Obnov spojení a zkus načtení zopakovat.'
   }
 
   return fallback
@@ -40,10 +40,10 @@ export function getNetworkAwareLoadMessage(
 export function getNetworkAwareActionMessage(
   err: unknown,
   fallback: string,
-  offlineFallback = 'Spojení vypadlo dřív, než se změna stihla uložit. Zkuste to znovu po obnovení připojení.',
+  offlineFallback = 'Spojení vypadlo dřív, než se změna stihla uložit. Zkus to znovu po obnovení připojení.',
 ): string {
   return isNetworkError(err) ? offlineFallback : fallback
 }
 
 /** Zpráva zobrazená při výpadku připojení místo červeného erroru */
-export const OFFLINE_TOAST_MSG = 'Není připojení k internetu. Změnu po obnovení spojení zkontrolujte a případně ji zopakujte.'
+export const OFFLINE_TOAST_MSG = 'Není připojení k internetu. Změnu po obnovení spojení zkontroluj a případně ji zopakuj.'

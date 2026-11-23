@@ -551,6 +551,15 @@
 .running-low-summary { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
 .running-low-link { display: inline-flex; align-items: center; align-self: flex-start; min-height: 44px; font-size: 0.875rem; font-weight: 600; color: var(--brand-primary); }
 
+/* Karta instalace na plochu (#277): v toku stránky na konci Přehledu, jen mobil */
+.install-card { gap: var(--space-sm); margin: 0 var(--space-md) var(--space-md); }
+.install-card-text,
+.install-hint { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
+.install-card-actions { display: flex; gap: var(--space-sm); }
+.install-card-actions > button { min-height: 48px; }
+.install-card-actions > .button-primary { flex: 1; }
+@media (min-width: 769px) { .install-card { display: none; } }
+
 /* ── Standardizovaná hlavička karet ──────────────────────────────────── */
 
 .dashboard-card-header {

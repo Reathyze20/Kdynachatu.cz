@@ -124,8 +124,8 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
       setDescError(
         getNetworkAwareActionMessage(
           error,
-          'Vzpomínku se nepodařilo uložit. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se vzpomínka stihla uložit. Zkuste to znovu po obnovení připojení.',
+          'Vzpomínku se nepodařilo uložit. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se vzpomínka stihla uložit. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -146,8 +146,8 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
       setDeleteError(
         getNetworkAwareActionMessage(
           error,
-          'Fotku se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se fotka stihla smazat. Zkuste to znovu po obnovení připojení.',
+          'Fotku se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se fotka stihla smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -289,7 +289,7 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
                 ref={descInputRef}
                 type="text"
                 className="lb-desc-input"
-                placeholder="Vaše vzpomínka…"
+                placeholder="Tvoje vzpomínka…"
                 value={descValue}
                 onChange={e => {
                   if (descError) setDescError(null)
@@ -355,7 +355,7 @@ export function Lightbox({ photos, initialIndex, folderId, onClose }: Props) {
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         title="Smazat fotku"
-        message="Opravdu chcete smazat tuto fotku? Tuto akci nelze vrátit."
+        message="Opravdu chceš smazat tuto fotku? Tuto akci nelze vrátit."
         confirmLabel="Smazat"
         danger
         loading={deletePhoto.isPending}

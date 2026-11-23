@@ -94,7 +94,7 @@ export default function OnboardingPage() {
         isSuperAdmin: data.isSuperAdmin,
         remember: !!localStorage.getItem('authToken'),
       })
-      showToast('Chata byla uspesne vytvorena!', 'success')
+      showToast('Chatu jsme vytvořili!', 'success')
       navigate('/dashboard', { replace: true })
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Nepodarilo se vytvorit chatu.'
@@ -134,9 +134,9 @@ export default function OnboardingPage() {
         </div>
         {signupEnabled ? (
           <>
-            <h2 className="onboarding-title">Vytvořte svůj prostor</h2>
+            <h2 className="onboarding-title">Vytvoř svůj prostor</h2>
             <p className="auth-subtitle">
-              Vítejte{user?.username ? `, ${user.username}` : ''}! Pojmenujte svou chatu.
+              Vítej{user?.username ? `, ${user.username}` : ''}! Pojmenuj svou chatu.
             </p>
             <form onSubmit={handleSubmit} noValidate data-testid="onboarding-form">
               <div className="form-group">
@@ -148,21 +148,21 @@ export default function OnboardingPage() {
                 {loading ? 'Vytváří se...' : 'Vytvořit chatu'}
               </button>
             </form>
-            <p className="onboarding-hint">Název chaty lze kdykoli změnit v nastavení.</p>
+            <p className="onboarding-hint">Název chaty můžeš kdykoli změnit v nastavení.</p>
           </>
         ) : (
           <div data-testid="onboarding-invite-only">
             <h2 className="onboarding-title">Do chaty se vstupuje přes pozvánku</h2>
             <p className="auth-subtitle">
-              Vítejte{user?.username ? `, ${user.username}` : ''}! Nové chaty teď zakládat nejde,
-              do chaty vás přidá její správce pozvánkou.
+              Vítej{user?.username ? `, ${user.username}` : ''}! Nové chaty teď zakládat nejde,
+              do chaty tě přidá její správce pozvánkou.
             </p>
           </div>
         )}
 
         <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            Byli jste pozváni do existující chaty? Požádejte správce o novou pozvánku, nebo zkuste znovu načíst stránku.
+            Pozval tě někdo do existující chaty? Požádej správce o novou pozvánku, nebo zkus znovu načíst stránku.
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 

@@ -104,8 +104,8 @@ export function ReconstructionPage() {
             setSubmitError(
               getNetworkAwareActionMessage(
                 error,
-                'Položku se nepodařilo uložit. Zkuste to znovu.',
-                'Spojení vypadlo dřív, než se položka stihla uložit. Zkuste to znovu po obnovení připojení.',
+                'Položku se nepodařilo uložit. Zkus to znovu.',
+                'Spojení vypadlo dřív, než se položka stihla uložit. Zkus to znovu po obnovení připojení.',
               ),
             )
           },
@@ -122,8 +122,8 @@ export function ReconstructionPage() {
           setSubmitError(
             getNetworkAwareActionMessage(
               error,
-              'Položku se nepodařilo přidat. Zkuste to znovu.',
-              'Spojení vypadlo dřív, než se položka stihla přidat. Zkuste to znovu po obnovení připojení.',
+              'Položku se nepodařilo přidat. Zkus to znovu.',
+              'Spojení vypadlo dřív, než se položka stihla přidat. Zkus to znovu po obnovení připojení.',
             ),
           )
         },

@@ -73,8 +73,8 @@ export function UploadModal({ folderId, onClose }: Props) {
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          'Fotky se nepodařilo nahrát. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se fotky stihly nahrát. Zkuste to znovu po obnovení připojení.',
+          'Fotky se nepodařilo nahrát. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se fotky stihly nahrát. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -128,9 +128,9 @@ export function UploadModal({ folderId, onClose }: Props) {
           />
           <ImagePlus size={28} strokeWidth={1.5} style={{ color: isDragging ? 'var(--brand-primary)' : 'var(--text-placeholder)' }} />
           <p className="upload-dropzone__text">
-            {isDragging ? 'Pusťte soubory zde' : 'Přetáhněte fotky sem'}
+            {isDragging ? 'Pusť soubory sem' : 'Přetáhni fotky sem'}
           </p>
-          <span className="upload-dropzone__subtext">nebo klikněte pro výběr</span>
+          <span className="upload-dropzone__subtext">nebo klikni pro výběr</span>
         </div>
 
         {/* File previews */}

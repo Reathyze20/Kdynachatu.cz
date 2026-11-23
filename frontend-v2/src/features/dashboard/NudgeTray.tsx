@@ -1,5 +1,5 @@
 /**
- * NudgeTray — „Visí na vás“ na Přehledu (návrh #1 díl 3 = A, #172): výstup nudge enginu
+ * NudgeTray — „Visí na tobě“ na Přehledu (návrh #1 díl 3 = A, #172): výstup nudge enginu
  * jako jedna akční karta. Upozornění s akcí jdou napřed; první je zvýrazněné a jeho tlačítko vede
  * rovnou do úkolu;
  * nejvýš dvě jsou vidět, zbytek je za „Zobrazit víc“. Upozornění, která stojí za to poslat
@@ -49,7 +49,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const hasAction = (n: Nudge) => n.href in ACTION_LABEL;
-  const nudges = buildNudges({ reservations, shopping })
+  const nudges = buildNudges({ reservations, shopping, myUsername: user?.username })
     .filter((n) => !n.id.startsWith("supply-") && !dismissed.includes(n.id))
     .sort((a, b) => Number(hasAction(b)) - Number(hasAction(a)));
   if (nudges.length === 0) return null;
@@ -79,7 +79,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
 
   return (
     <section className="glass-card your-tasks" aria-labelledby={headingId} data-testid="dashboard-nudge-tray">
-      <h2 id={headingId} className="dashboard-card-header-title">Visí na vás</h2>
+      <h2 id={headingId} className="dashboard-card-header-title">Visí na tobě</h2>
       <ul className="your-tasks__list">
         {visible.map(({ icon: Icon, ...n }, i) => {
           const action = ACTION_LABEL[n.href];

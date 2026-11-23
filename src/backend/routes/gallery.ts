@@ -463,7 +463,7 @@ router.delete("/photos/:id", protect, requireCabin, async (req: Request, res: Re
     }
 
     if (photo.uploadedBy?.id !== req.user!.userId && req.user!.role !== "admin") {
-      return res.status(403).json({ message: "Nemáte oprávnění smazat tuto fotku." });
+      return res.status(403).json({ message: "Nemáš oprávnění smazat tuto fotku." });
     }
 
     // Delete physical file + thumbnail
