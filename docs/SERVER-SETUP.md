@@ -326,7 +326,7 @@ Doména zůstává na WEDOS, mění se jen kam ukazuje: WEDOS administrace → *
 
 - záznam **A** pro `kdynachatu.cz` (název prázdný) → `NOVA_IP`
 - případně **A** pro `www` → `NOVA_IP`
-- později pro staging **A** pro `staging` → `NOVA_IP` (viz `plans/SEP-1-staging-setup.md`)
+- později pro staging **A** pro `staging` → `NOVA_IP` (viz `STAGING-SETUP.md`)
 
 **Nesahat** na záznamy Resendu: `send` (MX + TXT), `resend._domainkey`, `_dmarc` – bez nich nechodí e-maily.
 
