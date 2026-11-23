@@ -1,4 +1,5 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -140,5 +141,71 @@ describe('předpověď na pobyt: karta v detailu pobytu', () => {
     await screen.findByText('Víkend')
     await waitFor(() => expect(weatherCard()).not.toBeInTheDocument())
     expect(screen.queryByRole('link', { name: 'Nastavit lokalitu počasí' })).not.toBeInTheDocument()
+  })
+})
+
+/** Po 3. 6. prší nejvíc ve 14:00, Út 4. 6. v 10:00, St 5. 6. skoro neprší; teplota vrcholí v 16:00, vítr ve 12:00. */
+function hourlyDays() {
+  const body = openMeteo()
+  const hour = (t: string) => Number(t.slice(11, 13))
+  body.hourly.precipitation_probability = body.hourly.time.map((t) =>
+    t.startsWith('2030-06-03') ? (hour(t) === 14 ? 70 : 20) : t.startsWith('2030-06-04') ? (hour(t) === 10 ? 55 : 10) : 5)
+  body.hourly.temperature_2m = body.hourly.time.map((t) => (hour(t) === 16 ? 15.2 : 6 + hour(t) / 10) - (t.startsWith('2030-06-04') ? 10 : 0))
+  body.hourly.wind_speed_10m = body.hourly.time.map((t) => (hour(t) === 12 ? 31.4 : 8))
+  return body
+}
+
+describe('předpověď na pobyt: hodinový graf', () => {
+  afterEach(() => vi.useRealTimers())
+  const chartText = () => screen.getByRole('tabpanel').textContent
+
+  it('graf prvního dne je otevřený bez ťuknutí, se srážkami, když má pršet, a s délkou dne', async () => {
+    mockFetch(hourlyDays())
+    renderDetail('2030-06-03', '2030-06-05')
+
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+    const days = await within(card).findAllByRole('button', { pressed: true })
+    expect(days).toHaveLength(1)
+    expect(days[0]).toHaveTextContent('Po 3.')
+    expect(within(card).getByRole('tab', { name: 'Srážky' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(card).getByRole('tab', { name: 'Teplota' })).toHaveAttribute('aria-selected', 'false')
+    expect(chartText()).toContain('Pondělí · nejvíc srážek 70 % kolem 14:00')
+    expect(within(card).getByText('16 h 15 min')).toBeInTheDocument()
+  })
+
+  it('ťuknutí na den přepne graf a den zvýrazní, záložky přepnou řadu', async () => {
+    const user = userEvent.setup()
+    mockFetch(hourlyDays())
+    renderDetail('2030-06-03', '2030-06-05')
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+
+    await user.click(await within(card).findByRole('button', { name: /^Úterý 4\. 6\./ }))
+    expect(within(card).getByRole('button', { name: /^Úterý 4\. 6\./ })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(card).getByRole('button', { name: /^Pondělí 3\. 6\./ })).toHaveAttribute('aria-pressed', 'false')
+    expect(chartText()).toContain('Úterý · nejvíc srážek 55 % kolem 10:00')
+
+    await user.click(within(card).getByRole('tab', { name: 'Teplota' }))
+    expect(within(card).getByRole('tab', { name: 'Teplota' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(card).getByRole('tab', { name: 'Srážky' })).toHaveAttribute('aria-selected', 'false')
+    expect(chartText()).toContain('Úterý · maximum 5° kolem 16:00, minimum −3°')
+
+    within(card).getByRole('tab', { name: 'Teplota' }).focus()
+    await user.keyboard('{ArrowLeft}')
+    expect(within(card).getByRole('tab', { name: 'Vítr' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(card).getByRole('tab', { name: 'Vítr' })).toHaveFocus()
+    expect(chartText()).toContain('Úterý · vítr nejvíc 31 km/h kolem 12:00')
+
+    await user.click(within(card).getByRole('button', { name: /^Středa 5\. 6\./ }))
+    await user.click(within(card).getByRole('tab', { name: 'Srážky' }))
+    expect(chartText()).toContain('Středa · bez výrazných srážek (nejvíc 5 %)')
+  })
+
+  it('když první den nemá pršet, otevře se Teplota', async () => {
+    mockFetch(hourlyDays())
+    renderDetail('2030-06-05', '2030-06-06')
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+
+    expect(await within(card).findByRole('tab', { name: 'Teplota' })).toHaveAttribute('aria-selected', 'true')
+    expect(chartText()).toContain('Středa · maximum 15° kolem 16:00, minimum 7°')
   })
 })
