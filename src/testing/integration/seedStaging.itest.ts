@@ -48,6 +48,8 @@ describe("seedStaging – kompletní fiktivní data", () => {
   let foreignUserId: string;
   let snap1: Awaited<ReturnType<typeof snapshot>>;
   let snap2: Awaited<ReturnType<typeof snapshot>>;
+  let cover1: string | null;
+  let cover2: string | null;
 
   before(async () => {
     uploadsPath = fs.mkdtempSync(path.join(os.tmpdir(), "seed-itest-uploads-"));
@@ -63,10 +65,13 @@ describe("seedStaging – kompletní fiktivní data", () => {
       data: { userId: foreignUser.id, cabinId: foreign.id, purpose: "Cizí pobyt", dateFrom: new Date("2026-12-01"), dateTo: new Date("2026-12-03") },
     });
 
+    const demoCover = async () => (await prisma.cabin.findUniqueOrThrow({ where: { subdomain: "demo" } })).coverPhotoUrl;
     await runStagingSeed(prisma, { ...PASSWORDS, uploadsPath });
     snap1 = await snapshot();
+    cover1 = await demoCover();
     await runStagingSeed(prisma, { ...PASSWORDS, uploadsPath });
     snap2 = await snapshot();
+    cover2 = await demoCover();
   });
 
   after(async () => {
@@ -120,6 +125,16 @@ describe("seedStaging – kompletní fiktivní data", () => {
     const thumbs = fs.readdirSync(path.join(uploadsPath, "thumbs")).filter((n) => n.startsWith(SEED_FILE_PREFIX));
     assert.ok(originals.length >= 1, "originály seed fotek");
     assert.equal(thumbs.length, originals.length, "ke každému originálu náhled");
+  });
+
+  // PWA cachuje /uploads/ jako CacheFirst: titulní fotka pod stejným jménem by zůstala ze staré cache.
+  test("každý běh dá titulní fotce nové jméno, v DB je to nové a starý soubor zmizí", () => {
+    assert.ok(cover1 && cover2, "demo chata má titulní fotku");
+    assert.notEqual(cover2, cover1);
+    const fileOf = (url: string) => path.join(uploadsPath, path.posix.basename(url));
+    const smOf = (url: string) => fileOf(url).replace(/\.webp$/, "-sm.webp");
+    assert.ok(!fs.existsSync(fileOf(cover1)) && !fs.existsSync(smOf(cover1)), "soubory z prvního běhu zmizely");
+    assert.ok(fs.existsSync(fileOf(cover2)) && fs.existsSync(smOf(cover2)), "titulní fotka z DB existuje i s variantou -sm");
   });
 
   test("nedotkne se cizí chaty ani jejího uživatele", async () => {
