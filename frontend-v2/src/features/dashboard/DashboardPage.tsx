@@ -12,9 +12,9 @@ import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
-import { NextArrivalCard } from "./NextArrivalCard";
 import { RunningLowCard } from "./RunningLowCard";
 import { CabinHero } from "./CabinHero";
+import { InstallCard } from "@/components/shared/InstallCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { DASHBOARD_SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
@@ -177,10 +177,10 @@ export function DashboardPage() {
     }
   }, [notesQuery.data]);
 
-  // Weather is fetched client-side using cabin's weatherLocation
+  // Weather is fetched client-side: stored municipality centre, else the legacy weatherLocation text
   const weatherQuery = useQuery({
-    queryKey: ["weather", cabinQuery.data?.weatherLocation ?? null],
-    queryFn: () => fetchWeather(cabinQuery.data?.weatherLocation),
+    queryKey: ["weather", cabinQuery.data?.weatherLocation ?? null, cabinQuery.data?.latitude ?? null, cabinQuery.data?.longitude ?? null],
+    queryFn: () => fetchWeather(cabinQuery.data),
     enabled: cabinQuery.isSuccess,
     staleTime: 10 * 60 * 1000,
   });
@@ -260,7 +260,7 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, další příjezd, vzkaz). Počasí je jen řádek v pruhu nahoře (mock 01).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (dochází, vzkaz). Další příjezd je jen v hlavičce (#272). Počasí je jen řádek v pruhu nahoře (mock 01).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {shoppingQuery.isError ? (
@@ -268,7 +268,6 @@ export function DashboardPage() {
       ) : shoppingQuery.data ? (
         <RunningLowCard data={shoppingQuery.data} />
       ) : null}
-      {reservationsQuery.data && <NextArrivalCard data={reservationsQuery.data} />}
       <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />
@@ -295,6 +294,8 @@ export function DashboardPage() {
     <div className="dashboard-frame">
       <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} />
       <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
+      {/* Výzva k instalaci jednou po 3. návštěvě, na konci stránky (#277) */}
+      <InstallCard />
     </div>
   );
 }

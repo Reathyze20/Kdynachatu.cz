@@ -62,24 +62,24 @@ export function CookieConsent() {
             <div className="cookie-detail-items">
               <div className="cookie-detail-item">
                 <span>●</span>
-                <div><strong>Přihlášení</strong><span>Abyste nemuseli zadávat heslo pokaždé znovu (7 dní)</span></div>
+                <div><strong>Přihlášení</strong><span>Ať nemusíš zadávat heslo pokaždé znovu (7 dní)</span></div>
               </div>
               <div className="cookie-detail-item">
                 <span>●</span>
-                <div><strong>Vaše chata</strong><span>Abychom věděli, ke které chatě patříte</span></div>
+                <div><strong>Tvoje chata</strong><span>Abychom věděli, ke které chatě patříš</span></div>
               </div>
               <div className="cookie-detail-item">
                 <span>●</span>
-                <div><strong>Vzhled</strong><span>Vaše preference světlého/tmavého režimu</span></div>
+                <div><strong>Vzhled</strong><span>Tvoje preference světlého/tmavého režimu</span></div>
               </div>
               <div className="cookie-detail-item">
                 <span>●</span>
-                <div><strong>Toto oznámení</strong><span>Aby se vám tenhle výkřik GDPR nezobrazoval znovu</span></div>
+                <div><strong>Toto oznámení</strong><span>Aby se ti tenhle výkřik GDPR nezobrazoval znovu</span></div>
               </div>
             </div>
             <p className="cookie-consent-footnote">
               Vše výše je technicky nezbytné. Dle EU legislativy nepotřebujeme souhlas,
-              ale aspoň víte co máte v košíku. Bez sušenek, bohužel.
+              ale aspoň víš, co máš v košíku. Bez sušenek, bohužel.
             </p>
           </div>
         )}

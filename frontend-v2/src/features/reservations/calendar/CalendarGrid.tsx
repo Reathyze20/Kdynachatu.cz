@@ -134,18 +134,18 @@ export function CalendarGrid({
   };
 
   const rangeTitle = rangeStart
-    ? `Příjezd: ${formatCzechDate(rangeStart)} — vyberte odjezd`
+    ? `Příjezd: ${formatCzechDate(rangeStart)} — vyber odjezd`
     : selectedDay
       ? `Vybraný den: ${formatCzechDate(selectedDay)}`
-      : "Vyberte den v kalendáři";
+      : "Vyber den v kalendáři";
 
   // Formulace bez směrových odkazů — seznam rezervací je na desktopu vpravo,
   // na mobilu pod kalendářem.
   const rangeDescription = rangeStart
     ? "Druhé klepnutí na pozdější den potvrdí odjezd."
     : selectedDay
-      ? "Seznam rezervací teď ukazuje jen zvolený den. Dalším klepnutím na stejný den začnete novou rezervaci."
-      : "První klepnutí zobrazí rezervace pro konkrétní den. Druhým klepnutím na stejný den začnete vybírat pobyt.";
+      ? "Seznam rezervací teď ukazuje jen zvolený den. Dalším klepnutím na stejný den začneš novou rezervaci."
+      : "První klepnutí zobrazí rezervace pro konkrétní den. Druhým klepnutím na stejný den začneš vybírat pobyt.";
 
   const handleHover = (dateStr: string) => {
     if (rangeStart && dateStr > rangeStart) {

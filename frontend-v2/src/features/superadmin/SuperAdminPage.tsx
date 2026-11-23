@@ -179,7 +179,7 @@ export function SuperAdminPage() {
     }
 
     if (!payload.username || !payload.email) {
-      showToast('Vyplňte jméno i e-mail.', 'error')
+      showToast('Vyplň jméno i e-mail.', 'error')
       return
     }
 
@@ -197,8 +197,8 @@ export function SuperAdminPage() {
         setCreateError(
           getNetworkAwareActionMessage(
             mutationError,
-            'Účet se nepodařilo vytvořit. Zkuste to znovu.',
-            'Spojení vypadlo dřív, než se účet stihl vytvořit. Zkuste to znovu po obnovení připojení.',
+            'Účet se nepodařilo vytvořit. Zkus to znovu.',
+            'Spojení vypadlo dřív, než se účet stihl vytvořit. Zkus to znovu po obnovení připojení.',
           ),
         )
       },
@@ -219,8 +219,8 @@ export function SuperAdminPage() {
         setBanError(
           getNetworkAwareActionMessage(
             mutationError,
-            'Stav účtu se nepodařilo změnit. Zkuste to znovu.',
-            'Spojení vypadlo dřív, než se změna stihla uložit. Zkuste to znovu po obnovení připojení.',
+            'Stav účtu se nepodařilo změnit. Zkus to znovu.',
+            'Spojení vypadlo dřív, než se změna stihla uložit. Zkus to znovu po obnovení připojení.',
           ),
         )
       },
@@ -392,7 +392,7 @@ export function SuperAdminPage() {
               <p>
                 {users.length === 0
                   ? 'Jakmile vznikne první účet, objeví se tady včetně jeho stavu a systémových práv.'
-                  : 'Zkuste upravit filtry nebo vyčistit hledání.'}
+                  : 'Zkus upravit filtry nebo vyčistit hledání.'}
               </p>
               {hasFilters ? (
                 <div className="admin-empty-actions">
@@ -433,7 +433,7 @@ export function SuperAdminPage() {
                         <div className="admin-user-identity">
                           <div className="admin-user-title-row">
                             <span className="admin-user-name">{user.username}</span>
-                            {isSelf ? <span className="admin-user-self-badge">Váš účet</span> : null}
+                            {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
                           </div>
                           <div className="admin-user-subline">
                             <span>{user.email || 'Účet bez e-mailu'}</span>
@@ -560,7 +560,7 @@ export function SuperAdminPage() {
 
                     <div className="superadmin-secret-card">
                       <span className="superadmin-secret-label">Dočasné heslo</span>
-                      <code>{showSecrets ? lastCreatedUser.tempPassword : 'Skryto. Nejprve použijte dočasné zobrazení.'}</code>
+                      <code>{showSecrets ? lastCreatedUser.tempPassword : 'Skryto. Nejdřív použij dočasné zobrazení.'}</code>
                       <button type="button" className="btn btn-secondary btn-sm" onClick={() => copySecret('password', lastCreatedUser.tempPassword!)} disabled={!showSecrets}>
                         {copiedSecret === 'password' ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Kopírovat</>}
                       </button>
@@ -568,7 +568,7 @@ export function SuperAdminPage() {
 
                     <div className="superadmin-secret-card">
                       <span className="superadmin-secret-label">Fallback token</span>
-                      <code>{showSecrets ? lastCreatedUser.verificationToken : 'Skryto. Nejprve použijte dočasné zobrazení.'}</code>
+                      <code>{showSecrets ? lastCreatedUser.verificationToken : 'Skryto. Nejdřív použij dočasné zobrazení.'}</code>
                       <button type="button" className="btn btn-secondary btn-sm" onClick={() => copySecret('token', lastCreatedUser.verificationToken!)} disabled={!showSecrets}>
                         {copiedSecret === 'token' ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Kopírovat</>}
                       </button>
@@ -605,8 +605,8 @@ export function SuperAdminPage() {
         isOpen={pendingBanUser !== null}
         title={pendingBanUser?.isBanned ? 'Zrušit blokaci účtu?' : 'Zablokovat účet?'}
         message={pendingBanUser?.isBanned
-          ? `Opravdu chcete zrušit blokaci účtu „${pendingBanUser.username}“? Uživateli se okamžitě vrátí možnost přihlášení.`
-          : `Opravdu chcete zablokovat účet „${pendingBanUser?.username}“? Uživatel se nebude moci přihlásit, dokud blokaci nezrušíte.`}
+          ? `Opravdu chceš zrušit blokaci účtu „${pendingBanUser.username}“? Uživateli se okamžitě vrátí možnost přihlášení.`
+          : `Opravdu chceš zablokovat účet „${pendingBanUser?.username}“? Uživatel se nebude moci přihlásit, dokud blokaci nezrušíš.`}
         confirmLabel={pendingBanUser?.isBanned ? 'Zrušit blokaci' : 'Zablokovat účet'}
         danger={!pendingBanUser?.isBanned}
         loading={toggleBan.isPending}

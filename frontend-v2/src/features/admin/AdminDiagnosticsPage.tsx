@@ -7,9 +7,9 @@ import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 
 const supportSteps = [
-  'Vezměte kód chyby z toastu nebo fallback obrazovky.',
-  'Vložte ho do filtru Request ID nebo Text a omezte zdroj na frontend nebo backend.',
-  'Když kód nemáte, filtrujte podle uživatele, cesty a HTTP statusu 500.',
+  'Vezmi kód chyby z toastu nebo fallback obrazovky.',
+  'Vlož ho do filtru Request ID nebo Text a omez zdroj na frontend nebo backend.',
+  'Když kód nemáš, filtruj podle uživatele, cesty a HTTP statusu 500.',
   'Detail logu pak spojí request, modul, cestu i support stopu do jednoho místa.',
 ]
 
@@ -24,7 +24,7 @@ export function AdminDiagnosticsPage() {
             <span className="admin-kicker">Diagnostika</span>
             <h1 className="admin-page-title admin-page-title--wide">Velká stránka pro incidenty, logy a support kódy</h1>
             <p className="admin-page-lead">
-              Když rodina nahlásí problém, nehledáte po více panelech. Tady máte systémové logy, request ID, support workflow i rychlý stav aplikace na jednom místě.
+              Když rodina nahlásí problém, nemusíš hledat ve více panelech. Tady máš systémové logy, request ID, support workflow i rychlý stav aplikace na jednom místě.
             </p>
           </div>
 
@@ -45,7 +45,7 @@ export function AdminDiagnosticsPage() {
         <div className="admin-diagnostics-summary">
           <article className="admin-diagnostics-summary-card admin-diagnostics-summary-card--forest">
             <strong>Rychlý postup</strong>
-            <span>Vezměte support kód, filtrujte logy a dohledejte request bez SSH skákání po serveru.</span>
+            <span>Vezmi support kód, filtruj logy a dohledej request bez SSH skákání po serveru.</span>
           </article>
           <article className="admin-diagnostics-summary-card admin-diagnostics-summary-card--mist">
             <strong>Frontend i backend</strong>
@@ -53,7 +53,7 @@ export function AdminDiagnosticsPage() {
           </article>
           <article className="admin-diagnostics-summary-card admin-diagnostics-summary-card--sand">
             <strong>Navazující akce</strong>
-            <span>Ze supportu se hned vrátíte na členy, pozvánky nebo nastavení, když problém souvisí s oprávněním nebo konfigurací.</span>
+            <span>Ze supportu se hned vrátíš na členy, pozvánky nebo nastavení, když problém souvisí s oprávněním nebo konfigurací.</span>
           </article>
         </div>
       </section>
@@ -67,7 +67,7 @@ export function AdminDiagnosticsPage() {
                 <h2 className="admin-card-title">Jak incident dohledat bez zdržení</h2>
               </div>
               <p className="admin-card-description">
-                Místo dlouhého popisu od rodiny potřebujete jen přibližný čas, obrazovku nebo support kód. Zbytek si dohledáte tady.
+                Místo dlouhého popisu od rodiny potřebuješ jen přibližný čas, obrazovku nebo support kód. Zbytek si dohledáš tady.
               </p>
             </div>
           </div>
@@ -105,7 +105,7 @@ export function AdminDiagnosticsPage() {
                 <h2 className="admin-card-title">Stav aplikace</h2>
               </div>
               <p className="admin-card-description">
-                Než půjdete do detailu logů, rychle si ověřte, jestli je problém izolovaný nebo systémový.
+                Než půjdeš do detailu logů, rychle si ověř, jestli je problém izolovaný nebo systémový.
               </p>
             </div>
           </div>

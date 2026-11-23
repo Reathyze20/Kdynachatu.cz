@@ -12,6 +12,7 @@ import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { CABIN_SIGNUP_ENABLED } from "../../config/config";
 import { requireCabinSignupOpen } from "./cabinSignup";
+import { cabinMunicipalityFields, NO_CABIN_MUNICIPALITY } from "./municipalities";
 
 const router = Router();
 
@@ -26,6 +27,12 @@ const CABIN_SELECT = {
   departureChecklist: true,
   coverPhotoUrl: true,
   weatherLocation: true,
+  municipalityCode: true,
+  municipalityName: true,
+  municipalityDistrict: true,
+  municipalityRegion: true,
+  latitude: true,
+  longitude: true,
   isWinterized: true,
   features: true,
   createdAt: true,
@@ -154,7 +161,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
       rules,
       departureChecklist,
       coverPhotoUrl,
-      weatherLocation,
+      municipalityCode,
       isWinterized,
       features,
     } = req.body;
@@ -201,10 +208,11 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
       }
     }
 
-    if (weatherLocation !== undefined && weatherLocation !== null) {
-      if (typeof weatherLocation !== "string" || weatherLocation.length > 100) {
-        errors.push("Lokalita pro počasí může mít maximálně 100 znaků.");
-      }
+    // Poloha chaty jen jako obec ze seznamu (ADR-0006); volný text weatherLocation se už nepřijímá.
+    const parsedCode = updateCabinSettingsSchema.shape.municipalityCode.safeParse(municipalityCode);
+    const municipality = parsedCode.success && parsedCode.data ? cabinMunicipalityFields(parsedCode.data) : null;
+    if (!parsedCode.success || (parsedCode.data && !municipality)) {
+      errors.push("Vyber nejbližší obec ze seznamu.");
     }
 
     if (isWinterized !== undefined && typeof isWinterized !== "boolean") {
@@ -228,7 +236,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
         : null;
     }
     if (coverPhotoUrl !== undefined) data.coverPhotoUrl = coverPhotoUrl || null;
-    if (weatherLocation !== undefined) data.weatherLocation = weatherLocation?.trim() || null;
+    if (municipalityCode !== undefined) Object.assign(data, municipality ?? NO_CABIN_MUNICIPALITY);
     if (isWinterized !== undefined) data.isWinterized = isWinterized;
     if (features !== undefined) data.features = features;
 
@@ -253,7 +261,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
         userId: req.user?.userId,
       });
       return res.status(409).json({
-        message: "Databáze není aktualizovaná pro nové nastavení chaty. Spusťte prosím migrace.",
+        message: "Databáze není aktualizovaná pro nové nastavení chaty. Spusť migrace.",
       });
     }
 
@@ -271,7 +279,7 @@ router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, va
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
     if (req.user.cabinId) {
-      return res.status(400).json({ message: "Váš účet již má přiřazenou chatu." });
+      return res.status(400).json({ message: "Tvůj účet už má přiřazenou chatu." });
     }
 
     const { name } = req.body;
@@ -330,7 +338,7 @@ router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, va
     });
   } catch (error) {
     logger.error("CABIN", "Failed to create cabin via onboarding", { error: String(error) });
-    res.status(500).json({ message: "Nepodařilo se vytvořit chatu. Zkuste to znovu." });
+    res.status(500).json({ message: "Nepodařilo se vytvořit chatu. Zkus to znovu." });
   }
 });
 

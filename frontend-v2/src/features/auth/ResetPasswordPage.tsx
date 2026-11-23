@@ -127,7 +127,7 @@ export function ResetPasswordPage() {
               Nastavení nového hesla
             </h2>
             <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Zvolte nové heslo pro svůj účet. Odkaz lze použít pouze jednou.
+              Zvol nové heslo pro svůj účet. Odkaz můžeš použít jen jednou.
             </p>
 
             <form onSubmit={handleSubmit} style={{ textAlign: 'left' }} data-testid="reset-password-form">
@@ -261,7 +261,7 @@ export function ResetPasswordPage() {
               Chybí resetovací odkaz
             </h2>
             <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Otevřeli jste stránku bez platného tokenu. Vraťte se na přihlášení a požádejte o nový odkaz pro obnovu hesla.
+              Odkaz neobsahuje platný token. Vrať se na přihlášení a požádej o nový odkaz pro obnovu hesla.
             </p>
             <Link
               to="/login"

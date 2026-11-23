@@ -28,7 +28,7 @@ router.patch("/:messageId", protect, requireCabin, async (req: Request, res: Res
     if (!note) return res.status(404).json({ message: "Zpráva nenalezena." });
 
     if (note.userId !== req.user!.userId) {
-      return res.status(403).json({ message: "Můžete upravovat pouze vlastní zprávy." });
+      return res.status(403).json({ message: "Upravovat můžeš jen vlastní zprávy." });
     }
 
     const elapsed = Date.now() - note.createdAt.getTime();
@@ -69,7 +69,7 @@ router.delete("/:messageId", protect, requireCabin, async (req: Request, res: Re
     if (!note) return res.status(404).json({ message: "Zpráva nenalezena." });
 
     if (req.user!.role !== "admin" && note.userId !== req.user!.userId) {
-      return res.status(403).json({ message: "Nemáte oprávnění smazat tuto zprávu." });
+      return res.status(403).json({ message: "Nemáš oprávnění smazat tuto zprávu." });
     }
 
     await prisma.note.delete({ where: { id: messageId } });
@@ -116,7 +116,7 @@ router.patch("/:messageId/pin", protect, requireCabin, async (req: Request, res:
 // ============================================================================
 router.patch("/:messageId/resolve", protect, requireCabin, async (req: Request, res: Response) => {
   if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Nemáte oprávnění." });
+    return res.status(403).json({ message: "Nemáš oprávnění." });
   }
 
   const { messageId } = req.params;

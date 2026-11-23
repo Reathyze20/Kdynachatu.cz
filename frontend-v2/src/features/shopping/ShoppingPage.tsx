@@ -111,8 +111,8 @@ export function ShoppingPage() {
       setDeleteListError(
         getShoppingActionErrorMessage(
           error,
-          'Seznam se nepodařilo smazat. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se seznam stihl smazat. Zkuste to znovu po obnovení připojení.',
+          'Seznam se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se seznam stihl smazat. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -134,8 +134,8 @@ export function ShoppingPage() {
       setArchiveListError(
         getShoppingActionErrorMessage(
           error,
-          'Seznam se nepodařilo uzavřít. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se seznam stihl uzavřít. Zkuste to znovu po obnovení připojení.',
+          'Seznam se nepodařilo uzavřít. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se seznam stihl uzavřít. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -160,8 +160,8 @@ export function ShoppingPage() {
       setNewListError(
         getShoppingActionErrorMessage(
           error,
-          'Nový nákupní seznam se nepodařilo vytvořit. Zkuste to znovu.',
-          'Spojení vypadlo dřív, než se seznam stihl vytvořit. Zkuste to znovu po obnovení připojení.',
+          'Nový nákupní seznam se nepodařilo vytvořit. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se seznam stihl vytvořit. Zkus to znovu po obnovení připojení.',
         ),
       )
     }
@@ -271,7 +271,7 @@ export function ShoppingPage() {
       <ConfirmDialog
         isOpen={deleteListId !== null}
         title="Smazat seznam"
-        message="Opravdu chcete smazat tento nákupní seznam? Všechny jeho položky budou ztraceny."
+        message="Opravdu chceš smazat tento nákupní seznam? Přijdeš o všechny jeho položky."
         confirmLabel="Smazat"
         danger
         loading={deleteList.isPending}
@@ -287,7 +287,7 @@ export function ShoppingPage() {
       <ConfirmDialog
         isOpen={archiveListId !== null}
         title="Uzavřít seznam"
-        message="Všechny položky jsou hotové. Chcete seznam uzavřít? Zmizí z přehledu."
+        message="Všechny položky jsou hotové. Chceš seznam uzavřít? Zmizí z přehledu."
         confirmLabel="Uzavřít"
         loading={archiveList.isPending}
         errorMessage={archiveListError}

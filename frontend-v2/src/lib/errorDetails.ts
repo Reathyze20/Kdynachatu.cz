@@ -104,18 +104,18 @@ export function appendSupportCode(message: string, error: unknown): string {
 // ─── HTTP status → user-friendly Czech message ─────────────────────────────────
 
 const STATUS_MESSAGES: Record<number, string> = {
-  400: 'Neplatný požadavek — zkontrolujte zadaná data.',
-  401: 'Přihlášení vypršelo — přihlaste se znovu.',
-  403: 'Na tuto akci nemáte oprávnění.',
+  400: 'Neplatný požadavek — zkontroluj zadaná data.',
+  401: 'Přihlášení vypršelo — přihlas se znovu.',
+  403: 'Na tuto akci nemáš oprávnění.',
   404: 'Požadovaná data nebyla nalezena.',
   409: 'Konflikt — někdo jiný právě upravil stejná data.',
   413: 'Odesílaný soubor je příliš velký.',
-  422: 'Neplatná data — zkontrolujte formulář.',
-  429: 'Příliš mnoho požadavků — chvilku počkejte.',
-  500: 'Chyba na serveru — zkuste to za chvíli.',
+  422: 'Neplatná data — zkontroluj formulář.',
+  429: 'Příliš mnoho požadavků — chvilku počkej.',
+  500: 'Chyba na serveru — zkus to za chvíli.',
   502: 'Server je dočasně nedostupný.',
   503: 'Server je dočasně nedostupný.',
-  504: 'Server neodpověděl včas — zkuste to znovu.',
+  504: 'Server neodpověděl včas — zkus to znovu.',
 }
 
 /**
@@ -124,7 +124,7 @@ const STATUS_MESSAGES: Record<number, string> = {
  */
 export function getUserFriendlyMessage(
   status: number | undefined,
-  fallback = 'Něco se pokazilo. Zkuste to prosím znovu.',
+  fallback = 'Něco se pokazilo. Zkus to prosím znovu.',
 ): string {
   if (!status) return fallback
   return STATUS_MESSAGES[status] ?? fallback

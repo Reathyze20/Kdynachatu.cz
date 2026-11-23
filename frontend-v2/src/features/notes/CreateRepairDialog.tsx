@@ -72,8 +72,8 @@ export function CreateRepairDialog({ open, noteId, messageText, onClose }: Props
       setSubmitError(
         getNetworkAwareActionMessage(
           error,
-          "Úkol se nepodařilo vytvořit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se úkol stihl vytvořit. Zkuste to znovu po obnovení připojení.",
+          "Úkol se nepodařilo vytvořit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se úkol stihl vytvořit. Zkus to znovu po obnovení připojení.",
         ),
       );
     } finally {

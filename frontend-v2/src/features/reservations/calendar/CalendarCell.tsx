@@ -2,6 +2,7 @@
 import type { Reservation, UserAvailability } from "@/api/reservations";
 import styles from "../Reservations.module.css";
 import { isIsoDateInRange } from "@/lib/dateUtils";
+import { memberInitial, toMemberColor } from "@/lib/memberPalette";
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -118,7 +119,7 @@ export function CalendarCell({
           {forDay.length > 0 && (
             <>
               {visible.map((r, index) => {
-                const c = r.userColor || "var(--text-muted)";
+                const memberColor = toMemberColor(r.userColor);
                 const isStart = dateStr === r.from;
                 const isEnd = dateStr === r.to;
                 const isSingleDay = isStart && isEnd;
@@ -143,14 +144,14 @@ export function CalendarCell({
                 const barStyle: React.CSSProperties =
                   r.status === "soft"
                     ? {
-                        background: `repeating-linear-gradient(45deg, ${hexToRgba(r.userColor, 0.15)}, ${hexToRgba(r.userColor, 0.15)} 5px, rgba(255,255,255,0.7) 5px, rgba(255,255,255,0.7) 10px)`,
-                        borderColor: c,
-                        border: `1px solid ${c}`,
+                        background: `repeating-linear-gradient(45deg, ${hexToRgba(memberColor, 0.15)}, ${hexToRgba(memberColor, 0.15)} 5px, rgba(255,255,255,0.7) 5px, rgba(255,255,255,0.7) 10px)`,
+                        borderColor: memberColor,
+                        border: `1px solid ${memberColor}`,
                       }
-                    : { backgroundColor: hexToRgba(r.userColor, 0.3) };
+                    : { backgroundColor: hexToRgba(memberColor, 0.3) };
 
-                // Only show username on the start segment (or single-day)
-                const showLabel = isSingleDay || isStart;
+                // G4: name (initial on mobile) on the first segment and on every week row the bar continues into
+                const showLabel = isStart || dow === 1;
 
                 return (
                   <div
@@ -166,6 +167,7 @@ export function CalendarCell({
                   >
                     {isSelected ? <span className="sr-only">Vybraná rezervace</span> : null}
                     <span className={styles.calBarLabel}>{showLabel ? r.username : "\u00A0"}</span>
+                    {showLabel ? <span className={styles.calBarInitial} aria-hidden="true">{memberInitial(r.username)}</span> : null}
                     {hasOverflowBadge ? (
                       <button
                         type="button"
@@ -194,9 +196,9 @@ export function CalendarCell({
             <div
               key={a.id}
               className={styles.calAvailBadge}
-              style={{ backgroundColor: hexToRgba(a.userColor || "#cbd5e1", 0.9) }}
+              style={{ backgroundColor: toMemberColor(a.userColor) }}
             >
-              <span className={styles.calAvailCount}>{a.userAnimalIcon || "•"}</span>
+              <span className={styles.calAvailCount}>{memberInitial(a.username)}</span>
             </div>
           ))}
         </div>

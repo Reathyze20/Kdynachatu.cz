@@ -1,23 +1,20 @@
+import { useId } from "react";
 import { useNavigate } from "react-router-dom";
-import type { DashboardReservationsData, LastStay } from "@/api/dashboard";
-import { formatWeekendRange, nightsBetween, getLocalTodayIso, isoDateToLocalNoon } from "@/lib/dateUtils";
+import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation } from "@/api/dashboard";
+import { daysUntil, formatDateRange, formatShortDayDate, formatWeekendRange, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { pluralize } from "@/lib/utils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
-import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
+import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";
 import { gasLine } from "@/lib/gasLevel";
 import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
 import { ParticipantStack } from "./ParticipantStack";
-import { CalendarPlus, CircleCheck, DoorOpen, TriangleAlert } from "lucide-react";
+import { ArrowRight, CalendarPlus, CircleCheck, DoorOpen, House, TriangleAlert } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
   cabinDepartureChecklist: string[];
-}
-
-function isValidReservation(r: { from: string; to: string } | null | undefined): boolean {
-  if (!r) return false;
-  return !!r.from && !!r.to;
 }
 
 /** Arrival briefing derived from the last completed stay's checkout state. */
@@ -75,11 +72,55 @@ function dashboardChainStays(data: DashboardReservationsData, myUsername: string
   ];
 }
 
+type HeaderStay = ActiveStay | UpcomingReservation;
+
+function inDaysLabel(from: string): string {
+  const days = daysUntil(from);
+  if (days === 0) return "dnes";
+  if (days === 1) return "zítra";
+  return `za ${days} ${pluralize(days, "den", "dny", "dní")}`;
+}
+
+/** Jedna strana hlavičky: avatar s iniciálou (nebo značka, když nikdo není) a jméno (G4), pod tím do/od kdy. */
+function HeaderPerson({ stay, name, when, mark }: { stay?: HeaderStay; name: string; when?: string; mark?: "free" | "none" }) {
+  return (
+    <div className="status-header__person">
+      {stay ? (
+        <AnimalAvatar icon={stay.userAnimalIcon} username={stay.username} color={stay.userColor || undefined} size={40} />
+      ) : (
+        <span className={`status-header__mark status-header__mark--${mark}`} aria-hidden="true">{mark === "free" && <House className="w-5 h-5" />}</span>
+      )}
+      <div className="status-header__text">
+        <strong className="status-header__name">{name}</strong>
+        {when && <span className="status-header__when">{when}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** Detail pobytu pod osobou, CSS ho ukáže jen na desktopu (upřesnění 1 k návrhu #6): účel, noci, kdo jede s ním. */
+function StayDetail({ stay, withNights }: { stay: HeaderStay; withNights: boolean }) {
+  const nights = withNights ? nightsBetween(stay.from, stay.to) : 0;
+  const meta = [stay.purpose, nights > 0 ? `${nights} ${nightsLabel(nights)}` : ""].filter(Boolean).join(" · ");
+  return (
+    <div className="status-header__detail">
+      {meta && <p className="status-header__meta">{meta}</p>}
+      <ParticipantStack participants={stay.participants} />
+    </div>
+  );
+}
+
+/**
+ * Hlavička Přehledu teď → příště (#272, návrh #6 díl 2A). Jediné místo se jménem a datem dalšího
+ * pobytu, proto řetězec pod ní začíná až za ním. Teď a příště počítá `buildTurnusChain`
+ * (jen pevné pobyty, střídací den). Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
+ */
 export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const navigate = useNavigate();
+  const headingId = useId();
   const { user } = useAuth();
   const todayStr = getLocalTodayIso();
-  const chainNode = <TurnusChainLine nodes={buildTurnusChain(dashboardChainStays(data, user?.username), todayStr)} className="status-chain" />;
+  const chain = buildTurnusChain(dashboardChainStays(data, user?.username), todayStr);
   const currentHour = new Date().getHours();
   const active = data.activeReservation;
 
@@ -94,76 +135,65 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
 
   const hasCheckoutTasks = cabinDepartureChecklist && cabinDepartureChecklist.length > 0;
 
-  // ── Stav C: Occupied ─────────────────────────────────────────────────
-  if (active && isValidReservation(active)) {
-    const departingToday = active.to === todayStr;
-    const userColor = active.userColor || "#ea580c";
+  // ── Hlavička teď → příště: někdo je na chatě, nebo je naplánovaný další pobyt ──
+  if (chain.length > 0) {
+    // Plný záznam podle id uzlu; aktivní pobyt má navíc stav předávky, proto vyhrává.
+    const stays = new Map<string, HeaderStay>([...data.upcomingReservations, ...(active ? [active] : [])].map((s) => [s.id, s]));
+    const stayOf = (node?: TurnusChainNode) => (node?.stay ? stays.get(node.stay.id) ?? null : null);
+    const nameOf = (s: HeaderStay) => (s.username === user?.username ? "Ty" : s.username);
+    const now = stayOf(chain[0]);
+    const next = stayOf(chain.find((n) => n.kind === "next"));
+    const departingToday = !!now && now.to === todayStr;
+    const departed = departingToday && currentHour >= 14;
+    const checkoutDone = !!now && "isCheckoutCompleted" in now && now.isCheckoutCompleted;
 
-    let title: string;
-    let subtitle: string;
-    let cardClass: string;
-    let avatarNode: React.ReactNode;
     let checkoutReminderNode: React.ReactNode = null;
-
-    if (departingToday && currentHour >= 14) {
-      title = "Volná!";
-      subtitle = `Dnes uvolnil${active.username.endsWith("a") ? "a" : ""} ${active.username} · ${active.purpose}`;
-      cardClass = "glass-card status-card is-free";
-      avatarNode = (
-        <div className="status-avatar-block" style={{ background: "var(--color-primary)" }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-        </div>
-      );
-      if (hasCheckoutTasks) {
-        checkoutReminderNode = active.isCheckoutCompleted
-          ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
-          : <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>;
-      }
-    } else if (departingToday) {
-      title = active.username;
-      subtitle = `Odjíždí dnes · ${active.purpose}`;
-      cardClass = "glass-card status-card is-occupied";
-      avatarNode = <div className="status-avatar-block"><AnimalAvatar icon={active.userAnimalIcon} username={active.username} color={userColor} size={48} /></div>;
-      if (hasCheckoutTasks) {
-        checkoutReminderNode = active.isCheckoutCompleted
-          ? <div className="checkout-reminder checkout-reminder-done">Odjezdový checklist splněn</div>
-          : (
-            <div className="checkout-reminder checkout-reminder-warn">
-              <span>Před odjezdem vyplňte <a href="/reservations">odjezdový checklist</a></span>
-            </div>
-          );
-      }
-    } else {
-      const nights = nightsBetween(todayStr, active.to);
-      const dLabel = nights === 1 ? "1 den" : nights >= 2 && nights <= 4 ? `${nights} dny` : `${nights} dní`;
-      title = active.username;
-      
-      const toDate = isoDateToLocalNoon(active.to);
-      const formattedToObj = new Intl.DateTimeFormat("cs-CZ", { weekday: "long", day: "numeric", month: "numeric" }).format(toDate);
-      const formattedTo = formattedToObj.split(' ').map(w => w === 'Zítra' ? w : w).join(' ');
-
-      // Subtitle e.g.: "Pobyt do pátku 17. 4. (ještě 5 dní) · Test"
-      subtitle = `Pobyt do ${formattedTo} (ještě ${dLabel}) · ${active.purpose}`;
-      cardClass = "glass-card status-card is-occupied";
-      avatarNode = <div className="status-avatar-block"><AnimalAvatar icon={active.userAnimalIcon} username={active.username} color={userColor} size={48} /></div>;
+    if (departingToday && hasCheckoutTasks) {
+      checkoutReminderNode = checkoutDone
+        ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
+        : departed
+          ? <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>
+          : <div className="checkout-reminder checkout-reminder-warn"><span>Před odjezdem vyplň <a href="/reservations">odjezdový checklist</a></span></div>;
     }
 
+    // Můj pevný pobyt, který hlavička ani řetězec neukazují.
+    const mine = data.myNextReservation;
+    const myNext = mine ? data.upcomingReservations.find((r) => r.status === "primary" && r.from === mine.from && r.to === mine.to) : undefined;
+
     return (
-      <div className={cardClass} id="dashboard-active-reservation" style={{ "--status-user-color": userColor } as React.CSSProperties}>
+      <section className="glass-card status-card status-header" id="dashboard-active-reservation" aria-labelledby={headingId}>
         <div className="card-body-full status-content">
-          <div className="status-hero-row">
-            {avatarNode}
-            <div className="status-hero-text">
-              <div className="status-name-row">
-                <div className="status-name">{title}</div>
-              </div>
-              <div className="status-meta">
-                <span className="status-dates">{subtitle}</span>
-              </div>
+          <h2 id={headingId} className="status-header__label">Na chatě teď</h2>
+          <div className="status-header__row">
+            <div role="group" aria-label="Teď" className="status-header__side">
+              {now && !departed ? (
+                <>
+                  <HeaderPerson stay={now} name={nameOf(now)} when={departingToday ? "do dneška" : `do ${formatShortDayDate(now.to)}`} />
+                  <StayDetail stay={now} withNights={false} />
+                </>
+              ) : (
+                <HeaderPerson mark="free" name="Chata je volná" when={now ? `Dnes uvolnil${now.username.endsWith("a") ? "a" : ""} ${now.username}` : undefined} />
+              )}
+            </div>
+            <ArrowRight className="status-header__arrow" aria-hidden="true" />
+            <div role="group" aria-label="Příště" className="status-header__side">
+              {next ? (
+                <>
+                  <HeaderPerson stay={next} name={nameOf(next)} when={next.from === todayStr ? "od dneška" : `od ${formatShortDayDate(next.from)}`} />
+                  <StayDetail stay={next} withNights />
+                </>
+              ) : (
+                <HeaderPerson mark="none" name="Zatím nikdo" />
+              )}
             </div>
           </div>
-          {chainNode}
-          <ParticipantStack participants={active.participants} />
+          <TurnusChainLine nodes={chain.filter((n) => n.kind === "later")} className="status-chain" />
+          {!now && buildLastStayBlock(data.lastStay)}
+          {myNext && !chain.some((n) => n.stay?.id === myNext.id) && (
+            <p className="status-header__mine">
+              <strong>Tvůj pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}
+            </p>
+          )}
           {checkoutReminderNode}
           <div className="status-cta-row">
             {freeWeekendNode}
@@ -172,35 +202,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // ── Stav B: Free, but upcoming reservation exists ────────────────────
-  if (data.upcomingReservations.some((r) => r.status === "primary" && isValidReservation(r))) {
-    return (
-      <div className="glass-card status-card is-free" id="dashboard-active-reservation">
-        <div className="card-body-full status-content">
-          <div className="status-hero-row">
-            <div className="status-avatar-block" style={{ background: "var(--color-primary)" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-            </div>
-            <div className="status-hero-text">
-              <div className="status-name-row">
-                <div className="status-name">Chata je nyní volná</div>
-              </div>
-            </div>
-          </div>
-          {chainNode}
-          {buildLastStayBlock(data.lastStay)}
-          <div className="status-cta-row">
-            {freeWeekendNode}
-            <button onClick={() => navigate("/reservations")} className="status-cta status-cta-neutral">
-              Kalendář
-            </button>
-          </div>
-        </div>
-      </div>
+      </section>
     );
   }
 
@@ -212,7 +214,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           {OVERVIEW_INVITE_ILLUSTRATION ? <img src={OVERVIEW_INVITE_ILLUSTRATION} alt="" /> : <DoorOpen className="w-5 h-5" />}
         </div>
         <h2 id="overview-invite-title" className="overview-invite__title">Chata zatím čeká</h2>
-        <p className="overview-invite__text">Zaberte termín a rozjeďte to.</p>
+        <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
         {buildLastStayBlock(data.lastStay)}
         <div className="status-cta-row overview-invite__actions">
           <button className="status-cta status-cta-primary" onClick={() => navigate("/reservations")}>

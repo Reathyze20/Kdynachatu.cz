@@ -168,8 +168,8 @@ export function ReservationList({
       setNoteSaveError(
         getNetworkAwareActionMessage(
           error,
-          "Poznámku se nepodařilo uložit. Zkuste to znovu.",
-          "Spojení vypadlo dřív, než se poznámka stihla uložit. Zkuste to znovu po obnovení připojení.",
+          "Poznámku se nepodařilo uložit. Zkus to znovu.",
+          "Spojení vypadlo dřív, než se poznámka stihla uložit. Zkus to znovu po obnovení připojení.",
         ),
       );
     }
@@ -374,7 +374,7 @@ export function ReservationList({
       >
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            Tuto poznámku uvidí všichni členové chaty. Můžete ji kdykoliv upravit.
+            Tuto poznámku uvidí všichni členové chaty. Můžeš ji kdykoliv upravit.
           </p>
           <textarea
             value={noteText}
@@ -407,7 +407,7 @@ function ReservationCard({
   index: number;
   onClick: (r: Reservation) => void;
 }) {
-  const uColor = r.userColor || "#94a3b8";
+  const uColor = r.userColor || undefined;
   const d1 = new Date(r.from + "T00:00:00");
   const d2 = new Date(r.to + "T00:00:00");
   const isPast = d2 < new Date();

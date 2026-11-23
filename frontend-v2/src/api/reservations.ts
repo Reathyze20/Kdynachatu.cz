@@ -77,6 +77,8 @@ export interface CheckoutStatus {
   checkoutState?: CheckoutState | null;
 }
 
+export const checkoutPath = (id: string) => `/reservations/${id}/checkout`;
+
 /**
  * Completes the handover (předávka) of a stay: marks the checkout done and, when given,
  * stores the structured state of the cabin. The single write path shared by
@@ -85,6 +87,6 @@ export interface CheckoutStatus {
  */
 export function completeCheckout(id: string, state?: CheckoutState): Promise<CheckoutStatus> {
   return apiClient
-    .patch<CheckoutStatus>(`/reservations/${id}/checkout`, state !== undefined ? { checkoutState: state } : undefined)
+    .patch<CheckoutStatus>(checkoutPath(id), state !== undefined ? { checkoutState: state } : undefined)
     .then((r) => r.data);
 }

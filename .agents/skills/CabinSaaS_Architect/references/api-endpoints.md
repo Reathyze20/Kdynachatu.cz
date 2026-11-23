@@ -7,8 +7,9 @@ Complete map of all backend endpoints. Read this when building API modules or co
 | Method | Path | Auth | Body / Query | Response |
 |---|---|---|---|---|
 | POST | `/api/login` | no | `{ username, password }` | `{ token, username, userId, role, color, animalIcon, cabinId }` |
-| POST | `/api/register` | no | `{ cabinName, subdomain?, weatherLocation, username, email, password, color? }` | `{ message, requiresVerification? }`; 403 when CABIN_SIGNUP_ENABLED is off |
+| POST | `/api/register` | no | `{ cabinName, subdomain?, municipalityCode, username, email, password, color? }` | `{ message, requiresVerification? }`; 403 when CABIN_SIGNUP_ENABLED is off; 400 for an unknown municipality code |
 | GET | `/api/signup-status` | no | — | `{ cabinSignupEnabled }` |
+| GET | `/api/municipalities` | no | `?q=` (min 2 chars) | `{ municipalities: [{ code, name, district, region }] }`, RÚIAN list, no coordinates |
 | GET | `/api/verify-token` | no | `?token=<hash>` | `{ message }` |
 | POST | `/api/verify-email` | no | `{ username, code }` | `{ message }` |
 | GET | `/api/health` | no | — | `{ status, timestamp, database }` |
@@ -150,8 +151,8 @@ Complete map of all backend endpoints. Read this when building API modules or co
 
 | Method | Path | Auth | Role | Body | Response |
 |---|---|---|---|---|---|
-| GET | `/api/cabin` | yes | all | — | `{ id, name, subdomain, description, welcomeMessage, rules, departureChecklist, coverPhotoUrl, weatherLocation, isWinterized, features }` |
-| PATCH | `/api/cabin` | yes | admin | `{ name?, description?, welcomeMessage?, rules?, departureChecklist?, ... }` | cabin object |
+| GET | `/api/cabin` | yes | all | — | `{ id, name, subdomain, description, welcomeMessage, rules, departureChecklist, coverPhotoUrl, weatherLocation, municipalityCode, municipalityName, municipalityDistrict, municipalityRegion, latitude, longitude, isWinterized, features }` |
+| PATCH | `/api/cabin` | yes | admin | `{ name?, description?, welcomeMessage?, rules?, departureChecklist?, municipalityCode?, ... }` (code from `/api/municipalities`, `null` clears; free-text `weatherLocation` is ignored) | cabin object |
 | POST | `/api/cabin/create` | yes | — | `{ name }` | `{ token, cabinId, cabinName, ... }`; 403 when CABIN_SIGNUP_ENABLED is off |
 
 ## Invites (`/api/invites`)

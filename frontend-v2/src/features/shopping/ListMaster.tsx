@@ -40,7 +40,7 @@ export function ListMaster({
           <li className="master-empty">
             <img src="/icons/empty_basket.svg" alt="" aria-hidden="true" style={{ maxHeight: 72, width: 'auto', opacity: 0.65, marginBottom: '0.25rem' }} />
             <p>Žádné aktivní nákupy</p>
-            <p className="master-empty-hint">Klikněte na „+ Nový seznam"</p>
+            <p className="master-empty-hint">Klikni na „+ Nový seznam"</p>
           </li>
         )}
         <AnimatePresence mode="popLayout">

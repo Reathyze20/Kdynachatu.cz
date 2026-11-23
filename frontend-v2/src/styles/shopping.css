@@ -1003,19 +1003,20 @@
   text-transform: uppercase;
 }
 
+/* Barvy jen z tokenů (variables.css, #269): kontrast textu na podbarvení ≥ 4,5 : 1 */
 .badge-full {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--ok-bg);
+  color: rgb(var(--ok));
 }
 
 .badge-low {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--low-bg);
+  color: rgb(var(--low));
 }
 
 .badge-empty {
-  background: var(--color-danger-light);
-  color: var(--color-danger-text);
+  background: var(--empty-bg);
+  color: rgb(var(--empty));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

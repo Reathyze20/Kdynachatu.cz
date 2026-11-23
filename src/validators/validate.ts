@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { z, ZodError } from "zod";
 
 /**
- * Middleware for validating request body (or route params) against a Zod schema
+ * Middleware for validating request body (or route params / query) against a Zod schema
  */
-export const validate = (schema: z.ZodSchema, source: "body" | "params" = "body") => {
+export const validate = (schema: z.ZodSchema, source: "body" | "params" | "query" = "body") => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse(req[source]);

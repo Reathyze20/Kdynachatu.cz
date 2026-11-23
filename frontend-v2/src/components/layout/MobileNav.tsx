@@ -1,7 +1,7 @@
 /**
  * components/layout/MobileNav.tsx
  * Spodní lišta podle cyklu turnusu (redesign #0, issue #171): Přehled · Kalendář · Předávka · Zásoby · Víc.
- * Doplňky (Chat, Galerie, Deník, Rekonstrukce) jsou pod „Víc“.
+ * Doplňky (Chat, Galerie, Deník, Rekonstrukce) a „Přidat na plochu“ (#277) jsou pod „Víc“.
  */
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
@@ -10,12 +10,15 @@ import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
 import { Modal } from '@/components/shared/Modal'
+import { InstallMenuItem } from '@/components/shared/InstallCard'
+import { usePwaInstall } from '@/hooks/usePwaInstall'
 
 export function MobileNav() {
   const { user } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
+  const { canInstall } = usePwaInstall()
 
   if (!user?.cabinId) return null
 
@@ -46,7 +49,7 @@ export function MobileNav() {
       <nav id="mobile-nav" className="mobile-nav" aria-label="Hlavní navigace" data-testid="mobile-nav">
         {tabs.map((item) => renderNavLink(item, 'mobile-nav-link'))}
 
-        {more.length > 0 ? (
+        {more.length > 0 || canInstall ? (
           <button
             type="button"
             className={`mobile-nav-link${activeMore ? ' active' : ''}`}
@@ -65,6 +68,7 @@ export function MobileNav() {
       <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} title="Víc">
         <div className="drawer-quicklinks" data-testid="mobile-nav-more-sheet">
           {more.map((item) => renderNavLink(item, 'button-secondary drawer-quicklink', () => setMoreOpen(false)))}
+          <InstallMenuItem className="button-secondary drawer-quicklink" />
         </div>
       </Modal>
     </>
