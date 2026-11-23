@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import apiClient from '@/api/client'
-import type { DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
+import type { AttentionItem, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 import statusHeaderCss from '@/styles/status-header.css?raw'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
@@ -14,6 +14,8 @@ vi.mock('@/api/client', () => ({
     get: vi.fn((url: string) =>
       responses.has(url) ? Promise.resolve({ data: responses.get(url) }) : new Promise<never>(() => {}),
     ),
+    put: vi.fn(() => new Promise<never>(() => {})),
+    post: vi.fn(() => new Promise<never>(() => {})),
   },
 }))
 vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(weather.current)) }))
@@ -177,46 +179,78 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
   })
 })
 
-describe('Přehled: „Dochází“ v bočním panelu (#172)', () => {
-  it('důležité položky a počet k nakoupení jsou v bočním panelu s odkazem do Zásob, banner ani widget nákupu nezůstaly', async () => {
-    renderOverview(reservations(), {
-      pendingShoppingItems: [{ id: 's1', name: 'Káva', listId: 'l1', listName: 'Nákup', isEssential: true }],
-      totalPendingShoppingCount: 3,
-      totalItemsCount: 5,
-      essentialWarning: { count: 2, items: [{ name: 'Káva' }, { name: 'Sůl' }] },
-    })
+describe('Přehled: „Potřebuje pozornost“ (#275)', () => {
+  // Pořadí (Došlo před Dochází, ★ napřed) dává server, tady už seřazené
+  const supply = (name: string, isEmpty = false): AttentionItem =>
+    ({ name, isEmpty, isEssential: false, inventoryId: `inv-${name}`, shoppingItemId: null })
+  const starItem = (name: string): AttentionItem => ({ name, isEmpty: false, isEssential: true, inventoryId: null, shoppingItemId: `s-${name}` })
+  const FAULT = { text: 'Kape kohoutek', reportedBy: 'Petr', reportedAt: '2026-11-15T12:00:00.000Z' }
+  const withAttention = (...attention: AttentionItem[]): DashboardShoppingData => ({ ...NO_SHOPPING, attention })
 
-    const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
-    const low = await within(aside).findByRole('region', { name: 'Dochází' })
-    expect(low).toHaveTextContent('Káva · Sůl')
-    expect(low).toHaveTextContent('Na nákupním seznamu čekají 3 položky')
-    expect(within(low).getByRole('link', { name: 'Otevřít Zásoby' })).toHaveAttribute('href', '/shopping')
+  it('nahradí kartu „Dochází“: tři řádky, závada s autorem a datem, souhrn do Zásob', async () => {
+    renderOverview(reservations({ lastFault: FAULT }), withAttention(supply('Toaleťák', true), supply('Káva'), supply('Sůl'), supply('Mléko')))
+
+    const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
+    expect(screen.getByTestId('dashboard-page')).toContainElement(card)
+    const rows = within(card).getAllByRole('listitem')
+    expect(rows.map((r) => r.textContent)).toEqual(['DošloToaleťákKoupím já', 'DocházíKávaKoupím já', 'ZávadaKape kohoutek · Petr 15. 11.'])
+    expect(within(card).getByRole('link', { name: '+ 2 další potřebují pozornost' })).toHaveAttribute('href', '/shopping')
+    expect(screen.queryByRole('region', { name: 'Dochází' })).not.toBeInTheDocument()
     expect(screen.queryByText('K nakoupení')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Otevřít nákupy' })).not.toBeInTheDocument()
   })
 
-  it('víc než pět důležitých položek zkrátí na „a N dalších“, bez důležitých zůstane jen počet', async () => {
-    const names = ['Káva', 'Sůl', 'Cukr', 'Mýdlo', 'Sirky', 'Svíčky', 'Čaj']
-    renderOverview(reservations(), {
-      ...NO_SHOPPING, totalPendingShoppingCount: 7, essentialWarning: { count: 7, items: names.map((name) => ({ name })) },
-    })
-    const low = await screen.findByRole('region', { name: 'Dochází' })
-    expect(low).toHaveTextContent('Káva · Sůl · Cukr · Mýdlo · Sirky a 2 další')
-    expect(low).not.toHaveTextContent('Svíčky')
+  it('na desktopu je v bočním panelu', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    try {
+      renderOverview(reservations(), withAttention(supply('Káva')))
+      const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
+      expect(await within(aside).findByRole('region', { name: 'Potřebuje pozornost' })).toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
-  it('bez důležitých položek ukáže karta jen počet věcí k nakoupení', async () => {
-    renderOverview(reservations(), { ...NO_SHOPPING, totalPendingShoppingCount: 1 })
-    const low = await screen.findByRole('region', { name: 'Dochází' })
-    expect(low).toHaveTextContent('Na nákupním seznamu čeká 1 položka.')
+  it('„Koupím já“ u zásoby pošle slib přes zásobu, u ★ položky přes „Přivezu z domova“, řádek hned zmizí', async () => {
+    renderOverview(reservations(), withAttention(supply('Toaleťák', true), starItem('Baterky'), supply('Káva')))
+
+    const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Koupím já: Toaleťák' }))
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/inventory/inv-Toaleťák/pledge'))
+    await waitFor(() => expect(card).not.toHaveTextContent('Toaleťák'))
+    fireEvent.click(within(card).getByRole('button', { name: 'Koupím já: Baterky' }))
+    await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith('/shopping-list/s-Baterky/purchase', { status: 'bring_from_home' }))
+    await waitFor(() => expect(card).not.toHaveTextContent('Baterky'))
+    expect(card).toHaveTextContent('Káva')
   })
 
-  it('když nic nedochází a nic se nekupuje, karta se nevykreslí', async () => {
+  it('když server slib odmítne, řádek se vrátí', async () => {
+    vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Chyba serveru'))
+    renderOverview(reservations(), withAttention(supply('Toaleťák', true)))
+
+    const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Koupím já: Toaleťák' }))
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/inventory/inv-Toaleťák/pledge'))
+    expect(await within(card).findByText('Toaleťák')).toBeInTheDocument()
+  })
+
+  it('„Do WhatsAppu“ zkopíruje všechny věci i za souhrnem', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    renderOverview(reservations(), withAttention(supply('D', true), supply('A'), supply('B'), supply('C')))
+
+    const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Do WhatsAppu' }))
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(
+      `Na chatě potřebuje pozornost:\n- Došlo: D\n- Dochází: A\n- Dochází: B\n- Dochází: C\n${window.location.origin}/shopping`,
+    ))
+  })
+
+  it('když nic nepotřebuje pozornost, karta se nevykreslí', async () => {
     renderOverview(reservations())
 
-    await screen.findByRole('complementary', { name: 'Kontext chaty' })
     await screen.findByText('Chata zatím čeká')
-    expect(screen.queryByRole('region', { name: 'Dochází' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Potřebuje pozornost' })).not.toBeInTheDocument()
   })
 })
 
