@@ -299,9 +299,9 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
 
   // Tabulka kontrastu ve specu #337 (plný papír, D3): karta = 246 240 230, vnořené pole = 238 230 217.
   it.each([
-    ['hlavní text', '--text-main', '--sheet', 14.0],
-    ['vedlejší text', '--text-muted', '--sheet', 6.6],
-    ['akční zelená', '--brand-primary', '--sheet', 4.5],
+    ['hlavní text', '--text-main', '--sheet', 14.05],
+    ['vedlejší text', '--text-muted', '--sheet', 6.65],
+    ['akční zelená', '--brand-primary', '--sheet', 4.55],
     ['vedlejší text na vnořeném poli', '--text-muted', '--inset', 6.1],
   ])('světlý (spec #337): %s %s na %s ≥ %s : 1', (_name, text, surface, min) => {
     expect(contrast(rgbOf(root, text), rgbOf(root, surface))).toBeGreaterThanOrEqual(min)
@@ -315,5 +315,10 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
   it.each(['--under-top', '--under-bottom'])('světlý: hlavní i vedlejší text na podkladu %s', (surface) => {
     expect(contrast(rgbOf(root, '--text-main'), rgbOf(root, surface))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(rgbOf(root, '--text-muted'), rgbOf(root, surface))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it.each(['--under-top', '--under-bottom'])('tmavý: hlavní i vedlejší text na podkladu %s', (surface) => {
+    expect(contrast(rgbOf(bridgeDark, '--foreground'), rgbOf(dark, surface))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(rgbOf(bridgeDark, '--muted-foreground'), rgbOf(dark, surface))).toBeGreaterThanOrEqual(4.5)
   })
 })

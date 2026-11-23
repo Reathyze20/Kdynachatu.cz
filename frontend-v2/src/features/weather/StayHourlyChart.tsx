@@ -39,6 +39,7 @@ const SERIES: Series[] = [
     context: (max, _min, peak) => <>vítr nejvíc <b>{max} km/h</b> kolem <b>{peak}</b></>,
   },
   {
+    // amber-800: amber-700 má na papírové kartě (#339) jen 4,43 : 1
     id: "temp", label: "Teplota", icon: Thermometer, text: "text-amber-800", fill: "bg-amber-200", peakFill: "bg-amber-500",
     value: (h) => h.temp, format: (v) => `${deg(v)}°`, height: (v, min, max) => 20 + ((v - min) / (max - min || 1)) * 80,
     context: (max, min, peak) => <>maximum <b>{deg(max)}°</b> kolem <b>{peak}</b>, minimum {deg(min)}°</>,

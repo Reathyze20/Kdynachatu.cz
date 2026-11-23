@@ -448,8 +448,8 @@
 @media (max-width: 768px) {
 
   /* ── Mobile Header — fixed top ─────────────────────────────── */
-  /* Povrch menu = plný papír karty (D3, #339); hřebínek pod lištou
-     připomíná fotku z přihlášení. */
+  /* Menu surface = the full paper of the cards (D3, #339); the ridge line
+     below the bar echoes the login-screen photo. */
   .mobile-header {
     display: flex;
     justify-content: space-between;

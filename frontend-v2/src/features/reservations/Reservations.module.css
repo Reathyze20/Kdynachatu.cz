@@ -190,7 +190,7 @@ button.newReservationButton {
 .calWeekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: var(--bg-app);
+  background: rgb(var(--inset));
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
 }
@@ -724,7 +724,7 @@ button.newReservationButton {
 .tabs {
   display: flex;
   gap: var(--space-sm);
-  background: var(--bg-app);
+  background: rgb(var(--inset));
   padding: var(--space-xs);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-strong);

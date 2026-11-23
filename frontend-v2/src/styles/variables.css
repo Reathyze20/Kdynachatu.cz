@@ -205,7 +205,6 @@
   --under-top: 230 218 198;
   --under-bottom: 220 205 181;
   --lift: 0 1px 2px rgb(0 0 0 / .06), 0 14px 32px -16px rgb(30 20 10 / .45);
-  --bg-app-backdrop: radial-gradient(1200px 700px at 85% -10%, rgb(var(--glow)), transparent 60%), linear-gradient(180deg, rgb(var(--under-top)), rgb(var(--under-bottom)));
 
   /* ── Stavové štítky zásob a plynu (Dostatek · Málo/Dochází · Došlo) ──────
      Hodnoty z mocku docs/design/06-prehled-v2-atomy.html, ztmavené kvůli kontrastu štítku
@@ -301,9 +300,10 @@
 /* Podbarvení stavových štítků: 14 % barvy stavu (bylo 16 %, na papírové kartě #339 by --ok a --empty
    spadly pod 4,5 : 1), neprůhledně na ploše karty, aby kontrast
    textu (≥ 4,5 : 1, G1) nezávisel na hoveru řádku pod štítkem. V `.dark` znovu, protože
-   custom property se dědí už spočítaná. */
+   custom property se dědí už spočítaná. Stejně podklad pod kartami --bg-app-backdrop (#339). */
 :root,
 .dark {
+  --bg-app-backdrop: radial-gradient(1200px 700px at 85% -10%, rgb(var(--glow)), transparent 60%), linear-gradient(180deg, rgb(var(--under-top)), rgb(var(--under-bottom)));
   --ok-bg: color-mix(in srgb, rgb(var(--ok)) 14%, rgb(var(--sheet)));
   --low-bg: color-mix(in srgb, rgb(var(--low)) 14%, rgb(var(--sheet)));
   --empty-bg: color-mix(in srgb, rgb(var(--empty)) 14%, rgb(var(--sheet)));

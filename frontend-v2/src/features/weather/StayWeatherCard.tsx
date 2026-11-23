@@ -114,6 +114,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
             ><StayHourlyChart day={day} dayName={fullDayName(day.date)} /></motion.div>
           )}
         </AnimatePresence>
+        {/* emerald-800: emerald-700 má na vnořeném poli --inset (#339) jen 4,43 : 1 */}
         <p className="flex flex-wrap items-center gap-3 rounded-xl bg-inset px-3 py-2 text-sm font-medium text-slate-700">
           {day.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Východ slunce</span>{day.sunrise}</span>}
           {day.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{day.sunset}</span>}
