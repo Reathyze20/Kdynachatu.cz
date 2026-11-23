@@ -437,12 +437,14 @@
 /* ── Save button ─────────────────────────────────────────────────────── */
 
 .cs-btn-save {
-  padding: 10px 24px;
+  flex-shrink: 0;
+  min-height: var(--touch-target-primary);
+  padding: 0 28px;
   background: var(--color-primary, #3f7b63);
   color: #fff;
   border: none;
-  border-radius: var(--radius-md, 10px);
-  font-size: 0.95rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -468,6 +470,58 @@
 .cs-btn-save--success {
   background: var(--color-success, #16a34a);
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* ── Lišta s uložením (#260): „Uložit změny“ po ruce na každé záložce ── */
+
+.cs-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--touch-target-gap);
+  padding: 12px 28px;
+  background: rgb(var(--sheet));
+  border-top: 1px solid var(--color-border-light, #f0f0f0);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.cs-save-status {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-warning-text);
+}
+
+/* Sticky: obaly panelu ve správě nesmí být scroll kontejner (clip ořízne rohy, ale ten nevytvoří) */
+.admin-settings-shell.settings-page-card {
+  overflow: clip;
+}
+
+.admin-settings-shell .main-content-settings,
+.admin-settings-shell .settings-page-card {
+  overflow: visible;
+}
+
+/* Mobil scrolluje oknem, sticky by neudržel: pevně nad spodní navigací a bezpečnou zónou (nav.css) */
+@media (max-width: 768px) {
+  .cs-save-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
+    /* vpravo místo pro plovoucí tlačítko nápovědy (.fab-help, 16 px od kraje), ať nepřekryje Uložit */
+    padding: 8px calc(16px + var(--touch-target-min) + var(--touch-target-gap)) 8px 12px;
+    border-radius: 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Poslední pole nesmí zůstat pod lištou; specificita přebije 600px blok níže */
+  .settings-page-card .cs-body {
+    padding-bottom: calc(var(--touch-target-primary) + 40px);
+  }
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────── */
@@ -509,7 +563,6 @@
   }
 
   .cs-btn-save {
-    width: 100%;
-    text-align: center;
+    padding: 0 20px;
   }
 }

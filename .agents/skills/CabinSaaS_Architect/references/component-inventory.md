@@ -212,6 +212,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|
 | `useOnline` | `navigator.onLine` + event listeners → `boolean` |
 | `useCabinFeatures` | Query cabin feature flags → `{ features, isLoading }` |
+| `useUnsavedChangesGuard` | `isDirty` → podrží navigaci v aplikaci (BrowserRouter, bez `useBlocker`) a hlídá `beforeunload` → `{ isBlocked, proceed, stay }` pro `ConfirmDialog` |
 | `useMunicipalitySearch` | Municipality suggestions, 250 ms debounce, from 2 characters → `{ results, hasFinalResults }`; `MUNICIPALITY_KEYS` |
 
 ---
