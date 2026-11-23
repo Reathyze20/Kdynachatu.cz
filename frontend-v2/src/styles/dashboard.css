@@ -377,7 +377,7 @@
 }
 
 /* ── Kompaktní pruh chaty nad oběma sloupci (#172, návrh #1 díl 1 = A) ──
-   Titulní fotka chaty z nastavení (#322) nebo placeholder, jméno a jeden řádek kontextu. */
+   Placeholder, jméno a jeden řádek kontextu; titulní fotka v pruhu skončila (#338). */
 .dashboard-frame {
   display: flex;
   flex-direction: column;
@@ -498,84 +498,6 @@
 
 .cabin-hero__events svg {
   flex-shrink: 0;
-}
-
-/* ── Titulní fotka chaty v pruhu (#322, varianta B pickeru D4) ──
-   Pruh přes celou šířku karty, bílý text na tmavém přechodu zespodu. Přechod je převzatý
-   z pickeru (nejhorší pixel pod textem 5,07 : 1 mobil, 5,81 : 1 desktop, G1) – neslabit. */
-.glass-card.cabin-hero--photo {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  padding: 0;
-}
-
-.cabin-hero__strip {
-  position: relative;
-  height: 140px;
-  overflow: hidden;
-  /* do načtení fotky tmavě zelená, bílý text je čitelný hned */
-  background: rgb(28 46 36);
-  color: var(--raw-white);
-}
-
-.cabin-hero__strip img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cabin-hero__strip::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgb(12 20 16 / 0.82) 0%, rgb(12 20 16 / 0.55) 55%, rgb(12 20 16 / 0.1) 100%);
-}
-
-.cabin-hero__strip-text {
-  position: absolute;
-  right: 16px;
-  bottom: 12px;
-  left: 16px;
-  z-index: 1;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
-}
-
-.cabin-hero__strip-text .cabin-hero__name {
-  font-size: var(--font-size-2xl);
-  line-height: 1.15;
-  color: var(--raw-white);
-}
-
-.cabin-hero__strip-text .cabin-hero__context {
-  font-size: var(--font-size-base);
-  color: var(--raw-white);
-}
-
-.cabin-hero__extras {
-  padding: 4px 14px;
-}
-
-.cabin-hero__extras .cabin-hero__alert {
-  margin: 6px 0;
-}
-
-@media (min-width: 769px) {
-  .cabin-hero__strip {
-    height: 200px;
-  }
-
-  .cabin-hero__strip-text {
-    right: 28px;
-    bottom: 18px;
-    left: 28px;
-  }
-
-  .cabin-hero__strip-text .cabin-hero__name {
-    font-size: var(--font-size-3xl);
-  }
 }
 
 /* ── Pozvánka, když se nic neděje (#172, návrh #1 díl 5 = A) ── */

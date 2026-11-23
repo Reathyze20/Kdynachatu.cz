@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -144,6 +144,37 @@ describe('Přehled: karta Počasí na pobyt', () => {
     await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(screen.queryByRole('region', { name: 'Počasí na pobyt' })).not.toBeInTheDocument()
     expect(forecastCalls()).toBe(0)
+  })
+
+  it('hodinový graf je na Přehledu sbalený, otevře ho tlačítko „Hodinový graf“ i ťuknutí na den (#338)', async () => {
+    mockOpenMeteo()
+    renderOverview(reservations(null, [stay('r-petr', 'Petr', '2030-06-03', '2030-06-05')]))
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+    const toggle = await within(card).findByRole('button', { name: 'Hodinový graf' })
+    const chart = () => within(card).queryByRole('tablist', { name: 'Hodinový graf' })
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(chart()).not.toBeInTheDocument()
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(chart()).toBeInTheDocument()
+    fireEvent.click(toggle)
+    expect(chart()).not.toBeInTheDocument()
+
+    fireEvent.click(within(card).getByRole('button', { name: /^Úterý 4\. 6\./ }))
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(chart()).toBeInTheDocument()
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Úterý')
+  })
+
+  it('v detailu pobytu zůstává graf otevřený, bez tlačítka „Hodinový graf“ (#338)', async () => {
+    mockOpenMeteo()
+    responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: 'Lhota', latitude: 49.5, longitude: 15.2, departureChecklist: [] })
+    renderWith(new QueryClient({ defaultOptions: { queries: { retry: false } } }), <StayWeatherCard from="2030-06-03" to="2030-06-05" />)
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+
+    expect(await within(card).findByRole('tablist', { name: 'Hodinový graf' })).toBeInTheDocument()
+    expect(within(card).queryByRole('button', { name: 'Hodinový graf' })).not.toBeInTheDocument()
   })
 
   it('detail pobytu po Přehledu předpověď znovu nestahuje (sdílený klíč dotazu)', async () => {

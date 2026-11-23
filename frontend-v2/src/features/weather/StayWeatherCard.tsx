@@ -2,7 +2,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
-  CalendarDays, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSun, CloudSunRain,
+  CalendarDays, ChevronDown, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSun, CloudSunRain,
   Droplets, Snowflake, Sun, Sunrise, Sunset, ThermometerSnowflake, TriangleAlert, type LucideIcon,
 } from "lucide-react";
 import type { StayForecastDay } from "@/api/stayWeather";
@@ -59,9 +59,16 @@ function Alert({ icon: Icon, day, text }: { icon: LucideIcon; day: StayForecastD
   );
 }
 
-/** `title` = kdo a kdy (Přehled, #326), `frame` = rámeček karty (v detailu tenký obrys, na Přehledu samostatná karta). */
-export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] border border-slate-100" }: { from: string; to: string; title?: string; frame?: string }) {
+/**
+ * `title` = kdo a kdy (Přehled, #326), `frame` = rámeček karty (v detailu tenký obrys, na Přehledu samostatná karta).
+ * `collapsibleChart` = hodinový graf je sbalený, otevře ho tlačítko „Hodinový graf“ nebo ťuknutí na den (Přehled, #338).
+ */
+export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] border border-slate-100", collapsibleChart = false }: {
+  from: string; to: string; title?: string; frame?: string; collapsibleChart?: boolean;
+}) {
   const headingId = useId();
+  const chartId = useId();
+  const [chartOpen, setChartOpen] = useState(!collapsibleChart);
   const { user } = useAuth();
   const cabin = useCabinSettings();
   const { horizon, stay, locationProblem, isError, isLoading } = useStayForecast(cabin.data ?? undefined, from, to);
@@ -93,10 +100,10 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
     body = (
       <>
         <ul className="grid grid-cols-[repeat(auto-fit,minmax(84px,1fr))] gap-2">
-          {stay.days.map((d) => <DayCell key={d.date} day={d} selected={d.date === day.date} onSelect={() => setSelectedDate(d.date)} />)}
+          {stay.days.map((d) => <DayCell key={d.date} day={d} selected={d.date === day.date} onSelect={() => { setSelectedDate(d.date); setChartOpen(true); }} />)}
         </ul>
         {stay.days.some((d) => d.tentative) && <p className="text-sm text-slate-600">Dny 8–16 jsou orientační, předpověď se ještě změní.</p>}
-        <StayHourlyChart day={day} dayName={fullDayName(day.date)} />
+        <div id={chartId} hidden={!chartOpen}><StayHourlyChart day={day} dayName={fullDayName(day.date)} /></div>
         <p className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
           {day.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Východ slunce</span>{day.sunrise}</span>}
           {day.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{day.sunset}</span>}
@@ -105,6 +112,14 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
         </p>
         {stay.frost && <Alert icon={ThermometerSnowflake} day={stay.frost} text={`v noci mráz až ${deg(stay.frost.tempMin)} °C. Před odjezdem vypusť vodu.`} />}
         {stay.storm && <Alert icon={TriangleAlert} day={stay.storm} text="hrozí bouřka." />}
+        {collapsibleChart && (
+          <button
+            type="button" aria-expanded={chartOpen} aria-controls={chartId} onClick={() => setChartOpen((open) => !open)}
+            className="flex min-h-12 items-center justify-center gap-1.5 border-t border-slate-100 text-base font-bold text-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
+          >
+            Hodinový graf<ChevronDown aria-hidden="true" className={`w-4 h-4 transition-transform ${chartOpen ? "rotate-180" : ""}`} />
+          </button>
+        )}
       </>
     );
   } else if (isLoading || cabin.isLoading) {
