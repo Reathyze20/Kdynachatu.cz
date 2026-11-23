@@ -69,7 +69,7 @@ describe('zrušení pozvánky (#258)', () => {
     expect(screen.getByTestId('confirm-dialog-confirm-button').className).toMatch(/btn-danger/)
   })
 
-  it('zavření dialogu tlačítkem Zrušit nic nezmění', async () => {
+  it('zavření dialogu tlačítkem Nechat platit nic nezmění', async () => {
     const revoke = vi.spyOn(adminApi, 'revokeInvite').mockResolvedValue(undefined as never)
     const user = userEvent.setup()
     renderInvites()
@@ -92,5 +92,17 @@ describe('zrušení pozvánky (#258)', () => {
 
     await waitFor(() => expect(revoke.mock.calls[0]?.[0]).toBe('inv-1'))
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog-message')).toBeNull())
+  })
+
+  it('když zrušení selže, dialog zůstane otevřený a ukáže chybu', async () => {
+    vi.spyOn(adminApi, 'revokeInvite').mockRejectedValue(new Error('boom'))
+    const user = userEvent.setup()
+    renderInvites()
+
+    await user.click(await screen.findByTestId('invite-revoke-button'))
+    await user.click(await screen.findByTestId('confirm-dialog-confirm-button'))
+
+    expect(await screen.findByTestId('confirm-dialog-error')).toBeTruthy()
+    expect(screen.getByTestId('confirm-dialog-message')).toBeTruthy()
   })
 })

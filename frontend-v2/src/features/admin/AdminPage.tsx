@@ -145,7 +145,7 @@ function buildInviteShareText(invite: Invite): string {
 
 function buildRevokeConfirmMessage(invite: Invite): string {
   const roleLabel = getRoleLabel(invite.role).toLocaleLowerCase('cs-CZ')
-  const author = invite.createdBy?.username ? `, vytvořil ${invite.createdBy.username}` : ''
+  const author = invite.createdBy?.username ? `, autor: ${invite.createdBy.username}` : ''
   return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ (platí do ${formatDateLabel(invite.expiresAt)}${author}). Odkaz přestane fungovat a kdo ho už dostal, se přes něj nepřipojí.`
 }
 
@@ -477,6 +477,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   const [actionError, setActionError] = useState<string | null>(null)
   const [emailInvite, setEmailInvite] = useState<Invite | null>(null)
   const [revokeTarget, setRevokeTarget] = useState<Invite | null>(null)
+  const [revokeError, setRevokeError] = useState<string | null>(null)
   const [emailValue, setEmailValue] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -519,16 +520,16 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     )
   }
 
-  function handleRevoke(id: string, onDone?: () => void) {
+  function handleRevoke(id: string, onError: (message: string) => void = setActionError, onSuccess?: () => void) {
     setActionError(null)
     revokeInvite.mutate(id, {
       onSuccess: () => {
         setActionError(null)
         showToast('Pozvánka zrušena', 'success')
+        onSuccess?.()
       },
-      onSettled: onDone,
       onError: (error) => {
-        setActionError(
+        onError(
           getNetworkAwareActionMessage(
             error,
             'Pozvánku se nepodařilo zrušit. Zkus to znovu.',
@@ -774,10 +775,16 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         cancelLabel="Nechat platit"
         danger
         loading={revokeInvite.isPending}
+        errorMessage={revokeError}
         onConfirm={() => {
-          if (revokeTarget) handleRevoke(revokeTarget.id, () => setRevokeTarget(null))
+          if (!revokeTarget) return
+          setRevokeError(null)
+          handleRevoke(revokeTarget.id, setRevokeError, () => setRevokeTarget(null))
         }}
-        onCancel={() => setRevokeTarget(null)}
+        onCancel={() => {
+          setRevokeTarget(null)
+          setRevokeError(null)
+        }}
       />
 
       <Modal
