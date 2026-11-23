@@ -65,6 +65,27 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('načtení bez úprav ani na chvíli nehlídá odchod ani neukáže neuložené změny (#327)', async () => {
+    const addListener = vi.spyOn(window, 'addEventListener')
+    const flashed: string[] = []
+    // Záznamy mutací drží i uzly, které už další vykreslení stihlo odebrat.
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of [record.target, ...record.addedNodes, ...record.removedNodes]) {
+          if (node.textContent?.includes('Máš neuložené změny')) flashed.push(node.textContent)
+        }
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+
+    renderAt(<CabinSettingsPanel />)
+    await waitFor(() => expect(screen.getByTestId('cabin-settings-name-input')).toHaveValue('Chata U Lesa'))
+    observer.disconnect()
+
+    expect(addListener.mock.calls.filter(([type]) => type === 'beforeunload')).toHaveLength(0)
+    expect(flashed).toHaveLength(0)
+  })
+
   it('s neuloženou změnou se odchod ptá: Zůstat změnu nechá, Odejít bez uložení odejde', async () => {
     const name = await renderEdited()
     expect(fireBeforeUnload().defaultPrevented).toBe(true)
