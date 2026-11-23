@@ -16,6 +16,7 @@ const stays: Reservation[] = [
   { id: 'r-1', userId: 'u-petr', username: 'Petr', from: '2030-06-10', to: '2030-06-12', purpose: 'Víkend', status: 'primary' },
   { id: 'r-2', userId: 'u-jana', username: 'Jana', from: '2030-06-14', to: '2030-06-19', purpose: 'Sekání trávy', status: 'soft' },
   { id: 'r-3', userId: 'u-petr', username: 'Petr', from: '2030-06-20', to: '2030-06-21', purpose: 'Rybaření', status: 'backup' },
+  { id: 'r-4', userId: 'u-jana', username: 'Jana', from: '2030-06-25', to: '2030-06-25', purpose: 'Odečet vody' },
 ]
 
 function renderList() {
@@ -51,6 +52,14 @@ describe('reservation cards in the side panel', () => {
     expect(within(card('Rybaření')).getByText('20. 6. – 21. 6. · 1 noc')).toBeInTheDocument()
   })
 
+  it('a stay without a status is pevná and a one-day stay shows no nights', () => {
+    renderList()
+
+    const oneDay = card('Odečet vody')
+    expect(within(oneDay).getByText('Pevná')).toBeInTheDocument()
+    expect(within(oneDay).getByText('25. 6. – 25. 6.')).toBeInTheDocument()
+  })
+
   it('is a button, so the keyboard opens the detail too', async () => {
     const { user, onShowDetail } = renderList()
 
@@ -78,6 +87,11 @@ describe('reservation card styles', () => {
     ['.typeBackup', '--low'],
   ])('%s takes its colour from the status token %s', (selector, token) => {
     expect(prop(selector, 'color')).toBe(`rgb(var(${token}))`)
+  })
+
+  it('a past stay dims only the avatar, so its text keeps the contrast', () => {
+    expect(prop('.cardPast', 'opacity')).toBeUndefined()
+    expect(prop('.cardPast .cardAvatar', 'opacity')).toBe('0.5')
   })
 
   it('a předběžná badge differs by shape too (outline), not only by colour', () => {

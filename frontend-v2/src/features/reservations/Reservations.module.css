@@ -1022,14 +1022,19 @@ button.btnReset {
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.08), 0 2px 4px rgb(0 0 0 / 0.04);
 }
 
+/* Proběhlý pobyt: ztlumí se avatar a stín, text si drží kontrast ≥ 4,5 : 1. */
 .cardPast {
-  opacity: 0.5;
-  filter: saturate(0.5);
+  box-shadow: none;
 }
 
 .cardAvatar {
   display: flex;
   flex-shrink: 0;
+}
+
+.cardPast .cardAvatar {
+  opacity: 0.5;
+  filter: grayscale(1);
 }
 
 .cardContent {
@@ -1069,6 +1074,18 @@ button.btnReset {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Širší boční panel na desktopu (#209): větší karta a titulek. */
+@media (min-width: 1024px) {
+  .card {
+    gap: 18px;
+    padding: 18px 20px;
+  }
+
+  .cardTitle {
+    font-size: var(--font-size-lg);
+  }
 }
 
 /* ── Typ rezervace: pevná plně, předběžná obrysem, záložní ────────── */

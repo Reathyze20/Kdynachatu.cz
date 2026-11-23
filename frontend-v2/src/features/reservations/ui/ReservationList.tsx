@@ -7,6 +7,7 @@ import { useMonthlyNote, useUpdateMonthlyNote } from "../hooks/useReservations";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { RESERVATION_TYPE_LABEL } from "../reservationType";
 import css from "../Reservations.module.css";
 
 const MONTH_NAMES = [
@@ -399,12 +400,8 @@ export function ReservationList({
 
 // ── Reservation card sub-component ──────────────────────────────────
 
-/** Typ rezervace pojmenovaný jako ve formuláři: pevná / předběžná / záložní. */
-const TYPE_BADGE = {
-  primary: { label: "Pevná", cls: css.typeFirm },
-  soft: { label: "Předběžná", cls: css.typeSoft },
-  backup: { label: "Záložní", cls: css.typeBackup },
-} as const;
+/** Pevná plně, předběžná obrysem, záložní (#209). */
+const TYPE_CLASS = { primary: css.typeFirm, soft: css.typeSoft, backup: css.typeBackup } as const;
 
 function ReservationCard({
   reservation: r,
@@ -420,7 +417,7 @@ function ReservationCard({
   const isPast = d2 < new Date();
   const nights = nightsBetween(r.from, r.to);
   const dateLabel = `${d1.getDate()}. ${d1.getMonth() + 1}. – ${d2.getDate()}. ${d2.getMonth() + 1}.`;
-  const type = TYPE_BADGE[r.status ?? "primary"];
+  const status = r.status ?? "primary";
 
   return (
     <motion.button
@@ -442,10 +439,10 @@ function ReservationCard({
       <span className={css.cardContent}>
         <span className={css.cardTopRow}>
           <span className={css.cardTitle}>{r.purpose || "Bez názvu"}</span>
-          <span className={type.cls}>{type.label}</span>
+          <span className={TYPE_CLASS[status]}>{RESERVATION_TYPE_LABEL[status]}</span>
         </span>
         <span className={css.cardMeta}>
-          {dateLabel} · {nights} {nightsLabel(nights)}
+          {dateLabel}{nights > 0 && ` · ${nights} ${nightsLabel(nights)}`}
         </span>
         <span className={css.cardWho}>{r.username}</span>
       </span>
