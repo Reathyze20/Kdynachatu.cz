@@ -48,7 +48,8 @@ function Alert({ icon: Icon, day, text }: { icon: LucideIcon; day: StayForecastD
   );
 }
 
-export function StayWeatherCard({ from, to }: { from: string; to: string }) {
+/** `title` = kdo a kdy (Přehled, #326), `frame` = rámeček karty (v detailu tenký obrys, na Přehledu samostatná karta). */
+export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] border border-slate-100" }: { from: string; to: string; title?: string; frame?: string }) {
   const headingId = useId();
   const { user } = useAuth();
   const cabin = useCabinSettings();
@@ -95,8 +96,9 @@ export function StayWeatherCard({ from, to }: { from: string; to: string }) {
   } else return null;
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded-[20px] border border-slate-100 p-4" data-testid="stay-weather-card">
+    <section aria-labelledby={headingId} className={`flex flex-col gap-3 p-4 ${frame}`} data-testid="stay-weather-card">
       <h3 id={headingId} className="text-sm font-bold uppercase tracking-wide text-slate-600">Počasí na pobyt</h3>
+      {title && <p className="-mt-2 text-[17px] font-extrabold text-slate-900">{title}</p>}
       {body}
     </section>
   );

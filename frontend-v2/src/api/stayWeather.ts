@@ -26,7 +26,7 @@ export interface StayForecast { days: StayForecastDay[]; frost: StayForecastDay 
 export type StayForecastWindow = { kind: "ended" } | { kind: "later"; availableFrom: string } | { kind: "open" };
 
 /** Posun kalendářního dne YYYY-MM-DD o `n` dní (počítá se v UTC, takže bez posunu času). */
-function addDays(iso: string, n: number): string {
+export function addDays(iso: string, n: number): string {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
