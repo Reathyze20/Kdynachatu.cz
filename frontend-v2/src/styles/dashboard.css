@@ -191,6 +191,12 @@
   display: none;
 }
 
+/* Karty mají overflow: hidden (minimální výška 0); bez tohohle je flexbox při vyšším
+   obsahu smrskne, místo aby sloupec posouval. */
+.nordic-dashboard > * {
+  flex-shrink: 0;
+}
+
 @media (min-width: 768px) {
   .nordic-dashboard {
     padding: 16px;

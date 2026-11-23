@@ -150,6 +150,45 @@ function paddingAt(css: string, selector: string, width: number): Record<Side, s
   return padding
 }
 
+/** Výsledné `flex-shrink` pro `selector` na dané šířce (z `flex-shrink` i zkratky `flex`, poslední vyhrává). */
+function flexShrinkAt(css: string, selector: string, width: number): number {
+  let shrink = 1
+  for (const rule of rulesAt(css, selector, width)) {
+    for (const decl of rule.body.split(';')) {
+      const i = decl.indexOf(':')
+      if (i < 0) continue
+      const prop = decl.slice(0, i).trim()
+      const value = decl.slice(i + 1).replace('!important', '').trim()
+      if (prop === 'flex-shrink') shrink = Number(value)
+      else if (prop === 'flex') {
+        if (value === 'none') shrink = 0
+        else if (value === 'auto' || value === 'initial') shrink = 1
+        else {
+          const numbers = value.split(/\s+/).filter((v) => /^\d+(\.\d+)?$/.test(v))
+          shrink = numbers.length >= 2 ? Number(numbers[1]) : 1
+        }
+      }
+    }
+  }
+  return shrink
+}
+
+// Hlavní sloupec Přehledu je flex sloupec s vlastním posuvníkem. Karty mají `overflow: hidden`, takže
+// jejich minimální výška je 0: s výchozím `flex-shrink: 1` je flexbox při vyšším obsahu smrskne
+// (karta „Visí na tobě“ jako 30px proužek na desktopu 1883 × 900), místo aby sloupec posouval.
+describe('Přehled — karty se ve sloupci s posuvníkem nesmrskávají', () => {
+  it.each([390, 1024, 1883])('na šířce %i px se hlavní sloupec posouvá', (width) => {
+    const decls = declarationsAt(dashboardCssRaw, '.nordic-dashboard', width)
+    expect(decls.get('display')).toBe('flex')
+    expect(decls.get('flex-direction')).toBe('column')
+    expect(decls.get('overflow-y')).toBe('auto')
+  })
+
+  it.each([390, 1024, 1883])('na šířce %i px mají přímé děti hlavního sloupce přirozenou výšku', (width) => {
+    expect(flexShrinkAt(dashboardCssRaw, '.nordic-dashboard > *', width)).toBe(0)
+  })
+})
+
 describe('Spodní mobilní lišta — zvýraznění aktivní záložky (#192)', () => {
   it.each([360, 375, 768])('na šířce %i px má lišta odstup od všech okrajů, takže zvýraznění nesahá na hranu', (width) => {
     const padding = paddingAt(navCssRaw, '.mobile-nav', width)
