@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.8.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.7.0...v1.8.0) (2026-11-23)
+
+
+### Features
+
+* **dashboard:** cabin cover photo strip in CabinHero ([#336](https://github.com/Reathyze20/Kdynachatu.cz/issues/336)) ([49876d9](https://github.com/Reathyze20/Kdynachatu.cz/commit/49876d9fabac65409e079c389d1c1a5657616163))
+* **dashboard:** stay forecast card on the overview from 7 days before arrival ([#335](https://github.com/Reathyze20/Kdynachatu.cz/issues/335)) ([1c048e6](https://github.com/Reathyze20/Kdynachatu.cz/commit/1c048e68adb91c1fb5ea58bbbbdf4c2811f1ce64))
+* **gallery:** set a gallery photo as the cabin cover photo ([#332](https://github.com/Reathyze20/Kdynachatu.cz/issues/332)) ([1e1e4fb](https://github.com/Reathyze20/Kdynachatu.cz/commit/1e1e4fb5b57cd929e3509eae002eeae2859f1659))
+* **theme:** warm paper tokens instead of the cold green-gray (D4) ([#331](https://github.com/Reathyze20/Kdynachatu.cz/issues/331)) ([3b31533](https://github.com/Reathyze20/Kdynachatu.cz/commit/3b315339968d98019fed5754092ade5e749e2dce))
+* **weather:** hourly chart per stay day in the stay forecast card ([#334](https://github.com/Reathyze20/Kdynachatu.cz/issues/334)) ([7b8bb74](https://github.com/Reathyze20/Kdynachatu.cz/commit/7b8bb745b50919446a659cf3f442b556100523b7))
+* **weather:** stay forecast card in the stay detail ([#333](https://github.com/Reathyze20/Kdynachatu.cz/issues/333)) ([9666ee4](https://github.com/Reathyze20/Kdynachatu.cz/commit/9666ee41cc81af878c339e8b3ce5595eff6b96de))
+
+
+### Bug Fixes
+
+* **settings:** cabin settings no longer look dirty for one render after load ([#329](https://github.com/Reathyze20/Kdynachatu.cz/issues/329)) ([38a2399](https://github.com/Reathyze20/Kdynachatu.cz/commit/38a2399ddd807c32127250dd52838c491c9e9bd5))
+
 ## [1.7.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.6.0...v1.7.0) (2026-11-23)
 
 
