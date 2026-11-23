@@ -663,14 +663,9 @@
   color: var(--text-muted);
 }
 
+/* Bez opacity: zprůhlednění by srazilo kontrast tlumeného textu pod 4,5 : 1 (G1, #257). */
 .kanban-item.task-done {
-  opacity: 0.62;
-  transition: opacity 0.2s;
   background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
-}
-
-.kanban-item.task-done:hover {
-  opacity: 1;
 }
 
 .task-deadline {

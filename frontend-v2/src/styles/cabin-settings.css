@@ -246,7 +246,7 @@
 .cs-hint {
   display: block;
   font-size: 0.78rem;
-  color: var(--color-text-tertiary, #9ca3af);
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -258,7 +258,7 @@
 .cs-counter {
   display: block;
   font-size: 0.75rem;
-  color: var(--color-text-tertiary, #9ca3af);
+  color: var(--text-muted);
   text-align: right;
   margin-top: 4px;
 }
