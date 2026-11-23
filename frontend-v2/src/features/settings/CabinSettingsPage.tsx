@@ -8,7 +8,7 @@ import { ArrowLeft, GripVertical, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
-import { useCabinSettings, useUpdateCabinSettings } from './hooks/useCabinSettings'
+import { useCabinSettings, useRemoveCoverPhoto, useUpdateCabinSettings } from './hooks/useCabinSettings'
 import { showToast } from '@/lib/toast'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
@@ -208,6 +208,7 @@ export function CabinSettingsPanel({
     refetch: refetchSettings,
   } = useCabinSettings()
   const updateSettings = useUpdateCabinSettings()
+  const removeCoverPhoto = useRemoveCoverPhoto()
 
   const [activeTab, setActiveTab] = useState<TabId>('tab-basic')
 
@@ -229,9 +230,11 @@ export function CabinSettingsPanel({
 
   // Formulář se plní z nových dat ještě během vykreslení, ne v efektu: jinak by jedno vykreslení
   // porovnávalo prázdný formulář s uloženým snímkem a na chvíli hlásilo neuložené změny (#327).
-  const [populatedFrom, setPopulatedFrom] = useState<CabinConfig | undefined>(undefined)
-  if (settings && settings !== populatedFrom) {
-    setPopulatedFrom(settings)
+  // Klíčem je snímek polí formuláře: změna titulní fotky (#321) rozepsané úpravy nepřepíše.
+  const savedForm = useMemo(() => (settings ? savedSnapshot(settings) : null), [settings])
+  const [populatedFrom, setPopulatedFrom] = useState<string | null>(null)
+  if (settings && savedForm !== populatedFrom) {
+    setPopulatedFrom(savedForm)
     setName(settings.name ?? '')
     setDescription(settings.description ?? '')
     setLegacyLocationRemoved(false)
@@ -247,7 +250,6 @@ export function CabinSettingsPanel({
     setFeatures(settings.features ?? {})
   }
 
-  const savedForm = useMemo(() => (settings ? savedSnapshot(settings) : null), [settings])
   const currentForm = formSnapshot({ name, description, municipalityCode: municipality?.code ?? null, municipalityPending,
     legacyLocationRemoved, welcomeMessage, rules, isWinterized, checklist, features })
   const isDirty = savedForm !== null && currentForm !== savedForm
@@ -408,6 +410,35 @@ export function CabinSettingsPanel({
             <form id="cs-form" className="cabin-settings-form" noValidate onSubmit={handleSubmit} onChangeCapture={clearSaveFeedback} data-testid="cabin-settings-form">
               {/* Tab 1: Basic */}
               <div className={`cs-tab-pane${activeTab === 'tab-basic' ? ' active' : ''}`} id="tab-basic" data-testid="cabin-settings-basic-tab">
+                <section className="cs-section" data-testid="cabin-settings-cover-photo">
+                  <div className="cs-section-header">
+                    <h2>Titulní fotka</h2>
+                    <p>Fotka chaty, kterou uvidí všichni členové</p>
+                  </div>
+                  {settings?.coverPhotoUrl ? (
+                    <div className="flex flex-col items-start gap-3">
+                      <img
+                        src={settings.coverPhotoUrl}
+                        alt="Titulní fotka chaty"
+                        className="w-full aspect-[3/1] object-cover rounded-xl"
+                        data-testid="cabin-settings-cover-photo-preview"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        disabled={removeCoverPhoto.isPending}
+                        aria-label="Odebrat titulní fotku"
+                        onClick={() => removeCoverPhoto.mutate(undefined, { onSuccess: () => showToast('Titulní fotka odebrána', 'success') })}
+                        data-testid="cabin-settings-cover-photo-remove-button"
+                      >
+                        {removeCoverPhoto.isPending ? 'Odebírám…' : 'Odebrat'}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="m-0 text-sm text-muted-foreground">V Galerii u fotky zvol Nastavit jako titulní.</p>
+                  )}
+                </section>
+
                 <section className="cs-section">
                   <div className="cs-section-header">
                     <h2>Základní informace</h2>

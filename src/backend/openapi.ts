@@ -254,7 +254,10 @@ const schemas: Record<string, JsonSchema> = {
         nullable: true,
         items: { type: "string" },
       },
-      coverPhotoUrl: { type: "string", nullable: true },
+      coverPhotoUrl: {
+        type: "string", nullable: true, example: "/uploads/covers/0f8fad5b-d9cb-469f-a165-70867728950e.webp",
+        description: "Titulni fotka: siroka WebP varianta (desktop); uzka pro mobil ma stejne jmeno s priponou -sm. Meni se jen pres /api/cabin/cover-photo.",
+      },
       weatherLocation: { type: "string", nullable: true, example: "Třebenice", description: "Nazev obce; u chat bez vybrane obce stary volny text" },
       municipalityCode: { type: "integer", nullable: true, example: 565768 },
       municipalityName: { type: "string", nullable: true, example: "Třebenice" },
@@ -283,7 +286,6 @@ const schemas: Record<string, JsonSchema> = {
         nullable: true,
         items: { type: "string" },
       },
-      coverPhotoUrl: { type: "string", nullable: true },
       municipalityCode: {
         type: "integer", nullable: true, example: 565768,
         description: "Kod obce v RUIAN; server doplni nazev, okres, kraj a souradnice. null obec smaze. Volny text weatherLocation se neprijima.",
@@ -676,6 +678,33 @@ const paths: Record<string, OpenApiObject> = {
         "400": jsonResponse(ref("ErrorResponse"), "Neplatny vstup"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "403": jsonResponse(ref("ErrorResponse"), "Pouze admin muze menit nastaveni"),
+      },
+    },
+  },
+  "/api/cabin/cover-photo": {
+    put: {
+      tags: ["Cabin"],
+      summary: "Nastav fotku z Galerie chaty jako titulni fotku (jen spravce)",
+      description: "Server z fotky vyrobi dve WebP varianty (siroka 1000x360, uzka 750x280 s priponou -sm, orez na stred) pod novym jmenem a smaze soubory predchozi titulni fotky. Titulni fotka je kopie, smazani zdrojove fotky ji nezrusi. Chate odejde realtime event cabin:changed.",
+      security: bearerSecurity,
+      requestBody: jsonRequestBody({ type: "object", required: ["photoId"], properties: { photoId: { type: "string", format: "uuid" } } }),
+      responses: {
+        "200": jsonResponse(ref("CabinSettings"), "Titulni fotka nastavena, odpoved je aktualni nastaveni chaty"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatne ID fotky"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Titulni fotku muze menit jen spravce chaty"),
+        "404": jsonResponse(ref("ErrorResponse"), "Fotka neni v Galerii teto chaty"),
+      },
+    },
+    delete: {
+      tags: ["Cabin"],
+      summary: "Odeber titulni fotku chaty (jen spravce)",
+      description: "Vynuluje coverPhotoUrl a smaze soubory obou variant. Chate odejde realtime event cabin:changed.",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(ref("CabinSettings"), "Titulni fotka odebrana"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Titulni fotku muze menit jen spravce chaty"),
       },
     },
   },
