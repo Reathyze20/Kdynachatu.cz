@@ -420,7 +420,10 @@ export function CabinSettingsPanel({
                       <img
                         src={settings.coverPhotoUrl}
                         alt="Titulní fotka chaty"
-                        className="w-full aspect-[3/1] object-cover rounded-xl"
+                        width={1920}
+                        height={1200}
+                        decoding="async"
+                        className="w-full max-w-md h-auto aspect-[16/10] object-cover object-center rounded-xl"
                         data-testid="cabin-settings-cover-photo-preview"
                       />
                       <button

@@ -1,5 +1,5 @@
 /**
- * Titulní fotka chaty (#321): dvě malé WebP varianty v poměru pruhu na Přehledu, ořez na střed.
+ * Titulní fotka chaty (#321): dvě WebP varianty ve velikosti pozadí appky (#340), ořez na střed.
  * Do `Cabin.coverPhotoUrl` jde cesta široké varianty (`/uploads/covers/<uuid>.webp`),
  * úzká pro mobil má stejné jméno s příponou `-sm` (`<uuid>-sm.webp`).
  * Bez importu configu: adresáře dodává volající, unit testy tak běží v dočasném adresáři.
@@ -12,11 +12,17 @@ import sharp from "sharp";
 export const COVER_PHOTO_URL_PREFIX = "/uploads/covers/";
 export const COVER_PHOTO_NARROW_SUFFIX = "-sm";
 
-/** Pruh je asi 140 px vysoký na mobilu a 200 px na desktopu; varianty jsou pro 2× hustotu. */
+/**
+ * Pozadí přes celou obrazovku (#340): desktop na šířku, mobil na výšku. `maxBytes` je strop
+ * velikosti souboru; kvalita se snižuje po `COVER_PHOTO_QUALITIES`, dokud se varianta nevejde.
+ */
 export const COVER_PHOTO_SIZES = {
-  wide: { width: 1000, height: 360, quality: 64 },
-  narrow: { width: 750, height: 280, quality: 68 },
+  wide: { width: 1920, height: 1200, maxBytes: 200_000 },
+  narrow: { width: 1080, height: 1920, maxBytes: 150_000 },
 } as const;
+
+/** Nejvyšší kvalita první; poslední stupeň se použije, i když by soubor byl pořád větší. */
+export const COVER_PHOTO_QUALITIES = [72, 64, 56, 48, 40] as const;
 
 const COVER_URL = /^\/uploads\/covers\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.webp$/;
 
@@ -39,12 +45,9 @@ export async function createCoverPhotoVariants(sourcePath: string, coversDir: st
   try {
     const source = await fs.readFile(sourcePath);
     await Promise.all(
-      (["wide", "narrow"] as const).map((variant) => {
-        const { width, height, quality } = COVER_PHOTO_SIZES[variant];
-        return sharp(source)
-          .resize(width, height, { fit: "cover", position: "centre" })
-          .webp({ quality })
-          .toFile(path.join(coversDir, names[variant]));
+      (["wide", "narrow"] as const).map(async (variant) => {
+        const webp = await encodeWithinBudget(source, COVER_PHOTO_SIZES[variant]);
+        await fs.writeFile(path.join(coversDir, names[variant]), webp);
       }),
     );
   } catch (error) {
@@ -52,6 +55,23 @@ export async function createCoverPhotoVariants(sourcePath: string, coversDir: st
     throw error;
   }
   return url;
+}
+
+/** Ořízne zdroj na střed do cílové velikosti a zakóduje ho do WebP v nejvyšší kvalitě, která se vejde. */
+async function encodeWithinBudget(
+  source: Buffer,
+  { width, height, maxBytes }: { width: number; height: number; maxBytes: number },
+): Promise<Buffer> {
+  const { data, info } = await sharp(source)
+    .resize(width, height, { fit: "cover", position: "centre" })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let webp: Buffer | undefined;
+  for (const quality of COVER_PHOTO_QUALITIES) {
+    webp = await sharp(data, { raw: info }).webp({ quality }).toBuffer();
+    if (webp.length <= maxBytes) break;
+  }
+  return webp!;
 }
 
 /** Smaže obě varianty titulní fotky; neznámou URL a chybějící soubory tiše přeskočí. */

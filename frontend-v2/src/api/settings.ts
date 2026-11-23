@@ -21,7 +21,10 @@ export interface CabinConfig {
   longitude: number | null
   rules: string | null
   departureChecklist: string[] | null
-  /** Titulní fotka: široká WebP varianta, úzká pro mobil má stejné jméno s příponou -sm (#321). */
+  /**
+   * Titulní fotka ve velikosti pozadí (#321, #340): WebP pro desktop 1920 × 1200,
+   * mobilní 1080 × 1920 má stejné jméno s příponou -sm.
+   */
   coverPhotoUrl: string | null
   isWinterized: boolean
   features: Record<string, boolean> | null

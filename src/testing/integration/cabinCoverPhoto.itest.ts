@@ -72,7 +72,7 @@ describe("PUT /api/cabin/cover-photo – titulní fotka z Galerie (#321)", () =>
     assert.equal((await setCover(world.adminA, "neni-uuid")).status, 400);
   });
 
-  test("správce nastaví fotku: dvě WebP varianty, cesta v nastavení chaty, realtime jen chatě A", async () => {
+  test("správce nastaví fotku: dvě WebP varianty ve velikosti pozadí, cesta v nastavení chaty, realtime jen chatě A", async () => {
     const recorder = recordRealtimeEmits();
     let res;
     try {
@@ -83,7 +83,9 @@ describe("PUT /api/cabin/cover-photo – titulní fotka z Galerie (#321)", () =>
     assert.equal(res.status, 200);
     const url = await coverOf(world.cabinA.id);
     assert.equal(res.body.coverPhotoUrl, url);
-    for (const file of coverFiles(url)) assert.equal((await sharp(fs.readFileSync(file)).metadata()).format, "webp");
+    const [wide, narrow] = await Promise.all(coverFiles(url).map((file) => sharp(fs.readFileSync(file)).metadata()));
+    assert.deepEqual([wide.format, wide.width, wide.height], ["webp", 1920, 1200]);
+    assert.deepEqual([narrow.format, narrow.width, narrow.height], ["webp", 1080, 1920]);
     assert.deepEqual(recorder.emits.map((e) => [e.room, e.event]), [[`cabin:${world.cabinA.id}`, "cabin:changed"]]);
 
     const settings = await as(app, world.memberA).get("/api/cabin");

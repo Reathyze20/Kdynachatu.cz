@@ -162,8 +162,9 @@ export interface MunicipalitySearchResponse {
 }
 
 // PUT /api/cabin/cover-photo – titulní fotka chaty z vlastní Galerie (jen správce, #321).
-// Odpověď (i u DELETE) je nastavení chaty; coverPhotoUrl je široká WebP varianta,
-// úzká pro mobil má stejné jméno s příponou -sm (…/<uuid>-sm.webp).
+// Odpověď (i u DELETE) je nastavení chaty; coverPhotoUrl je WebP varianta pro desktop
+// 1920 × 1200 (do ~200 kB), mobilní 1080 × 1920 (do ~150 kB) má stejné jméno s příponou -sm
+// (…/<uuid>-sm.webp). Obě jsou ve velikosti pozadí appky (#340).
 export interface SetCabinCoverPhotoRequest {
   photoId: string;
 }
