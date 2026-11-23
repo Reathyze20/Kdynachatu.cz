@@ -65,10 +65,10 @@ export async function writeSeedImage(uploadsPath: string, slug: string, color: S
  * (`cabinCoverPhoto.ts`): `seed-cover.webp` (široká) a `seed-cover-sm.webp` (mobil),
  * k oběma náhled. Vrací `SEED_COVER_URL`.
  */
-export async function writeSeedCoverPhoto(uploadsPath: string, sourcePath: string = SEED_COVER_SOURCE): Promise<string> {
+export async function writeSeedCoverPhoto(uploadsPath: string): Promise<string> {
   const thumbsPath = path.join(uploadsPath, "thumbs");
   await fs.promises.mkdir(thumbsPath, { recursive: true }); // vytvoří i uploadsPath
-  const source = await fs.promises.readFile(sourcePath);
+  const source = await fs.promises.readFile(SEED_COVER_SOURCE);
   const thumb = await sharp(source).resize(400, 300, { fit: "cover", position: "centre" }).webp({ quality: 70 }).toBuffer();
   const variants = [
     { fileName: `${SEED_COVER_NAME}.webp`, size: COVER_PHOTO_SIZES.wide },
