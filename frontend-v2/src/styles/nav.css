@@ -448,8 +448,8 @@
 @media (max-width: 768px) {
 
   /* ── Mobile Header — fixed top ─────────────────────────────── */
-  /* Warm wash + ridge line echo the login-screen photo so the cabin
-     identity carries past login instead of dropping to flat white. */
+  /* Povrch menu = plný papír karty (D3, #339); hřebínek pod lištou
+     připomíná fotku z přihlášení. */
   .mobile-header {
     display: flex;
     justify-content: space-between;
@@ -461,7 +461,7 @@
     height: 56px;
     padding: 0 16px;
     padding-top: env(safe-area-inset-top, 0px);
-    background: linear-gradient(180deg, #ffffff 0%, var(--raw-color-5, #f4f7f5) 100%);
+    background: rgb(var(--sheet));
     border-bottom: none;
     z-index: 2000;
     box-sizing: border-box;
@@ -496,8 +496,8 @@
     left: 0;
     right: 0;
     z-index: var(--z-sticky);
-    background: var(--bg-glass-strong);
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgb(var(--sheet));
+    border-top: 1px solid rgb(var(--rule-soft));
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
     justify-content: space-around;
     align-items: center;

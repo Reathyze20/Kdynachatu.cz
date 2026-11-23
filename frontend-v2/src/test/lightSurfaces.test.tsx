@@ -81,19 +81,28 @@ describe('Design tokeny povrchů z mocku (C1)', () => {
   const tokensIn = (selector: string) => variables.filter((r) => r.selectors.includes(selector))
 
   // Teplý papír (D4, #320, tabulka ve specu #319) místo zelenošedé z C4a.
-  const LIGHT = { '--page': '246 240 230', '--sheet': '255 252 246', '--sheet-alt': '242 234 220', '--rule': '230 221 207', '--rule-soft': '238 231 220' }
+  // Plný papír (D3, #339, spec #337): karta má dnešní barvu pozadí, vnořená pole --inset, linka karty 230 221 207.
+  const LIGHT = {
+    '--page': '246 240 230', '--sheet': '246 240 230', '--sheet-alt': '242 234 220', '--inset': '238 230 217',
+    '--rule': '230 221 207', '--rule-soft': '230 221 207', '--under-top': '230 218 198', '--under-bottom': '220 205 181',
+  }
 
   it.each(Object.entries(LIGHT))('světlý režim: %s = %s, tmavý (.dark) ho definuje taky', (token, value) => {
     expect(lastDecl(tokensIn(':root'), token)).toBe(value)
     expect(lastDecl(tokensIn('.dark'), token)).toBeTruthy()
   })
 
-  it('jemný stín --lift (světlý i tmavý) a pozadí aplikace jsou tokeny', () => {
-    expect(lastDecl(tokensIn(':root'), '--lift')).toMatch(/rgb\(16 40 28/)
+  it('výraznější stín --lift podle pickeru 08 (plný papír), tmavý ho definuje taky', () => {
+    expect(lastDecl(tokensIn(':root'), '--lift')).toBe('0 1px 2px rgb(0 0 0 / .06), 0 14px 32px -16px rgb(30 20 10 / .45)')
     expect(lastDecl(tokensIn('.dark'), '--lift')).toBeTruthy()
+  })
+
+  it('podklad pod kartami je varianta D: gradient --under-top → --under-bottom se září --glow vpravo nahoře', () => {
+    const backdrop = lastDecl(tokensIn(':root'), '--bg-app-backdrop')
     // Světlo v rohu bere --glow, ne --sheet-alt, aby plochy na --sheet-alt (vybraný den) neměnily význam (#320).
-    expect(lastDecl(tokensIn(':root'), '--bg-app-backdrop')).toMatch(/radial-gradient\([^;]*var\(--glow\)/)
-    expect(lastDecl(tokensIn(':root'), '--bg-app-backdrop')).not.toMatch(/--sheet-alt/)
+    expect(backdrop).toMatch(/^radial-gradient\(1200px 700px at 85% -10%, rgb\(var\(--glow\)\), transparent 60%\)/)
+    expect(backdrop).toMatch(/linear-gradient\(180deg, rgb\(var\(--under-top\)\), rgb\(var\(--under-bottom\)\)\)$/)
+    expect(backdrop).not.toMatch(/--sheet-alt/)
   })
 })
 
@@ -116,6 +125,8 @@ describe('Teplý papír (D4, #320): hodnoty tokenů podle specu #319', () => {
   it.each([
     ['--page', '24 20 17'], ['--sheet', '37 32 27'], ['--sheet-alt', '47 40 33'],
     ['--rule', '66 57 48'], ['--rule-soft', '52 45 38'],
+    // Plný papír (#339): vnořené pole o kousek světlejší než karta, podklad tmavší než karta.
+    ['--inset', '44 38 32'], ['--under-top', '24 20 17'], ['--under-bottom', '18 15 12'],
   ])('tmavý režim: %s = %s', (token, value) => {
     expect(lastDecl(dark, token)).toBe(value)
   })
@@ -154,6 +165,13 @@ describe('Lehké pozadí po přihlášení (C5a)', () => {
     expect(rulesFor('base.css', 'body::before')).toEqual([])
   })
 
+  it('podklad jde přes celou výšku okna i u krátkých stránek a na mobilu ho nepřekryje plný obal appky (#339)', () => {
+    expect(lastDecl(rulesFor('base.css', 'body').filter((r) => r.media === null), 'min-height')).toBe('100vh')
+    const shell = ALL_RULES.filter((r) => r.selectors.includes('.app-container'))
+    expect(shell.length).toBeGreaterThan(0)
+    for (const prop of ['background', 'background-color']) expect(lastDecl(shell, prop), prop).toBeUndefined()
+  })
+
   it('fotku v aplikaci nese jen třída .photo-backdrop (přihlášení), mimo veřejné stránky nikde jinde', () => {
     const offenders = ALL_RULES
       .filter((r) => !PUBLIC_FILES.some((f) => r.file.endsWith(f)))
@@ -189,6 +207,26 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
     expect(lastDecl(rules, 'background')).toBe('rgb(var(--sheet))')
     expect(lastDecl(rules, 'border')).toBe('1px solid rgb(var(--rule-soft))')
     expect(lastDecl(rules, 'box-shadow')).toBe('var(--lift)')
+  })
+
+  // Na mobilu nese povrch menu horní a spodní lišta (D3, #339), na desktopu .app-sidebar výš.
+  it.each(['.mobile-header', '.mobile-nav'])('mobil: %s má plný papír karty --sheet', (selector) => {
+    const rules = rulesFor('nav.css', selector).filter((r) => r.media?.includes('max-width: 768px'))
+    expect(rules.length).toBeGreaterThan(0)
+    expect(lastDecl(rules, 'background')).toBe('rgb(var(--sheet))')
+  })
+
+  it('boční panel Kalendáře je papírová karta a plocha Zásob vnořené pole, ne studená bílá (#339)', () => {
+    const panel = ALL_RULES.filter((r) => r.file.endsWith('/reservations/Reservations.module.css') && r.selectors.includes('.listContainer') && r.media === null)
+    expect(lastDecl(panel, 'background')).toBe('rgb(var(--sheet))')
+    expect(lastDecl(panel, 'border')).toBe('1px solid rgb(var(--rule-soft))')
+    expect(lastDecl(panel, 'box-shadow')).toBe('var(--lift)')
+    expect(lastDecl(rulesFor('shopping.css', '.shopping-page').filter((r) => r.media === null), 'background')).toBe('rgb(var(--inset))')
+    // Mobil: kalendář je papírová karta, Zásoby leží přímo na podkladu.
+    const mobile = (r: Rule) => r.media?.includes('max-width: 768px') ?? false
+    const calendar = ALL_RULES.filter((r) => r.file.endsWith('/reservations/Reservations.module.css') && r.selectors.includes('.calendarCard') && mobile(r))
+    expect(lastDecl(calendar, 'background')).toBe('rgb(var(--sheet))')
+    expect(lastDecl(rulesFor('shopping.css', '.shopping-page').filter(mobile), 'background')).toBe('transparent')
   })
 
   it('levý panel Zásob je plný a karty nesimulují sklo rozmazanou fotkou v pseudoelementech', () => {
@@ -257,5 +295,25 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
   it('tmavý: vybraný den (--foreground na --sheet-alt) a zelený odkaz --ok na kartě', () => {
     expect(contrast(rgbOf(bridgeDark, '--foreground'), rgbOf(dark, '--sheet-alt'))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(rgbOf(dark, '--ok'), rgbOf(dark, '--sheet'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  // Tabulka kontrastu ve specu #337 (plný papír, D3): karta = 246 240 230, vnořené pole = 238 230 217.
+  it.each([
+    ['hlavní text', '--text-main', '--sheet', 14.0],
+    ['vedlejší text', '--text-muted', '--sheet', 6.6],
+    ['akční zelená', '--brand-primary', '--sheet', 4.5],
+    ['vedlejší text na vnořeném poli', '--text-muted', '--inset', 6.1],
+  ])('světlý (spec #337): %s %s na %s ≥ %s : 1', (_name, text, surface, min) => {
+    expect(contrast(rgbOf(root, text), rgbOf(root, surface))).toBeGreaterThanOrEqual(min)
+  })
+
+  it.each(['--foreground', '--muted-foreground'])('tmavý: %s na vnořeném poli --inset', (token) => {
+    expect(contrast(rgbOf(bridgeDark, token), rgbOf(dark, '--inset'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  // Text mimo karty (nadpis stránky, prázdný stav) leží na podkladu D; i na jeho tmavším konci musí být čitelný.
+  it.each(['--under-top', '--under-bottom'])('světlý: hlavní i vedlejší text na podkladu %s', (surface) => {
+    expect(contrast(rgbOf(root, '--text-main'), rgbOf(root, surface))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(rgbOf(root, '--text-muted'), rgbOf(root, surface))).toBeGreaterThanOrEqual(4.5)
   })
 })

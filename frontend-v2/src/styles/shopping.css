@@ -9,8 +9,8 @@
   flex-direction: column;
   flex-grow: 1;
   min-height: 0;
-  /* Subtle forest gradient — same as chat area */
-  background: linear-gradient(180deg, #f0f4f1 0%, #e8ede9 50%, #f4f7f5 100%);
+  /* Plocha pod kartou seznamu = vnořené pole papíru (D3, #339), ne studený lesní gradient */
+  background: rgb(var(--inset));
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   width: 100%;
@@ -2015,7 +2015,9 @@
 @media (max-width: 768px) {
 
   /* Page container — no padding, full width, fill viewport */
+  /* Bez rámu karty: na mobilu leží seznamy přímo na podkladu appky (#339) */
   .shopping-page {
+    background: transparent;
     border-radius: 0;
     box-shadow: none;
     flex: 1 1 auto;
