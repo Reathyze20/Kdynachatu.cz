@@ -12,7 +12,7 @@ import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
 import { AttentionCard } from "./AttentionCard";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
 import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
@@ -188,7 +188,7 @@ export function DashboardPage() {
     ? pickOverviewStay(reservationsQuery.data.activeReservation, reservationsQuery.data.upcomingReservations, user, getLocalTodayIso())
     : null;
   // „Potřebuje pozornost“: na mobilu pod „Visí na tobě“, na desktopu v bočním panelu (#275)
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const attention = shoppingQuery.isError ? (
     <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
   ) : shoppingQuery.data ? (

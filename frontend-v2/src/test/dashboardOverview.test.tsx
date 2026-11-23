@@ -281,6 +281,17 @@ describe('Přehled: kompaktní karta chaty a pozvánka (#172, #338)', () => {
     expect(screen.queryByTestId('cabin-hero')).not.toBeInTheDocument()
   })
 
+  it('na desktopu karta na Přehledu není (dnešek je v menu), jméno chaty zůstává jako skrytý nadpis', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    try {
+      renderOverview(reservations())
+      expect(await screen.findByRole('heading', { level: 1, name: 'Chata U Lesa' })).toHaveClass('sr-only')
+      expect(screen.queryByTestId('cabin-today')).not.toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('výstrahu na bouřku z dalších dnů ukáže karta pod řádkem počasí', async () => {
     weather.current = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
     renderOverview(reservations())

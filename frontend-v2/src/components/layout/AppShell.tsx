@@ -16,7 +16,7 @@ import { HelpFab } from '@/components/shared/HelpFab'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
 import { RouteTransitionSkeleton, getRouteSkeletonVariant } from '@/components/shared/RouteTransitionSkeleton'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -40,7 +40,7 @@ export function AppShell() {
   const [showRouteSkeleton, setShowRouteSkeleton] = useState(false)
   const isFirstRoutePaint = useRef(true)
   // Dnešek chaty v menu jen tam, kde má menu popisky (#338); jinak ho nese karta na Přehledu
-  const wideDesktop = useMediaQuery('(min-width: 1024px)')
+  const wideDesktop = useMediaQuery(WIDE_DESKTOP_QUERY)
 
   const animalIcon = user?.animalIcon ?? null
   const username = user?.username ?? 'Uživatel'

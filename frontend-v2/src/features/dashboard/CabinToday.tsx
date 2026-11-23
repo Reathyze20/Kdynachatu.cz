@@ -5,23 +5,17 @@
  * kompaktní karta nahoře na Přehledu se jménem chaty jako h1. Nahradila pruh CabinHero.
  */
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { fetchWeather } from "@/api/dashboard";
 import { useCabinSettings } from "@/features/settings/hooks/useCabinSettings";
+import { useTodayWeather } from "@/features/weather/hooks/useTodayWeather";
 import { getTodayFormatted } from "@/lib/dateUtils";
 import { regionEventsUrl } from "@/lib/regionEvents";
 
 export function CabinToday({ variant }: { variant: "sidebar" | "card" }) {
   const { isAdmin } = useAuth();
   const cabin = useCabinSettings();
-  const { data: weather } = useQuery({
-    queryKey: ["weather", cabin.data?.weatherLocation ?? null, cabin.data?.latitude ?? null, cabin.data?.longitude ?? null],
-    queryFn: () => fetchWeather(cabin.data),
-    enabled: cabin.isSuccess,
-    staleTime: 10 * 60 * 1000,
-  });
+  const { data: weather } = useTodayWeather(cabin.data ?? undefined);
   const storm = weather && typeof weather === "object" && weather.stormAlert && weather.stormAlert.day !== "Dnes" ? weather.stormAlert : null;
   const missingLocation = weather === "EMPTY_LOCATION" || weather === "LOCATION_NOT_FOUND";
   const temp = weather && typeof weather === "object" ? Math.round(weather.temp) : null;
