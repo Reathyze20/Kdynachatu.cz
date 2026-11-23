@@ -8,6 +8,7 @@ import { useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { DesktopSidebar } from './DesktopSidebar'
+import { CabinToday } from '@/features/dashboard/CabinToday'
 import { MobileHeader } from './MobileHeader'
 import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -15,6 +16,7 @@ import { HelpFab } from '@/components/shared/HelpFab'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
 import { RouteTransitionSkeleton, getRouteSkeletonVariant } from '@/components/shared/RouteTransitionSkeleton'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -37,6 +39,8 @@ export function AppShell() {
   useRealtimeSync()
   const [showRouteSkeleton, setShowRouteSkeleton] = useState(false)
   const isFirstRoutePaint = useRef(true)
+  // Dnešek chaty v menu jen tam, kde má menu popisky (#338); jinak ho nese karta na Přehledu
+  const wideDesktop = useMediaQuery(WIDE_DESKTOP_QUERY)
 
   const animalIcon = user?.animalIcon ?? null
   const username = user?.username ?? 'Uživatel'
@@ -72,7 +76,7 @@ export function AppShell() {
 
         {/* Desktop rám #1b: levý sidebar s profilovým menu (bez horní lišty, #205)
             + obsah s omezenou čitelnou šířkou (na mobilu display: contents) */}
-        <DesktopSidebar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
+        <DesktopSidebar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} today={wideDesktop ? <CabinToday variant="sidebar" /> : null} />
         <div className="app-shell-body">
         <OfflineBanner />
 

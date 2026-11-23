@@ -376,8 +376,8 @@
   }
 }
 
-/* ── Kompaktní pruh chaty nad oběma sloupci (#172, návrh #1 díl 1 = A) ──
-   Placeholder, jméno a jeden řádek kontextu; titulní fotka v pruhu skončila (#338). */
+/* ── Dnešek chaty (#338, CabinToday): na mobilu kompaktní karta nahoře na Přehledu,
+   na desktopu blok v hlavičce levého menu pod názvem chaty. */
 .dashboard-frame {
   display: flex;
   flex-direction: column;
@@ -386,31 +386,13 @@
   min-height: 0;
 }
 
-/* Obal drží vodorovné odsazení sloupců, karta pod textem drží kontrast i na fotce pozadí (G1) */
-.cabin-hero-wrap {
-  padding: 12px 12px 0;
-}
-
-@media (min-width: 769px) {
-  .cabin-hero-wrap {
-    padding: 16px 16px 0;
-  }
-}
-
-@media (min-width: 1100px) {
-  .cabin-hero-wrap {
-    padding: 12px 20px 0;
-  }
-}
-
-.glass-card.cabin-hero {
+.glass-card.cabin-today--card {
   flex-direction: row;
   align-items: center;
   gap: var(--space-md);
   padding: 10px 14px;
 }
 
-.cabin-hero__media,
 .overview-invite__media {
   display: grid;
   place-items: center;
@@ -420,24 +402,29 @@
   background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
 }
 
-.cabin-hero__media {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-}
-
-.cabin-hero__media img,
 .overview-invite__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.cabin-hero__text {
+.cabin-today__text {
   min-width: 0;
 }
 
-.cabin-hero__name {
+/* V levém menu pod názvem chaty, od navigace oddělený linkou (picker 08) */
+.cabin-today--sidebar {
+  margin-top: calc(-1 * var(--space-md));
+  padding: 0 12px var(--space-xs);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.cabin-today--sidebar b {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.cabin-today__name {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 800;
@@ -448,7 +435,7 @@
   white-space: nowrap;
 }
 
-.cabin-hero__context {
+.cabin-today__context {
   margin: 2px 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -458,7 +445,7 @@
   color: var(--text-muted);
 }
 
-.cabin-hero__alert {
+.cabin-today__alert {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -469,12 +456,12 @@
   color: var(--color-warning-text);
 }
 
-.cabin-hero__alert svg {
+.cabin-today__alert svg {
   flex-shrink: 0;
   color: var(--status-warning);
 }
 
-.cabin-hero__link {
+.cabin-today__link {
   display: inline-flex;
   align-items: center;
   min-height: var(--touch-target-min);
@@ -484,7 +471,7 @@
 }
 
 /* Odkaz na kalendář Kudy z nudy (#283): tichý, ale 48 px na dotyk a 16 px text (B2, G3) */
-.cabin-hero__events {
+.cabin-today__events {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
@@ -496,7 +483,7 @@
   color: var(--brand-primary);
 }
 
-.cabin-hero__events svg {
+.cabin-today__events svg {
   flex-shrink: 0;
 }
 

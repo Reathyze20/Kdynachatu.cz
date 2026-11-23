@@ -4,7 +4,9 @@
  * Na desktopu je místa dost, takže doplňky z „Víc“ jsou vidět rovnou jako skupina pod hlavními sekcemi.
  * Dole je nápověda (#205): na desktopu nahrazuje plovoucí tlačítko, které překrývalo obsah.
  * Pod ní profilové menu s administrací a odhlášením (#205): desktop nemá horní lištu.
+ * Pod názvem chaty je slot `today` pro dnešek chaty (datum, počasí, #338); plní ho AppShell.
  */
+import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
@@ -16,9 +18,11 @@ import { SidebarProfileMenu } from './SidebarProfileMenu'
 
 interface DesktopSidebarProps {
   onOpenProfileDrawer: () => void
+  /** Obsah pod názvem chaty (dnešek chaty); bez chaty se nevykreslí. */
+  today?: ReactNode
 }
 
-export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
+export function DesktopSidebar({ onOpenProfileDrawer, today }: DesktopSidebarProps) {
   const { user } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
@@ -51,6 +55,7 @@ export function DesktopSidebar({ onOpenProfileDrawer }: DesktopSidebarProps) {
         <img src="/logo-icon.svg" alt="" className="nav-logo-icon" />
         <span className="app-sidebar-label">{cabin?.name ?? 'Kdy na chatu'}</span>
       </Link>
+      {hasCabin ? today : null}
 
       {hasCabin ? (
         <nav className="app-sidebar-nav" aria-label="Hlavní navigace" data-testid="desktop-primary-nav">

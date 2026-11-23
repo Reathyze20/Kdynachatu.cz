@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import apiClient from "@/api/client";
-import { fetchWeather } from "@/api/dashboard";
 import type { CabinSettings, DashboardActivationData, DashboardReservationsData, DashboardShoppingData, DashboardNotesData } from "@/api/dashboard";
 import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppingSchema, DashboardNotesSchema } from "@/api/schemas";
 import { ActiveReservation } from "./ActiveReservation";
@@ -13,8 +12,8 @@ import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
 import { AttentionCard } from "./AttentionCard";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { CabinHero } from "./CabinHero";
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
+import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
 import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
 import { InstallCard } from "@/components/shared/InstallCard";
@@ -181,14 +180,6 @@ export function DashboardPage() {
     }
   }, [notesQuery.data]);
 
-  // Weather is fetched client-side: stored municipality centre, else the legacy weatherLocation text
-  const weatherQuery = useQuery({
-    queryKey: ["weather", cabinQuery.data?.weatherLocation ?? null, cabinQuery.data?.latitude ?? null, cabinQuery.data?.longitude ?? null],
-    queryFn: () => fetchWeather(cabinQuery.data),
-    enabled: cabinQuery.isSuccess,
-    staleTime: 10 * 60 * 1000,
-  });
-
   const cabinError = cabinQuery.isError;
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
@@ -197,7 +188,7 @@ export function DashboardPage() {
     ? pickOverviewStay(reservationsQuery.data.activeReservation, reservationsQuery.data.upcomingReservations, user, getLocalTodayIso())
     : null;
   // „Potřebuje pozornost“: na mobilu pod „Visí na tobě“, na desktopu v bočním panelu (#275)
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const attention = shoppingQuery.isError ? (
     <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
   ) : shoppingQuery.data ? (
@@ -206,6 +197,9 @@ export function DashboardPage() {
 
   const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
+      {/* Dnešek chaty (#338): na desktopu v hlavičce levého menu, jinak kompaktní karta nahoře */}
+      {isDesktop ? <h1 className="sr-only">{cabinQuery.data?.name ?? "Přehled"}</h1> : <CabinToday variant="card" />}
+
       {/* Winter banner */}
       {isWinterized && (
         <div id="dashboard-winter-banner" className="winter-banner" data-testid="dashboard-winter-banner">
@@ -288,7 +282,7 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (pozornost, vzkaz). Další příjezd je jen v hlavičce (#272). Počasí je jen řádek v pruhu nahoře (mock 01).
+  // Rám #1b: hlavní sloupec = akce a stav, boční panel = lehký kontext (pozornost, vzkaz). Další příjezd je jen v hlavičce (#272).
   const aside = (
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {isDesktop && attention}
@@ -313,10 +307,8 @@ export function DashboardPage() {
     </div>
   );
 
-  // Kompaktní pruh chaty nad oběma sloupci (mock 01b: hero nad hlavním sloupcem i bočním panelem).
   return (
     <div className="dashboard-frame">
-      <CabinHero cabinName={cabinQuery.data?.name} weather={weatherQuery.data} region={cabinQuery.data?.municipalityRegion} />
       <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
       {/* Výzva k instalaci jednou po 3. návštěvě, na konci stránky (#277) */}
       <InstallCard />

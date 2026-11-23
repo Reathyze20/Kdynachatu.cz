@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { CabinToday } from '@/features/dashboard/CabinToday'
+import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import apiClient from '@/api/client'
 import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 import statusHeaderCss from '@/styles/status-header.css?raw'
@@ -267,40 +269,51 @@ describe('Přehled: jen akce a stav chaty (#172)', () => {
   })
 })
 
-describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
-  it('pruh nahoře ukazuje jméno chaty, dnešní datum a počasí a má slot na fotku', async () => {
+describe('Přehled: kompaktní karta chaty a pozvánka (#172, #338)', () => {
+  it('karta nahoře ukazuje jméno chaty, dnešní datum a počasí, pruh CabinHero není', async () => {
     weather.current = { temp: -3.4, description: 'Zataženo' }
     renderOverview(reservations())
 
-    const hero = await screen.findByTestId('cabin-hero')
-    expect(await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })).toBeInTheDocument()
-    await waitFor(() => expect(hero).toHaveTextContent('Čtvrtek 10. prosince · −3 °C · Zataženo'))
-    expect(within(hero).getByTestId('cabin-hero-media')).toBeInTheDocument()
-    expect(screen.getByTestId('two-column-layout')).not.toContainElement(hero)
+    const today = await screen.findByTestId('cabin-today')
+    expect(await within(today).findByRole('heading', { level: 1, name: 'Chata U Lesa' })).toBeInTheDocument()
+    await waitFor(() => expect(today).toHaveTextContent('Čtvrtek 10. prosince · −3 °C · Zataženo'))
+    expect(screen.getByTestId('dashboard-page')).toContainElement(today)
+    expect(screen.queryByTestId('cabin-hero')).not.toBeInTheDocument()
   })
 
-  it('výstrahu na bouřku z dalších dnů ukáže pruh pod řádkem počasí', async () => {
+  it('na desktopu karta na Přehledu není (dnešek je v menu), jméno chaty zůstává jako skrytý nadpis', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    try {
+      renderOverview(reservations())
+      expect(await screen.findByRole('heading', { level: 1, name: 'Chata U Lesa' })).toHaveClass('sr-only')
+      expect(screen.queryByTestId('cabin-today')).not.toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('výstrahu na bouřku z dalších dnů ukáže karta pod řádkem počasí', async () => {
     weather.current = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
     renderOverview(reservations())
 
-    const hero = await screen.findByTestId('cabin-hero')
-    expect(await within(hero).findByText('Zítra: Bouřka')).toBeInTheDocument()
+    const today = await screen.findByTestId('cabin-today')
+    expect(await within(today).findByText('Zítra: Bouřka')).toBeInTheDocument()
   })
 
-  it('bez lokality počasí nabídne pruh správci odkaz do nastavení, členovi nic', async () => {
+  it('bez lokality počasí nabídne karta správci odkaz do nastavení, členovi nic', async () => {
     weather.current = 'EMPTY_LOCATION'
     auth.isAdmin = true
     renderOverview(reservations())
 
-    const hero = await screen.findByTestId('cabin-hero')
-    expect(await within(hero).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
+    const today = await screen.findByTestId('cabin-today')
+    expect(await within(today).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
   })
 
-  it('s vybranou obcí nabídne pruh odkaz „Akce v kraji“ na kalendář Kudy z nudy v novém panelu (#283)', async () => {
+  it('s vybranou obcí nabídne karta odkaz „Akce v kraji“ na kalendář Kudy z nudy v novém panelu (#283)', async () => {
     renderOverview(reservations(), NO_SHOPPING, { municipalityName: 'Telč', municipalityRegion: 'Kraj Vysočina' })
 
-    const hero = await screen.findByTestId('cabin-hero')
-    const link = await within(hero).findByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })
+    const today = await screen.findByTestId('cabin-today')
+    const link = await within(today).findByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })
     expect(link).toHaveTextContent('Akce v kraji')
     expect(link).toHaveAttribute('href', 'https://www.kudyznudy.cz/kalendar-akci/kraj-vysocina')
     expect(link).toHaveAttribute('target', '_blank')
@@ -310,9 +323,9 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
   it('bez vybrané obce odkaz „Akce v kraji“ není (#283)', async () => {
     renderOverview(reservations())
 
-    const hero = await screen.findByTestId('cabin-hero')
-    await within(hero).findByRole('heading', { level: 1, name: 'Chata U Lesa' })
-    expect(within(hero).queryByRole('link', { name: /Akce v kraji/ })).not.toBeInTheDocument()
+    const today = await screen.findByTestId('cabin-today')
+    await within(today).findByRole('heading', { level: 1, name: 'Chata U Lesa' })
+    expect(within(today).queryByRole('link', { name: /Akce v kraji/ })).not.toBeInTheDocument()
   })
 
   it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {
@@ -329,6 +342,45 @@ describe('Přehled: kompaktní pruh chaty a pozvánka (#172)', () => {
 
     await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(screen.queryByRole('region', { name: 'Chata zatím čeká' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Desktop: dnešek chaty v hlavičce levého menu (#338)', () => {
+  function renderSidebar(cabin: Partial<CabinSettings> = {}) {
+    responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], ...cabin })
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter>
+          <DesktopSidebar onOpenProfileDrawer={vi.fn()} today={<CabinToday variant="sidebar" />} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    return screen.getByTestId('desktop-sidebar')
+  }
+
+  it('pod názvem chaty je dnešní datum, počasí dnes a „Akce v kraji“, před navigací', async () => {
+    weather.current = { temp: 0.2, description: 'Zataženo' }
+    const sidebar = renderSidebar({ municipalityRegion: 'Kraj Vysočina' })
+
+    const today = within(sidebar).getByTestId('cabin-today')
+    expect(today).toHaveTextContent('Čtvrtek 10. prosince')
+    await waitFor(() => expect(today).toHaveTextContent('0 °C · Zataženo'))
+    expect(await within(today).findByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })).toHaveAttribute('href', 'https://www.kudyznudy.cz/kalendar-akci/kraj-vysocina')
+    expect(within(sidebar).getByTestId('desktop-home-link').compareDocumentPosition(today)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(today.compareDocumentPosition(within(sidebar).getByRole('navigation', { name: 'Hlavní navigace' }))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(within(today).queryByRole('heading')).not.toBeInTheDocument()
+  })
+
+  it('výstraha na bouřku a správci odkaz na nastavení lokality jsou pod datem', async () => {
+    weather.current = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
+    const today = within(renderSidebar()).getByTestId('cabin-today')
+    expect(await within(today).findByText('Zítra: Bouřka')).toBeInTheDocument()
+
+    cleanup()
+    weather.current = 'EMPTY_LOCATION'
+    auth.isAdmin = true
+    const adminToday = within(renderSidebar()).getByTestId('cabin-today')
+    expect(await within(adminToday).findByRole('link', { name: 'Nastavit lokalitu počasí' })).toHaveAttribute('href', '/admin/cabin')
   })
 })
 

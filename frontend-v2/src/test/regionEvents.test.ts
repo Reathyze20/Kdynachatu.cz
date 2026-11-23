@@ -35,7 +35,7 @@ describe('regionEventsUrl: kraj z RÚIAN → kalendář akcí Kudy z nudy (#283)
 })
 
 describe('odkaz „Akce v kraji“: dotyková plocha 48 px a text 16 px (B2, G3)', () => {
-  const rule = /\.cabin-hero__events\s*\{([^}]*)\}/.exec(dashboardCssRaw)?.[1] ?? ''
+  const rule = /\.cabin-today__events\s*\{([^}]*)\}/.exec(dashboardCssRaw)?.[1] ?? ''
 
   it('má výšku z tokenu dotykového cíle', () => {
     expect(rule).toMatch(/min-height\s*:\s*var\(--touch-target-min\)/)
