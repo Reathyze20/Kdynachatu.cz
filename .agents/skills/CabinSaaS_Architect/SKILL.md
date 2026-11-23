@@ -131,6 +131,10 @@ The page renders inside `AppShell`'s `<main id="page-container">`, which already
 - Use generous internal gaps: `gap-4 md:gap-6`, `space-y-4`, `p-4 md:p-6`.
 - Cards within cards use `rounded-xl` (not `2xl`) and softer shadows (`shadow-md`).
 
+### No Coloured Left Stripes
+
+**Never** put a coloured left border on a card, field, banner, quote or list row (`border-left: 3px solid …`, `border-l-4 border-l-amber-400`, inline `borderLeftColor`). The user finds it a well-known AI trick (#355). Show tone (warning, info, selected) with what already exists: a tinted `lucide` icon, a label, or a soft token background (`--status-warning-light`, `--brand-primary-light`). Allowed: invisible left borders (`border-l-transparent` in `scroll-area`), neutral full-height dividers (`border-l` on `sheet`), and the diary folder's book spine. `src/test/noLeftStripes.test.ts` enforces this; add an exception there only with a reason.
+
 ### Color System
 
 The app uses a two-layer design-token architecture defined in `variables.css`. When writing Tailwind, map to these semantic tokens:
@@ -414,6 +418,7 @@ Before finishing any component, verify:
 - [ ] Page wrapper is `p-3 md:p-0`; the shell (`#page-container`, `.app-shell-body`) provides the nav space and desktop frame
 - [ ] Main column + side context panel uses `TwoColumnLayout` (master-detail: Recipe 7)
 - [ ] Colors use Emerald (primary) + Slate (neutral) — no rogue palettes
+- [ ] No coloured left stripes; tone comes from an icon, label or soft background
 - [ ] Inline styles use CSS custom properties (`var(--brand-primary)`) — no hardcoded hex
 - [ ] No `window.confirm()` / `window.prompt()` — use `<ConfirmDialog>` / `<PromptDialog>`
 - [ ] Icons from `lucide-react`, sized `w-4 h-4` or `w-5 h-5`

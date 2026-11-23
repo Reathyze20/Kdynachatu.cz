@@ -215,7 +215,7 @@ export function DashboardPage() {
 
       {/* Cabin error banner */}
       {cabinError && (
-        <div className="essential-warning-banner" style={{ borderLeftColor: 'var(--status-warning)' }}>
+        <div className="essential-warning-banner">
           <TriangleAlert className="w-5 h-5 inline-block align-middle mr-2" aria-hidden="true" style={{ color: 'var(--status-warning)' }} />
           <span>Nepodařilo se načíst nastavení chaty — některé widgety nemusí fungovat správně.</span>
         </div>

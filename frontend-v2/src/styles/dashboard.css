@@ -118,13 +118,13 @@
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-left-width: 3px;
   background: var(--color-surface, #fff);
 }
 
-.nudge-info { border-left-color: var(--color-primary, #ea580c); }
-.nudge-action { border-left-color: #2563eb; }
-.nudge-warn { border-left-color: var(--status-warning, #d97706); }
+/* Tón nese barva ikony, ne proužek vlevo (#355) */
+.nudge-info .nudge-icon { color: var(--color-primary); }
+.nudge-action .nudge-icon { color: var(--status-info); }
+.nudge-warn .nudge-icon { color: var(--status-warning); }
 
 .nudge-icon {
   flex-shrink: 0;
@@ -993,7 +993,6 @@
   padding: 8px 12px;
   border-radius: 8px;
   margin-top: 8px;
-  border-left: 3px solid var(--color-primary);
   line-height: 1.4;
   word-break: break-word;
 }
@@ -1239,7 +1238,7 @@
   overflow: hidden;
 }
 
-/* Samotná zpráva — italická s levým pruhem */
+/* Samotná zpráva — italická, bez proužku vlevo (#355) */
 .handover-note-text,
 .nordic-dashboard .message-content {
   font-size: 0.92rem;
@@ -1253,8 +1252,6 @@
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  border-left: 3px solid var(--color-primary, #5d9b62);
-  padding-left: 16px;
   margin: 8px 0;
   font-style: italic;
 }

@@ -121,9 +121,8 @@
 /* Highlight callout box */
 .legal-highlight {
   background: var(--bg-subtle, #f0faf4);
-  border-left: 3px solid var(--brand-primary);
   padding: var(--space-sm) var(--space-md);
-  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+  border-radius: var(--radius-md, 8px);
   font-size: var(--font-size-sm);
   color: var(--text-main);
   margin: var(--space-md) 0;
