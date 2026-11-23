@@ -488,6 +488,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  /* rozestup od odkazu „Nastavit lokalitu počasí“, když jsou vedle sebe (B2) */
+  margin-inline-end: var(--touch-target-gap);
   min-height: var(--touch-target-min);
   font-size: var(--font-size-base);
   font-weight: 600;
