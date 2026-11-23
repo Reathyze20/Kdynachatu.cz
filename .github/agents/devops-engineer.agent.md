@@ -34,22 +34,21 @@ The user has RS and relies on this app for financial independence. **Downtime is
 ## Deployment Flow
 
 ```
-merge PR into rodina-stable        (family production; main deploys only to staging, see docs/plans/SEP-1.md)
+merge release PR on main (release-please) → tag vX.Y.Z   (merge to main alone deploys only to staging, ADR-0002)
     ↓
-GitHub Actions (.github/workflows/deploy.yml on rodina-stable)
+GitHub Actions (.github/workflows/deploy.yml, approval in environment `production`)
     ↓
-SSH to VPS (appleboy/ssh-action)
+build release artifact in Actions (backend deps + Vite build, nothing is built on the 2 GB server)
     ↓
-┌─ cd /home/reathyze/chata
-├─ git fetch && git reset --hard origin/main
-├─ npm ci
-├─ mv src/generated/prisma src/generated/prisma.old  ← prevent EACCES
-├─ npx prisma generate
+SSH to VPS → scripts/deploy/deploy-release.sh   (guards: ref, target, dir, port, PM2 name, DB)
+    ↓
+┌─ unpack into /home/reathyze/chata/releases/<tag>_<timestamp>/
+├─ npm ci --omit=dev
+├─ DB backup (production only)
 ├─ npx prisma migrate deploy
-├─ mv dist/frontend dist/frontend.old  ← prevent stale build
-├─ cd frontend-v2 && npm ci && npm run build
-├─ npx pm2 restart chata-app
-└─ FAILSAFE: npx pm2 restart chata-app  ← always restart, even on error
+├─ switch `current` symlink → npx pm2 restart chata-app
+├─ /api/health fails → `current` back to the previous release
+└─ prune old releases (keep 3)
 ```
 
 ---
