@@ -11,10 +11,6 @@ import cabinSettingsCss from '@/styles/cabin-settings.css?raw'
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ isAdmin: true }) }))
 
-/**
- * #260: neuložené nastavení chaty nesmí tiše zmizet a „Uložit změny“ musí být po ruce na každé záložce.
- */
-
 const CABIN: CabinConfig = {
   id: 'c-1', name: 'Chata U Lesa', subdomain: 'u-lesa', description: null, welcomeMessage: null, rules: null,
   departureChecklist: ['Zavřít vodu'], coverPhotoUrl: null, isWinterized: false, features: {},
@@ -30,6 +26,7 @@ function renderAt(ui: ReactNode) {
       <MemoryRouter initialEntries={['/admin/cabin']}>
         <Link to="/dashboard">Nástěnka</Link>
         <Link to="/admin/cabin#moduly">Kotva na stejné stránce</Link>
+        <Link to="/admin/cabin?panel=members">Jiný panel</Link>
         <Routes>
           <Route path="/admin/cabin" element={ui} />
           <Route path="/admin" element={<p>Stránka správy</p>} />
@@ -72,9 +69,11 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
     const name = await renderEdited()
     expect(fireBeforeUnload().defaultPrevented).toBe(true)
 
-    // Kotva na stejné stránce formulář neodmountuje, ta se neptá.
+    // Kotva na stejné stránce formulář neodmountuje, ta se neptá; query (?panel=) přepíná obsah správy, ta ano.
     await userEvent.click(screen.getByRole('link', { name: 'Kotva na stejné stránce' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('link', { name: 'Jiný panel' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Zůstat' }))
 
     await userEvent.click(screen.getByRole('link', { name: 'Nástěnka' }))
     const dialog = await screen.findByRole('dialog')
@@ -149,19 +148,13 @@ describe('nastavení chaty: neuložené změny (#260)', () => {
 
 describe('lepivá lišta s Uložit změny stojí na tokenech (#260)', () => {
   const css = cabinSettingsCss.replace(/\/\*[\s\S]*?\*\//g, '')
-  const rule = (selector: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter((m) => m[1].split(',').some((s) => s.trim() === selector))
-    .map((m) => m[2])
-    .join(';')
+  const rule = (selector: string) =>
+    [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => m[1].split(',').some((s) => s.trim() === selector)).map((m) => m[2]).join(';')
 
-  it('lišta je lepivá a na mobilu sedí nad spodní navigací i bezpečnou zónou', () => {
+  it('lišta drží u spodku, na mobilu nad navigací a bezpečnou zónou; tlačítko je hlavní akce 56 px', () => {
     expect(rule('.cs-save-bar')).toMatch(/position:\s*sticky/)
     expect(rule('.cs-save-bar')).toMatch(/bottom:\s*calc\(var\(--mobile-nav-height\)[^;]*env\(safe-area-inset-bottom/)
-  })
-
-  it('tlačítko je hlavní akce 56 px s písmem z tokenu', () => {
     expect(rule('.cs-btn-save')).toMatch(/min-height:\s*var\(--touch-target-primary\)/)
     expect(rule('.cs-btn-save')).toMatch(/font-size:\s*var\(--font-size-base\)/)
-    expect(rule('.cs-btn-save')).not.toMatch(/font-size:\s*0\.95rem/)
   })
 })

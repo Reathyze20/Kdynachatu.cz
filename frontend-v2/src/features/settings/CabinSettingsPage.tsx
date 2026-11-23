@@ -245,10 +245,10 @@ export function CabinSettingsPanel({
     setFeatures(settings.features ?? {})
   }, [settings])
 
-  const saved = useMemo(() => (settings ? savedSnapshot(settings) : null), [settings])
-  const current = formSnapshot({ name, description, municipalityCode: municipality?.code ?? null, municipalityPending,
+  const savedForm = useMemo(() => (settings ? savedSnapshot(settings) : null), [settings])
+  const currentForm = formSnapshot({ name, description, municipalityCode: municipality?.code ?? null, municipalityPending,
     legacyLocationRemoved, welcomeMessage, rules, isWinterized, checklist, features })
-  const isDirty = saved !== null && current !== saved
+  const isDirty = savedForm !== null && currentForm !== savedForm
   const leaveGuard = useUnsavedChangesGuard(isDirty)
 
   const clearSaveFeedback = useCallback(() => {

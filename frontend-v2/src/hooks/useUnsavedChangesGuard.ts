@@ -8,7 +8,7 @@
  * jdou všechny `<Link>`, `<NavLink>` i `navigate()`. Tlačítko Zpět prohlížeče tím chycené není.
  */
 import { useContext, useEffect, useState } from 'react'
-import { UNSAFE_NavigationContext, useLocation, type To } from 'react-router-dom'
+import { UNSAFE_NavigationContext, createPath, useLocation, type To } from 'react-router-dom'
 
 export interface UnsavedChangesGuard {
   /** Navigace čeká na potvrzení – zobraz dialog. */
@@ -21,9 +21,10 @@ export interface UnsavedChangesGuard {
 
 type NavigateFn = (to: To, ...rest: unknown[]) => void
 
-function targetPathname(to: To, currentPathname: string): string {
-  if (typeof to === 'string') return new URL(to, `http://app${currentPathname}`).pathname
-  return to.pathname || currentPathname
+/** Cesta i s query: obojí může přepnout obsah stránky (např. `?panel=` ve správě), kotva ne. */
+function targetPath(to: To, current: string): string {
+  const url = new URL(typeof to === 'string' ? to : createPath(to), `http://app${current}`)
+  return url.pathname + url.search
 }
 
 interface HistoryNavigator {
@@ -33,13 +34,13 @@ interface HistoryNavigator {
 }
 
 /**
- * Přesměruje navigaci mimo `pathname` do `hold`; změna jen kotvy nebo query na stejné stránce
- * formulář neodmountuje, ta projde. Vrací funkci, která navigator vrátí do původního stavu.
+ * Přesměruje navigaci mimo `current` (cesta + query) do `hold`; změna jen kotvy formulář
+ * neodmountuje, ta projde. Vrací funkci, která navigator vrátí do původního stavu.
  */
-function interceptNavigator(navigator: HistoryNavigator, pathname: string, hold: (run: () => void) => void): () => void {
+function interceptNavigator(navigator: HistoryNavigator, current: string, hold: (run: () => void) => void): () => void {
   const { push, replace, go } = navigator
   const guarded = (original: NavigateFn): NavigateFn => (to, ...rest) => {
-    if (targetPathname(to, pathname) === pathname) original(to, ...rest)
+    if (targetPath(to, current) === current) original(to, ...rest)
     else hold(() => original(to, ...rest))
   }
   navigator.push = guarded(push)
@@ -54,15 +55,14 @@ function interceptNavigator(navigator: HistoryNavigator, pathname: string, hold:
 
 export function useUnsavedChangesGuard(isDirty: boolean): UnsavedChangesGuard {
   const { navigator } = useContext(UNSAFE_NavigationContext)
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const [pending, setPending] = useState<(() => void) | null>(null)
 
   useEffect(() => {
     if (!isDirty) return
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault()
-      // Starší Safari a Chrome ukážou dotaz jen s nastaveným returnValue.
-      event.returnValue = ''
+      event.returnValue = '' // starší Safari a Chrome se bez returnValue nezeptají
     }
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
@@ -70,8 +70,8 @@ export function useUnsavedChangesGuard(isDirty: boolean): UnsavedChangesGuard {
 
   useEffect(() => {
     if (!isDirty) return
-    return interceptNavigator(navigator as unknown as HistoryNavigator, pathname, (run) => setPending(() => run))
-  }, [isDirty, navigator, pathname])
+    return interceptNavigator(navigator as unknown as HistoryNavigator, pathname + search, (run) => setPending(() => run))
+  }, [isDirty, navigator, pathname, search])
 
   return {
     isBlocked: pending !== null,
