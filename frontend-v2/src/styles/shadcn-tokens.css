@@ -56,7 +56,8 @@
 
 .dark {
   --background: #141c18;
-  --foreground: #e8efe9;
+  /* Text v teplých tónech podle mocku 07-teplo-atomy (#320): 242 236 227 a 190 177 162 */
+  --foreground: #f2ece3;
   --card: #1b2621;
   --card-foreground: var(--foreground);
   --popover: var(--card);
@@ -68,7 +69,7 @@
   --secondary: #273530;
   --secondary-foreground: var(--foreground);
   --muted: #222e29;
-  --muted-foreground: #9db0a7;
+  --muted-foreground: #beb1a2;
   --accent: #2a3a33;
   --accent-foreground: var(--foreground);
 
