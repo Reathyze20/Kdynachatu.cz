@@ -224,6 +224,16 @@ describe('Přehled: „Potřebuje pozornost“ (#275)', () => {
     expect(card).toHaveTextContent('Káva')
   })
 
+  it('když server slib odmítne, řádek se vrátí', async () => {
+    vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Chyba serveru'))
+    renderOverview(reservations(), withAttention(supply('Toaleťák', true)))
+
+    const card = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Koupím já: Toaleťák' }))
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/inventory/inv-Toaleťák/pledge'))
+    expect(await within(card).findByText('Toaleťák')).toBeInTheDocument()
+  })
+
   it('„Do WhatsAppu“ zkopíruje všechny věci i za souhrnem', async () => {
     const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })

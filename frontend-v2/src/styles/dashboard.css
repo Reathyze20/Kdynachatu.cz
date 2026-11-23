@@ -545,7 +545,6 @@
   gap: 2px;
 }
 
-
 /* „Potřebuje pozornost“ (#275): štítek stavu · celý název · akce; cíle dotyku ≥ 44 px */
 .attention-card { gap: var(--space-sm); }
 .attention-whatsapp { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 var(--space-sm); border-radius: 999px; font-size: 0.8125rem; font-weight: 600; color: var(--brand-primary); background: transparent; }

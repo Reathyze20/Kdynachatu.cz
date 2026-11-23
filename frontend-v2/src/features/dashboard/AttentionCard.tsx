@@ -24,16 +24,23 @@ function usePledge() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (item: AttentionItem) =>
-      item.inventoryId ? inventoryApi.pledge(item.inventoryId) : shoppingApi.toggleItemStatus(item.shoppingItemId ?? "", "bring_from_home"),
+      item.inventoryId
+        ? inventoryApi.pledge(item.inventoryId)
+        : item.shoppingItemId
+          ? shoppingApi.toggleItemStatus(item.shoppingItemId, "bring_from_home")
+          : Promise.reject(new Error("Věc nemá zásobu ani položku nákupu")),
     // Optimisticky: slíbená věc z karty zmizí hned
     onMutate: async (item) => {
       await qc.cancelQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
+      const previous = qc.getQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY);
       qc.setQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY, (old) =>
         old && { ...old, attention: old.attention?.filter((i) => attentionKey(i) !== attentionKey(item)) },
       );
+      return { previous };
     },
-    onError: (err) => {
-      if (isNetworkError(err)) return; // offline fronta slib odešle později
+    onError: (err, _item, ctx) => {
+      // Výpadek sítě: slib zůstane (offline fronta), chyba serveru vrátí řádek zpět
+      if (!isNetworkError(err) && ctx?.previous) qc.setQueryData(DASHBOARD_SHOPPING_KEY, ctx.previous);
       handleMutationError("Slib se nepodařilo uložit")(err);
     },
     onSettled: () => {
