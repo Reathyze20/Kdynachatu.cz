@@ -117,8 +117,7 @@
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
-  border-left: 4px solid transparent;
-  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, background-color 0.15s ease;
 }
 
 .thread-item:hover {
@@ -126,7 +125,7 @@
 }
 
 .thread-item.active {
-  border-left-color: var(--color-primary, #3f7b63);
+  background: var(--brand-primary-light);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.08), 0 2px 4px rgb(0 0 0 / 0.04);
 }
 
@@ -1448,7 +1447,6 @@
   padding: 6px 10px;
   margin-bottom: 6px;
   background: rgba(0, 0, 0, 0.06);
-  border-left: 4px solid var(--color-primary, #5d9b62);
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.12s;
@@ -1477,7 +1475,6 @@
 /* Reply quote inside own (dark) bubbles — high contrast for readability */
 .message-mine .message-reply-quote {
   background: rgba(255, 255, 255, 0.18);
-  border-left-color: rgba(255, 255, 255, 0.6);
 }
 
 .message-mine .message-reply-quote:hover {
@@ -1503,7 +1500,6 @@
   padding: 8px 12px;
   background: var(--color-bg-alt, #f9fafb);
   border-bottom: 1px solid var(--color-border, #e5e7eb);
-  border-left: 3px solid var(--color-primary, #5d9b62);
   animation: slideUpPanel 0.15s ease;
 }
 

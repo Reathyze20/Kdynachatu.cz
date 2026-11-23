@@ -158,7 +158,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vzkaz pro další</span>
           <span
-            className="text-sm text-amber-900 bg-amber-50/50 p-3 rounded-xl border-l-4 border-l-amber-400 leading-relaxed"
+            className="text-sm text-amber-900 bg-amber-50/50 p-3 rounded-xl leading-relaxed"
             dangerouslySetInnerHTML={{ __html: escapeHtml(r.handoverNote) }}
           />
         </div>

@@ -1358,7 +1358,6 @@ button.btnReset {
   background: var(--status-warning-light);
   padding: var(--space-md);
   border-radius: var(--radius-sm);
-  border-left: 4px solid var(--status-warning);
   font-size: var(--font-size-sm);
   color: var(--text-main);
 }
