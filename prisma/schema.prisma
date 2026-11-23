@@ -42,6 +42,13 @@ model Cabin {
 
   // ── Weather / Frost alert fields ──────────────────────────────────────
   weatherLocation  String?   @map("weather_location") @db.VarChar(100)
+  // Nejbližší obec z číselníku RÚIAN (ADR-0006): souřadnice jsou definiční bod obce, ne poloha chaty
+  municipalityCode     Int?    @map("municipality_code")
+  municipalityName     String? @map("municipality_name") @db.VarChar(100)
+  municipalityDistrict String? @map("municipality_district") @db.VarChar(100)
+  municipalityRegion   String? @map("municipality_region") @db.VarChar(100)
+  latitude             Float?
+  longitude            Float?
   isWinterized     Boolean   @default(false) @map("is_winterized")
   lastFrostAlertAt DateTime? @map("last_frost_alert_at")
 

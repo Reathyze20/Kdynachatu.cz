@@ -44,7 +44,9 @@ address     String?  Max 300, for navigation
 rules       String?  Text, markdown house rules
 departureChecklist Json?  String[] custom checklist
 coverPhotoUrl String?  URL to cover photo
-weatherLocation String?  Max 100, city for weather API
+weatherLocation String?  Max 100, name of the picked municipality (legacy free text for cabins that have not picked one)
+municipalityCode/Name/District/Region  Nearest municipality from RÚIAN (ADR-0006)
+latitude, longitude Float?  Centre of that municipality (WGS84), never the cabin itself; weather + frost alerts
 isWinterized Boolean  Default false, frost alerts
 lastFrostAlertAt DateTime?
 createdAt   DateTime
@@ -270,6 +272,8 @@ interface CabinConfig {
   description?: string; welcomeMessage?: string
   rules?: string; departureChecklist?: string[]
   coverPhotoUrl?: string; weatherLocation?: string
+  municipalityCode?: number; municipalityName?: string; municipalityDistrict?: string
+  municipalityRegion?: string; latitude?: number; longitude?: number
   isWinterized: boolean; features?: Record<string, boolean>
 }
 ```

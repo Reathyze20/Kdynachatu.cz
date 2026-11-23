@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import express from "express";
-import { findMunicipality, municipalitySearchHandler, searchMunicipalities } from "./municipalities";
+import { cabinMunicipalityFields, findMunicipality, municipalitySearchHandler, searchMunicipalities } from "./municipalities";
 import { validate } from "../../validators/validate";
 import { municipalitySearchSchema } from "../../validators/schemas";
 
@@ -72,6 +72,22 @@ describe("findMunicipality", () => {
 
   test("returns undefined for an unknown code", () => {
     assert.equal(findMunicipality(1), undefined);
+  });
+});
+
+describe("cabinMunicipalityFields", () => {
+  test("stores name, district, region and the centre of the picked municipality", () => {
+    const fields = cabinMunicipalityFields(591866);
+    assert.ok(fields);
+    assert.equal(fields.municipalityName, "Třebenice");
+    assert.equal(fields.municipalityDistrict, "Třebíč");
+    assert.equal(fields.municipalityRegion, "Kraj Vysočina");
+    assert.equal(fields.weatherLocation, "Třebenice");
+    assert.ok(Math.abs(fields.latitude - 49.16) < 0.05 && Math.abs(fields.longitude - 16.02) < 0.05);
+  });
+
+  test("rejects an unknown code", () => {
+    assert.equal(cabinMunicipalityFields(1), null);
   });
 });
 
