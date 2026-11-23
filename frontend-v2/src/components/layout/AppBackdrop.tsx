@@ -29,21 +29,21 @@ export function AppBackdrop() {
   const url = cabin?.coverPhotoUrl
   if (!url) return null
   // Nová fotka = nový obrázek: stav načtení se nepřenáší z předchozí
-  return <CoverBackdrop key={url} url={url} hidden={!PHOTO_PAGES.includes(pathname)} />
+  return <CoverBackdrop key={url} url={url} offPhotoPage={!PHOTO_PAGES.includes(pathname)} />
 }
 
 interface CoverBackdropProps {
   url: string
   /** Stránka má text mimo karty: fotka zůstane načtená, ale schovaná. */
-  hidden: boolean
+  offPhotoPage: boolean
 }
 
-function CoverBackdrop({ url, hidden }: CoverBackdropProps) {
-  const [ready, setReady] = useState(false)
+function CoverBackdrop({ url, offPhotoPage }: CoverBackdropProps) {
+  const [fitsBackground, setFitsBackground] = useState(false)
   const small = mobileCoverUrl(url)
 
   return (
-    <div className="app-backdrop" data-testid="app-backdrop" data-visible={ready && !hidden} aria-hidden="true">
+    <div className="app-backdrop" data-testid="app-backdrop" data-visible={fitsBackground && !offPhotoPage} aria-hidden="true">
       <picture>
         {small ? <source media="(max-width: 768px)" srcSet={small} /> : null}
         <img
@@ -51,8 +51,8 @@ function CoverBackdrop({ url, hidden }: CoverBackdropProps) {
           alt=""
           decoding="async"
           fetchPriority="low"
-          onLoad={(e) => setReady(Math.max(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight) >= BACKDROP_MIN_SIDE)}
-          onError={() => setReady(false)}
+          onLoad={(e) => setFitsBackground(Math.max(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight) >= BACKDROP_MIN_SIDE)}
+          onError={() => setFitsBackground(false)}
         />
       </picture>
       <div className="app-backdrop__veil" />

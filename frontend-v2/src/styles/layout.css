@@ -307,7 +307,9 @@
 }
 
 /* ── Titulní fotka jako pozadí (D4, #341): pevně za obsahem, nad podkladem D z body.
-   Viditelná až po načtení (AppBackdrop), takže text se vykreslí bez čekání na fotku. ── */
+   Viditelná až po načtení (AppBackdrop), takže text se vykreslí bez čekání na fotku.
+   z-index: -1 drží fotku nad pozadím body jen díky tomu, že body tvoří kontext vrstvení
+   (position: relative; z-index: 0 v base.css). ── */
 .app-backdrop {
   position: fixed;
   inset: 0;
