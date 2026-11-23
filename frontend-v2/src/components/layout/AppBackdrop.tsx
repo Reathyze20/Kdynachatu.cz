@@ -13,9 +13,9 @@ const BACKDROP_MIN_SIDE = 1500
 
 /**
  * Stránky, kde je všechen text na kartách a papírových plochách, takže fotka smí být vidět.
- * Ostatní mají nadpisy, záložky nebo prázdné stavy přímo na pozadí: tam zatím podklad D (#341).
+ * Správa a Superadmin mají zatím skleněné karty a text mimo karty: tam podklad D (#341).
  */
-const PHOTO_PAGES = ['/dashboard', '/reservations']
+const PHOTO_PAGES = ['/dashboard', '/reservations', '/shopping', '/notes', '/reconstruction', '/gallery', '/diary']
 
 /** Mobilní varianta má stejné jméno s příponou `-sm` (#340); cesta mimo dohodnutý tvar jde bez ní. */
 function mobileCoverUrl(url: string): string | null {

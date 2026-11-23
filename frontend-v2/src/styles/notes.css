@@ -234,10 +234,11 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  /* Match Reservations calendarCard */
-  background: var(--bg-app, #f4f7f5);
+  /* Full paper card like the thread list: the cover photo is behind the page (#341) */
+  background: rgb(var(--sheet));
+  border: 1px solid rgb(var(--rule-soft));
   border-radius: var(--radius-xl);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--lift);
   position: relative;
   z-index: 1;
 }
@@ -257,12 +258,7 @@
   flex-shrink: 0;
 }
 
-/* Forest watermark — very subtle behind messages */
-/* Subtle top-to-bottom gradient for depth */
-.notes-chat-area-wrapper {
-  background: linear-gradient(180deg, #f0f4f1 0%, #e8ede9 50%, #f4f7f5 100%);
-}
-
+/* Forest texture (#247) at 7 % on the paper card: decoration, not the cover photo */
 .notes-chat-area-wrapper::before {
   content: "";
   position: absolute;
@@ -300,10 +296,8 @@
   display: flex;
   align-items: center;
   padding: var(--space-lg) var(--space-xl);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-  background: rgba(240, 244, 241, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgb(var(--rule-soft));
+  background: rgb(var(--sheet));
   gap: var(--space-md);
   flex-shrink: 0;
   z-index: var(--z-sticky);
@@ -1102,7 +1096,7 @@
     /* Strip card styling on mobile — edge-to-edge */
     border-radius: 0;
     box-shadow: none;
-    background: #f8faf9;
+    background: rgb(var(--sheet));
     border: none;
     padding: var(--space-md);
   }
@@ -1110,6 +1104,7 @@
   .notes-chat-area-wrapper {
     /* Strip card styling on mobile — edge-to-edge */
     border-radius: 0;
+    border: none;
     box-shadow: none;
   }
 
