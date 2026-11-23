@@ -14,7 +14,7 @@ export const COVER_PHOTO_NARROW_SUFFIX = "-sm";
 
 /** Pruh je asi 140 px vysoký na mobilu a 200 px na desktopu; varianty jsou pro 2× hustotu. */
 export const COVER_PHOTO_SIZES = {
-  wide: { width: 1200, height: 400, quality: 70 },
+  wide: { width: 1000, height: 360, quality: 64 },
   narrow: { width: 750, height: 280, quality: 68 },
 } as const;
 

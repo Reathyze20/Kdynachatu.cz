@@ -685,7 +685,7 @@ const paths: Record<string, OpenApiObject> = {
     put: {
       tags: ["Cabin"],
       summary: "Nastav fotku z Galerie chaty jako titulni fotku (jen spravce)",
-      description: "Server z fotky vyrobi dve WebP varianty (siroka 1200x400, uzka 750x280 s priponou -sm, orez na stred) pod novym jmenem a smaze soubory predchozi titulni fotky. Titulni fotka je kopie, smazani zdrojove fotky ji nezrusi. Chate odejde realtime event cabin:changed.",
+      description: "Server z fotky vyrobi dve WebP varianty (siroka 1000x360, uzka 750x280 s priponou -sm, orez na stred) pod novym jmenem a smaze soubory predchozi titulni fotky. Titulni fotka je kopie, smazani zdrojove fotky ji nezrusi. Chate odejde realtime event cabin:changed.",
       security: bearerSecurity,
       requestBody: jsonRequestBody({ type: "object", required: ["photoId"], properties: { photoId: { type: "string", format: "uuid" } } }),
       responses: {
