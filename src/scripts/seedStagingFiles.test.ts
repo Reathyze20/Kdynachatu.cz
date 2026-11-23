@@ -5,7 +5,13 @@ import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import { COVER_PHOTO_SIZES, encodeWithinBudget } from "../backend/routes/cabinCoverPhoto";
-import { cleanSeedFiles, writeSeedCoverPhoto, writeSeedImage, SEED_COVER_SOURCE, SEED_COVER_URL, SEED_FILE_PREFIX } from "./seedStagingFiles";
+import { cleanSeedFiles, createSeedCoverUrl, writeSeedCoverPhoto, writeSeedImage, SEED_COVER_SOURCE, SEED_FILE_PREFIX } from "./seedStagingFiles";
+
+/** Jména souborů titulní fotky z URL; mobilní `-sm` odvozuje stejně jako `mobileCoverUrl` v AppBackdrop. */
+function coverFiles(url: string): [string, string] {
+  const wide = path.posix.basename(url);
+  return [wide, `${wide.slice(0, -".webp".length)}-sm.webp`];
+}
 
 describe("seedStagingFiles", () => {
   let uploadsPath: string;
@@ -57,8 +63,8 @@ describe("seedStagingFiles", () => {
     assert.ok(fs.existsSync(path.join(thumbsPath, "family-photo.webp")), "non-seed thumb kept");
   });
 
-  // Titulní fotka má vlastní adresář: jméno `seed-cover` používá i test writeSeedImage výše
-  // a sharp na Windows drží přečtený soubor otevřený. Soubory se proto čtou přes buffer.
+  // Titulní fotka má vlastní adresář a soubory se čtou přes buffer: sharp na Windows drží
+  // přečtený soubor otevřený a cleanSeedFiles by ho pak nesmazal.
   describe("writeSeedCoverPhoto", () => {
     let coverUploads: string;
     let coverThumbs: string;
@@ -77,14 +83,14 @@ describe("seedStagingFiles", () => {
     });
 
     test("makes the Koštálov photo the cover: wide + mobile -sm variant big enough for the app background", async () => {
-      const src = await writeSeedCoverPhoto(coverUploads);
+      const url = createSeedCoverUrl();
+      await writeSeedCoverPhoto(coverUploads, url);
       const source = fs.readFileSync(SEED_COVER_SOURCE);
 
-      assert.equal(src, SEED_COVER_URL);
-      assert.equal(src, `/uploads/${SEED_FILE_PREFIX}cover.webp`, "coverPhotoUrl se nemění");
+      const [wide, narrow] = coverFiles(url);
       const variants = [
-        { file: `${SEED_FILE_PREFIX}cover.webp`, size: COVER_PHOTO_SIZES.wide },
-        { file: `${SEED_FILE_PREFIX}cover-sm.webp`, size: COVER_PHOTO_SIZES.narrow },
+        { file: wide, size: COVER_PHOTO_SIZES.wide },
+        { file: narrow, size: COVER_PHOTO_SIZES.narrow },
       ];
       for (const { file, size } of variants) {
         const bytes = fs.readFileSync(path.join(coverUploads, file));
@@ -103,14 +109,49 @@ describe("seedStagingFiles", () => {
     });
 
     test("cleanSeedFiles removes both cover variants", async () => {
-      await writeSeedCoverPhoto(coverUploads);
+      const url = createSeedCoverUrl();
+      await writeSeedCoverPhoto(coverUploads, url);
 
       await cleanSeedFiles(coverUploads);
 
-      for (const file of [`${SEED_FILE_PREFIX}cover.webp`, `${SEED_FILE_PREFIX}cover-sm.webp`]) {
+      for (const file of coverFiles(url)) {
         assert.ok(!fs.existsSync(path.join(coverUploads, file)), `${file} deleted`);
         assert.ok(!fs.existsSync(path.join(coverThumbs, file)), `${file} thumb deleted`);
       }
+    });
+
+    // PWA cachuje /uploads/ jako CacheFirst: stejné jméno by prohlížeč dál servíroval ze staré cache.
+    test("every seed run gets a fresh seed- cover name, so a cached old cover is never reused", () => {
+      const first = createSeedCoverUrl();
+      const second = createSeedCoverUrl();
+
+      assert.notEqual(first, second);
+      for (const url of [first, second]) {
+        assert.match(url, /^\/uploads\/seed-cover-[0-9a-f]+\.webp$/);
+        assert.ok(path.posix.basename(url).startsWith(SEED_FILE_PREFIX), "prefix seed- → cleanSeedFiles ho při dalším běhu smaže");
+      }
+    });
+
+    test("a second run writes the cover under the new name and the old files disappear", async () => {
+      const first = createSeedCoverUrl();
+      await writeSeedCoverPhoto(coverUploads, first);
+      const second = createSeedCoverUrl();
+
+      await cleanSeedFiles(coverUploads);
+      await writeSeedCoverPhoto(coverUploads, second);
+
+      for (const file of coverFiles(first)) {
+        assert.ok(!fs.existsSync(path.join(coverUploads, file)), `${file}: starý soubor zmizel`);
+        assert.ok(!fs.existsSync(path.join(coverThumbs, file)), `${file}: starý náhled zmizel`);
+      }
+      for (const file of coverFiles(second)) {
+        assert.ok(fs.existsSync(path.join(coverUploads, file)), `${file}: nový soubor`);
+        assert.ok(fs.existsSync(path.join(coverThumbs, file)), `${file}: nový náhled`);
+      }
+    });
+
+    test("refuses a cover URL that cleanSeedFiles would not remove on the next run", async () => {
+      await assert.rejects(writeSeedCoverPhoto(coverUploads, "/uploads/covers/family.webp"), /seed cover/);
     });
   });
 

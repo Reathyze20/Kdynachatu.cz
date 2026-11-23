@@ -18,7 +18,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/password";
 import { DEMO_USERS, resolveSeedConfig, resolveUploadsPath } from "./seedStagingConfig";
-import { cleanSeedFiles, writeSeedCoverPhoto, writeSeedImage, SEED_COVER_URL, SEED_FILE_PREFIX, type SeedColor } from "./seedStagingFiles";
+import { cleanSeedFiles, createSeedCoverUrl, writeSeedCoverPhoto, writeSeedImage, SEED_FILE_PREFIX, type SeedColor } from "./seedStagingFiles";
 
 dotenv.config();
 
@@ -57,7 +57,7 @@ function yearMonth(offset: number): { year: number; month: number } {
 // ── Soubory ─────────────────────────────────────────────────────────────────
 
 // Jediný zdroj pravdy pro jednobarevné seed fotky: slug + barva. Cesty i fyzické soubory z něj
-// nemůžou utéct. Titulní fotka je skutečná fotka (Koštálov) se dvěma variantami, viz SEED_COVER_URL.
+// nemůžou utéct. Titulní fotka je skutečná fotka (Koštálov) se dvěma variantami, viz createSeedCoverUrl.
 const SEED_IMAGE_SPECS: { slug: string; color: SeedColor }[] = [
   { slug: "gallery-leto-1", color: { r: 126, g: 188, b: 232 } },
   { slug: "gallery-leto-2", color: { r: 244, g: 208, b: 111 } },
@@ -69,10 +69,13 @@ const SEED_IMAGE_SPECS: { slug: string; color: SeedColor }[] = [
 /** Veřejná cesta seed fotky (deterministická, bez IO) – jako galerie `/uploads/<name>`. */
 const seedSrc = (slug: string) => `/uploads/${SEED_FILE_PREFIX}${slug}.webp`;
 
-/** Deterministické cesty fotek pro DB (bez zápisu souborů) – aby šel seed „fail before write“. */
+/**
+ * Cesty fotek pro DB známé před zápisem souborů – aby šel seed „fail before write“. Jednobarevné
+ * jsou deterministické (obsah se mezi běhy nemění), titulní fotka má v každém běhu nové jméno.
+ */
 function buildSeedImages(): SeedImages {
   return {
-    cover: SEED_COVER_URL,
+    cover: createSeedCoverUrl(),
     galleryLeto: [seedSrc("gallery-leto-1"), seedSrc("gallery-leto-2")],
     galleryZima: seedSrc("gallery-zima-1"),
     wallpapers: [seedSrc("wallpaper-1"), seedSrc("wallpaper-2")],
@@ -80,10 +83,10 @@ function buildSeedImages(): SeedImages {
 }
 
 /** Přepíše fyzické seed soubory (prefix `seed-`). Volá se až po úspěšné DB transakci. */
-async function writeSeedImageFiles(uploadsPath: string): Promise<void> {
+async function writeSeedImageFiles(uploadsPath: string, images: SeedImages): Promise<void> {
   await cleanSeedFiles(uploadsPath);
   await Promise.all([
-    writeSeedCoverPhoto(uploadsPath),
+    writeSeedCoverPhoto(uploadsPath, images.cover),
     ...SEED_IMAGE_SPECS.map((s) => writeSeedImage(uploadsPath, s.slug, s.color)),
   ]);
 }
@@ -392,7 +395,7 @@ export async function runStagingSeed(prisma: PrismaClient, options: RunSeedOptio
   }, { timeout: 60_000 });
   // Teprve po úspěšné DB transakci zapiš fyzické soubory. Když seed skončí chybou dřív
   // (guard, cizí uživatel), na disku nic nevznikne – „fail before writing anything“.
-  await writeSeedImageFiles(options.uploadsPath);
+  await writeSeedImageFiles(options.uploadsPath, images);
 }
 
 async function main(): Promise<void> {

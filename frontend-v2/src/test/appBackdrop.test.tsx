@@ -63,6 +63,14 @@ describe('Titulní fotka jako pozadí appky (#341)', () => {
     expect(backdrop).toHaveAttribute('data-visible', 'true')
   })
 
+  it('titulní fotka ze staging seedu (jméno se mění s každým během) má mobilní variantu -sm', async () => {
+    mockCabin('/uploads/seed-cover-3fa2c91b.webp')
+    renderBackdrop()
+    const { backdrop } = await findPhoto()
+
+    expect(backdrop.querySelector('source')).toHaveAttribute('srcset', '/uploads/seed-cover-3fa2c91b-sm.webp')
+  })
+
   it('mobilní varianta 1080 × 1920 má velikost pozadí', async () => {
     mockCabin(COVER)
     renderBackdrop('/reservations')
