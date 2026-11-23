@@ -58,6 +58,7 @@ function yearMonth(offset: number): { year: number; month: number } {
 
 // Jediný zdroj pravdy pro jednobarevné seed fotky: slug + barva. Cesty i fyzické soubory z něj
 // nemůžou utéct. Titulní fotka je skutečná fotka (Koštálov) se dvěma variantami, viz createSeedCoverUrl.
+// Jména jsou pevná, PWA je cachuje jako CacheFirst: změna barvy nebo velikosti potřebuje i nový slug.
 const SEED_IMAGE_SPECS: { slug: string; color: SeedColor }[] = [
   { slug: "gallery-leto-1", color: { r: 126, g: 188, b: 232 } },
   { slug: "gallery-leto-2", color: { r: 244, g: 208, b: 111 } },
