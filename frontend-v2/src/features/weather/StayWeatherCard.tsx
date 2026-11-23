@@ -95,7 +95,7 @@ export function StayWeatherCard({ from, to }: { from: string; to: string }) {
           {stay.days.map((d) => <DayCell key={d.date} day={d} selected={d.date === day.date} onSelect={() => setSelectedDate(d.date)} />)}
         </ul>
         {stay.days.some((d) => d.tentative) && <p className="text-sm text-slate-600">Dny 8–16 jsou orientační, předpověď se ještě změní.</p>}
-        <StayHourlyChart day={day} />
+        <StayHourlyChart day={day} dayName={fullDayName(day.date)} />
         <p className="flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
           {day.sunrise && <span className="inline-flex items-center gap-1.5"><Sunrise aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Východ slunce</span>{day.sunrise}</span>}
           {day.sunset && <span className="inline-flex items-center gap-1.5"><Sunset aria-hidden="true" className="w-4 h-4 text-amber-600" /><span className="sr-only">Západ slunce</span>{day.sunset}</span>}

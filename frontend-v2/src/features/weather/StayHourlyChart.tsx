@@ -2,8 +2,6 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import { CloudRain, Thermometer, Wind, type LucideIcon } from "lucide-react";
 import type { ForecastHour, StayForecastDay } from "@/api/stayWeather";
-import { DAY_NAMES_FULL } from "@/lib/utils";
-import { isoDateToLocalNoon } from "@/lib/dateUtils";
 
 type ChartTab = "rain" | "wind" | "temp";
 
@@ -12,9 +10,9 @@ const SHOWN_HOURS = Array.from({ length: 7 }, (_, i) => `${String(8 + 2 * i).pad
 const RAIN_MIN = 15;
 
 const deg = (t: number) => `${t < 0 ? "−" : ""}${Math.abs(t)}`;
-const hourLabel = (time: string) => `${Number(time.slice(0, 2))}:00`;
+const hourOf = (time: string) => Number(time.slice(0, 2));
 /** Na úzké kartě (320 px) se „:00“ a „ %“ u sloupců nevejdou, schovají se podle šířky grafu. */
-const wide = "@max-[280px]:hidden";
+const hideWhenNarrow = "@max-[280px]:hidden";
 
 interface Series {
   id: ChartTab; label: string; icon: LucideIcon;
@@ -22,26 +20,28 @@ interface Series {
   value: (h: ForecastHour) => number;
   format: (v: number) => ReactNode;
   height: (v: number, min: number, max: number) => number; // výška sloupce v %
-  context: (values: number[], peak: string) => ReactNode;
+  minPeak?: number; // pod touto hodnotou se vrchol nezvýrazní a kontext řekne „bez výrazných …“
+  /** `peak` = hodina vrcholu „14:00“, nebo null, když je maximum pod `minPeak`. */
+  context: (max: number, min: number, peak: string | null) => ReactNode;
 }
 
 const SERIES: Series[] = [
   {
     id: "rain", label: "Srážky", icon: CloudRain, text: "text-blue-700", fill: "bg-blue-200", peakFill: "bg-blue-600",
-    value: (h) => h.precipProbability, format: (v) => <>{v}<span className={wide}> %</span></>, height: (v) => v,
-    context: (values, peak) => Math.max(...values) < RAIN_MIN
-      ? <>bez výrazných srážek (nejvíc {Math.max(...values)} %)</>
-      : <>nejvíc srážek <b>{Math.max(...values)} %</b> kolem <b>{peak}</b></>,
+    value: (h) => h.precipProbability, format: (v) => <>{v}<span className={hideWhenNarrow}> %</span></>, height: (v) => v, minPeak: RAIN_MIN,
+    context: (max, _min, peak) => peak === null
+      ? <>bez výrazných srážek (nejvíc {max} %)</>
+      : <>nejvíc srážek <b>{max} %</b> kolem <b>{peak}</b></>,
   },
   {
-    id: "wind", label: "Vítr", icon: Wind, text: "text-sky-800", fill: "bg-sky-200", peakFill: "bg-sky-700",
+    id: "wind", label: "Vítr", icon: Wind, text: "text-slate-800", fill: "bg-slate-300", peakFill: "bg-slate-600",
     value: (h) => h.windSpeed, format: (v) => String(v), height: (v, _min, max) => Math.max(4, (v / Math.max(30, max)) * 100),
-    context: (values, peak) => <>vítr nejvíc <b>{Math.max(...values)} km/h</b> kolem <b>{peak}</b></>,
+    context: (max, _min, peak) => <>vítr nejvíc <b>{max} km/h</b> kolem <b>{peak}</b></>,
   },
   {
     id: "temp", label: "Teplota", icon: Thermometer, text: "text-amber-700", fill: "bg-amber-200", peakFill: "bg-amber-500",
     value: (h) => h.temp, format: (v) => `${deg(v)}°`, height: (v, min, max) => 20 + ((v - min) / (max - min || 1)) * 80,
-    context: (values, peak) => <>maximum <b>{deg(Math.max(...values))}°</b> kolem <b>{peak}</b>, minimum {deg(Math.min(...values))}°</>,
+    context: (max, min, peak) => <>maximum <b>{deg(max)}°</b> kolem <b>{peak}</b>, minimum {deg(min)}°</>,
   },
 ];
 
@@ -52,7 +52,8 @@ function defaultTab(day: StayForecastDay): ChartTab {
   return shownHours(day).some((h) => h.precipProbability >= RAIN_MIN) ? "rain" : "temp";
 }
 
-export function StayHourlyChart({ day }: { day: StayForecastDay }) {
+/** `dayName` = celý název dne („Pátek“) pro větu nad grafem. */
+export function StayHourlyChart({ day, dayName }: { day: StayForecastDay; dayName: string }) {
   const id = useId();
   const [tab, setTab] = useState<ChartTab>(() => defaultTab(day));
   const hours = shownHours(day);
@@ -62,8 +63,7 @@ export function StayHourlyChart({ day }: { day: StayForecastDay }) {
   const values = hours.map(series.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const peakIdx = tab === "rain" && max < RAIN_MIN ? -1 : values.indexOf(max);
-  const dayName = DAY_NAMES_FULL[(isoDateToLocalNoon(day.date).getDay() + 6) % 7];
+  const peakIdx = max < (series.minPeak ?? -Infinity) ? -1 : values.indexOf(max);
 
   // Šipky vlevo/vpravo přepínají záložky (vzor ARIA tabs), Tab skočí rovnou do panelu.
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -89,7 +89,7 @@ export function StayHourlyChart({ day }: { day: StayForecastDay }) {
         ))}
       </div>
       <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}`} tabIndex={0} className="flex flex-col gap-2">
-        <p className="text-sm text-slate-600 [&_b]:text-slate-900">{dayName} · {series.context(values, hourLabel(hours[Math.max(0, values.indexOf(max))].time))}</p>
+        <p className="text-sm text-slate-600 [&_b]:text-slate-900">{dayName} · {series.context(max, min, peakIdx < 0 ? null : `${hourOf(hours[peakIdx].time)}:00`)}</p>
         <div aria-hidden="true" className="flex items-end gap-0.5 @min-[280px]:gap-1">
           {hours.map((h, i) => (
             <div key={h.time} className="flex min-w-0 flex-1 flex-col items-center gap-1">
@@ -97,7 +97,7 @@ export function StayHourlyChart({ day }: { day: StayForecastDay }) {
               <div className="relative h-16 w-full overflow-hidden rounded-md bg-slate-100">
                 <div className={`absolute inset-x-0 bottom-0 rounded-t-md ${i === peakIdx ? series.peakFill : series.fill}`} style={{ height: `${series.height(values[i], min, max)}%` }} />
               </div>
-              <span className={`text-sm leading-none tracking-tight ${i === peakIdx ? "font-bold text-slate-900" : "text-slate-600"}`}>{Number(h.time.slice(0, 2))}<span className={wide}>:00</span></span>
+              <span className={`text-sm leading-none tracking-tight ${i === peakIdx ? "font-bold text-slate-900" : "text-slate-600"}`}>{hourOf(h.time)}<span className={hideWhenNarrow}>:00</span></span>
             </div>
           ))}
         </div>
