@@ -2164,6 +2164,16 @@
     display: flex;
   }
 
+  /* Open detail whose list vanished (deleted elsewhere): the hint needs paper too (#341) */
+  .detail-placeholder {
+    flex: none;
+    margin: 8px 16px 16px;
+    background: rgb(var(--sheet));
+    border: 1px solid rgb(var(--rule-soft));
+    border-radius: var(--radius-xl);
+    box-shadow: var(--lift);
+  }
+
 
 
   /* Show back button on mobile */

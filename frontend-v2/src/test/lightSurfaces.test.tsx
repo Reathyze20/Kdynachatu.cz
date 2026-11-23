@@ -338,6 +338,7 @@ describe('Obrazovky s fotkou: text jen na plném papíře (#341)', () => {
   it.each([
     ['shopping.css', '.detail-view-switcher-track'],
     ['shopping.css', '.shopping-master'],
+    ['shopping.css', '.detail-placeholder'],
     ['notes.css', '.notes-sidebar'],
     ['notes.css', '.notes-chat-area-wrapper'],
     ['reconstruction.css', '.reconstruction-card'],
