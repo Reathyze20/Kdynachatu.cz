@@ -26,7 +26,7 @@
 .onboarding-hint {
   margin-top: var(--space-4);
   text-align: center;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
 }
 

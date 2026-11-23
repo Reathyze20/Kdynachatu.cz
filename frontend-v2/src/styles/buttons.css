@@ -23,6 +23,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: var(--touch-target-min);
   padding: 9px 20px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
@@ -70,14 +71,17 @@ button:not(:disabled):active,
   transform: scale(0.97) translateY(0) !important;
 }
 
-/* Sizes */
+/* Velikosti: i .btn-sm má dotykovou plochu 48 px (B2), menší je jen odsazením */
 .btn-sm {
   padding: 6px 14px;
   font-size: var(--font-size-xs);
 }
 
+/* Hlavní akce obrazovky (B2): 56 px, plně kulatá */
 .btn-lg {
+  min-height: var(--touch-target-primary);
   padding: 12px 28px;
+  border-radius: var(--radius-full);
   font-size: var(--font-size-base);
 }
 
@@ -196,6 +200,11 @@ button:not(:disabled):active,
 
 /* ── .btn-icon  (square, icon-only) ────────────────────────────────────── */
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
   padding: 8px;
   border-radius: var(--radius-md);
   background: transparent;
@@ -224,6 +233,7 @@ button:not(:disabled):active,
   color: var(--text-on-primary);
   border: none;
   font-weight: 600;
+  min-height: var(--touch-target-min);
   padding: 10px 24px;
 }
 
@@ -244,6 +254,7 @@ button:not(:disabled):active,
 }
 
 .button-secondary {
+  min-height: var(--touch-target-min);
   background-color: var(--color-bg-card);
   color: var(--color-text-dark);
   border: 1px solid var(--color-border);
@@ -261,6 +272,7 @@ button:not(:disabled):active,
 }
 
 .button-danger {
+  min-height: var(--touch-target-min);
   background-color: var(--color-danger);
   color: var(--text-on-danger);
   border: none;
@@ -282,6 +294,7 @@ button:not(:disabled):active,
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
+  min-height: var(--touch-target-min);
   padding: 8px 16px;
   border-radius: var(--radius-full);
   font-weight: 600;

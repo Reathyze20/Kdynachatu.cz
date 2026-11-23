@@ -37,7 +37,7 @@
 }
 
 .custom-select-trigger .cs-arrow {
-    font-size: 10px;
+    font-size: 10px; /* G3 výjimka: šipka, ne text */
     opacity: 0.45;
     transition: transform 0.2s ease;
     flex-shrink: 0;

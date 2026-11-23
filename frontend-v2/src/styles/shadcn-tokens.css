@@ -113,4 +113,8 @@
   --color-sheet: rgb(var(--sheet));
   --color-rule-soft: rgb(var(--rule-soft));
   --shadow-lift: var(--lift);
+
+  /* G3 (#270): ani utilita text-xs nedá méně než 14 px (stejně jako text-sm) */
+  --text-xs: var(--font-size-xs);
+  --text-xs--line-height: 1.25rem;
 }

@@ -203,7 +203,7 @@
 .mobile-header-logo-text {
   display: block;
   max-width: 190px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--color-text, #111827);
   letter-spacing: -0.02em;
@@ -279,7 +279,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
+  min-height: var(--touch-target-min);
   padding: 0 12px;
   border-radius: var(--radius-md);
   color: var(--text-main);
@@ -315,7 +315,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
+  min-height: var(--touch-target-min);
   padding: 0 12px;
   border-radius: var(--radius-md);
   color: var(--text-muted);
@@ -395,7 +395,7 @@
 }
 
 .app-sidebar-profile-menu .nav-dropdown-item {
-  min-height: 44px;
+  min-height: var(--touch-target-min);
 }
 
 .nav-dropdown-item:focus-visible {
@@ -482,11 +482,11 @@
 
   /* ── Mobile Bottom Nav — Core 5 ────────────────────────────── */
   /* Jediný zdroj výšky lišty bez bezpečné zóny (#196): 6 px odsazení nahoře
-     i dole + 1 px rámeček + záložka asi 53 px (změřeno 66 px). Lišta je
-     aspoň takto vysoká (min-height níže); při větším písmu může narůst.
-     Používá ji offset obsahu (#page-container). */
+     i dole + 1 px rámeček + záložka s popiskem 14 px asi 58 px (změřeno 70,4 px
+     na 360 px, #270). Lišta je aspoň takto vysoká (min-height níže); při větším
+     písmu může narůst. Používá ji offset obsahu (#page-container). */
   :root {
-    --mobile-nav-height: 66px;
+    --mobile-nav-height: 71px;
   }
 
   .mobile-nav {
@@ -516,10 +516,11 @@
     justify-content: center;
     text-decoration: none;
     color: var(--color-text-muted);
-    font-size: 0.7rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     padding: 6px 4px;
-    min-height: 44px;
+    /* fallback v px čte test lišty v layoutCss.test.ts */
+    min-height: var(--touch-target-min, 48px);
     border-radius: var(--radius-md);
     transition: color var(--transition-fast), background var(--transition-fast);
     min-width: 0;
