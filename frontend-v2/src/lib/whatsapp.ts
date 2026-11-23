@@ -1,13 +1,7 @@
 /**
- * Most do rodinné skupiny, dokud nepřijde bot (fáze 3): zpráva + odkaz do aplikace do schránky.
+ * Most do rodinné skupiny, dokud nepřijde bot (fáze 3): zpráva + odkaz do aplikace.
+ * Kopíruje se přes `CopyForWhatsAppButton` (#264).
  */
-import { showToast } from "@/lib/toast";
-
-export async function copyForWhatsApp(message: string, href: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(`${message}\n${window.location.origin}${href}`);
-    showToast("Zkopírováno pro WhatsApp", "success");
-  } catch {
-    showToast("Kopírování se nepodařilo", "error");
-  }
+export function whatsAppMessage(message: string, href: string): string {
+  return `${message}\n${window.location.origin}${href}`;
 }

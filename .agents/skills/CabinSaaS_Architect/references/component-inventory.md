@@ -52,6 +52,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **OfflineBanner** | Yellow "Jste offline" banner at top | — (uses `useOnline`) |
 | **HelpFab** | Floating help button + modal with app guide | — |
 | **InstallCard** / **InstallMenuItem** | „Přidat na plochu“ (#277): in-flow card at the end of Přehled from the 3rd visit, „Teď ne“ hides it for good (mobile only); permanent item in the „Víc“ menu. Native prompt on Android, Share hint on iOS; nothing in the installed app | card: —; item: `className, labelClassName?` |
+| **CopyForWhatsAppButton** | The one „Zkopírovat pro WhatsApp“ action (#264): text button, then „Zkopírováno“ for 2 s plus an `aria-live` status; failure shows an error toast unless `onError` is given. Message + app link via `whatsAppMessage` (`lib/whatsapp.ts`). Used on Přehled (Visí na tobě, Potřebuje pozornost) and on invites | `text, onError?, onCopied?, testId?` |
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
 | **ColorPicker** | Grid of the 8 verified member colors (`MEMBER_PALETTE`); a stored off-palette color shows as the nearest one (#271) | `value, onChange, size?` |
 | **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y (po 14. 12.) → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
