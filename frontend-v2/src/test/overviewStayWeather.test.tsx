@@ -167,6 +167,17 @@ describe('Přehled: karta Počasí na pobyt', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Úterý')
   })
 
+  it('tlačítko „Hodinový graf“ je v hlavičce karty vedle názvu pobytu, ne pod výstrahami (#356)', async () => {
+    mockOpenMeteo()
+    renderOverview(reservations(null, [stay('r-petr', 'Petr', '2030-06-03', '2030-06-05')]))
+    const card = await screen.findByRole('region', { name: 'Počasí na pobyt' })
+    const toggle = await within(card).findByRole('button', { name: 'Hodinový graf' })
+    const firstDay = within(card).getByRole('button', { name: /^Pondělí 3\. 6\./ })
+
+    expect(toggle.compareDocumentPosition(firstDay) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(toggle.parentElement).toContainElement(within(card).getByText(/^Pobyt: Petr/))
+  })
+
   it('v detailu pobytu zůstává graf otevřený, bez tlačítka „Hodinový graf“ (#338)', async () => {
     mockOpenMeteo()
     responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: 'Lhota', latitude: 49.5, longitude: 15.2, departureChecklist: [] })
