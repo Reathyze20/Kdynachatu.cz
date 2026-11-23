@@ -75,7 +75,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | Component | Type | Status |
 |---|---|---|
 | DashboardPage | Page | ✅ Complete |
-| CabinHero | Header | ✅ Compact cabin strip above both columns: photo slot (Midjourney drop-in via `overviewAssets.ts`), cabin name, date + weather line (#172) |
+| CabinHero | Header | ✅ Cabin header above both columns: cabin name, date + weather line (#172); with the cabin cover photo (`coverPhotoUrl` from cabin settings) a photo strip with `srcset` and dark gradient, otherwise a small forest placeholder (#322) |
 | ActiveReservation | Card | ✅ Status header „Na chatě teď“ now → next (#272): who is at the cabin and until when, arrow, who comes next and from when (avatar + name, G4); desktop shows purpose, nights and co-travellers under each side; „Chata je volná“ / „Zatím nikdo“ when a side is empty; chain line only from the stay after next; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
 | ParticipantStack | Inline | ✅ „Také jede“ avatars of co-travellers (status header) |
 | DepartureBanner | Banner | ✅ |
