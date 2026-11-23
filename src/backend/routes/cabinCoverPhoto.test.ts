@@ -70,7 +70,7 @@ describe("createCoverPhotoVariants a removeCoverPhotoFiles", () => {
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-  test("vyrobí úzkou a širokou WebP variantu ve velikosti pozadí pod novým jménem", async () => {
+  test("vyrobí desktopovou a mobilní WebP variantu ve velikosti pozadí pod novým jménem", async () => {
     const coversDir = path.join(dir, "covers");
     const url = await createCoverPhotoVariants(source, coversDir);
     const names = coverPhotoFileNames(url);
