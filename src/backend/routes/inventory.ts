@@ -182,15 +182,13 @@ router.post("/:id/add-to-cart", protect, requireCabin, validate(addToCartSchema)
       return res.status(409).json({ message: "Položka je již přidána do nákupu." });
     }
 
-    await prisma.$transaction(async (tx) => {
+    const added = await prisma.$transaction(async (tx) => {
       let targetListId: string;
 
       if (listId) {
-        // a) Ověř existenci a že seznam je aktivní
-        const existing = await tx.shoppingList.findFirst({ where: { id: listId, cabinId: req.user!.cabinId } });
-        if (!existing || existing.isResolved) {
-          throw new Error("Seznam nenalezen nebo je archivovaný.");
-        }
+        // a) Cizí, neexistující i archivovaný seznam je pro uživatele „nenalezen“ (#424) – vrátit dřív, než se cokoli zapíše
+        const existing = await tx.shoppingList.findFirst({ where: { id: listId, cabinId: req.user!.cabinId, isResolved: false } });
+        if (!existing) return false;
         targetListId = existing.id;
       } else {
         // b) Vytvoř nový seznam
@@ -220,7 +218,11 @@ router.post("/:id/add-to-cart", protect, requireCabin, validate(addToCartSchema)
         where: { id },
         data: { inCart: true },
       });
+      return true;
     });
+    if (!added) {
+      return res.status(404).json({ message: "Seznam nenalezen." });
+    }
 
     emitToCabin(req.user!.cabinId!, "inventory:updated", { id });
     emitToCabin(req.user!.cabinId!, "shopping:item:added", { linkedInventoryId: id });
