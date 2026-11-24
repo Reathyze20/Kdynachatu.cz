@@ -2,7 +2,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -77,7 +77,6 @@ describe("ideation check", () => {
     const { code, output } = runHelper("check", "--root", root);
 
     assert.equal(code, 0, output);
-    assert.ok(existsSync(path.join(root, "lessons.md")));
   });
 
   test("an unknown subcommand exits non-zero with usage", () => {

@@ -35,7 +35,6 @@ Jeden řádek na kandidáta, vyplňuje správce: \`- <běh> <K-ID> | <název> | 
 `;
 
 const SIGNALS_FILE = "signals.md";
-
 const TEMPLATES: ReadonlyArray<{ file: string; content: string }> = [
   { file: SIGNALS_FILE, content: SIGNALS_TEMPLATE },
   { file: "lessons.md", content: LESSONS_TEMPLATE },
