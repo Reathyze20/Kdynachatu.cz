@@ -187,3 +187,64 @@ describe("inventory: error messages are readable Czech", () => {
     assert.equal(second.body.message, "Položka je již přidána do nákupu.");
   });
 });
+
+// #410: nákupní cesty zásob (add-to-cart, „Koupím já“, souhrn chybějícího) nesmí sáhnout na seznamy chaty B.
+describe("inventory: shopping paths from cabin A never touch cabin B's lists", () => {
+  const createList = (owner: TestUser, name: string, createdAt?: Date) =>
+    prisma.shoppingList.create({ data: { name, createdById: owner.id, cabinId: owner.cabinId, createdAt } });
+  const itemsOn = (listId: string) => prisma.shoppingListItem.findMany({ where: { listId } });
+
+  test("POST /inventory/:id/add-to-cart into cabin B's list is refused and writes nothing", async () => {
+    const id = await createItem(world.memberA, "Rýže A", { status: "LOW" });
+    const listB = await createList(world.memberB, "Tajný nákup B");
+    const shoppingItemCount = await prisma.shoppingListItem.count();
+
+    const res = await as(app, world.memberA).post(`/api/inventory/${id}/add-to-cart`).send({ listId: listB.id });
+    // Cizí seznam je pro chatu A neexistující. Kontrakt je 404, route dnes vrací 500 (bug #424);
+    // test proto hlídá jen odmítnutí a hlavně to, že se do seznamu B nic nezapsalo.
+    assert.notEqual(res.status, 200);
+    assert.deepEqual(await itemsOn(listB.id), []);
+    assert.equal(await prisma.shoppingListItem.count(), shoppingItemCount, "shopping item created");
+    assert.equal((await itemSnapshot(id))?.inCart, false);
+  });
+
+  test("POST /inventory/:id/pledge lands on cabin A's list even when cabin B has the newest active list", async () => {
+    const id = await createItem(world.memberA, "Káva A", { status: "EMPTY" });
+    // Pevné datum daleko v budoucnu: seznam B je nejnovější aktivní seznam v DB bez ohledu na dnešek.
+    const newestB = await createList(world.memberB, "Tajný nejnovější B", new Date("2999-01-01T00:00:00Z"));
+
+    const res = await as(app, world.memberA).post(`/api/inventory/${id}/pledge`);
+    assert.equal(res.status, 200);
+    const pledged = await prisma.shoppingListItem.findUnique({ where: { id: res.body.id }, include: { list: true } });
+    assert.deepEqual([pledged?.linkedInventoryId, pledged?.list?.cabinId], [id, world.cabinA.id]);
+    assert.deepEqual(await itemsOn(newestB.id), []);
+  });
+
+  test("POST /inventory/:id/pledge leaves cabin B's pending item linked to the same supply untouched", async () => {
+    const id = await createItem(world.memberA, "Čokoláda A", { status: "LOW" });
+    const listB = await createList(world.memberB, "Tajný seznam B");
+    const foreign = await prisma.shoppingListItem.create({
+      data: { name: "Tajná čokoláda B", listId: listB.id, addedById: world.memberB.id, linkedInventoryId: id },
+    });
+    const before = await prisma.shoppingListItem.findUnique({ where: { id: foreign.id } });
+
+    const res = await as(app, world.memberA).post(`/api/inventory/${id}/pledge`);
+    assert.equal(res.status, 200);
+    assert.notEqual(res.body.id, foreign.id);
+    assert.deepEqual(await prisma.shoppingListItem.findUnique({ where: { id: foreign.id } }), before);
+  });
+
+  test("GET /inventory/missing-summary counts only cabin A's pending shopping items", async () => {
+    const listB = await createList(world.memberB, "Tajný souhrn B");
+    await prisma.shoppingListItem.create({ data: { name: "Tajné máslo B", listId: listB.id, addedById: world.memberB.id } });
+    const pending = (cabinId?: string) =>
+      prisma.shoppingListItem.count({ where: { status: "pending", list: { isResolved: false, isPantry: false, cabinId } } });
+    const pendingA = await pending(world.cabinA.id);
+    assert.ok((await pending()) > pendingA, "cabin B has no pending shopping item");
+
+    const res = await as(app, world.memberA).get("/api/inventory/missing-summary");
+    assert.equal(res.status, 200);
+    assert.equal(res.body.pendingShoppingCount, pendingA);
+    assert.equal(res.body.hasShoppingItems, pendingA > 0);
+  });
+});
