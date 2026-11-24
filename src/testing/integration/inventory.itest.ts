@@ -1,4 +1,5 @@
 import "./env"; // musí zůstat první import
+import { randomUUID } from "node:crypto";
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import type { Express } from "express";
@@ -200,13 +201,38 @@ describe("inventory: shopping paths from cabin A never touch cabin B's lists", (
     const shoppingItemCount = await prisma.shoppingListItem.count();
 
     const res = await as(app, world.memberA).post(`/api/inventory/${id}/add-to-cart`).send({ listId: listB.id });
-    // Cizí seznam je pro chatu A neexistující. Kontrakt je 404, route dnes vrací 500 (bug #424);
-    // po opravě #424 zúžit na 404. Hlavní je, že se do seznamu B nic nezapsalo.
-    assert.ok([404, 500].includes(res.status), `unexpected status ${res.status}`);
+    // Cizí seznam je pro chatu A neexistující (#424).
+    assert.equal(res.status, 404);
+    assert.equal(res.body.message, "Seznam nenalezen.");
     assert.deepEqual(await itemsOn(listB.id), []);
     assert.equal(await prisma.shoppingListItem.count(), shoppingItemCount, "shopping item created");
     assert.equal((await itemSnapshot(id))?.inCart, false);
   });
+
+  // #424: neexistující a archivovaný vlastní seznam se chovají stejně jako cizí – 404, nic se nezapíše.
+  const ownListCases: [string, () => Promise<string>][] = [
+    ["a missing listId", async () => randomUUID()],
+    ["cabin A's archived list", async () => {
+      const archived = await createList(world.memberA, "Archivovaný nákup A");
+      await prisma.shoppingList.update({ where: { id: archived.id }, data: { isResolved: true } });
+      return archived.id;
+    }],
+  ];
+  for (const [name, makeListId] of ownListCases) {
+    test(`POST /inventory/:id/add-to-cart into ${name} is 404 and writes nothing`, async () => {
+      const id = await createItem(world.memberA, `Těstoviny A (${name})`, { status: "LOW" });
+      const listId = await makeListId();
+      const shoppingItemCount = await prisma.shoppingListItem.count();
+      const listCount = await prisma.shoppingList.count();
+
+      const res = await as(app, world.memberA).post(`/api/inventory/${id}/add-to-cart`).send({ listId });
+      assert.equal(res.status, 404);
+      assert.equal(res.body.message, "Seznam nenalezen.");
+      assert.equal(await prisma.shoppingListItem.count(), shoppingItemCount, "shopping item created");
+      assert.equal(await prisma.shoppingList.count(), listCount, "shopping list created");
+      assert.equal((await itemSnapshot(id))?.inCart, false);
+    });
+  }
 
   test("POST /inventory/:id/pledge lands on cabin A's list even when cabin B has the newest active list", async () => {
     const id = await createItem(world.memberA, "Káva A", { status: "EMPTY" });
