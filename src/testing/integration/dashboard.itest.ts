@@ -3,6 +3,7 @@ import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import type { Express } from "express";
 import prisma from "../../utils/prisma";
+import type { Prisma } from "../../generated/prisma/client.js";
 import { calendarTodayIso, nextFreeWeekend } from "../../backend/routes/reservationHelpers";
 import { as, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
 
@@ -23,7 +24,9 @@ const ids = {} as Record<
 const DAY_MS = 86_400_000;
 const day = (offset: number) => new Date(new Date(todayIso).getTime() + offset * DAY_MS);
 
-const createReservation = async (owner: TestUser, cabinId: string, dateFrom: Date, dateTo: Date, extra: object = {}) =>
+type ReservationExtra = Partial<Prisma.ReservationUncheckedCreateInput>;
+
+const createReservation = async (owner: TestUser, cabinId: string, dateFrom: Date, dateTo: Date, extra: ReservationExtra = {}) =>
   (await prisma.reservation.create({
     data: { userId: owner.id, cabinId, dateFrom, dateTo, purpose: `Pobyt ${owner.username}`, status: "primary", ...extra },
   })).id;
@@ -69,8 +72,10 @@ before(async () => {
   ids.bLastStay = await createReservation(memberB, cabinB.id, day(-3), day(-1));
 
   // Člen A, který dřív byl v chatě B: jeho staré rezervace zůstaly v B. Souhrny „moje“ v A je nesmí
-  // počítat. Pobyt od 1. ledna do dneška: dnešní odjezd i noci letos (1. ledna je jich 0).
-  ids.movedDeparting = await createReservation(memberA, cabinB.id, new Date(`${todayIso.slice(0, 4)}-01-01`), day(0));
+  // počítat. Pobyt od 1. ledna do dneška: dnešní odjezd i noci letos. 1. ledna začne včera, ať
+  // nespadne mezi nadcházející pobyty B (noci letos pak kontrolovat nejde).
+  const yearStart = new Date(`${todayIso.slice(0, 4)}-01-01`);
+  ids.movedDeparting = await createReservation(memberA, cabinB.id, yearStart < day(0) ? yearStart : day(-1), day(0));
   ids.movedNext = await createReservation(memberA, cabinB.id, day(30), day(32));
 
   ids.aItem = await seedShopping(memberA, "Sirky A");
@@ -87,7 +92,7 @@ before(async () => {
 
 after(teardownIntegrationFile);
 
-const get = async (user: TestUser, path: string) => {
+const dashboardGet = async (user: TestUser, path: string) => {
   const res = await as(app, user).get(`/api/dashboard/${path}`);
   assert.equal(res.status, 200);
   return res.body;
@@ -97,7 +102,7 @@ const idsOf = (rows: { id: string }[]) => rows.map((r) => r.id);
 
 describe("dashboard: GET /reservations for cabin A summarises only cabin A", () => {
   test("upcoming, active, last stay and stays this month contain nothing from cabin B", async () => {
-    const body = await get(world.memberA, "reservations");
+    const body = await dashboardGet(world.memberA, "reservations");
     assert.deepEqual(idsOf(body.upcomingReservations), [ids.ownUpcoming]);
     assert.equal(body.activeReservation, null);
     assert.equal(body.lastStay, null);
@@ -105,12 +110,12 @@ describe("dashboard: GET /reservations for cabin A summarises only cabin A", () 
   });
 
   test("the next free weekend ignores cabin B's stays", async () => {
-    const body = await get(world.memberA, "reservations");
+    const body = await dashboardGet(world.memberA, "reservations");
     assert.deepEqual(body.nextFreeWeekend, nextFreeWeekend(todayIso, []));
   });
 
   test("my departure, next stay and nights skip my old reservations left in cabin B", async () => {
-    const body = await get(world.memberA, "reservations");
+    const body = await dashboardGet(world.memberA, "reservations");
     assert.equal(body.departingToday, false);
     assert.equal(body.departingReservationId, null);
     assert.equal(body.myNextReservation, null);
@@ -118,14 +123,14 @@ describe("dashboard: GET /reservations for cabin A summarises only cabin A", () 
   });
 
   test("the last fault names the stay owner, not the cabin B user who filled the handover", async () => {
-    const body = await get(world.memberA, "reservations");
+    const body = await dashboardGet(world.memberA, "reservations");
     assert.equal(body.lastFault.text, "Prasklé okno");
     assert.equal(body.lastFault.reportedBy, world.adminA.username);
     assert.equal(JSON.stringify(body).includes(world.memberB.username), false);
   });
 
   test("control: cabin B sees its own stays", async () => {
-    const body = await get(world.memberB, "reservations");
+    const body = await dashboardGet(world.memberB, "reservations");
     assert.deepEqual(idsOf(body.upcomingReservations), [ids.bBlocking, ids.bUpcoming, ids.movedNext]);
     assert.ok([ids.bBlocking, ids.movedDeparting].includes(body.activeReservation.id));
     assert.equal(body.lastStay.username, world.memberB.username);
@@ -137,7 +142,7 @@ describe("dashboard: GET /reservations for cabin A summarises only cabin A", () 
 
 describe("dashboard: other summaries for cabin A contain nothing from cabin B", () => {
   test("GET /shopping", async () => {
-    const body = await get(world.memberA, "shopping");
+    const body = await dashboardGet(world.memberA, "shopping");
     assert.deepEqual(idsOf(body.pendingShoppingItems), [ids.aItem]);
     assert.equal(body.totalPendingShoppingCount, 1);
     assert.equal(body.totalItemsCount, 1);
@@ -146,21 +151,21 @@ describe("dashboard: other summaries for cabin A contain nothing from cabin B", 
   });
 
   test("GET /notes", async () => {
-    assert.deepEqual(idsOf((await get(world.memberA, "notes")).latestNotes), [ids.aNote]);
+    assert.deepEqual(idsOf((await dashboardGet(world.memberA, "notes")).latestNotes), [ids.aNote]);
   });
 
   test("GET /reconstruction", async () => {
-    const body = await get(world.memberA, "reconstruction");
+    const body = await dashboardGet(world.memberA, "reconstruction");
     assert.deepEqual(idsOf(body.items), [ids.aIdea]);
     assert.equal(body.totalActiveCount, 1);
   });
 
   test("GET /gallery", async () => {
-    assert.deepEqual(idsOf((await get(world.memberA, "gallery")).photos), [ids.aPhoto]);
+    assert.deepEqual(idsOf((await dashboardGet(world.memberA, "gallery")).photos), [ids.aPhoto]);
   });
 
   test("GET /activation counts only cabin A for its admin", async () => {
-    assert.deepEqual(await get(world.adminA, "activation"), {
+    assert.deepEqual(await dashboardGet(world.adminA, "activation"), {
       shouldShow: false,
       membersCount: 2,
       activeInviteCount: 1,
@@ -173,10 +178,10 @@ describe("dashboard: other summaries for cabin A contain nothing from cabin B", 
 
   test("control: cabin B sees its own records", async () => {
     const { memberB, adminB } = world;
-    assert.deepEqual(idsOf((await get(memberB, "shopping")).pendingShoppingItems), [ids.bItem]);
-    assert.deepEqual(idsOf((await get(memberB, "notes")).latestNotes), [ids.bNote]);
-    assert.deepEqual(idsOf((await get(memberB, "reconstruction")).items), [ids.bIdea]);
-    assert.deepEqual(idsOf((await get(memberB, "gallery")).photos), [ids.bPhoto]);
-    assert.equal((await get(adminB, "activation")).reservationsCount, 5);
+    assert.deepEqual(idsOf((await dashboardGet(memberB, "shopping")).pendingShoppingItems), [ids.bItem]);
+    assert.deepEqual(idsOf((await dashboardGet(memberB, "notes")).latestNotes), [ids.bNote]);
+    assert.deepEqual(idsOf((await dashboardGet(memberB, "reconstruction")).items), [ids.bIdea]);
+    assert.deepEqual(idsOf((await dashboardGet(memberB, "gallery")).photos), [ids.bPhoto]);
+    assert.equal((await dashboardGet(adminB, "activation")).reservationsCount, 5);
   });
 });
