@@ -103,7 +103,7 @@ Po prvním zeleném deployi naplnit staging fiktivními daty:
 reathyze$ cd /home/reathyze/chata-staging/current && npm run db:seed
 ```
 
-Vznikne chata `demo` („Testovací chata“) s účty `demo-spravce` (role admin, heslo `STAGING_SEED_ADMIN_PASSWORD`), `demo-jana` a `demo-petr` (heslo `STAGING_SEED_MEMBER_PASSWORD`) a ukázkovými rezervacemi, nákupy, poznámkou k měsíci a chatem. Seed jde spustit opakovaně: v chatě `demo` smaže a znovu vytvoří rezervace, nákupy, poznámky k měsíci a chat (změny testerů v nich zmizí, ostatní moduly jako galerie nebo deník zůstanou), tři demo účty vrátí do výchozího stavu, nic nezduplikuje a jiných chat se nedotkne. Bez `DEPLOY_TARGET=staging` a DB končící na `_staging` skončí chybou.
+Vznikne chata `demo` („Testovací chata“) s účty `demo-spravce` (role admin, heslo `STAGING_SEED_ADMIN_PASSWORD`), `demo-mamka` (účet pro netechnického testera), `demo-jana` a `demo-petr` (heslo `STAGING_SEED_MEMBER_PASSWORD`) a ukázkovými rezervacemi, nákupy, poznámkou k měsíci a chatem. Seed jde spustit opakovaně: v chatě `demo` smaže a znovu vytvoří rezervace, nákupy, poznámky k měsíci a chat (změny testerů v nich zmizí, ostatní moduly jako galerie nebo deník zůstanou), čtyři demo účty vrátí do výchozího stavu, nic nezduplikuje a jiných chat se nedotkne. Bez `DEPLOY_TARGET=staging` a DB končící na `_staging` skončí chybou.
 
 Titulní fotka demo chaty (a tím pozadí appky) je hrad Koštálov; seed soubory se zapisují jen při běhu seedu, takže po nasazení změny seedu je potřeba `npm run db:seed` spustit znovu, aby se projevila.
 

@@ -119,6 +119,30 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
       </div>
       <p className="auth-subtitle">Přihlas se ke svému účtu</p>
 
+      {/* Nad formulářem: po kliknutí na jméno je tlačítko „Přihlásit se“ hned pod ním (staging tester na mobilu). */}
+      {demoAccounts.length > 0 && (
+        <div className="demo-accounts" data-testid="login-demo-accounts">
+          <p className="demo-accounts-title">Ahoj! Tohle je zkušební verze aplikace.</p>
+          <ol className="demo-accounts-steps">
+            <li>Klikni na své jméno.</li>
+            <li>Klikni na Přihlásit se.</li>
+          </ol>
+          <div className="demo-accounts-list">
+            {demoAccounts.map((account) => (
+              <button
+                key={account.username}
+                type="button"
+                className="demo-account-chip"
+                onClick={() => fillDemoAccount(account)}
+                data-testid={`login-demo-account-${account.username}`}
+              >
+                {account.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form id="login-form" noValidate onSubmit={handleSubmit} data-testid="login-form">
         <div className="form-group">
           <label htmlFor="username">Uživatelské jméno:</label>
@@ -212,25 +236,6 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
           </p>
         )}
       </form>
-
-      {demoAccounts.length > 0 && (
-        <div className="demo-accounts" data-testid="login-demo-accounts">
-          <p className="demo-accounts-title">Testovací účty (staging) – kliknutím se vyplní přihlášení:</p>
-          <div className="demo-accounts-list">
-            {demoAccounts.map((account) => (
-              <button
-                key={account.username}
-                type="button"
-                className="demo-account-chip"
-                onClick={() => fillDemoAccount(account)}
-                data-testid={`login-demo-account-${account.username}`}
-              >
-                {account.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {onShowRegister && (
         <p className="toggle-form-text">

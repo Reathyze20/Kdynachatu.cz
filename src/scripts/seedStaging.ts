@@ -1,8 +1,9 @@
 /**
- * Fiktivní data pro staging: chata `demo` se správcem a dvěma členy a kompletním, realistickým
- * obsahem napříč všemi obrazovkami (rezervace včetně minulé předávky, nákupy + spíž, inventář,
- * poznámky + vlákna + reakce, galerie + fotky, deník, rekonstrukce + hlasování, dovolené,
- * měsíční poznámky, pozvánky, wallpapery, branding chaty). Žádná reálná data rodiny.
+ * Fiktivní data pro staging: chata `demo` se správcem a třemi členy (včetně účtu „Mamka“ pro
+ * netechnického testera) a kompletním, realistickým obsahem napříč všemi obrazovkami (rezervace
+ * včetně minulé předávky, nákupy + spíž, inventář, poznámky + vlákna + reakce, galerie + fotky,
+ * deník, rekonstrukce + hlasování, dovolené, měsíční poznámky, pozvánky, wallpapery, branding
+ * chaty). Žádná reálná data rodiny.
  *
  * Run: npm run db:seed   (DEPLOY_TARGET=staging, DB končící na _staging,
  *      STAGING_SEED_ADMIN_PASSWORD + STAGING_SEED_MEMBER_PASSWORD, viz .env.staging.example)

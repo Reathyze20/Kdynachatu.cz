@@ -429,34 +429,45 @@
   text-decoration: underline;
 }
 
-/* Rychlé přihlášení demo účty – jen staging (LoginForm, /api/demo-accounts) */
+/* Rychlé přihlášení demo účty – jen staging (LoginForm, /api/demo-accounts).
+   Návod v krocích a velká tlačítka pro netechnického testera (mobil od 320 px i desktop). */
 .demo-accounts {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-md);
-  border-top: 1px dashed var(--color-border);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px dashed var(--color-border);
 }
 
 .demo-accounts-title {
-  margin: 0 0 var(--space-sm);
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
   text-align: center;
 }
 
+.demo-accounts-steps {
+  margin: 0 auto var(--space-md);
+  padding-left: 1.5em;
+  width: fit-content;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
 .demo-accounts-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   gap: var(--space-sm);
 }
 
 .demo-account-chip {
   min-height: var(--touch-target-min);
-  padding: var(--space-xs) var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   background: var(--bg-card);
   color: var(--color-text);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   cursor: pointer;
 }

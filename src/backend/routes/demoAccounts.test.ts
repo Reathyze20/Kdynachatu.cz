@@ -14,8 +14,9 @@ const stagingEnv = {
 };
 
 describe("resolveDemoAccounts", () => {
-  test("staging lists every seeded demo account with its seed password", () => {
+  test("staging lists every seeded demo account with its seed password, Mamka first", () => {
     assert.deepEqual(resolveDemoAccounts(stagingEnv), [
+      { username: "demo-mamka", label: "Mamka", role: "user", password: MEMBER_PASSWORD },
       { username: "demo-spravce", label: "Správce", role: "admin", password: ADMIN_PASSWORD },
       { username: "demo-jana", label: "Jana", role: "user", password: MEMBER_PASSWORD },
       { username: "demo-petr", label: "Petr", role: "user", password: MEMBER_PASSWORD },
@@ -54,7 +55,7 @@ describe("GET /api/demo-accounts", () => {
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("cache-control"), "no-store");
     const body = (await res.json()) as { accounts: unknown[] };
-    assert.equal(body.accounts.length, 3);
+    assert.equal(body.accounts.length, 4);
   });
 
   test("outside staging answers an empty list", async () => {

@@ -83,7 +83,7 @@ describe("seedStaging – kompletní fiktivní data", () => {
     await teardownIntegrationFile();
   });
 
-  test("vytvoří demo chatu se správcem, dvěma členy a brandingem", async () => {
+  test("vytvoří demo chatu se správcem, třemi členy (včetně Mamky) a brandingem", async () => {
     const cabin = await prisma.cabin.findUniqueOrThrow({ where: { subdomain: "demo" } });
     assert.equal(cabin.name, "Testovací chata");
     assert.ok(cabin.coverPhotoUrl?.startsWith(`/uploads/${SEED_FILE_PREFIX}`), "cover fotka je seed soubor");
@@ -91,12 +91,16 @@ describe("seedStaging – kompletní fiktivní data", () => {
     assert.ok(cabin.features && typeof cabin.features === "object", "feature flags");
 
     const demoUsers = await prisma.user.findMany({ where: { cabinId: cabin.id } });
-    assert.equal(demoUsers.length, 3);
+    assert.equal(demoUsers.length, 4);
     assert.equal(demoUsers.filter((x) => x.role === "admin").length, 1);
-    assert.equal(demoUsers.filter((x) => x.role === "user").length, 2);
+    assert.equal(demoUsers.filter((x) => x.role === "user").length, 3);
     assert.ok(demoUsers.every((x) => x.email?.endsWith("@example.invalid")), "e-maily na example.invalid");
     const admin = demoUsers.find((x) => x.role === "admin")!;
     assert.ok(await verifyPassword(PASSWORDS.adminPassword, admin.passwordHash), "heslo správce z env");
+    const mamka = demoUsers.find((x) => x.username === "demo-mamka");
+    assert.ok(mamka, "seed vytvoří účet Mamka");
+    assert.equal(mamka.role, "user", "Mamka je členka demo chaty");
+    assert.ok(await verifyPassword(PASSWORDS.memberPassword, mamka.passwordHash), "Mamka má členské heslo z env");
   });
 
   test("naplní každou doménu aplikace (každá obrazovka má co ukázat)", () => {
