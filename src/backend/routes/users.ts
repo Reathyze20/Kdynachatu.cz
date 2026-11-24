@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createUserSchema, updateProfileSchema, changeMyPasswordSchema, changeRoleSchema, changePasswordSchema, adminUpdateUserSchema } from "../../validators/schemas";
 import { hashPassword, verifyPassword } from "../../utils/password";
@@ -9,6 +10,7 @@ import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
 
 const router = Router();
+const adminOnly = requireRole(["admin"], "Přístup pouze pro administrátora.");
 
 const USERNAME_TAKEN_MESSAGE = "Uživatelské jméno již existuje."; // stejná hláška jako POST /api/register
 
@@ -48,10 +50,8 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
 // ============================================================================
 //                          CREATE USER (ADMIN)
 // ============================================================================
-router.post("/", protect, requireCabin, validate(createUserSchema), async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
+router.post("/", protect, requireCabin, validate(createUserSchema), adminOnly, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
   const { username, password, role } = req.body;
 
@@ -223,10 +223,8 @@ router.delete("/me", protect, async (req: Request, res: Response) => {
 // ============================================================================
 //                    DELETE USER'S RESERVATIONS
 // ============================================================================
-router.delete("/:id/reservations", protect, requireCabin, async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
+router.delete("/:id/reservations", protect, requireCabin, adminOnly, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
   const { id } = req.params;
 
@@ -244,10 +242,8 @@ router.delete("/:id/reservations", protect, requireCabin, async (req: Request, r
 // ============================================================================
 //                          CHANGE USER ROLE
 // ============================================================================
-router.put("/:id/role", protect, requireCabin, validate(changeRoleSchema), async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
+router.put("/:id/role", protect, requireCabin, validate(changeRoleSchema), adminOnly, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
   const { id } = req.params;
   const { role } = req.body;
@@ -273,10 +269,8 @@ router.put("/:id/role", protect, requireCabin, validate(changeRoleSchema), async
 // ============================================================================
 //                        CHANGE USER PASSWORD
 // ============================================================================
-router.put("/:id/password", protect, requireCabin, validate(changePasswordSchema), async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
+router.put("/:id/password", protect, requireCabin, validate(changePasswordSchema), adminOnly, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
   const { id } = req.params;
   const { password } = req.body;
@@ -306,10 +300,8 @@ router.put("/:id/password", protect, requireCabin, validate(changePasswordSchema
 // ============================================================================
 //                          UPDATE USER (ADMIN)
 // ============================================================================
-router.patch("/:id", protect, requireCabin, validate(adminUpdateUserSchema), async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
+router.patch("/:id", protect, requireCabin, validate(adminUpdateUserSchema), adminOnly, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
   const { id } = req.params;
   const { role, password } = req.body;
@@ -343,10 +335,8 @@ router.patch("/:id", protect, requireCabin, validate(adminUpdateUserSchema), asy
 // ============================================================================
 //                            DELETE USER
 // ============================================================================
-router.delete("/:id", protect, requireCabin, async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
+router.delete("/:id", protect, requireCabin, adminOnly, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
   const { id } = req.params;
 
@@ -370,11 +360,9 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
 // ============================================================================
 //                   SOFT REMOVE USER FROM CABIN (ADMIN)
 // ============================================================================
-router.patch("/:id/remove-from-cabin", protect, requireCabin, async (req: Request, res: Response) => {
+router.patch("/:id/remove-from-cabin", protect, requireCabin, adminOnly, async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-    }
+    if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
     const { id } = req.params;
     const { deleteData } = req.body;

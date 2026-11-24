@@ -1,12 +1,14 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { createMessageSchema, createChannelSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
 
 const router = Router();
+const noGuestMessages = requireRole(["admin", "user"], "Hosté nemohou psát zprávy.");
 
 // ============================================================================
 //  Helper: format a Note record into the API response shape
@@ -288,11 +290,7 @@ router.get("/messages", protect, requireCabin, async (req: Request, res: Respons
 // ============================================================================
 //  POST /api/channels/messages — send a message to the "Hlavní" thread
 // ============================================================================
-router.post("/messages", protect, requireCabin, async (req: Request, res: Response) => {
-  if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Hosté nemohou psát zprávy." });
-  }
-
+router.post("/messages", protect, requireCabin, noGuestMessages, async (req: Request, res: Response) => {
   const parsed = createMessageSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ message: parsed.error.issues[0]?.message ?? "Neplatný vstup" });
@@ -383,11 +381,7 @@ router.get("/:channelId/messages", protect, requireCabin, async (req: Request, r
 // ============================================================================
 //  POST /api/channels/:channelId/messages — send a message to a named channel
 // ============================================================================
-router.post("/:channelId/messages", protect, requireCabin, async (req: Request, res: Response) => {
-  if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Hosté nemohou psát zprávy." });
-  }
-
+router.post("/:channelId/messages", protect, requireCabin, noGuestMessages, async (req: Request, res: Response) => {
   const { channelId } = req.params;
   const cabinId = req.user!.cabinId!;
 

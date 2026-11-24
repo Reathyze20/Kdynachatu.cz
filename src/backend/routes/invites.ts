@@ -9,6 +9,7 @@ import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createInviteSchema, acceptInviteSchema, sendInviteEmailSchema } from "../../validators/schemas";
 import { sendEmail } from "../../utils/email";
@@ -44,10 +45,9 @@ function buildInviteUrl(token: string): string {
 // ============================================================================
 //  POST /api/invites — Create a new invite link (admin only)
 // ============================================================================
-router.post("/", protect, requireCabin, validate(createInviteSchema), async (req: Request, res: Response) => {
+router.post("/", protect, requireCabin, validate(createInviteSchema), requireRole(["admin"], "Pouze admin může vytvářet pozvánky."), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
-    if (req.user.role !== "admin") return res.status(403).json({ message: "Pouze admin může vytvářet pozvánky." });
 
     const { role = "user", maxUses, expiresInDays = 7 } = req.body;
 
@@ -101,10 +101,9 @@ router.post("/", protect, requireCabin, validate(createInviteSchema), async (req
 // ============================================================================
 //  GET /api/invites — List all invite links for current cabin (admin only)
 // ============================================================================
-router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
+router.get("/", protect, requireCabin, requireRole(["admin"], "Pouze admin."), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
-    if (req.user.role !== "admin") return res.status(403).json({ message: "Pouze admin." });
 
     const invites = await prisma.inviteLink.findMany({
       where: { cabinId: req.user.cabinId! },

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema, reservationIdParamsSchema, assignReservationSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
@@ -504,10 +505,9 @@ router.get("/monthly-note", protect, requireCabin, async (req: Request, res: Res
 });
 
 // PUT — upsert monthly note
-router.put("/monthly-note", protect, requireCabin, validate(upsertMonthlyNoteSchema), async (req: Request, res: Response) => {
+router.put("/monthly-note", protect, requireCabin, validate(upsertMonthlyNoteSchema), requireRole(["admin", "user"], "Hosté nemohou upravovat poznámky."), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno." });
-    if (req.user.role === "guest") return res.status(403).json({ message: "Hosté nemohou upravovat poznámky." });
 
     const cabinId = req.user.cabinId!;
     const { year: y, month: m, text } = req.body as { year: number; month: number; text: string };

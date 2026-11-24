@@ -1,6 +1,7 @@
 ﻿import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createInventoryItemSchema, updateInventoryItemSchema, addToCartSchema, inventoryIdParamsSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
@@ -100,13 +101,9 @@ router.put("/:id", protect, requireCabin, validate(updateInventoryItemSchema), a
 //                    TOGGLE isEssential ON INVENTORY ITEM
 // PATCH /:id/toggle-essential
 // ============================================================================
-router.patch("/:id/toggle-essential", protect, requireCabin, async (req: Request, res: Response) => {
+router.patch("/:id/toggle-essential", protect, requireCabin, requireRole(["admin", "user"], "Hosté nemohou měnit kritické položky."), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const role = req.user!.role;
-    if (role === "guest") {
-      return res.status(403).json({ message: "Hosté nemohou měnit kritické položky." });
-    }
 
     const item = await prisma.inventoryItem.findFirst({ where: { id, cabinId: req.user!.cabinId } });
     if (!item) {

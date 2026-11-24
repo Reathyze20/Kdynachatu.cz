@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createShoppingItemSchema, updateItemStatusSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
@@ -167,14 +168,9 @@ router.put("/:itemId/purchase", protect, requireCabin, validate(updateItemStatus
 // ============================================================================
 //                 TOGGLE isEssential ON SHOPPING ITEM
 // ============================================================================
-router.patch("/:itemId/toggle-essential", protect, requireCabin, async (req: Request, res: Response) => {
+router.patch("/:itemId/toggle-essential", protect, requireCabin, requireRole(["admin", "user"], "Hosté nemohou měnit kritické položky."), async (req: Request, res: Response) => {
   const { itemId } = req.params;
   try {
-    const role = req.user!.role;
-    if (role === "guest") {
-      return res.status(403).json({ message: "Hosté nemohou měnit kritické položky." });
-    }
-
     const item = await findCabinItem(req.user!.cabinId!, itemId);
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena." });

@@ -44,25 +44,29 @@ export async function resetDatabase(): Promise<void> {
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`);
 }
 
+async function createCabinUser(username: string, role: string, cabinId: string, passwordHash: string): Promise<TestUser> {
+  const user = await prisma.user.create({
+    data: {
+      username,
+      passwordHash,
+      color: "#5d9b62",
+      email: `${username}@example.test`,
+      isEmailVerified: true,
+      isVerified: true,
+      role,
+      cabinId,
+    },
+  });
+  return { id: user.id, username, role, cabinId };
+}
+
 async function seedCabin(letter: "a" | "b", passwordHash: string) {
   const cabin = await prisma.cabin.create({ data: { name: `Chata ${letter.toUpperCase()}`, subdomain: `chata-${letter}` } });
-  const createUser = async (kind: "spravce" | "clen", role: string): Promise<TestUser> => {
-    const username = `${kind}-${letter}`;
-    const user = await prisma.user.create({
-      data: {
-        username,
-        passwordHash,
-        color: "#5d9b62",
-        email: `${username}@example.test`,
-        isEmailVerified: true,
-        isVerified: true,
-        role,
-        cabinId: cabin.id,
-      },
-    });
-    return { id: user.id, username, role, cabinId: cabin.id };
+  return {
+    cabin: { id: cabin.id },
+    admin: await createCabinUser(`spravce-${letter}`, "admin", cabin.id, passwordHash),
+    member: await createCabinUser(`clen-${letter}`, "user", cabin.id, passwordHash),
   };
-  return { cabin: { id: cabin.id }, admin: await createUser("spravce", "admin"), member: await createUser("clen", "user") };
 }
 
 export async function seedTwoCabins(): Promise<TestWorld> {
@@ -70,6 +74,21 @@ export async function seedTwoCabins(): Promise<TestWorld> {
   const a = await seedCabin("a", passwordHash);
   const b = await seedCabin("b", passwordHash);
   return { cabinA: a.cabin, cabinB: b.cabin, adminA: a.admin, memberA: a.member, adminB: b.admin, memberB: b.member };
+}
+
+export interface TestWorldWithGuests extends TestWorld {
+  guestA: TestUser;
+  guestB: TestUser;
+}
+
+/** Host (role `guest`) v obou chatách. Jen na vyžádání: stávající testy počítají členy chaty bez hosta. */
+export async function addGuests(world: TestWorld): Promise<TestWorldWithGuests> {
+  const passwordHash = await hashPassword(TEST_PASSWORD);
+  return {
+    ...world,
+    guestA: await createCabinUser("host-a", "guest", world.cabinA.id, passwordHash),
+    guestB: await createCabinUser("host-b", "guest", world.cabinB.id, passwordHash),
+  };
 }
 
 /** Token stejně, jak ho vydává aplikace (bez login endpointu a jeho rate limiteru). */

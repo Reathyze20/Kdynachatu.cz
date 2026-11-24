@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { updateHandoverNoteSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
@@ -11,13 +12,9 @@ const router = Router();
 // ============================================================================
 //              PATCH /api/workspace/handover-note — Uložit vzkaz na lednici
 // ============================================================================
-router.patch("/handover-note", protect, requireCabin, validate(updateHandoverNoteSchema), async (req: Request, res: Response) => {
+router.patch("/handover-note", protect, requireCabin, validate(updateHandoverNoteSchema), requireRole(["admin", "user"], "Hosté nemohou upravovat vzkaz."), async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ message: "Neautorizováno" });
-  }
-
-  if (req.user.role === "guest") {
-    return res.status(403).json({ message: "Hosté nemohou upravovat vzkaz." });
   }
 
   const { note } = req.body;
