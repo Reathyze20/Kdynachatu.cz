@@ -1,7 +1,4 @@
-/**
- * Helper skillu `/ideation` (#367, #369) se testuje jen zvenku: spustí se jako CLI nad
- * dočasným adresářem a ověří se soubory, výstup a exit kód. Všechna data jsou fiktivní.
- */
+// Helper `/ideation` (#367) se testuje zvenku: CLI nad dočasným adresářem, jen fiktivní data.
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -22,18 +19,8 @@ function runHelper(...args: string[]) {
 }
 
 function signalsFile(count: number): string {
-  const rows = Array.from(
-    { length: count },
-    (_, i) => `| S-${i + 1} | 2026-10-0${(i % 9) + 1} | rodič | osobně | Fiktivní postřeh číslo ${i + 1}. | |`,
-  );
-  return [
-    "# Signály",
-    "",
-    "| ID | Datum | Role | Zdroj | Parafráze | Shluk |",
-    "|---|---|---|---|---|---|",
-    ...rows,
-    "",
-  ].join("\n");
+  const rows = Array.from({ length: count }, (_, i) => `| S-${i + 1} | 2026-10-01 | rodič | osobně | Postřeh ${i + 1}. | |\n`);
+  return `# Signály\n\n| ID | Datum | Role | Zdroj | Parafráze | Shluk |\n|---|---|---|---|---|---|\n${rows.join("")}`;
 }
 
 function withSignals(count: number): string {

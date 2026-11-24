@@ -1,18 +1,13 @@
 /**
- * Deterministický helper skillu `/ideation` (#367). Dělá mechanické kroky, které LLM dělá
- * nespolehlivě. Nepoužívá síť, DB ani `.env`; pracuje jen se soubory v kořeni `.ideation/`.
- *
- *   tsx src/scripts/ideation.ts check [--root <dir>]
- *
- * `check` založí chybějící šablony (existující soubory nikdy nepřepíše) a spočítá ruční
- * signály v `signals.md`. Pod minimem skončí exit kódem 1 a vypíše, kolik signálů chybí.
- * Další podpříkazy (`blind`, `evaluate`) se přidávají do `COMMANDS`.
+ * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts check [--root <dir>]`.
+ * `check` založí chybějící šablony (existující nikdy nepřepíše) a pod minimem ručních signálů skončí
+ * exit kódem 1 s počtem chybějících. Bez sítě, DB a `.env`. Další podpříkazy patří do `COMMANDS`.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const MIN_SIGNALS = 10;
+const MIN_SIGNALS = 10;
 
 const SIGNALS_TEMPLATE = `# Signály od rodiny
 
@@ -46,10 +41,7 @@ const TEMPLATES: ReadonlyArray<{ file: string; content: string }> = [
 
 const SIGNAL_ROW = /^\|\s*S-\d+\s*\|/;
 
-interface CommandResult {
-  code: number;
-  lines: string[];
-}
+type CommandResult = { code: number; lines: string[] };
 
 type Command = (root: string) => CommandResult;
 
