@@ -2,12 +2,15 @@ import { Request, Response, NextFunction } from "express";
 import { z, ZodError } from "zod";
 
 /**
- * Middleware for validating request body (or route params / query) against a Zod schema
+ * Middleware for validating request body (or route params / query) against a Zod schema.
+ *
+ * The parsed result replaces `req[source]` (#472): fields outside the schema are dropped (strip, not strict)
+ * and schema defaults and transforms (trim, coerce) apply, so handlers only ever see validated data.
  */
 export const validate = (schema: z.ZodSchema, source: "body" | "params" | "query" = "body") => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse(req[source]);
+      req[source] = schema.parse(req[source]);
       next();
     } catch (error) {
       if (error instanceof ZodError) {

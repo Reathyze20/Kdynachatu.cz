@@ -148,7 +148,7 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
       <div className="flex flex-wrap items-center justify-between gap-x-3">
         <div className="min-w-0">
           <h3 id={headingId} className="text-sm font-bold uppercase tracking-wide text-slate-600">Počasí na pobyt</h3>
-          {title && <p className="mt-1 text-[17px] font-extrabold text-[var(--text-main)]">{title}</p>}
+          {title && <p className="mt-1 text-[17px] font-bold text-[var(--text-main)]">{title}</p>}
         </div>
         {chartToggle}
       </div>

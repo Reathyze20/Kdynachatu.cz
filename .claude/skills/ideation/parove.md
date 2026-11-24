@@ -1,10 +1,10 @@
 # Krok 5: Párové porovnání
 
-Jedno kolo se 3 rozhodčími pro případ, kdy po kroku 4 zbývá víc než 5 ponechaných kandidátů. Jeho výsledek je konečný.
+Jedno kolo se 3 rozhodčími pro případ, kdy po kroku 4 zbývá víc než 5 ponechaných kandidátů pipeline. Kandidáti baseline do kola nevstupují. Jeho výsledek je konečný.
 
-1. Ponechaným kandidátům přiděl kódy P1, P2… v pořadí z kroku 3.
+1. Ponechaným kandidátům pipeline přiděl kódy P1, P2… v pořadí z kroku 3.
 2. Sestav seznam všech uspořádaných dvojic (každá dvojice v obou pořadích), seřazený podle druhého kódu a pak prvního: `P2 vs P1`, `P3 vs P1`… `P1 vs P2`, `P3 vs P2`… Dvojice a její obrácení tak v seznamu nestojí u sebe.
-3. Spusť 3 rozhodčí (`Explore`, `model: "opus"`) v jedné zprávě, každý s promptem níže. Rozhodčí 1 dostane seznam dvojic i kandidátů v pořadí z bodů 1 a 2, rozhodčí 2 oba seznamy obrácené, rozhodčí 3 oba seznamy od poloviny (druhá půlka, pak první). Kandidáti jsou anonymizovaní: kód místo názvu, co dělá, důkaz a štítky z kroku 4; bez štítku Navrhlo a bez námitek.
+3. Spusť 3 rozhodčí (`Explore`, `model: "opus"`) v jedné zprávě, každý s promptem níže. Rozhodčí 1 dostane seznam dvojic i kandidátů v pořadí z bodů 1 a 2, rozhodčí 2 oba seznamy obrácené, rozhodčí 3 oba seznamy od poloviny (druhá půlka, pak první). Kandidáti jsou anonymizovaní: kód místo názvu, co dělá, důkaz a štítky z kroku 4; bez námitek.
 4. Výstupy rozhodčích převeď do `<kořen>/parove.json`, rozhodčí čísluj 1–3:
 
    ```json

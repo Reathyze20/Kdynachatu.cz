@@ -2,7 +2,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -270,5 +270,167 @@ describe("ideation pairwise", () => {
 
     assert.notEqual(code, 0);
     assert.match(output, /parove\.json/);
+  });
+});
+
+type BlindCandidate = {
+  title: string;
+  summary: string;
+  evidence: string;
+  labels: string;
+  objections: string[];
+  question: string;
+};
+
+function candidate(title: string): BlindCandidate {
+  return {
+    title,
+    summary: `Co dělá ${title}.`,
+    evidence: "S-1, #12",
+    labels: "jádro · metrika 30. 6. 2027: ano · velikost: S · migrace: ne · riziko cabinId: ne: nic nového",
+    objections: [`Kdo ${title} 1?`, `Kdo ${title} 2?`, `Kdo ${title} 3?`],
+    question: `Chtěli byste ${title}?`,
+  };
+}
+
+const PIPELINE = ["Pa", "Pb", "Pc", "Pd", "Pe"].map(candidate);
+const BASELINE = ["Ba", "Bb", "Bc", "Bd", "Be"].map(candidate);
+
+function withBlind(input: unknown): string {
+  const root = freshRoot();
+  mkdirSync(root, { recursive: true });
+  writeFileSync(path.join(root, "slepe.json"), JSON.stringify(input));
+  return root;
+}
+
+type BlindKey = { run: string; candidates: Array<{ id: string; origin: string; title: string }> };
+
+function keyPath(root: string, run: string): string {
+  return path.join(root, "runs", `${run}.klic.json`);
+}
+
+function readKey(root: string, run: string): BlindKey {
+  return JSON.parse(readFileSync(keyPath(root, run), "utf8"));
+}
+
+function blindTitles(output: string): Array<[string, string]> {
+  return output
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("### "))
+    .map((line): [string, string] => {
+      const [id, title] = line.slice(4).split(" – ");
+      return [id, title];
+    });
+}
+
+describe("ideation blind", () => {
+  test("mixes both sides into K1–K10 without revealing origin and writes the key next to the run output", () => {
+    const root = withBlind({ pipeline: PIPELINE, baseline: BASELINE });
+
+    const { code, output } = runHelper("blind", "--root", root, "--run", "2026-11-24", "--seed", "7");
+
+    assert.equal(code, 0, output);
+    assert.doesNotMatch(output, /pipeline|baseline/i);
+    const shown = blindTitles(output);
+    assert.deepEqual(
+      shown.map(([id]) => id),
+      ["K1", "K2", "K3", "K4", "K5", "K6", "K7", "K8", "K9", "K10"],
+    );
+    assert.deepEqual(
+      shown.map(([, title]) => title).sort(),
+      ["Ba", "Bb", "Bc", "Bd", "Be", "Pa", "Pb", "Pc", "Pd", "Pe"],
+    );
+    assert.match(
+      output,
+      /### K\d+ – Pa\nCo dělá Pa\.\n\n- Důkaz: S-1, #12\n- Štítky: jádro · .*\n- Námitky:\n {2}1\. Kdo Pa 1\?\n {2}2\. Kdo Pa 2\?\n {2}3\. Kdo Pa 3\?\n\nOtázka pro rodinu \(ke zkopírování\):\n\n> Chtěli byste Pa\?/,
+    );
+
+    const key = readKey(root, "2026-11-24");
+    assert.equal(key.run, "2026-11-24");
+    assert.deepEqual(
+      key.candidates.map((c) => c.id),
+      shown.map(([id]) => id),
+    );
+    for (const [id, title] of shown) {
+      const entry = key.candidates.find((c) => c.id === id);
+      assert.equal(entry?.title, title);
+      assert.equal(entry?.origin, title.startsWith("P") ? "pipeline" : "baseline");
+    }
+    assert.notDeepEqual(
+      shown.map(([, title]) => title),
+      ["Pa", "Pb", "Pc", "Pd", "Pe", "Ba", "Bb", "Bc", "Bd", "Be"],
+    );
+    assert.equal(existsSync(path.join(root, "slepe.json")), false, "the input with origins must not stay in the root");
+  });
+
+  test("the same seed gives the same mix and key", () => {
+    const runs = [1, 2].map(() => {
+      const root = withBlind({ pipeline: PIPELINE, baseline: BASELINE });
+      const { output } = runHelper("blind", "--root", root, "--run", "2026-11-24", "--seed", "42");
+      return { output, key: readKey(root, "2026-11-24") };
+    });
+
+    assert.equal(runs[0].output, runs[1].output);
+    assert.deepEqual(runs[0].key, runs[1].key);
+  });
+
+  test("an uneven split keeps every candidate of both sides exactly once", () => {
+    const root = withBlind({ pipeline: PIPELINE.slice(0, 2), baseline: BASELINE });
+
+    const { code, output } = runHelper("blind", "--root", root, "--run", "2026-11-24-2");
+
+    assert.equal(code, 0, output);
+    const key = readKey(root, "2026-11-24-2");
+    assert.deepEqual(
+      key.candidates.map((c) => c.id),
+      ["K1", "K2", "K3", "K4", "K5", "K6", "K7"],
+    );
+    assert.equal(key.candidates.filter((c) => c.origin === "pipeline").length, 2);
+    assert.equal(key.candidates.filter((c) => c.origin === "baseline").length, 5);
+  });
+
+  test("refuses more than 5 candidates on one side and writes no key", () => {
+    const root = withBlind({ pipeline: PIPELINE, baseline: [...BASELINE, candidate("Bf")] });
+
+    const { code, output } = runHelper("blind", "--root", root, "--run", "2026-11-24");
+
+    assert.notEqual(code, 0);
+    assert.match(output, /baseline je 6, na stranu jich smí být nejvýš 5/);
+    assert.equal(existsSync(keyPath(root, "2026-11-24")), false);
+  });
+
+  test("refuses a candidate with an extra field that could reveal its origin", () => {
+    const root = withBlind({ pipeline: [{ ...candidate("Pa"), proposedBy: "3 z 8 generátorů" }], baseline: BASELINE });
+
+    const { code, output } = runHelper("blind", "--root", root, "--run", "2026-11-24");
+
+    assert.notEqual(code, 0);
+    assert.match(output, /bez dalších polí/);
+    assert.equal(existsSync(keyPath(root, "2026-11-24")), false);
+  });
+
+  test("never overwrites an existing key", () => {
+    const root = withBlind({ pipeline: PIPELINE, baseline: BASELINE });
+    mkdirSync(path.join(root, "runs"), { recursive: true });
+    writeFileSync(keyPath(root, "2026-11-24"), "původní klíč\n");
+
+    const { code, output } = runHelper("blind", "--root", root, "--run", "2026-11-24");
+
+    assert.notEqual(code, 0);
+    assert.match(output, /už existuje/);
+    assert.equal(readFileSync(keyPath(root, "2026-11-24"), "utf8"), "původní klíč\n");
+  });
+
+  test("without --run or without slepe.json it exits non-zero and says what is missing", () => {
+    const root = freshRoot();
+    mkdirSync(root, { recursive: true });
+
+    const noRun = runHelper("blind", "--root", root);
+    const noInput = runHelper("blind", "--root", root, "--run", "2026-11-24");
+
+    assert.notEqual(noRun.code, 0);
+    assert.match(noRun.output, /--run/);
+    assert.notEqual(noInput.code, 0);
+    assert.match(noInput.output, /slepe\.json/);
   });
 });

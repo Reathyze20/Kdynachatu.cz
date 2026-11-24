@@ -86,7 +86,7 @@ function TestingChecklistCard() {
       <div ref={cardRef} className="testing-card testing-card--collapsed">
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           className="rounded-full bg-sheet shadow-lift"
           aria-expanded={false}
           onClick={() => setOpen(true)}
@@ -118,21 +118,21 @@ function TestingChecklistCard() {
         <p className={cn('mt-1 font-medium', taskDone && 'text-muted-foreground line-through')}>{task.title}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {task.places.map((place) => (
-            <Button key={place.to} asChild variant="outline" size="sm">
+            <Button key={place.to} asChild variant="secondary" size="sm">
               <Link to={place.to}>{place.name ? `Ukaž mi kde: ${place.name}` : 'Ukaž mi kde'}</Link>
             </Button>
           ))}
           {taskDone ? (
-            <Button type="button" variant="outline" size="sm" onClick={() => saveDone(done.filter((id) => id !== task.id))}><Undo2 aria-hidden="true" />Vrátit odškrtnutí</Button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => saveDone(done.filter((id) => id !== task.id))}><Undo2 aria-hidden="true" />Vrátit odškrtnutí</Button>
           ) : (
             <Button type="button" size="sm" onClick={markDone}><Check aria-hidden="true" />Hotovo</Button>
           )}
         </div>
         <div className="mt-1 flex flex-wrap gap-2">
-          <Button type="button" variant="link" size="sm" className="px-2" aria-expanded={feedback === 'task'} onClick={() => setFeedback(feedback === 'task' ? null : 'task')}>
+          <Button type="button" variant="ghost" size="sm" className="px-2" aria-expanded={feedback === 'task'} onClick={() => setFeedback(feedback === 'task' ? null : 'task')}>
             Napsat, co nešlo
           </Button>
-          <Button type="button" variant="link" size="sm" className="px-2" aria-expanded={feedback === 'general'} onClick={() => setFeedback(feedback === 'general' ? null : 'general')}>
+          <Button type="button" variant="ghost" size="sm" className="px-2" aria-expanded={feedback === 'general'} onClick={() => setFeedback(feedback === 'general' ? null : 'general')}>
             {GENERAL_FEEDBACK_LABEL}
           </Button>
         </div>

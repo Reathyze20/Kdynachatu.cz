@@ -421,7 +421,7 @@ a {
 
 .hero-title {
   font-size: clamp(2.4rem, 6vw, 4.2rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.08;
   letter-spacing: -0.03em;
   color: var(--text-main, #1a2721);
@@ -637,7 +637,7 @@ a {
 
 .landing-section-title {
   font-size: clamp(1.6rem, 4vw, 2.4rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-main, #1a2721);
   margin-bottom: 16px;
@@ -985,7 +985,7 @@ a {
 
 .pricing-amount {
   font-size: 2.5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-main, #1a2721);
   letter-spacing: -0.03em;
 }
@@ -1317,7 +1317,7 @@ a {
 .testimonial-quote::before {
   content: open-quote;
   font-size: 1.4rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--brand-primary, #3f7b63);
   margin-right: 2px;
   line-height: 0;
@@ -1327,7 +1327,7 @@ a {
 .testimonial-quote::after {
   content: close-quote;
   font-size: 1.4rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--brand-primary, #3f7b63);
   margin-left: 2px;
   line-height: 0;
@@ -1351,7 +1351,7 @@ a {
 
 .landing-cta-inner h2 {
   font-size: clamp(1.6rem, 4vw, 2.2rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #fff;
   margin-bottom: 12px;

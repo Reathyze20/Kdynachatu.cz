@@ -115,7 +115,7 @@ async function authenticateRequest(
 
     if (hydratedUser.status === "banned") {
       res.status(403).json({
-        message: "Tento účet byl zablokován. Kontaktujte administrátora.",
+        message: "Tento účet byl zablokován. Kontaktuj administrátora.",
         code: "ACCOUNT_BANNED",
       });
       return false;

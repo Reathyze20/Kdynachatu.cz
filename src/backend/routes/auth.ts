@@ -15,7 +15,7 @@ import { cabinMunicipalityFields } from "./municipalities";
 const router = Router();
 
 const PASSWORD_RESET_EXPIRY_MS = 2 * 60 * 60 * 1000;
-const PASSWORD_RESET_GENERIC_MESSAGE = "Pokud účet existuje a má nastavený e-mail pro obnovu hesla, poslali jsme vám odkaz pro nastavení nového hesla.";
+const PASSWORD_RESET_GENERIC_MESSAGE = "Pokud účet existuje a má nastavený e-mail pro obnovu hesla, poslali jsme ti odkaz pro nastavení nového hesla.";
 const isProduction = process.env.NODE_ENV === "production";
 
 function hashToken(token: string): string {
@@ -84,7 +84,7 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
         username: user.username,
       });
       return res.status(403).json({
-        message: "Tento účet byl zablokován. Kontaktujte administrátora.",
+        message: "Tento účet byl zablokován. Kontaktuj administrátora.",
         code: "ACCOUNT_BANNED",
       });
     }
@@ -94,7 +94,7 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
       // If user still has a verificationToken, they used the new flow
       if (user.verificationToken) {
         return res.status(403).json({
-          message: "Nejprve ověřte svůj e-mail. Zkontrolujte svou schránku a klikněte na aktivační odkaz.",
+          message: "Nejdřív ověř svůj e-mail. Zkontroluj schránku a klikni na aktivační odkaz.",
           needsVerification: true,
         });
       }
@@ -111,11 +111,11 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
 
       try {
         await sendVerificationEmailWithPIN(user.email as string, code as string);
-        return res.status(403).json({ message: "Vaše e-mailová adresa ještě nebyla ověřena. Odeslali jsme vám nový ověřovací kód na e-mail." });
+        return res.status(403).json({ message: "Tvoje e-mailová adresa ještě není ověřená. Poslali jsme ti na e-mail nový ověřovací kód." });
       } catch (err) {
         logger.error("AUTH", "Failed to resend verification email during login", { error: String(err) });
         const response: { message: string; testCode?: string } = {
-          message: "Vaše e-mailová adresa ještě nebyla ověřena a e-mail se nepodařilo odeslat. Kontaktujte administrátora.",
+          message: "Tvoje e-mailová adresa ještě není ověřená a ověřovací e-mail se nepodařilo odeslat. Zkus to znovu.",
         };
 
         if (!isProduction) {
@@ -258,7 +258,7 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
       await sendVerificationEmailWithToken(email, verificationToken!);
 
       res.status(201).json({
-        message: "Děkujeme za registraci! Poslali jsme vám e-mail s odkazem pro aktivaci účtu. Zkontrolujte svou schránku.",
+        message: "Děkujeme za registraci. Poslali jsme ti e-mail s odkazem pro aktivaci účtu, zkontroluj schránku.",
         requiresVerification: true,
       });
     } catch (emailError) {
@@ -288,7 +288,7 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
         }
 
         return res.status(503).json({
-          message: "Registraci se nepodarilo dokoncit, protoze se nepodarilo odeslat aktivacni e-mail. Zkuste to prosim znovu pozdeji nebo kontaktujte administrátora.",
+          message: "Registraci se nepodařilo dokončit, protože se nepodařilo odeslat aktivační e-mail. Zkus to znovu.",
           requiresVerification: false,
         });
       }
@@ -305,7 +305,7 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
         requiresVerification: boolean;
         testToken?: string | null;
       } = {
-        message: "Registrace proběhla, ale e-mail s aktivačním odkazem se nepodařilo odeslat. Kontaktujte administrátora.",
+        message: "Registrace proběhla, ale e-mail s aktivačním odkazem se nepodařilo odeslat. Kontaktuj administrátora.",
         requiresVerification: true,
       };
 
@@ -462,7 +462,7 @@ router.post("/reset-password", validate(resetPasswordSchema), async (req: Reques
 
     logger.info("AUTH", "Password reset completed", { userId: user.id, username: user.username });
 
-    return res.json({ message: "Heslo bylo úspěšně změněno. Nyní se můžete přihlásit." });
+    return res.json({ message: "Heslo je změněné. Teď se můžeš přihlásit." });
   } catch (error) {
     logger.error("AUTH", "Reset password error", { error: String(error) });
     return res.status(500).json({ message: "Chyba serveru." });
@@ -491,7 +491,7 @@ router.get("/verify-token", async (req: Request, res: Response) => {
     }
 
     if (user.isVerified) {
-      return res.json({ message: "Tento účet již byl ověřen. Můžete se přihlásit." });
+      return res.json({ message: "Tento účet už je ověřený. Můžeš se přihlásit." });
     }
 
     await prisma.user.update({
@@ -510,7 +510,7 @@ router.get("/verify-token", async (req: Request, res: Response) => {
     });
 
     res.json({
-      message: "Účet byl úspěšně aktivován! Nyní se můžete přihlásit.",
+      message: "Účet je aktivní. Teď se můžeš přihlásit.",
     });
   } catch (error) {
     logger.error("AUTH", "Token verification error", {
@@ -553,7 +553,7 @@ router.post("/verify-email", validate(verifyEmailSchema), async (req: Request, r
       }
     });
 
-    res.json({ message: "E-mail byl úspěšně ověřen. Nyní se můžete přihlásit." });
+    res.json({ message: "E-mail je ověřený. Teď se můžeš přihlásit." });
   } catch (error) {
     logger.error("AUTH", "Verify error", { error: String(error) });
     res.status(500).json({ message: "Chyba serveru při ověřování." });

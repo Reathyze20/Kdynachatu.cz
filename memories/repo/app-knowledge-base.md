@@ -201,7 +201,7 @@ App.tsx
 - `FeatureErrorFallback.tsx`, `GlobalFallback.tsx`
 
 **UI primitives (shadcn/ui):** [frontend-v2/src/components/ui/](frontend-v2/src/components/ui/)
-- 14 komponent: avatar, badge, button, card, checkbox, dialog, dropdown-menu, form, input, label, scroll-area, separator, sheet, sonner
+- 5 komponent: badge, button, dialog, dropdown-menu, input (ostatní nepoužité smazal #452, API v `DESIGN.md` §6)
 
 **Custom Hooks:**
 - `useCabinFeatures.ts` — feature flags z `/api/cabin`
