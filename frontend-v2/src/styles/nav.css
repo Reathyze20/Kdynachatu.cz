@@ -448,8 +448,7 @@
 @media (max-width: 768px) {
 
   /* ── Mobile Header — fixed top ─────────────────────────────── */
-  /* Menu surface = the full paper of the cards (D3, #339); the ridge line
-     below the bar echoes the login-screen photo. */
+  /* Menu surface = the full paper of the cards (D3, #339). */
   .mobile-header {
     display: flex;
     justify-content: space-between;
