@@ -217,7 +217,11 @@ export function findRouteDefinitions(source: string, mountPrefix: string, object
   return routes;
 }
 
-/** Všechny API routy aplikace: přímo v `app.ts` (jen `/api/…`) a v namountovaných souborech rout. */
+/**
+ * Všechny API routy aplikace: přímo v `app.ts` (jen `/api/…`) a v namountovaných souborech rout.
+ * Routy mimo `/api` (statika `/uploads`, SPA fallback) guard nevidí; chráněný handler uploadů (#470,
+ * Média) sem bude potřeba doplnit.
+ */
 export function findAppRoutes(): { routes: string[]; unmountedFiles: string[] } {
   const appSource = fs.readFileSync(path.join(PROJECT_ROOT, "src/backend/app.ts"), "utf8");
   const mounts = findRouterMounts(appSource);
