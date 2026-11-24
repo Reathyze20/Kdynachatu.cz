@@ -55,7 +55,7 @@ export function FeedbackField({ taskId, label }: FeedbackFieldProps) {
         className="min-h-(--touch-target-min) w-full min-w-0 resize-y rounded-md border border-input bg-background px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" variant="outline" size="sm" disabled={!text.trim() || send.isPending}>
+        <Button type="submit" variant="secondary" size="sm" disabled={!text.trim() || send.isPending}>
           {send.isPending ? 'Odesílám…' : 'Odeslat'}
         </Button>
         {status === 'saved' && <p role="status" className="text-sm font-medium text-green-600">Díky, uloženo</p>}

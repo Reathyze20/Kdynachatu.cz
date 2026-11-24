@@ -66,6 +66,17 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
       `${LUCIDE}<AnimalAvatar size={48} />`, '<Icon size={48} />', `${LUCIDE}<X data-size="18" />`, `${LUCIDE}<X className="min-h-12 rounded-lg" strokeWidth={2.5} />`,
     ],
   },
+  legacyButton: {
+    bad: [
+      'className="btn"', 'className="mt-2 btn-primary"', "className='btn-secondary'", 'className={`btn-sm ${x}`}', "cn('btn-danger', a)",
+      "className={'btn-' + variant}", 'className={`btn-${variant}`}', "querySelector('.btn-primary')",
+      "querySelector('.btn:hover')", "closest('.btn.active')", "querySelectorAll('.btn, a')",
+    ],
+    good: [
+      '<Button variant="secondary">', 'id="btn-change-email"', 'data-testid="btn-save"', 'htmlFor="btn-x"', 'name="btn"', 'className="gallery-btn notes-new-thread-btn"',
+      'className={css.btnReset}', 'const submitBtn = ref', 'className="button-primary"',
+    ],
+  },
 }
 
 describe('pravidla DESIGN.md rozpoznají porušení', () => {

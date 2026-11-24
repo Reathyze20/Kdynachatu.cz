@@ -6,24 +6,17 @@ Complete map of every existing React component in `frontend-v2/src/`. Read this 
 
 ## shadcn/ui Primitives (`components/ui/`)
 
-These are pre-built, ready to import from `@/components/ui/<name>`:
+Restyled on our tokens (#452); API and rules in `DESIGN.md` §6. Import from `@/components/ui/<name>`:
 
 | Component | Import | Usage |
 |---|---|---|
-| Avatar | `@/components/ui/avatar` | User avatar display |
-| Badge | `@/components/ui/badge` | Status tags, counts |
-| Button | `@/components/ui/button` | Standard button with variants |
-| Card | `@/components/ui/card` | Card, CardHeader, CardContent, CardFooter |
-| Checkbox | `@/components/ui/checkbox` | Radix checkbox |
-| Dialog | `@/components/ui/dialog` | Radix dialog (use Modal.tsx instead for consistency) |
-| DropdownMenu | `@/components/ui/dropdown-menu` | Context menus, action dropdowns |
-| Form | `@/components/ui/form` | React Hook Form integration |
-| Input | `@/components/ui/input` | Text input |
-| Label | `@/components/ui/label` | Form labels |
-| ScrollArea | `@/components/ui/scroll-area` | Custom scrollbars |
-| Separator | `@/components/ui/separator` | Horizontal/vertical dividers |
-| Sheet | `@/components/ui/sheet` | Side drawers (mobile profile) |
-| Sonner | `@/components/ui/sonner` | Toast library (internal, use showToast) |
+| Button | `@/components/ui/button` | Every action. `variant` primary (default) / secondary / ghost / danger, `size` default / sm / lg (56 px main action) / icon (48 × 48, needs `aria-label`), `pending` (spinner, `aria-busy`), `asChild` |
+| Input | `@/components/ui/input` | Form field, 48 px; `invalid` sets `aria-invalid` + red border, error text below via `aria-describedby` |
+| DropdownMenu | `@/components/ui/dropdown-menu` | Kebab menu (Upravit / Smazat): Trigger, Content, Item (`variant="danger"`), Separator |
+| Dialog | `@/components/ui/dialog` | Base for `Modal` only (#453), screens use `Modal` |
+| Badge | `@/components/ui/badge` | Not restyled yet, kept for `themeBridge.test.tsx` |
+
+Unused shadcn primitives (avatar, card, checkbox, form, label, scroll-area, separator, sheet, sonner) were deleted in #452. Add a primitive only with its first use, styled on tokens.
 
 ---
 

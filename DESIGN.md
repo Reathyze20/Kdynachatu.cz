@@ -108,23 +108,23 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 
 | Komponenta | Kde | Kdy a jak | Stav |
 |---|---|---|---|
-| `Button` | `ui/` | Každá akce. Varianty `primary`, `secondary`, `ghost`, `danger`. Výška ≥ 48 px, hlavní akce obrazovky 56 px a plně kulatá. Stav disabled a pending (spinner v tlačítku). | Dnes má varianty `default`/`destructive`/`outline`/`secondary`/`ghost`/`link`. **Cíl** #452 |
-| `Input` | `ui/` | Pole formuláře, chybový stav s `aria-invalid`. | existuje nepřestylované shadcn, přestylování a chybový stav **Cíl** #452 |
-| `DropdownMenu` | `ui/` | Kebab menu akcí nad položkou, ovladatelné klávesnicí i dotykem. | existuje nepřestylované shadcn, přestylování **Cíl** #452 |
+| `Button` | `ui/` | Každá akce. `variant` `primary` (výchozí), `secondary`, `ghost`, `danger`. `size` `default` a `sm` (48 px, `sm` s menším odsazením), `lg` = hlavní akce obrazovky 56 px a plně kulatá, `icon` = 48 × 48 px s ikonou 20 px a povinným `aria-label`. `disabled`, `pending` (spinner, `aria-busy`, nejde stisknout znovu), `asChild` pro odkaz se vzhledem tlačítka. `default` a `outline` jsou zastaralé aliasy, nový kód je nepíše. | existuje (#452) |
+| `Input` | `ui/` | Pole formuláře, výška 48 px. `invalid` nastaví `aria-invalid` a červený rámeček, text chyby je pod polem a propojí se přes `aria-describedby`. | existuje (#452) |
+| `DropdownMenu` | `ui/` | Kebab menu akcí nad položkou, ovladatelné klávesnicí i dotykem: `DropdownMenuTrigger asChild` s `Button variant="ghost" size="icon"`, `DropdownMenuItem` (48 px, `variant="danger"` pro Smazat), `DropdownMenuSeparator` (Smazat oddělit od ostatních akcí). Menu je papírová karta nad modálem. | existuje (#452) |
 | `Dialog` | `ui/` | Jen základ pro `Modal`. Obrazovky ho přímo nepoužívají. | existuje |
 | `Modal` | `shared/` | Každý dialog a krátký formulář. API `isOpen`, `onClose`, `title`, `children`, `footer`, `maxWidth`, `persistent`. Do 640 px bottom sheet. | API existuje, postavení na `ui/dialog` **Cíl** #453 |
 | `ConfirmDialog`, `PromptDialog` | `shared/` | Potvrzení mazání, opsání slova. Nikdy `window.confirm()` / `window.prompt()`. | existují, staví na `Modal` |
 | `PageHeader` | `shared/` | Hlavička každé stránky (viz vzor Hlavička). | **Cíl** #454 |
 | `EmptyState` | `shared/` | Prázdná sekce: ikona lucide 24 px, jedna věta, volitelná akce. | **Cíl** #454 |
-| `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`. | **Cíl** #454. Nepoužité `ui/card` se smaže, nebo se stane jejím základem (#452) |
+| `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`. | **Cíl** #454 |
 | `ListRow` | `shared/` | Řádek seznamu, výška 48 px, slot pro obsah a akci. | **Cíl** #454 |
 | `FeatureErrorFallback` | `shared/` | Selhání načtení sekce, s tlačítkem znovu. | existuje |
 | `TwoColumnLayout` | `layout/` | Hlavní sloupec + boční panel na desktopu. Master-detail seznamy jsou výjimka. | existuje |
 | Skeletony | `RouteTransitionSkeleton`, `*Skeleton` ve featurách, třídy `.skeleton-*` | Načítání obsahu ve tvaru výsledného rozvržení. | existují |
 | Toast | `lib/toast.ts` (`showToast`) | Výsledek akce. Chyby mutací přes `lib/mutationError.ts`. | existuje |
 
-- **Zmrazené legacy třídy:** `.btn-*` (#452), `page-card`, `glass-card`, `admin-card`, `.card` a `*-empty-*` (#454). Nové použití selže v guardu, stávající jsou v allowlistu.
-- **Nepoužitá primitiva** v `ui/` se smažou, nebo se přestylují na tokeny při prvním použití (#452).
+- **Zmrazené legacy třídy:** `.btn` a `.btn-*` (guard `legacyButton`, #452), `page-card`, `glass-card`, `admin-card`, `.card` a `*-empty-*` (#454). Nové použití selže v guardu, stávající jsou v allowlistu.
+- **Primitiva v `ui/`** jsou jen `Button`, `Input`, `DropdownMenu`, `Dialog` a `Badge` (zatím bez použití, drží ho `themeBridge.test.tsx`). Ostatní nepoužitá shadcn primitiva #452 smazal. Nové primitivum se přidá až s prvním použitím, rovnou na tokenech.
 - Surové `<button className=…>` pro akci a surové `<input>` se po #452 nepíšou, místo nich `Button` a `Input`.
 
 ## 7. Vzory
@@ -238,6 +238,7 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `diaryFont` | Kalam (`--font-diary`) mimo `styles/diary.css` |
 | `inlineSvg` | inline `<svg>` v TSX |
 | `iconSize` | ikona lucide jinak než 16/20/24 px (`size={…}`, `h-*`/`w-*`/`size-*`) |
+| `legacyButton` | třída `btn` nebo `btn-*` v TS/TSX (zmrazený legacy systém tlačítek, místo něj `Button`) |
 
 ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 
@@ -245,7 +246,6 @@ ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 
 | Pravidlo | Ticket |
 |---|---|
-| zmrazené `.btn-*` | #452 |
 | zmrazené `page-card`, `glass-card`, `admin-card`, `.card`, `*-empty-*` | #454 |
 | vykání v hláškách backendu (node:test) | #457 |
 
