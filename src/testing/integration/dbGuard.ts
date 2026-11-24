@@ -1,7 +1,7 @@
 /**
  * Pojistka integračních testů: harness smí migrovat a truncatovat jen databázi, která je
  * zjevně testovací (lokální Postgres na 5432 má DB `cabin_reservation` s produkčními daty rodiny).
- * Lokální běh navíc používá vždy dočasný kontejner na portu 5433 (runIntegrationTests.ts).
+ * Lokální běh navíc používá vždy dočasný kontejner na portu 5433 (testDatabase.ts).
  * Bez importů z aplikace, aby šel použít ještě před načtením config.ts (dotenv).
  */
 
