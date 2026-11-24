@@ -157,6 +157,6 @@ describe("tenant mutanti: registry odpovídají skutečným souborům rout a ite
   test("bez testu jsou jen vědomě přiznané soubory", () => {
     // Když soubor dostane itest, nebo přibude soubor bez testu, seznam se musí vědomě upravit.
     const untested = Object.entries(ROUTE_ITEST_MAP).filter(([, itests]) => itests.length === 0).map(([file]) => file);
-    assert.deepEqual(untested, ["logs.ts"]);
+    assert.deepEqual(untested, []);
   });
 });

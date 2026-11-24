@@ -32,7 +32,7 @@ export const ROUTE_ITEST_MAP: RouteItestMap = {
   "gallery.ts": ["gallery.itest.ts", "cabinCoverPhoto.itest.ts"],
   "inventory.ts": ["inventory.itest.ts", "shopping.itest.ts"],
   "invites.ts": ["invites.itest.ts"],
-  "logs.ts": [],
+  "logs.ts": ["logs.itest.ts"],
   "messages.ts": ["chat.itest.ts"],
   "noteThreads.ts": ["notes.itest.ts"],
   "notes.ts": ["notes.itest.ts"],
