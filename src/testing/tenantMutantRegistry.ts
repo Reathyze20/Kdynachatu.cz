@@ -16,8 +16,7 @@ import type { TenantMutant } from "./tenantMutants";
 
 /**
  * Klíč = název souboru v `src/backend/routes/`, hodnota = názvy `*.itest.ts` v
- * `src/testing/integration/`, které volají jeho endpointy. `users.ts` → `auth.itest.ts`, i když
- * `/api/users` žádný itest nevolá: mutace tu díru ukáže. Soubor bez mutantů (`workspace.ts`)
+ * `src/testing/integration/`, které volají jeho endpointy. Soubor bez mutantů (`workspace.ts`)
  * zápis nepotřebuje.
  */
 export type RouteItestMap = Readonly<Record<string, readonly string[]>>;
@@ -39,7 +38,7 @@ export const ROUTE_ITEST_MAP: RouteItestMap = {
   "reservations.ts": ["reservations.itest.ts", "monthlyNote.itest.ts", "handover.itest.ts", "notes.itest.ts"],
   "shoppingList.ts": ["shopping.itest.ts"],
   "shoppingLists.ts": ["shopping.itest.ts"],
-  "users.ts": ["auth.itest.ts"],
+  "users.ts": ["users.itest.ts"],
   "wallpapers.ts": ["wallpapers.itest.ts"],
 };
 
@@ -50,8 +49,28 @@ export interface TenantMutantException {
   reason: string; // povinný: proč je mutant ekvivalentní
 }
 
-/** Ekvivalentní mutanti. Na začátku prázdné; každý přeživší je nejdřív kandidát na test, ne sem. */
-export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [];
+/** Ekvivalentní mutanti. Každý přeživší je nejdřív kandidát na test, sem jen s doloženým důvodem. */
+export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
+  {
+    file: "users.ts",
+    route: "POST /api/users",
+    original: "cabinId: req.user.cabinId",
+    reason:
+      "Kontrola duplicity jména před create. `User.username` je ve schématu globálně @unique, takže jméno " +
+      "z cizí chaty nevznikne ani bez filtru: originál skončí na unikátním indexu (500), mutant hláškou " +
+      "„Uživatel již existuje.“ (400). Nic se nevytvoří ani nezmění a mutant neprozradí nic nového – " +
+      "globální obsazenost jména hlásí už veřejná registrace (409). Test v users.itest.ts to ověřuje.",
+  },
+  {
+    file: "users.ts",
+    route: "DELETE /api/users/me",
+    original: "cabinId: user.cabinId",
+    reason:
+      "Nedosažitelný kód: `router.delete(\"/:id\")` je registrovaný dřív a `DELETE /api/users/me` obslouží " +
+      "s id `me` (člen 403, správce 404), handler `/me` se nespustí nikdy – mutant je ekvivalentní. " +
+      "Bug #419; s jeho opravou výjimku smazat a doplnit test posledního admina do users.itest.ts.",
+  },
+];
 
 export type RegistryErrorKind =
   | "unmapped-route-file"
