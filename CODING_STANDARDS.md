@@ -29,9 +29,7 @@ Co hlídá CI (typecheck, build, `.only`/`.skip`, neměnné migrace, velikost PR
 - Nový serverový Socket.IO event = nová invalidace v `src/hooks/useRealtimeSync.ts`, jinak se ostatní členové chaty nedozví o změně.
 - Chyby mutací přes `src/lib/mutationError.ts`, hlášky přes `src/lib/toast.ts`. Žádné `alert()` a žádné vlastní ad-hoc toasty.
 - Mutace, které má uživatel vidět hned (nákupní seznam, poznámky, rezervace), jsou optimistické s rollbackem v `onError`.
-- Nové komponenty nejdřív zkontrolovat proti `.agents/skills/CabinSaaS_Architect/references/component-inventory.md` – žádné duplikáty existujících.
-- Mobil první: každá nová obrazovka musí fungovat na šířce 320 px, cíle dotyku ≥ 48 × 48 px s rozestupem 8 px, hlavní akce obrazovky 56 px (B2), text 16 px, vedlejší 14 px, nic menšího (G3). Hodnoty jsou tokeny ve `frontend-v2/src/styles/variables.css`.
-
+- Vzhled a texty UI se posuzují podle `DESIGN.md` (tokeny, typografie, ikony, kanonické komponenty, vzory, hlas textů, formáty). Porušení pravidla z `DESIGN.md` je nález, stejně jako duplikát komponenty z `components/ui/` nebo `components/shared/`.
 ## Texty a jazyk
 
 - Vše, co uvidí uživatel (UI, chybové hlášky z API, e-maily), je česky, s diakritikou, tykání v aktivním hlasu (vzor: „Zkus to znovu.“). Kód, identifikátory, commity a titulky PR anglicky.
