@@ -2,38 +2,6 @@
    Dashboard — Clean SaaS Layout (Radical Cleanup)
    ============================================================================ */
 
-/* ── Spolucestující (co-occupants) na status kartě ───────────────────────── */
-.status-participants {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.status-participants-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted, #6b7280);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.status-participants-avatars {
-  display: flex;
-  align-items: center;
-}
-
-.status-participant {
-  display: inline-flex;
-  margin-left: -6px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px var(--color-surface, #fff);
-}
-
-.status-participant:first-child {
-  margin-left: 0;
-}
-
 /* ── „Od minule“ na status kartě (#366): sekce bez boxu, stav chaty vlevo, vzkazy vpravo ── */
 .arrival-briefing {
   display: flex;

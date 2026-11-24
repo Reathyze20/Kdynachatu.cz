@@ -56,7 +56,6 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | **CopyForWhatsAppButton** | The one „Zkopírovat pro WhatsApp“ action (#264): text button, then „Zkopírováno“ for 2 s plus an `aria-live` status; failure shows an error toast unless `onError` is given. Message + app link via `whatsAppMessage` (`lib/whatsapp.ts`). Used on Přehled (Visí na tobě, Potřebuje pozornost) and on invites | `text, onError?, onCopied?, testId?` |
 | **AvatarPicker** | Grid of 30 animal emojis for profile | `value, onChange` |
 | **ColorPicker** | Grid of the 8 verified member colors (`MEMBER_PALETTE`); a stored off-palette color shows as the nearest one (#271) | `value, onChange, size?` |
-| **TurnusChainLine** | Turnus chain as one text line „Teď: X → Další: Y (po 14. 12.) → Pak: Z“; shared by Přehled (#172) and calendar (#211). Nodes from `buildTurnusChain`; empty chain renders nothing | `nodes, onSelect?, className?` |
 | **MunicipalityPicker** | Nearest municipality of the cabin from the Czech list (#279, ADR-0006): ARIA combobox over `GET /api/municipalities`, offers name + district + region; the value is only a picked municipality (typing drops it, unpicked text sets a validity error, `noValidate` forms must check `value === null`). Credits ČÚZK (CC BY 4.0) | `id, value, onChange, placeholder?, required?, testId?` |
 
 ---
@@ -78,7 +77,6 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 | DashboardPage | Page | ✅ Complete |
 | CabinToday | Header | ✅ Today at the cabin (#338): date, today's weather, storm alert, „Akce v kraji ↗“ and the admin link to the location settings; `sidebar` variant in the desktop menu header under the cabin name (≥ 1024 px, `today` slot of DesktopSidebar filled by AppShell), `card` variant = compact card with the cabin name as h1 at the top of Přehled below 1024 px. Replaced CabinHero |
 | ActiveReservation | Card | ✅ Status header „Na chatě teď“ now → next (#272): who is at the cabin and until when, arrow, who comes next and from when (avatar + name, G4); desktop shows purpose, nights and co-travellers under each side; „Chata je volná“ / „Zatím nikdo“ when a side is empty; chain line only from the stay after next; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
-| ParticipantStack | Inline | ✅ „Také jede“ avatars of co-travellers (status header) |
 | DepartureBanner | Banner | ✅ |
 | NudgeTray | Card | ✅ „Visí na vás“: nudges from `nudges.ts` as one action card, actionable first, first highlighted with a button, max 2 visible + „Zobrazit víc“; low supplies stay in RunningLowCard (#172) |
 | PinnedNote | Card | ✅ |
