@@ -95,6 +95,18 @@ describe('Značková zelená ladí s teplým papírem (#427)', () => {
     expect(contrast(WHITE, token('--brand-primary-hover'))).toBeGreaterThanOrEqual(4.5)
   })
 
+  // Plochy po náhradě emerald tříd (#429): vybraná karta „Pevná“/„Rezervovat chatu“ na bg-accent
+  // (nadpis --text-main, popis --text-muted), UV index text-primary na vnořeném poli bg-inset,
+  // ikona text-primary na kroužku bg-primary/20 položeném na bg-accent.
+  it('text na nových zelených plochách má kontrast ≥ 4,5 : 1, ikona na kroužku ≥ 3 : 1 (#429)', () => {
+    const [primary, accent] = [token('--brand-primary'), token('--brand-primary-light')]
+    expect(contrast(primary, token('--inset'))).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(token('--text-main'), accent)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(token('--text-muted'), accent)).toBeGreaterThanOrEqual(4.5)
+    const ring = primary.map((c, i) => c * 0.2 + accent[i] * 0.8) as Rgb
+    expect(contrast(primary, ring)).toBeGreaterThanOrEqual(3)
+  })
+
   it('výchozí Button na hover ztmavne na --brand-primary-hover, nezesvětlí průhledností', () => {
     expect(buttonTsxRaw).toMatch(/default: "[^"]*hover:bg-\(--brand-primary-hover\)[^"]*"/)
     expect(buttonTsxRaw).not.toMatch(/hover:bg-primary\/\d+/)

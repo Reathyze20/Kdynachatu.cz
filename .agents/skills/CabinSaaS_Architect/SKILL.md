@@ -163,7 +163,7 @@ The app uses a two-layer design-token architecture defined in `variables.css`. W
 
 **shadcn semantic utilities** (`bg-primary`, `text-muted-foreground`, `border-input`, `ring-ring`, `bg-destructive`, …) are wired to these tokens by the theme bridge in `src/styles/shadcn-tokens.css` (light `:root` references `variables.css`, dark = `.dark` class). Prefer them in new components; do not redefine legacy `--color-*` aliases there.
 
-**Do not** introduce chaotic palettes. Primary actions use the brand tokens above, not Tailwind `emerald-*` / `teal-*` (those lean blue and clash with the warm paper; existing uses are legacy). Neutrals are the warm tokens (`--text-muted`, `--rule`, `--inset`). Status colours: supply states `--ok` / `--low` / `--empty`, otherwise Danger = `red-600`, Warning = `amber-600`, Info = `blue-600`. A new colour is a design decision: make a picker in `docs/design/` (like `10-zelena-atomy.html`) and let the user choose.
+**Do not** introduce chaotic palettes. Primary actions use the brand tokens above, not Tailwind `emerald-*` / `teal-*` (those lean blue and clash with the warm paper; `src/test/noEmeraldTeal.test.ts` keeps them out, #429). Neutrals are the warm tokens (`--text-muted`, `--rule`, `--inset`). Status colours: supply states `--ok` / `--low` / `--empty`, otherwise Danger = `red-600`, Warning = `amber-600`, Info = `blue-600`. A new colour is a design decision: make a picker in `docs/design/` (like `10-zelena-atomy.html`) and let the user choose.
 
 ### Typography
 

@@ -49,7 +49,7 @@
 }
 
 /* Dark varianta: variables.css zatím tmavou paletu nemá, proto vlastní hodnoty
-   ve stejných emerald/slate tónech. Aplikuje se třídou `.dark` (zatím ji appka
+   v tmavých zelených a slate tónech. Aplikuje se třídou `.dark` (zatím ji appka
    nikde nenastavuje, takže na legacy obrazovky nemá vliv). `dark:` utility se
    řídí stejnou třídou, ne `prefers-color-scheme` (žádná je zatím nepoužívá). */
 @custom-variant dark (&:where(.dark, .dark *));

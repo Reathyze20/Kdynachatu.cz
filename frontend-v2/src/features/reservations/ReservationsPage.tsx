@@ -329,7 +329,7 @@ export function ReservationsPage() {
               </div>
               <div>
                 <div className="font-semibold text-foreground">Rezervovat chatu</div>
-                <div className="text-xs text-primary">Vytvořit pevnou rezervaci pro pobyt</div>
+                <div className="text-xs text-muted-foreground">Vytvořit pevnou rezervaci pro pobyt</div>
               </div>
             </button>
             <button

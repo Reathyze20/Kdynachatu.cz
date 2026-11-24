@@ -440,7 +440,7 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                   </div>
                   <div>
                     <div className={`font-semibold text-sm ${!soft ? "text-foreground" : "text-slate-700"}`}>Pevná</div>
-                    <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-primary" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
+                    <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-muted-foreground" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
                   </div>
                 </button>
 
