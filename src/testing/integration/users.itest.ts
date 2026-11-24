@@ -85,10 +85,10 @@ describe("users: admin A on a cabin B member gets 404 and the member is unchange
   }
 
   test("positive control: admin A changes the role of a cabin A member", async () => {
-    const own = await createUser("clen-a-role", "user", world.cabinA.id);
-    const res = await as(app, world.adminA).put(`/api/users/${own.id}/role`).send({ role: "guest" });
+    const ownMember = await createUser("clen-a-role", "user", world.cabinA.id);
+    const res = await as(app, world.adminA).put(`/api/users/${ownMember.id}/role`).send({ role: "guest" });
     assert.equal(res.status, 200);
-    assert.equal((await userSnapshot(own.id))?.role, "guest");
+    assert.equal((await userSnapshot(ownMember.id))?.role, "guest");
   });
 });
 
@@ -108,6 +108,8 @@ describe("users: GET /api/users for cabin A contains nothing from cabin B", () =
 });
 
 describe("users: bulk changes from cabin A do not touch cabin B", () => {
+  // Hromadné deleteMany odpoví 200 i na neexistující id, takže 200 tu nic neprozradí; tenant
+  // kontrakt je, že rezervace chaty B zůstane.
   test("DELETE /api/users/:id/reservations on a cabin B member keeps their reservation", async () => {
     const res = await as(app, world.adminA).delete(`/api/users/${world.memberB.id}/reservations`);
     assert.equal(res.status, 200);
@@ -115,10 +117,10 @@ describe("users: bulk changes from cabin A do not touch cabin B", () => {
   });
 
   test("positive control: DELETE /api/users/:id/reservations removes a cabin A member's reservations", async () => {
-    const own = await createReservation(world.memberA);
+    const ownReservationId = await createReservation(world.memberA);
     const res = await as(app, world.adminA).delete(`/api/users/${world.memberA.id}/reservations`);
     assert.equal(res.status, 200);
-    assert.equal(await prisma.reservation.findUnique({ where: { id: own } }), null);
+    assert.equal(await prisma.reservation.findUnique({ where: { id: ownReservationId } }), null);
   });
 
   // Uživatelské jméno je v DB globálně unikátní, takže jméno z chaty B v A nevznikne nikdy;
