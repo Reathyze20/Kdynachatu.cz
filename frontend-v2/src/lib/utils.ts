@@ -4,6 +4,7 @@
  */
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { formatDate as formatFullDate, monthName } from './format'
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
@@ -24,20 +25,16 @@ export function formatCount(count: number, one: string, few: string, many: strin
 
 // ─── Date helpers ──────────────────────────────────────────────────────────────
 
-const MONTH_NAMES = [
-  'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
-  'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec',
-]
+const MONTH_NAMES = Array.from({ length: 12 }, (_, i) => monthName(i).replace(/^./, (c) => c.toUpperCase()))
 
 const DAY_NAMES = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']
 const DAY_NAMES_FULL = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
 
 export { MONTH_NAMES, DAY_NAMES, DAY_NAMES_FULL }
 
-/** Formats ISO date "YYYY-MM-DD" → "DD.MM.YYYY" */
+/** Formats ISO date "YYYY-MM-DD" → "21. 3. 2026" (lib/format.ts, DESIGN.md §9) */
 export function formatDate(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  return `${d}.${m}.${y}`
+  return formatFullDate(iso)
 }
 
 /** Formats ISO timestamp → relative time string */

@@ -1,35 +1,29 @@
-const MONTH_NAMES_CZ = ["ledna", "února", "března", "dubna", "května", "června", "července", "srpna", "září", "října", "listopadu", "prosince"];
-const DAY_NAMES_CZ = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"];
-const DAY_NAMES_SHORT_CZ = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
+import { formatDateRange as formatRange, formatDayDate, formatLongDate, formatShortDate, weekdayName } from "./format";
 
+// Formátovače níž jen delegují na lib/format.ts (DESIGN.md §9) a drží tvar, na který jsou zvyklí volající.
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const dayOf = (iso: string) => Number(iso.slice(8, 10));
+
+/** „12. – 14. března 2026“, přes měsíc „30. června – 2. července 2026“, přes rok s rokem u obou dnů. Vstup YYYY-MM-DD. */
 export function formatDateRange(from: string, to: string): string {
-  const f = new Date(from + "T12:00:00");
-  const t = new Date(to + "T12:00:00");
-  if (f.getMonth() === t.getMonth() && f.getFullYear() === t.getFullYear()) {
-    return `${f.getDate()}. – ${t.getDate()}. ${MONTH_NAMES_CZ[t.getMonth()]} ${t.getFullYear()}`;
-  }
-  return `${f.getDate()}. ${MONTH_NAMES_CZ[f.getMonth()]} – ${t.getDate()}. ${MONTH_NAMES_CZ[t.getMonth()]} ${t.getFullYear()}`;
+  const sameYear = from.slice(0, 4) === to.slice(0, 4);
+  const start = from.slice(0, 7) === to.slice(0, 7) ? `${dayOf(from)}.` : formatLongDate(from, { year: !sameYear });
+  return `${start} – ${formatLongDate(to, { year: true })}`;
 }
 
 /**
  * Rozsah pobytu číselně i s rokem: „12.–14. 7. 2025“, „30. 6. – 2. 7. 2025“,
- * přes Nový rok „30. 12. 2025 – 2. 1. 2026“. Vstup je kalendářní den YYYY-MM-DD,
- * čte se po složkách, takže se den neposune v žádném časovém pásmu.
+ * přes Nový rok „30. 12. 2025 – 2. 1. 2026“. Vstup je kalendářní den YYYY-MM-DD
+ * (i začátek ISO razítka), takže se den neposune v žádném časovém pásmu.
  */
 export function formatStayRange(from: string, to?: string | null): string {
-  const [fy, fm, fd] = from.slice(0, 10).split("-").map(Number);
-  const full = (d: number, m: number, y: number) => `${d}. ${m}. ${y}`;
-  if (!to || to.slice(0, 10) === from.slice(0, 10)) return full(fd, fm, fy);
-  const [ty, tm, td] = to.slice(0, 10).split("-").map(Number);
-  if (fy !== ty) return `${full(fd, fm, fy)} – ${full(td, tm, ty)}`;
-  if (fm !== tm) return `${fd}. ${fm}. – ${full(td, tm, ty)}`;
-  return `${fd}.–${full(td, tm, ty)}`;
+  return formatRange(from.slice(0, 10), (to || from).slice(0, 10), { year: true });
 }
 
+/** „So 21. – Ne 22. března“. Vstup YYYY-MM-DD. */
 export function formatWeekendRange(start: string, end: string): string {
-  const s = new Date(start + "T12:00:00");
-  const e = new Date(end + "T12:00:00");
-  return `${DAY_NAMES_SHORT_CZ[s.getDay()]} ${s.getDate()}. – ${DAY_NAMES_SHORT_CZ[e.getDay()]} ${e.getDate()}. ${MONTH_NAMES_CZ[e.getMonth()]}`;
+  return `${capitalize(weekdayName(start))} ${dayOf(start)}. – ${capitalize(weekdayName(end))} ${formatLongDate(end)}`;
 }
 
 export function nightsBetween(from: string, to: string): number {
@@ -53,22 +47,17 @@ export function daysUntil(dateStr: string): number {
 
 /** Krátké datum „po 14. 12.“ (den v týdnu malým písmenem + den a měsíc). */
 export function formatShortDayDate(iso: string): string {
-  const d = new Date(iso + "T12:00:00");
-  return `${DAY_NAMES_SHORT_CZ[d.getDay()].toLowerCase()} ${d.getDate()}. ${d.getMonth() + 1}.`;
+  return formatDayDate(iso);
 }
 
-/** Den a měsíc „15. 11.“ z ISO časového razítka, v místním čase. */
+/** Den a měsíc „15. 11.“ z ISO časového razítka, v pražském čase. */
 export function formatDayMonth(isoTimestamp: string): string {
-  const d = new Date(isoTimestamp);
-  return `${d.getDate()}. ${d.getMonth() + 1}.`;
+  return formatShortDate(isoTimestamp);
 }
 
+/** Dnešek „Čtvrtek 10. prosince“. */
 export function getTodayFormatted(): string {
-  const today = new Date();
-  const dayName = DAY_NAMES_CZ[today.getDay()];
-  const dayNum = today.getDate();
-  const monthName = MONTH_NAMES_CZ[today.getMonth()];
-  return `${dayName} ${dayNum}. ${monthName}`;
+  return capitalize(formatLongDate(new Date(), { weekday: true }));
 }
 
 // ─── Kalendářní datum rezervací ──────────────────────────────────────
