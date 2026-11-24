@@ -147,7 +147,7 @@ The page renders inside `AppShell`'s `<main id="page-container">`, which already
 
 ### Color System
 
-The app uses a two-layer design-token architecture defined in `variables.css`. When writing Tailwind, map to these semantic tokens:
+The app uses a two-layer design-token architecture defined in `variables.css`. When writing Tailwind, map to these semantic tokens. The `slate-*` equivalents below are legacy (they are cool grey); in new code use the token or the shadcn utility:
 
 | Purpose | CSS Custom Property | Tailwind Equivalent |
 |---|---|---|

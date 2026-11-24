@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 // `?raw` místo node:fs (není v typech tsconfig.app).
 import variablesCssRaw from '@/styles/variables.css?raw'
+import buttonTsxRaw from '@/components/ui/button.tsx?raw'
 
 /**
  * Značková zelená ladí s teplým papírem (#427, picker docs/design/10-zelena-atomy.html).
@@ -29,8 +30,8 @@ function decl(name: string): string {
 /** Barva tokenu: hex, trojice `R G B`, `var(--x)`, `rgb(var(--x))` nebo `color-mix(in srgb, A N%, B)`. */
 function color(value: string): Rgb {
   const v = value.trim()
-  const ref = /^(?:rgb\()?var\((--[\w-]+)\)\)?$/.exec(v)
-  if (ref) return color(decl(ref[1]))
+  const ref = /^var\((--[\w-]+)\)$|^rgb\(var\((--[\w-]+)\)\)$/.exec(v)
+  if (ref) return color(decl(ref[1] ?? ref[2]))
   const mix = /^color-mix\(in srgb,\s*(.+?)\s+(\d+(?:\.\d+)?)%,\s*(.+)\)$/.exec(v)
   if (mix) {
     const [a, t, b] = [color(mix[1]), Number(mix[2]) / 100, color(mix[3])]
@@ -77,8 +78,11 @@ describe('Značková zelená ladí s teplým papírem (#427)', () => {
     expect(hue(token('--brand-primary-hover'))).toBeLessThan(145)
   })
 
-  it('podbarvení je 10 % zelené vmíchané do papíru, ne máta', () => {
-    expect(decl('--brand-primary-light')).toBe('color-mix(in srgb, var(--brand-primary) 10%, rgb(var(--page)))')
+  it('podbarvení je teplý nádech zelené v papíru, ne máta', () => {
+    const light = token('--brand-primary-light')
+    expect(hue(light)).toBeLessThan(145)
+    expect(light[0]).toBeGreaterThanOrEqual(light[1])
+    expect(contrast(light, token('--page'))).toBeLessThan(1.25)
   })
 
   it('zelený text má kontrast ≥ 4,5 : 1 na papíře i na vlastním podbarvení', () => {
@@ -89,6 +93,11 @@ describe('Značková zelená ladí s teplým papírem (#427)', () => {
   it('bílý text na tlačítku i na hoveru má kontrast ≥ 4,5 : 1', () => {
     expect(contrast(WHITE, token('--brand-primary'))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(WHITE, token('--brand-primary-hover'))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('výchozí Button na hover ztmavne na --brand-primary-hover, nezesvětlí průhledností', () => {
+    expect(buttonTsxRaw).toMatch(/default: "[^"]*hover:bg-\(--brand-primary-hover\)[^"]*"/)
+    expect(buttonTsxRaw).not.toMatch(/hover:bg-primary\/\d+/)
   })
 
   it.each(['--raw-color-5', '--raw-off-white', '--bg-card-hover', '--bg-hover'])(

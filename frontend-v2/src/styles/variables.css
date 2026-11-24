@@ -12,7 +12,7 @@
      ========================================================================= */
 
   --raw-color-1: #1a2721;
-  /* Nejtmavší      — Velmi tmavá zeleno-šedá (hover tlačítek; text bere --raw-ink) */
+  /* Nejtmavší      — Velmi tmavá zeleno-šedá (--color-text-dark; hover tlačítek je od #427 --brand-primary-hover, text bere --raw-ink) */
   --raw-color-2: #3e5c47;
   /* Výrazná/Akcent  — Jedle, ztlumená lesní zelená posunutá k teplé (tlačítka, odkazy).
      Šalvějová #3d7861 táhla do tyrkysova a na sépiové fotce působila cize (#427,
@@ -105,7 +105,7 @@
   /* ── Speciální border & focus ──────────────────────────────────────── */
   --border-input: #cbd5e1;
   --border-glass: rgba(255, 255, 255, 0.6);
-  --focus-ring-color: rgba(63, 123, 99, 0.15);
+  --focus-ring-color: rgba(62, 92, 71, 0.18);
   --focus-ring: 0 0 0 3px var(--focus-ring-color);
 
   /* ── Doplňkové texty ─────────────────────────────────────────────────── */
