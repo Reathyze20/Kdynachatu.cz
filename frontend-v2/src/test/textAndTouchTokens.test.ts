@@ -100,6 +100,25 @@ describe('G3 · běžný text 16 px, vedlejší 14 px, nic menšího (#270)', ()
     expect(theme).toMatch(/--text-xs\s*:\s*var\(--font-size-xs\)/)
   })
 
+  // Typová škála DESIGN.md §3 (#451): role → [velikost, řez, prostrkání]
+  const TYPE_SCALE: Record<string, [string, string, string?]> = {
+    'page-title': ['var(--font-size-2xl)', '700'],
+    'card-title': ['var(--font-size-base)', '600'],
+    body: ['var(--font-size-base)', '400'],
+    label: ['var(--font-size-sm)', '500'],
+    meta: ['var(--font-size-sm)', '400'],
+    eyebrow: ['var(--font-size-sm)', '700', '0.06em'],
+  }
+
+  it.each(Object.entries(TYPE_SCALE))('typová škála: utilita text-%s má velikost a řez z DESIGN.md §3', (role, [size, weight, tracking]) => {
+    const theme = /@theme[^{]*\{([^}]*)\}/.exec(stripComments(shadcnTokensCssRaw))?.[1] ?? ''
+    const themeVar = (name: string) => new RegExp(String.raw`(?:^|;)\s*${name}\s*:\s*([^;]+);`).exec(theme)?.[1].trim()
+    expect(themeVar(`--text-${role}`)).toBe(size)
+    expect(themeVar(`--text-${role}--font-weight`)).toBe(weight)
+    expect(themeVar(`--text-${role}--line-height`)).toBeDefined()
+    expect(themeVar(`--text-${role}--letter-spacing`)).toBe(tracking)
+  })
+
   it('písmo pod 14 px zbývá jen v souborech se zapsaným dluhem a dluh neroste', () => {
     expect(countPerFile(CSS, smallFontSizes)).toEqual(G3_DEBT)
     expect(countPerFile(TSX, smallTsxFontSizes)).toEqual(G3_DEBT_TSX)

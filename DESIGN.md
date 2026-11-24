@@ -68,31 +68,31 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 
 ## 3. Typografie
 
-- **Plus Jakarta Sans** (`--font-family`) v řezech **400, 500, 600 a 700**, víc se nenačítá (`index.html`). Řez 800 a 900 i utility `font-extrabold` a `font-black` se nepíšou, prohlížeč by tučnost dopočítával. Stávajících ~28 výskytů 800 převede na 700 #451.
+- **Plus Jakarta Sans** (`--font-family`) v řezech **400, 500, 600 a 700**, víc se nenačítá (`index.html`). Řez 800 a 900 i utility `font-extrabold` a `font-black` se nepíšou, prohlížeč by tučnost dopočítával (guard `fontWeight`).
 - Charakterové písmo pro nadpisy se nepoužívá (pravidlo C3 z fáze 4 je zrušené). Další rodinu písma přidává jen uživatel.
-- **Kalam** (`--font-diary`) jen v Deníku pobytů, tedy v `styles/diary.css`: zápisník (hlavička, datum, text zápisu), náhled zápisu, data složek a prázdný stav deníku. Jinde se ruční písmo nepoužívá.
+- **Kalam** (`--font-diary`) jen v Deníku pobytů, tedy v `styles/diary.css`: zápisník (hlavička, datum, text zápisu), náhled zápisu, data složek a prázdný stav deníku. Jinde se ruční písmo nepoužívá (guard `diaryFont`).
 
 ### Typová škála
 
-Vybírá se role, ne velikost v pixelech. Pojmenované tokeny a utility pro role vystaví #451. Do té doby se použije uvedený token velikosti.
+Vybírá se role, ne velikost v pixelech. Utilita `text-<role>` nastaví velikost, řez, výšku řádku a prostrkání. Barvu nenese, ta se píše zvlášť (`text-(--text-main)`, `text-(--text-muted)`), eyebrow navíc `uppercase`. V CSS se použije uvedený token velikosti a řez.
 
-| Role | Prvek | Velikost | Řez | Barva |
-|---|---|---|---|---|
-| Titulek stránky | `h1` v `PageHeader` | `--font-size-2xl` (24 px) | 700 | `--text-main` |
-| Nadpis karty | `h2` (vnořený `h3`) | `--font-size-base` (16 px) | 600 | `--text-main` |
-| Tělo | odstavec, položka seznamu | `--font-size-base` (16 px) | 400 | `--text-main` |
-| Popisek | popisek pole, nápověda, text pod hodnotou | `--font-size-sm` (14 px) | 500 | `--text-muted` |
-| Meta | čas, autor, počet | `--font-size-sm` (14 px) | 400 | `--text-muted` |
-| Eyebrow | krátký štítek nad nadpisem nebo hodnotou, stavový štítek | `--font-size-sm` (14 px) | 700, kapitálky, prostrkání 0,06em | `--text-muted` |
+| Role | Utilita | Prvek | Velikost | Řez | Barva |
+|---|---|---|---|---|---|
+| Titulek stránky | `text-page-title` | `h1` v `PageHeader` | `--font-size-2xl` (24 px) | 700 | `--text-main` |
+| Nadpis karty | `text-card-title` | `h2` (vnořený `h3`) | `--font-size-base` (16 px) | 600 | `--text-main` |
+| Tělo | `text-body` | odstavec, položka seznamu | `--font-size-base` (16 px) | 400 | `--text-main` |
+| Popisek | `text-label` | popisek pole, nápověda, text pod hodnotou | `--font-size-sm` (14 px) | 500 | `--text-muted` |
+| Meta | `text-meta` | čas, autor, počet | `--font-size-sm` (14 px) | 400 | `--text-muted` |
+| Eyebrow | `text-eyebrow uppercase` | krátký štítek nad nadpisem nebo hodnotou, stavový štítek | `--font-size-sm` (14 px) | 700, kapitálky, prostrkání 0,06em | `--text-muted` |
 
 - Minimum je 14 px, běžný text 16 px (G3). `--font-size-xs` je alias pro 14 px a ani utilita `text-xs` menší písmo nedá (`textAndTouchTokens.test.ts`).
 - **Nadpisy karet ve větné velikosti písmen** („Visí na tobě“, „Na chatě teď“). Kapitálky s prostrkáním patří jen eyebrow štítku a stavovému štítku (rozhodnutí #425).
 
 ## 4. Ikony
 
-- Jen `lucide-react`. Jinou ikonovou sadu zakáže ESLint `no-restricted-imports` (#451). Emoji ani unicode dingbaty nejsou ikony (`uiIconography.test.ts`).
-- Velikosti jen **16, 20 a 24 px**: 16 v textu a v tlačítku s textem, 20 jako samostatná ikona (ikonové tlačítko, navigace), 24 v `EmptyState`. Stávající 14, 18, 28, 48 px a další odchylky jsou v allowlistu (#451).
-- Inline `<svg>` jen z allowlistu: logo, ilustrace landing page, prázdné stavy (#451).
+- Jen `lucide-react`. Jinou ikonovou sadu zakazuje ESLint `no-restricted-imports`. Emoji ani unicode dingbaty nejsou ikony (`uiIconography.test.ts`).
+- Velikosti jen **16, 20 a 24 px**: 16 v textu a v tlačítku s textem, 20 jako samostatná ikona (ikonové tlačítko, navigace), 24 v `EmptyState`. Stávající 14, 18, 28, 48 px a další odchylky jsou v allowlistu (guard `iconSize`).
+- Inline `<svg>` jen z allowlistu: logo, ilustrace landing page, prázdné stavy (guard `inlineSvg`). Trvalou výjimkou je `GlobalFallback`, který nesmí záviset na lucide.
 - Každá ikona něco sděluje, dekorace to není. Ikona vedle textu má `aria-hidden`, ikonové tlačítko má `aria-label` a cíl 48 × 48 px.
 
 ## 5. Pohyb
@@ -231,12 +231,17 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `coldPalette` | `slate-*`, `emerald-*`, `bg-white` (v `className` hlídá i ESLint, výjimky bere ze stejného allowlistu) |
 | `breakpoint` | media query mimo 768/1024 px (viz kapitola 2), Tailwind `sm:`, `xl:`, `2xl:`, `min-[…]:`, `max-[…]:` |
 | `newCssFile` | každý `.css` pod `src/` kromě `index.css` a souborů s definicí tokenů |
+| `fontWeight` | řez mimo načtené 400/500/600/700 (`font-weight: 800`, `font-extrabold`, `font-black`, `font-light` …) |
+| `diaryFont` | Kalam (`--font-diary`) mimo `styles/diary.css` |
+| `inlineSvg` | inline `<svg>` v TSX |
+| `iconSize` | ikona lucide jinak než 16/20/24 px (`size={…}`, `h-*`/`w-*`/`size-*`) |
+
+ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 
 **Přibudou:**
 
 | Pravidlo | Ticket |
 |---|---|
-| řez 800 a nenačtené řezy, Kalam mimo Deník, inline `<svg>`, velikost ikon 16/20/24, ESLint jen `lucide-react` | #451 |
 | zmrazené `.btn-*` | #452 |
 | zmrazené `page-card`, `glass-card`, `admin-card`, `.card`, `*-empty-*` | #454 |
 | `toLocaleDateString` a pole měsíců mimo formátovací modul | #455 |

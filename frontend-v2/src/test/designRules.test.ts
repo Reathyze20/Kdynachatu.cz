@@ -4,13 +4,14 @@ import { DESIGN_RULES, TOKEN_FILES } from './designRules'
 import allowlistRaw from './designAllowlist.json?raw'
 
 /**
- * Guard tokenů a barev z DESIGN.md (#450). Stávající porušení jsou v designAllowlist.json
+ * Guard tokenů, barev (#450), písma a ikon (#451) z DESIGN.md. Stávající porušení jsou v designAllowlist.json
  * („pravidlo → důvod → soubory“), který se smí jen zmenšovat. Prázdný allowlist = Krok 6 v #69.
  */
 
 const ALLOWLIST = JSON.parse(allowlistRaw) as Record<string, Allowlist>
 const rule = (name: string) => DESIGN_RULES.find((r) => r.name === name)!
 const hits = (name: string, snippet: string) => evaluateRule(rule(name), { 'example.tsx': snippet }).violations
+const LUCIDE = "import { Check, X } from 'lucide-react'\n"
 
 const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
   rawColour: {
@@ -33,6 +34,29 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
       'className="md:flex lg:grid max-md:hidden"', 'size: { sm: "h-8" }', 'className="@max-[280px]:hidden"', '.a { max-width: 1200px; }',
     ],
   },
+  fontWeight: {
+    bad: [
+      'font-weight: 800;', 'font-weight:900}', 'font-weight: 300;', 'fontWeight: 800', "fontWeight: '900'",
+      'className="font-extrabold"', 'className="font-black"', 'className="font-light"', 'className="font-[800]"',
+    ],
+    good: [
+      'font-weight: 700;', 'font-weight: 400;', 'font-weight: bold;', 'font-weight: var(--w);', 'fontWeight: 600',
+      'className="font-bold font-semibold font-medium font-normal"', 'className="font-[500]"',
+    ],
+  },
+  diaryFont: { bad: ['font-family: var(--font-diary);', "fontFamily: 'Kalam, cursive'"], good: ['font-family: var(--font-family);'] },
+  inlineSvg: { bad: ['<svg viewBox="0 0 24 24"><path d="M1 1" /></svg>'], good: [`${LUCIDE}<Check size={16} />`] },
+  iconSize: {
+    bad: [
+      `${LUCIDE}<Check size={18} />`, "import { Check as Ok } from 'lucide-react'\n<Ok size={14} aria-hidden />",
+      `${LUCIDE}<X className="h-3.5 w-3.5" />`, `${LUCIDE}<X className="size-8" />`, `${LUCIDE}<X className="w-[18px]" />`,
+      `${LUCIDE}<X size={compact ? 14 : 16} />`, `${LUCIDE}const Icon = item.icon\n<Icon size={28} />`, `${LUCIDE}<item.icon size={18} />`,
+    ],
+    good: [
+      `${LUCIDE}<Check size={16} />\n<X size={20} onClick={() => a > b} />`, `${LUCIDE}<X className="h-4 w-4 md:size-6" />`, `${LUCIDE}<X />`,
+      `${LUCIDE}<AnimalAvatar size={48} />`, '<Icon size={48} />', `${LUCIDE}<X data-size="18" />`, `${LUCIDE}<X className="min-h-12 rounded-lg" strokeWidth={2.5} />`,
+    ],
+  },
 }
 
 describe('pravidla DESIGN.md rozpoznají porušení', () => {
@@ -46,6 +70,16 @@ describe('pravidla DESIGN.md rozpoznají porušení', () => {
       const sources = Object.fromEntries(TOKEN_FILES.map((file) => [file, '--color-x: var(--raw-y, #fff);']))
       expect(evaluateRule(rule(name), sources).violations).toEqual([])
     }
+  })
+
+  it('Kalam smí jen Deník (styles/diary.css) a definice tokenů', () => {
+    const sources = { 'styles/diary.css': 'font-family: var(--font-diary);', 'styles/variables.css': '--font-diary: "Kalam", cursive;' }
+    expect(evaluateRule(rule('diaryFont'), sources).violations).toEqual([])
+  })
+
+  it('inline <svg> hlídá jen TSX, globální fallback je trvalá výjimka (vykreslí se i bez lucide)', () => {
+    const sources = { 'a.css': '.a { content: "<svg"; }', 'components/shared/GlobalFallback.tsx': '<svg />', 'b.tsx': '<svg />' }
+    expect(evaluateRule(rule('inlineSvg'), sources).violations).toEqual(['b.tsx:1  <svg'])
   })
 
   it('newCssFile chytí nový .css soubor, vstup Tailwindu a definice tokenů ne', () => {

@@ -972,7 +972,7 @@
   background-color: var(--brand-primary);
   color: var(--text-on-primary);
   font-size: 1.3rem;
-  font-weight: 900;
+  font-weight: 700;
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
@@ -1135,7 +1135,7 @@
 
 .detail-page-title {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-main);
   margin: 0;
   line-height: 1.15;

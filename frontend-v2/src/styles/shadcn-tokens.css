@@ -119,4 +119,26 @@
   /* G3 (#270): ani utilita text-xs nedá méně než 14 px (stejně jako text-sm) */
   --text-xs: var(--font-size-xs);
   --text-xs--line-height: 1.25rem;
+
+  /* Typová škála DESIGN.md §3 (#451): role místo velikosti v px. Barvu nese zvlášť text-(--text-main) / text-(--text-muted),
+     eyebrow se píše `text-eyebrow uppercase`. */
+  --text-page-title: var(--font-size-2xl);
+  --text-page-title--line-height: 1.875rem;
+  --text-page-title--font-weight: 700;
+  --text-card-title: var(--font-size-base);
+  --text-card-title--line-height: 1.375rem;
+  --text-card-title--font-weight: 600;
+  --text-body: var(--font-size-base);
+  --text-body--line-height: 1.5rem;
+  --text-body--font-weight: 400;
+  --text-label: var(--font-size-sm);
+  --text-label--line-height: 1.25rem;
+  --text-label--font-weight: 500;
+  --text-meta: var(--font-size-sm);
+  --text-meta--line-height: 1.25rem;
+  --text-meta--font-weight: 400;
+  --text-eyebrow: var(--font-size-sm);
+  --text-eyebrow--line-height: 1.25rem;
+  --text-eyebrow--font-weight: 700;
+  --text-eyebrow--letter-spacing: 0.06em;
 }
