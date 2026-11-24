@@ -383,6 +383,18 @@ export const acceptInviteSchema = z.object({
   animalIcon: z.string().max(50).optional(),
 });
 
+// Staging — zpětná vazba testera (#389); id úkolů zrcadlí frontend-v2 features/staging/testingTasks.ts
+export const STAGING_FEEDBACK_TASK_IDS = [
+  "general", "prehled", "rezervace", "nakup", "poznamka-mesic", "chat", "predavka", "galerie",
+] as const;
+
+export const stagingFeedbackSchema = z.object({
+  taskId: z.enum(STAGING_FEEDBACK_TASK_IDS, { message: "Neznámý úkol" }),
+  text: z.string().trim().min(1, "Napiš, co ti nešlo nebo co ti chybí").max(2000, "Text může mít nejvýš 2000 znaků"),
+  screen: z.string().trim().min(1).max(300),
+  viewportWidth: z.number().int().min(0).max(10000),
+});
+
 // Superadmin — create user
 export const superadminCreateUserSchema = z.object({
   username: z.string().trim().min(2, "Jméno musí mít alespoň 2 znaky").max(50),

@@ -6,7 +6,7 @@
  * Po přihlášení (= připojení AppShell) se karta otevře sama, dokud nejsou všechny úkoly hotové,
  * jinak je sbalená do tlačítka. „Ukaž mi kde“ kartu sbalí, aby obrazovka byla vidět celá.
  * Karta je v toku stránky nad obsahem (ne plovoucí), takže nepřekrývá spodní lištu ani přehled.
- * Pole zpětné vazby k úkolu (#389) patří do `TestingTaskItem`.
+ * Zpětná vazba (#389): pole u každého úkolu (`TestingTaskItem`) + obecné pole pod seznamem.
  */
 import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -14,6 +14,7 @@ import { ClipboardList, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
 import { useDemoAccounts } from '@/features/auth/hooks/useDemoAccounts'
+import { FeedbackField } from './FeedbackField'
 import { TESTING_TASKS, allTasksDone, readDoneTasks, writeDoneTasks, type TestingTask } from './testingTasks'
 
 export function TestingChecklist() {
@@ -92,6 +93,7 @@ function TestingChecklistCard() {
             />
           ))}
         </ol>
+        <FeedbackField taskId="general" label="Cokoli dalšího" />
       </section>
     </div>
   )
@@ -130,6 +132,7 @@ function TestingTaskItem({ task, order, done, onToggleDone, onShowWhere }: Testi
           Hotovo
         </label>
       </div>
+      <FeedbackField taskId={task.id} label="Co ti nešlo / co ti chybí?" />
     </li>
   )
 }

@@ -219,6 +219,28 @@ const schemas: Record<string, JsonSchema> = {
       },
     },
   },
+  StagingFeedbackRequest: {
+    type: "object",
+    required: ["taskId", "text", "screen", "viewportWidth"],
+    properties: {
+      taskId: {
+        type: "string",
+        enum: ["general", "prehled", "rezervace", "nakup", "poznamka-mesic", "chat", "predavka", "galerie"],
+        description: "Id ukolu z karty Co vyzkouset, general = obecne pole",
+      },
+      text: { type: "string", minLength: 1, maxLength: 2000, example: "Nenasla jsem, kde je nakup." },
+      screen: { type: "string", maxLength: 300, example: "/dashboard" },
+      viewportWidth: { type: "integer", minimum: 0, maximum: 10000, example: 360 },
+    },
+  },
+  StagingFeedbackResponse: {
+    type: "object",
+    required: ["id", "createdAt"],
+    properties: {
+      id: { type: "string", format: "uuid" },
+      createdAt: { type: "string", format: "date-time" },
+    },
+  },
   MunicipalitySearchResponse: {
     type: "object",
     required: ["municipalities"],
@@ -603,6 +625,20 @@ const paths: Record<string, OpenApiObject> = {
       summary: "Fiktivni demo ucty pro rychle prihlaseni (neprazdne jen na stagingu)",
       responses: {
         "200": jsonResponse(ref("DemoAccountsResponse"), "Seznam demo uctu, mimo staging prazdny"),
+      },
+    },
+  },
+  "/api/staging-feedback": {
+    post: {
+      tags: ["Staging"],
+      summary: "Zpetna vazba testera z karty Co vyzkouset (jen staging; cabinId a uzivatel z prihlaseni)",
+      security: bearerSecurity,
+      requestBody: jsonRequestBody(ref("StagingFeedbackRequest")),
+      responses: {
+        "201": jsonResponse(ref("StagingFeedbackResponse"), "Zaznam byl pripsan do souboru zpetne vazby"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Prazdny nebo prilis dlouhy text, neznamy ukol"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "404": jsonResponse(ref("ErrorResponse"), "Mimo staging endpoint neexistuje"),
       },
     },
   },
@@ -1077,6 +1113,7 @@ export const openApiSpec = {
     { name: "Gallery", description: "Gallery folders and uploads" },
     { name: "Admin", description: "Admin-only cabin diagnostics" },
     { name: "Logs", description: "Operational log access" },
+    { name: "Staging", description: "Staging-only guided testing" },
   ],
   components: {
     securitySchemes: {

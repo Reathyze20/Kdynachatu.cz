@@ -1,8 +1,9 @@
 /**
  * features/staging/testingTasks.ts
  * Úkoly karty „Co vyzkoušet“ (#388) a jejich odškrtnutí v prohlížeči (bez backendu, bez DB).
- * `id` úkolu je stabilní – zpětná vazba k úkolu (#389) se na něj bude odkazovat.
+ * `id` úkolu je stabilní – zpětná vazba k úkolu (#389) se na něj odkazuje (backend id ověřuje).
  */
+import type { StagingFeedbackTaskId } from '@/api/stagingFeedback'
 
 /** Cíl „Ukaž mi kde“ – cesta z routeru frontendu; `name` rozliší víc cílů jednoho úkolu */
 export interface TaskPlace {
@@ -11,7 +12,7 @@ export interface TaskPlace {
 }
 
 export interface TestingTask {
-  id: string
+  id: Exclude<StagingFeedbackTaskId, 'general'>
   title: string
   places: readonly TaskPlace[]
 }
