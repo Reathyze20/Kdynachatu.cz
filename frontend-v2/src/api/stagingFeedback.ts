@@ -1,6 +1,4 @@
-/**
- * api/stagingFeedback.ts — zpětná vazba testera z karty „Co vyzkoušet“ (jen staging, #389)
- */
+/** api/stagingFeedback.ts — zpětná vazba testera z karty „Co vyzkoušet“ (jen staging, #389) */
 import apiClient from './client'
 
 // Wire typy zrcadlí src/types.ts (StagingFeedbackTaskId, StagingFeedbackRequest, StagingFeedbackResponse)
@@ -20,8 +18,6 @@ export interface StagingFeedbackResponse {
 }
 
 export const stagingFeedbackApi = {
-  send: async (body: StagingFeedbackRequest): Promise<StagingFeedbackResponse> => {
-    const { data } = await apiClient.post<StagingFeedbackResponse>('/staging-feedback', body)
-    return data
-  },
+  send: async (body: StagingFeedbackRequest): Promise<StagingFeedbackResponse> =>
+    (await apiClient.post<StagingFeedbackResponse>('/staging-feedback', body)).data,
 }

@@ -157,8 +157,8 @@ export type StagingFeedbackTaskId =
 export interface StagingFeedbackRequest {
   taskId: StagingFeedbackTaskId;
   text: string;
-  screen: string; // cesta obrazovky, na které tester byl
-  viewportWidth: number; // šířka okna v px – mobil/desktop
+  screen: string; // cesta obrazovky
+  viewportWidth: number; // px – mobil/desktop
 }
 
 /** Jeden řádek souboru se zpětnou vazbou (JSON Lines); cabinId a uživatel z přihlášení */

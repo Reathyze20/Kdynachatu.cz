@@ -223,11 +223,7 @@ const schemas: Record<string, JsonSchema> = {
     type: "object",
     required: ["taskId", "text", "screen", "viewportWidth"],
     properties: {
-      taskId: {
-        type: "string",
-        enum: ["general", "prehled", "rezervace", "nakup", "poznamka-mesic", "chat", "predavka", "galerie"],
-        description: "Id ukolu z karty Co vyzkouset, general = obecne pole",
-      },
+      taskId: { type: "string", enum: ["general", "prehled", "rezervace", "nakup", "poznamka-mesic", "chat", "predavka", "galerie"] },
       text: { type: "string", minLength: 1, maxLength: 2000, example: "Nenasla jsem, kde je nakup." },
       screen: { type: "string", maxLength: 300, example: "/dashboard" },
       viewportWidth: { type: "integer", minimum: 0, maximum: 10000, example: 360 },
@@ -236,10 +232,7 @@ const schemas: Record<string, JsonSchema> = {
   StagingFeedbackResponse: {
     type: "object",
     required: ["id", "createdAt"],
-    properties: {
-      id: { type: "string", format: "uuid" },
-      createdAt: { type: "string", format: "date-time" },
-    },
+    properties: { id: { type: "string", format: "uuid" }, createdAt: { type: "string", format: "date-time" } },
   },
   MunicipalitySearchResponse: {
     type: "object",
