@@ -1,13 +1,15 @@
 /**
- * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank> [--root <dir>]`.
+ * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank|pairwise> [--root <dir>]`.
  * `check` založí chybějící šablony (existující nikdy nepřepíše) a pod minimem ručních signálů skončí
  * exit kódem 1 s počtem chybějících. `rank` vypíše bloky shluků z `shluky.md` seřazené podle počtu
- * ručních signálů `S-n`; počet issues rozhoduje jen při shodě (#386). Bez sítě, DB a `.env`.
+ * ručních signálů `S-n`; počet issues rozhoduje jen při shodě (#386). `pairwise` sečte verdikty
+ * párového kola z `parove.json` a vybere nejvýš 5 postupujících (#370). Bez sítě, DB a `.env`.
  * Další podpříkazy patří do `COMMANDS`.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 
 const MIN_SIGNALS = 10;
 
@@ -99,7 +101,106 @@ function rank(root: string): CommandResult {
   return { code: 0, lines: [ranked.map(({ block }) => block).join("\n\n")] };
 }
 
-const COMMANDS: Record<string, Command> = { check, rank };
+const PAIRWISE_FILE = "parove.json";
+const MAX_ADVANCING = 5;
+const MAX_CANDIDATES = 10;
+const JUDGES = [1, 2, 3];
+
+const PairwiseInput = z.object({
+  candidates: z.array(z.string().min(1)),
+  verdicts: z.array(
+    z.object({ judge: z.number().int(), first: z.string(), second: z.string(), winner: z.string() }),
+  ),
+});
+
+/** Jedno uspořádané posouzení: rozhodčí viděl `first` jako prvního a `second` jako druhého. */
+function orderedPair(judge: number, first: string, second: string): string {
+  return `rozhodčí ${judge}: ${first} před ${second}`;
+}
+
+function pairwiseInputError({ candidates, verdicts }: z.infer<typeof PairwiseInput>): string | undefined {
+  if (candidates.length <= MAX_ADVANCING) {
+    return `Párové kolo se spouští jen při víc než ${MAX_ADVANCING} kandidátech (je jich ${candidates.length}). Postupují všichni.`;
+  }
+  if (candidates.length > MAX_CANDIDATES) return `Kandidátů je ${candidates.length}, krok 4 jich pouští nejvýš ${MAX_CANDIDATES}.`;
+  if (new Set(candidates).size !== candidates.length) return "Kód kandidáta se v `candidates` opakuje.";
+
+  const seen = new Set<string>();
+  for (const { judge, first, second, winner } of verdicts) {
+    if (!JUDGES.includes(judge)) return `Rozhodčí ${judge}: párové kolo má nejvýš ${JUDGES.length} rozhodčí (1–${JUDGES.length}).`;
+    const label = orderedPair(judge, first, second);
+    for (const id of [first, second, winner]) {
+      if (!candidates.includes(id)) return `${label}: neznámý kandidát ${id}.`;
+    }
+    if (first === second) return `${label}: dvojice musí mít dva různé kandidáty.`;
+    if (winner !== first && winner !== second) return `${label}: vítěz ${winner} není v dvojici.`;
+    if (seen.has(label)) return `${label}: verdikt je tu dvakrát.`;
+    seen.add(label);
+  }
+  return undefined;
+}
+
+/**
+ * Rozhodčí dává výhru jen tehdy, když vybral stejného kandidáta v obou pořadích dvojice; tím se
+ * potlačí poziční zaujatost. Pořadí: počet výher, při shodě pořadí v `candidates` (z kroku 3).
+ */
+function pairwise(root: string): CommandResult {
+  const inputPath = path.join(root, PAIRWISE_FILE);
+  if (!existsSync(inputPath)) {
+    return { code: 1, lines: [`Chybí ${inputPath}. Zapiš do něj kandidáty a verdikty rozhodčích z kroku 5 a spusť znovu.`] };
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(inputPath, "utf8"));
+  } catch {
+    return { code: 1, lines: [`${inputPath} není platný JSON.`] };
+  }
+  const parsed = PairwiseInput.safeParse(raw);
+  if (!parsed.success) {
+    return { code: 1, lines: [`${inputPath} nemá tvar { candidates: string[], verdicts: { judge, first, second, winner }[] }.`] };
+  }
+  const error = pairwiseInputError(parsed.data);
+  if (error) return { code: 1, lines: [error] };
+
+  const { candidates, verdicts } = parsed.data;
+  const winnerOf = new Map(verdicts.map((v) => [orderedPair(v.judge, v.first, v.second), v.winner]));
+  const wins = new Map(candidates.map((id) => [id, 0]));
+  const missing: string[] = [];
+
+  for (const judge of JUDGES) {
+    if (!verdicts.some((v) => v.judge === judge)) {
+      missing.push(`rozhodčí ${judge}: žádný verdikt`);
+      continue;
+    }
+    candidates.forEach((a, i) => {
+      for (const b of candidates.slice(i + 1)) {
+        const ab = winnerOf.get(orderedPair(judge, a, b));
+        const ba = winnerOf.get(orderedPair(judge, b, a));
+        if (ab === undefined) missing.push(orderedPair(judge, a, b));
+        if (ba === undefined) missing.push(orderedPair(judge, b, a));
+        if (ab !== undefined && ab === ba) wins.set(ab, (wins.get(ab) ?? 0) + 1);
+      }
+    });
+  }
+
+  // Array.prototype.sort je stabilní, takže shoda výher zachová pořadí z kroku 3.
+  const winsOf = (id: string) => wins.get(id) ?? 0;
+  const ranked = [...candidates].sort((a, b) => winsOf(b) - winsOf(a));
+  const advancing = ranked.slice(0, MAX_ADVANCING);
+  const lines = [
+    `Postupují: ${advancing.join(", ")}`,
+    ...ranked.map((id, i) => `${i + 1}. ${id}: ${winsOf(id)} výher${i < MAX_ADVANCING ? " (postupuje)" : ""}`),
+  ];
+  const cutoff = winsOf(ranked[MAX_ADVANCING - 1]);
+  const tied = ranked.filter((id) => winsOf(id) === cutoff);
+  if (winsOf(ranked[MAX_ADVANCING]) === cutoff) {
+    lines.push(`Shoda na hranici: ${tied.join(", ")} mají po ${cutoff} výhrách, o postupu rozhodlo pořadí z kroku 3.`);
+  }
+  if (missing.length > 0) lines.push(`Bez verdiktu: ${missing.join("; ")}`);
+  return { code: 0, lines };
+}
+
+const COMMANDS: Record<string, Command> = { check, rank, pairwise };
 
 const USAGE = `Použití: tsx src/scripts/ideation.ts <${Object.keys(COMMANDS).join("|")}> [--root <dir>] (výchozí kořen .ideation)`;
 

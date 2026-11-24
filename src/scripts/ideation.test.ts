@@ -154,3 +154,121 @@ describe("ideation rank", () => {
     assert.match(output, /shluky\.md/);
   });
 });
+
+type Verdict = { judge: number; first: string; second: string; winner: string };
+
+const SIX = ["P1", "P2", "P3", "P4", "P5", "P6"];
+
+function orderedPairs(candidates: string[]): Array<[string, string]> {
+  return candidates.flatMap((first) =>
+    candidates.filter((second) => second !== first).map((second): [string, string] => [first, second]),
+  );
+}
+
+/** Rozhodčí s pevným pořadím: v obou pořadích vyhraje kandidát, který je v `preference` dřív. */
+function consistentJudge(judge: number, preference: string[]): Verdict[] {
+  return orderedPairs(preference).map(([first, second]) => ({
+    judge,
+    first,
+    second,
+    winner: preference.indexOf(first) < preference.indexOf(second) ? first : second,
+  }));
+}
+
+function withPairwise(input: unknown): string {
+  const root = freshRoot();
+  mkdirSync(root, { recursive: true });
+  writeFileSync(path.join(root, "parove.json"), JSON.stringify(input));
+  return root;
+}
+
+function advancing(output: string): string[] {
+  const line = output.split(/\r?\n/).find((l) => l.startsWith("Postupují:")) ?? "";
+  return line
+    .replace("Postupují:", "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+describe("ideation pairwise", () => {
+  test("counts a win only when both orders agree, so a judge who always picks the first one adds nothing", () => {
+    const verdicts = orderedPairs(SIX).map(([first, second]) => ({
+      judge: 1,
+      first,
+      second,
+      winner: first === "P6" || second === "P6" ? "P6" : first,
+    }));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(advancing(output), ["P6", "P1", "P2", "P3", "P4"]);
+    assert.match(output, /P6: 5 výher/);
+    assert.match(output, /P5: 0 výher/);
+    assert.match(output, /Shoda na hranici: P1, P2, P3, P4, P5 mají po 0 výhrách/);
+  });
+
+  test("sums wins across 3 judges and lets at most 5 advance", () => {
+    const preference = ["P4", "P6", "P1", "P2", "P5", "P3"];
+    const verdicts = [1, 2, 3].flatMap((judge) => consistentJudge(judge, preference));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(advancing(output), ["P4", "P6", "P1", "P2", "P5"]);
+    assert.match(output, /P4: 15 výher/);
+    assert.doesNotMatch(output, /Shoda na hranici|Bez verdiktu/);
+  });
+
+  test("a missing verdict or a silent judge gives no win and is reported", () => {
+    const verdicts = consistentJudge(1, SIX).filter((v) => !(v.first === "P2" && v.second === "P1"));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.equal(code, 0, output);
+    assert.match(output, /P1: 4 výher/);
+    assert.match(output, /Bez verdiktu: rozhodčí 1: P2 před P1; rozhodčí 2: žádný verdikt; rozhodčí 3: žádný verdikt/);
+  });
+
+  test("refuses to run with 5 or fewer candidates", () => {
+    const five = SIX.slice(0, 5);
+
+    const { code, output } = runHelper(
+      "pairwise",
+      "--root",
+      withPairwise({ candidates: five, verdicts: consistentJudge(1, five) }),
+    );
+
+    assert.notEqual(code, 0);
+    assert.match(output, /víc než 5/);
+  });
+
+  test("refuses a fourth judge", () => {
+    const verdicts = [1, 2, 3, 4].flatMap((judge) => consistentJudge(judge, SIX));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.notEqual(code, 0);
+    assert.match(output, /nejvýš 3/);
+  });
+
+  test("refuses a winner that is not in the pair", () => {
+    const verdicts = [{ judge: 1, first: "P1", second: "P2", winner: "P3" }];
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.notEqual(code, 0);
+    assert.match(output, /vítěz P3 není v dvojici/);
+  });
+
+  test("without parove.json it exits non-zero and names the missing file", () => {
+    const root = freshRoot();
+    mkdirSync(root, { recursive: true });
+
+    const { code, output } = runHelper("pairwise", "--root", root);
+
+    assert.notEqual(code, 0);
+    assert.match(output, /parove\.json/);
+  });
+});
