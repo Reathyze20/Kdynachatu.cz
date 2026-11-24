@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.10.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.9.0...v1.10.0) (2026-11-24)
+
+
+### Features
+
+* **admin:** show staging tester feedback in Správa ([#398](https://github.com/Reathyze20/Kdynachatu.cz/issues/398)) ([5c3edf6](https://github.com/Reathyze20/Kdynachatu.cz/commit/5c3edf693fc29974b2b7348800eb184b7b42f7f6))
+* **auth:** "Mamka" demo account and friendly staging login screen ([#392](https://github.com/Reathyze20/Kdynachatu.cz/issues/392)) ([3f7a7ad](https://github.com/Reathyze20/Kdynachatu.cz/commit/3f7a7ad1eb9f5da906d88fe2565c70f4affddfb2))
+* **dashboard:** fit the desktop overview without scrolling ([#358](https://github.com/Reathyze20/Kdynachatu.cz/issues/358)) ([afd5564](https://github.com/Reathyze20/Kdynachatu.cz/commit/afd556452eabf1f8c9006fd9b5e83c67278ccbd7))
+* **dashboard:** now → next → later timeline header and boxless "Od minule" ([#368](https://github.com/Reathyze20/Kdynachatu.cz/issues/368)) ([3a35307](https://github.com/Reathyze20/Kdynachatu.cz/commit/3a35307597c9b56983ae239a2af6d47f619834be))
+* **ideation:** skill skeleton with grounding, independent generation and dedup ([#374](https://github.com/Reathyze20/Kdynachatu.cz/issues/374)) ([cf77865](https://github.com/Reathyze20/Kdynachatu.cz/commit/cf778656a1f26489a2aa81cfa364f296680f8615))
+* **staging:** "Co vyzkoušet" guided testing checklist ([#393](https://github.com/Reathyze20/Kdynachatu.cz/issues/393)) ([312fd73](https://github.com/Reathyze20/Kdynachatu.cz/commit/312fd733c5b1cc30e661ea4ab275d1eb26cb4627))
+* **staging:** send tester feedback from the "Co vyzkoušet" checklist ([#397](https://github.com/Reathyze20/Kdynachatu.cz/issues/397)) ([d48a129](https://github.com/Reathyze20/Kdynachatu.cz/commit/d48a12982cc874871a4b234ece762cbce093b060))
+* **theme:** cover photo behind Správa, Diagnostika and Superadmin ([#353](https://github.com/Reathyze20/Kdynachatu.cz/issues/353)) ([422264f](https://github.com/Reathyze20/Kdynachatu.cz/commit/422264fb0d9bd5a0c1c433a38101ee11c27c4382)), closes [#341](https://github.com/Reathyze20/Kdynachatu.cz/issues/341)
+* **theme:** cover photo behind Zásoby, Chat, Rekonstrukce, Galerie and Deník ([#350](https://github.com/Reathyze20/Kdynachatu.cz/issues/350)) ([9abe423](https://github.com/Reathyze20/Kdynachatu.cz/commit/9abe423f689b40395b4eb4352c40b8e1f3ef95c2))
+
+
+### Bug Fixes
+
+* **dashboard:** keep overview cards from shrinking when the column scrolls ([#352](https://github.com/Reathyze20/Kdynachatu.cz/issues/352)) ([1f1722a](https://github.com/Reathyze20/Kdynachatu.cz/commit/1f1722aafcff7f165c2f04376118154c44072c2a))
+* **staging:** give the seeded cover a fresh filename on every run ([#354](https://github.com/Reathyze20/Kdynachatu.cz/issues/354)) ([80378e2](https://github.com/Reathyze20/Kdynachatu.cz/commit/80378e2ce980b4470dbc0a13582c1789014b5621))
+* **staging:** make the "Co vyzkoušet" checklist a floating one-task mini card ([#402](https://github.com/Reathyze20/Kdynachatu.cz/issues/402)) ([bff2fc7](https://github.com/Reathyze20/Kdynachatu.cz/commit/bff2fc780569f3ed4e0f69fd18b57f1a099798e5))
+* **ui:** drop the coloured left accent stripes ([#357](https://github.com/Reathyze20/Kdynachatu.cz/issues/357)) ([ffcd79c](https://github.com/Reathyze20/Kdynachatu.cz/commit/ffcd79c8defc96f04e160da23806dd20904e7408))
+
 ## [1.9.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.8.0...v1.9.0) (2026-11-23)
 
 
