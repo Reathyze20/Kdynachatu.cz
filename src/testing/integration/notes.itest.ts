@@ -177,6 +177,17 @@ describe("notes: lists for cabin A contain nothing from cabin B", () => {
     assert.deepEqual(res.body.map((n: { id: string }) => n.id), [noteA]);
   });
 
+  test("GET /api/note-threads counts only cabin A's notes in the main thread", async () => {
+    // Cabin B must have a main-thread note (noteB) for the count to be able to leak.
+    assert.ok((await prisma.note.count({ where: { cabinId: world.cabinB.id, threadId: null } })) > 0);
+    const expected = await prisma.note.count({ where: { cabinId: world.cabinA.id, threadId: null } });
+    const res = await as(app, world.memberA).get("/api/note-threads");
+    assert.equal(res.status, 200);
+    const main = res.body.find((t: { id: string | null }) => t.id === null);
+    assert.ok(main, "main thread missing");
+    assert.equal(main.messageCount, expected);
+  });
+
   test(`GET /api/notes?threadId=${"<B thread>"} returns an empty list for cabin A`, async () => {
     const res = await as(app, world.memberA).get(`/api/notes?threadId=${threadB}`);
     assert.deepEqual(res.body, []);
