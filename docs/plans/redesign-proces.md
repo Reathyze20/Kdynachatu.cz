@@ -29,7 +29,7 @@ Redesign **není greenfield**. Tři existující vstupy náš proces bere a **pr
 - **Produktová vize** – `docs/PRODUCT.md` (co produkt je, non-goals, segmenty).
 - **Roadmapa** – map issue #69 (8 kroků, mj. „Krok 6 – design systém + redesign, mobil první").
 - **Designový kontrakt** – `.agents/skills/CabinSaaS_Architect/SKILL.md` (tokeny „Moderní Les",
-  shadcn/ui, estetika „floating glass in a forest").
+  shadcn/ui, estetika „floating glass in a forest"). Dnes je kontraktem `DESIGN.md`, skill popisuje jen postup.
 
 Fáze 1 (vize) a Fáze 4 (design) proto nezačínají prázdné, ale revizí toho, co už je.
 

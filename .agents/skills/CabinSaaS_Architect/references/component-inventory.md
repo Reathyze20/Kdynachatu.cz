@@ -6,7 +6,7 @@ Complete map of every existing React component in `frontend-v2/src/`. Read this 
 
 ## shadcn/ui Primitives (`components/ui/`)
 
-These are pre-built, ready to import from `@/components/ui/<name>`:
+Mostly unrestyled shadcn. Which primitive is canonical, and its target styling, is in `DESIGN.md` §6; unused ones get restyled on first use or deleted (#452). Import from `@/components/ui/<name>`:
 
 | Component | Import | Usage |
 |---|---|---|

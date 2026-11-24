@@ -1,13 +1,16 @@
 # Redesign – Fáze 4: Pravidla FE/UX (závazný filtr návrhů)
 
+> **Nahrazeno `DESIGN.md`.** Závazná pravidla vzhledu jsou v `DESIGN.md` v kořeni repa (spec #445).
+> Tento dokument je archiv rozhodnutí z Fáze 4. Kde se s `DESIGN.md` rozchází, platí `DESIGN.md`.
+> Pravidlo C2 (emerald + slate) je zrušené, platí Jedle a teplé neutrály. Zrušené je i C3 (charakterní nadpisový řez).
+
 Stav k **2026-11-21** · Shodnuto (agent předložil research + návrh, uživatel schválil všechna
 pravidla a u ⭐ voleb vybral doporučené varianty). První část Fáze 4 procesu z
 [redesign-proces.md](redesign-proces.md) – *vizuální směr a technická rozhodnutí*. Druhá část
 Fáze 4 = **návrhy obrazovek** (Akcion styl, varianty A/B/C), které tenhle filtr dodržují.
 
-Pravidla **revidují** existující design kontrakt `.agents/skills/CabinSaaS_Architect/SKILL.md`
-(Fáze 4 reviduje, nezahazuje). Kde se liší, platí tento dokument a kontrakt se podle něj později
-upraví.
+Pravidla **revidovala** tehdejší design kontrakt `.agents/skills/CabinSaaS_Architect/SKILL.md`
+(Fáze 4 reviduje, nezahazuje). Dnes oba nahrazuje `DESIGN.md`.
 
 ## Z čeho to vychází
 
@@ -33,8 +36,8 @@ pozadí) z doby, kdy byl glassmorphism v módě — proto tři revize níže (C4
 
 ### C — Vizuální jazyk
 - **C1 · Design tokens jako jediný zdroj pravdy** (Tailwind 4 `@theme` + CSS proměnné), ne natvrdo v komponentách. Staví na existujícím `variables.css`.
-- **C2 · Paleta „Moderní Les": emerald (akce) + slate (neutrál)** + stavové barvy. Žádné divoké palety.
-- **C3 · Typografie nese osobnost** — charakterní nadpisový řez + čitelný řez na text.
+- ~~**C2 · Paleta „Moderní Les": emerald (akce) + slate (neutrál)** + stavové barvy.~~ **Zrušeno** (`DESIGN.md` §1–2: Jedle a teplé neutrály z tokenů).
+- ~~**C3 · Typografie nese osobnost** — charakterní nadpisový řez + čitelný řez na text.~~ **Zrušeno** (`DESIGN.md` §3).
 - **C4 ⭐ → (a) Zmírnit sklo.** Frosted glass jen jako jemný akcent (modály, horní lišta); obsah na čistých kartách. Hloubka slouží čitelnosti, ne efektu.
 - **C5 ⭐ → (a) Lehké pozadí.** Jemný gradient/textura v barvách lesa; fotka lesa jen na přihlášení a prázdných stavech (ne fullscreen všude — kvůli 3G výkonu a kontrastu textu).
 
