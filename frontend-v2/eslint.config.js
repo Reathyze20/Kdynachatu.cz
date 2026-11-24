@@ -49,6 +49,20 @@ export default defineConfig([
       }))],
     },
   },
+  // DESIGN.md §4 (#451): jediná ikonová sada je lucide-react (react-icons, @heroicons/*, @tabler/icons-react,
+  // @mui/icons-material, @fortawesome/*, react-feather, phosphor-react, lucide bez -react …).
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          regex: String.raw`^(?!\.|@/)(?!lucide-react$).*(?:icon|fontawesome|feather|phosphor|^lucide)`,
+          caseSensitive: false,
+          message: 'Ikony jen z lucide-react (DESIGN.md §4).',
+        }],
+      }],
+    },
+  },
   // Prázdné `files` ESLint odmítne, proto blok jen dokud allowlist coldPalette něco obsahuje.
   ...(COLD_PALETTE_ALLOWED.length ? [{ files: COLD_PALETTE_ALLOWED, rules: { 'no-restricted-syntax': 'off' } }] : []),
 ])

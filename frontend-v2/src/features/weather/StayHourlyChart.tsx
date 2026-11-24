@@ -94,7 +94,7 @@ export function StayHourlyChart({ day, dayName }: { day: StayForecastDay; dayNam
         <div aria-hidden="true" className="flex items-end gap-0.5 @min-[280px]:gap-1">
           {hours.map((h, i) => (
             <div key={h.time} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-              <span className={`text-sm leading-none whitespace-nowrap ${i === peakIdx ? `font-extrabold ${series.text}` : "font-semibold text-slate-600"}`}>{series.format(values[i])}</span>
+              <span className={`text-sm leading-none whitespace-nowrap ${i === peakIdx ? `font-bold ${series.text}` : "font-semibold text-slate-600"}`}>{series.format(values[i])}</span>
               <div className="relative h-16 w-full overflow-hidden rounded-md bg-inset">
                 <div className={`absolute inset-x-0 bottom-0 rounded-t-md ${i === peakIdx ? series.peakFill : series.fill}`} style={{ height: `${series.height(values[i], min, max)}%` }} />
               </div>

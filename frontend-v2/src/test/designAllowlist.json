@@ -71,5 +71,29 @@
       "styles/status-header.css", "styles/superadmin.css", "styles/toast.css", "styles/view-transitions.css"
     ],
     "Duplicitní import hub, který nic neimportuje (vstup je src/index.css), smazat": ["styles/index.css"]
+  },
+  "inlineSvg": {
+    "Ruční kopie ikony lucide, nahradí se komponentou z lucide-react s obrazovkou": [
+      "components/shared/HelpFab.tsx", "features/notes/ChatView.tsx", "features/notes/MessageBubble.tsx",
+      "features/notes/MessageContextMenu.tsx", "features/notes/MessageInput.tsx", "features/reservations/calendar/CalendarGrid.tsx",
+      "features/reservations/ui/ReservationDetail.tsx", "features/shopping/InventoryRow.tsx", "features/shopping/ItemRow.tsx",
+      "features/shopping/ListDetail.tsx", "features/shopping/PantryView.tsx"
+    ],
+    "Landing page: ilustrace a ikony statické stránky (DESIGN.md §4)": ["features/landing/LandingPage.tsx"]
+  },
+  "iconSize": {
+    "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [
+      "components/shared/Modal.tsx", "components/shared/Toast.tsx", "features/admin/AdminPage.tsx", "features/auth/LoginForm.tsx",
+      "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
+      "features/notes/MessageBubble.tsx", "features/reconstruction/KanbanColumn.tsx", "features/reconstruction/ReconstructionPage.tsx",
+      "features/reconstruction/TaskFormModal.tsx", "features/reservations/ui/BookingForm.tsx",
+      "features/reservations/ui/ReservationList.tsx", "features/superadmin/SuperAdminPage.tsx", "features/weather/StayWeatherCard.tsx"
+    ],
+    "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
+      "features/auth/RegisterForm.tsx", "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
+      "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx",
+      "features/invite/InvitePage.tsx", "features/shopping/PantryView.tsx"
+    ],
+    "Primitivum shadcn: tečka radio položky (8 px) není ikona, přestyluje se s DropdownMenu (#452)": ["components/ui/dropdown-menu.tsx"]
   }
 }

@@ -8,7 +8,7 @@
 .status-header__label {
   margin: 0;
   font-size: var(--status-header-sm);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -20,7 +20,7 @@
 .status-header__text { display: flex; flex-direction: column; min-width: 0; }
 
 /* Dlouhé jméno se zalomí, neusekne (G3, WCAG 1.4.4) */
-.status-header__name { font-size: var(--font-size-lg); font-weight: 800; line-height: 1.25; color: var(--text-main); overflow-wrap: anywhere; }
+.status-header__name { font-size: var(--font-size-lg); font-weight: 700; line-height: 1.25; color: var(--text-main); overflow-wrap: anywhere; }
 .status-header__when { font-size: max(1rem, var(--font-size-base)); line-height: 1.35; color: var(--text-muted); }
 .status-header__warn { color: var(--color-warning-text); font-weight: 600; }
 .status-header__more {

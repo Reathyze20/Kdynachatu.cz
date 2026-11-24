@@ -57,7 +57,7 @@
 
 .legal-container h1 {
   font-size: var(--font-size-2xl, 1.5rem);
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-main);
   margin: 0 0 var(--space-xs) 0;
   line-height: 1.3;
