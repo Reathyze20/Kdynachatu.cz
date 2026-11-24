@@ -1,6 +1,6 @@
 /**
- * Fiktivní data pro staging: chata `demo` se správcem a dvěma členy a kompletním, realistickým
- * obsahem napříč všemi obrazovkami (rezervace včetně minulé předávky, nákupy + spíž, inventář,
+ * Fiktivní data pro staging: chata `demo` se správcem a třemi členy (včetně účtu „Mamka“ pro
+ * netechnického testera) a kompletním, realistickým obsahem napříč všemi obrazovkami (rezervace včetně minulé předávky, nákupy + spíž, inventář,
  * poznámky + vlákna + reakce, galerie + fotky, deník, rekonstrukce + hlasování, dovolené,
  * měsíční poznámky, pozvánky, wallpapery, branding chaty). Žádná reálná data rodiny.
  *

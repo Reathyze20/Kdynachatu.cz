@@ -13,6 +13,7 @@ import { DEMO_USERS, resolveSeedConfig } from "../../scripts/seedStagingConfig";
 type Env = Record<string, string | undefined>;
 
 const LABELS: Record<(typeof DEMO_USERS)[number]["key"], string> = {
+  mamka: "Mamka",
   admin: "Správce",
   jana: "Jana",
   petr: "Petr",

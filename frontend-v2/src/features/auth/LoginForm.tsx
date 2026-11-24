@@ -215,7 +215,11 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
 
       {demoAccounts.length > 0 && (
         <div className="demo-accounts" data-testid="login-demo-accounts">
-          <p className="demo-accounts-title">Testovací účty (staging) – kliknutím se vyplní přihlášení:</p>
+          <p className="demo-accounts-title">Ahoj! Tohle je zkušební verze aplikace.</p>
+          <ol className="demo-accounts-steps">
+            <li>Klikni na své jméno.</li>
+            <li>Klikni na Přihlásit se.</li>
+          </ol>
           <div className="demo-accounts-list">
             {demoAccounts.map((account) => (
               <button

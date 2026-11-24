@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
@@ -60,6 +60,26 @@ describe('rychlé přihlášení demo účty (staging)', () => {
     expect(screen.getByRole('button', { name: /Jana/ })).toBeInTheDocument()
   })
 
+  it('shows a friendly step-by-step guide instead of the technical title', async () => {
+    mockApi(STAGING_ACCOUNTS)
+    renderAuthPage()
+
+    const section = await screen.findByTestId('login-demo-accounts')
+    expect(section).toHaveTextContent(/Tohle je zkušební verze aplikace/)
+    const steps = within(section).getAllByRole('listitem').map((li) => li.textContent)
+    expect(steps).toEqual(['Klikni na své jméno.', 'Klikni na Přihlásit se.'])
+    expect(section).not.toHaveTextContent(/Testovací účty \(staging\)/)
+  })
+
+  it('keeps the account order from the server (Mamka first)', async () => {
+    mockApi([{ username: 'demo-mamka', label: 'Mamka', role: 'user', password: 'Clen-heslo-4567' }, ...STAGING_ACCOUNTS])
+    renderAuthPage()
+
+    const section = await screen.findByTestId('login-demo-accounts')
+    const names = within(section).getAllByRole('button').map((b) => b.textContent)
+    expect(names).toEqual(['Mamka', 'Správce', 'Jana'])
+  })
+
   it('outside staging (empty list) shows no demo section', async () => {
     mockApi([])
     renderAuthPage()
@@ -67,5 +87,6 @@ describe('rychlé přihlášení demo účty (staging)', () => {
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith('/demo-accounts'))
     expect(screen.getByTestId('login-form')).toBeInTheDocument()
     expect(screen.queryByTestId('login-demo-accounts')).not.toBeInTheDocument()
+    expect(screen.queryByText(/zkušební verze/)).not.toBeInTheDocument()
   })
 })
