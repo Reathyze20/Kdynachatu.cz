@@ -218,12 +218,17 @@ export function findRouterMounts(appSource: string): Map<string, string> {
 
 const ROUTES_DIR = "src/backend/routes";
 
+/** Názvy produkčních souborů rout (bez `*.test.ts`), abecedně. */
+export function routeFileNames(): string[] {
+  return fs.readdirSync(path.join(PROJECT_ROOT, ROUTES_DIR))
+    .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+    .sort();
+}
+
 /** Mutanti ze všech produkčních souborů rout (bez `*.test.ts`), s prefixy z `app.ts`. */
 export function findRouteFileMutants(): TenantMutant[] {
   const mounts = findRouterMounts(fs.readFileSync(path.join(PROJECT_ROOT, "src/backend/app.ts"), "utf8"));
-  return fs.readdirSync(path.join(PROJECT_ROOT, ROUTES_DIR))
-    .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
-    .sort()
+  return routeFileNames()
     .flatMap((name) => findTenantMutants(
       fs.readFileSync(path.join(PROJECT_ROOT, ROUTES_DIR, name), "utf8"),
       `${ROUTES_DIR}/${name}`,
