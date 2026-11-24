@@ -9,7 +9,8 @@
       "expectations": [
         "Output odkazuje na frontend-v2, ne na legacy pages router.",
         "Output pouziva TanStack Query a Axios patterns.",
-        "Output resi loading, empty a error state."
+        "Output resi loading, empty a error state.",
+        "Output nejdriv zkontroluje inventar komponent a vzhled bere z DESIGN.md (kanonicke komponenty, tokeny), ne z vlastnich hexu."
       ]
     },
     {
@@ -20,7 +21,8 @@
       "expectations": [
         "Output nepopisuje Vanilla TS frontend.",
         "Output pracuje s komponentami, hooky a route table v React appce.",
-        "Output zohledni path-based routing a offline/mobile constraints."
+        "Output zohledni path-based routing a offline/mobile constraints.",
+        "Formular a chyby validace odpovidaji vzorum v DESIGN.md (chyba pod polem, Modal, Button)."
       ]
     }
   ]

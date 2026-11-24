@@ -1,6 +1,6 @@
 # Recipes & Patterns
 
-Battle-tested code patterns used across the application. Copy-paste these as starting points — they enforce all CabinSaaS rules.
+Code patterns for data, state and structure. The styling in them (classes, colours, buttons, empty states) predates `DESIGN.md`; take the structure from here and write classNames, buttons and empty states from `DESIGN.md` §2–§7.
 
 ---
 

@@ -57,7 +57,7 @@ Pravidlo:
 
 | Folder | Skill Name | Status | Primary Role |
 |---|---|---|---|
-| `.agents/skills/CabinSaaS_Architect/` | CabinSaaS_Architect | active | repo-specific frontend architecture |
+| `.agents/skills/CabinSaaS_Architect/` | CabinSaaS_Architect | active | frontend UI workflow (inventory → canonical component → checklist), rules in `DESIGN.md` |
 | `.agents/skills/frontend-design/` | frontend-design | active | high-polish UI work |
 | `.agents/skills/saas-playbook/` | saas-playbook | active | product/launch/business checklists |
 | `.agents/skills/skill-creator/` | skill-creator | active | skill creation and benchmarking |

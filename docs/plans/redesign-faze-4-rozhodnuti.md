@@ -1,5 +1,9 @@
 # Redesign – Fáze 4: Log rozhodnutí a stav (návrhy obrazovek)
 
+> **Nahrazeno `DESIGN.md`.** Závazná pravidla vzhledu jsou v `DESIGN.md` v kořeni repa (spec #445).
+> Tento log je archiv rozhodnutí z Fáze 4. Kde se s `DESIGN.md` rozchází, platí `DESIGN.md`.
+> Pravidlo C2 (emerald + slate) je zrušené, stejně jako C3 (charakterní nadpisový řez).
+
 Stav k **2026-11-21**. Tenhle soubor je **kotva proti /clear**: drží, co je rozhodnuté, kde to
 leží a jak pokračovat. Navazuje na [pravidla Fáze 4](redesign-faze-4-pravidla.md) a
 [rozsah Fáze 3](redesign-faze-3-rozsah.md).
