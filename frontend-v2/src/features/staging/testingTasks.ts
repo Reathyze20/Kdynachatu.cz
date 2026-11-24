@@ -17,6 +17,9 @@ export interface TestingTask {
   places: readonly TaskPlace[]
 }
 
+/** Popisek obecného pole (`taskId: 'general'`) – karta i výpis ve Správě (#390) */
+export const GENERAL_FEEDBACK_LABEL = 'Cokoli dalšího'
+
 export const TESTING_TASKS: readonly TestingTask[] = [
   { id: 'prehled', title: 'Rozhlédni se po přehledu – co na něm vidíš? Čemu nerozumíš? Co ti tam chybí?', places: [{ to: '/dashboard' }] },
   { id: 'rezervace', title: 'Zarezervuj si víkend v kalendáři', places: [{ to: '/reservations' }] },

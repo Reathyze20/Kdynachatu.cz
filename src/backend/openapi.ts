@@ -234,6 +234,27 @@ const schemas: Record<string, JsonSchema> = {
     required: ["id", "createdAt"],
     properties: { id: { type: "string", format: "uuid" }, createdAt: { type: "string", format: "date-time" } },
   },
+  StagingFeedbackRecord: {
+    allOf: [
+      ref("StagingFeedbackRequest"),
+      {
+        type: "object",
+        required: ["id", "createdAt", "cabinId", "userId", "username"],
+        properties: {
+          id: { type: "string", format: "uuid" },
+          createdAt: { type: "string", format: "date-time" },
+          cabinId: { type: "string" },
+          userId: { type: "string" },
+          username: { type: "string" },
+        },
+      },
+    ],
+  },
+  StagingFeedbackListResponse: {
+    type: "object",
+    required: ["feedback"],
+    properties: { feedback: { type: "array", items: ref("StagingFeedbackRecord") } },
+  },
   MunicipalitySearchResponse: {
     type: "object",
     required: ["municipalities"],
@@ -632,6 +653,16 @@ const paths: Record<string, OpenApiObject> = {
         "400": jsonResponse(ref("ValidationErrorResponse"), "Prazdny nebo prilis dlouhy text, neznamy ukol"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "404": jsonResponse(ref("ErrorResponse"), "Mimo staging endpoint neexistuje"),
+      },
+    },
+    get: {
+      tags: ["Staging"],
+      summary: "Zpetna vazba testeru pro spravce chaty, od nejnovejsi (jen staging; jen zaznamy chaty prihlaseneho)",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(ref("StagingFeedbackListResponse"), "Zaznamy chaty prihlaseneho spravce, bez souboru prazdny seznam"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "404": jsonResponse(ref("ErrorResponse"), "Mimo staging, nebo prihlaseny neni spravce chaty"),
       },
     },
   },

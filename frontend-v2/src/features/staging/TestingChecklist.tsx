@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
 import { useDemoAccounts } from '@/features/auth/hooks/useDemoAccounts'
 import { FeedbackField } from './FeedbackField'
-import { TESTING_TASKS, allTasksDone, readDoneTasks, writeDoneTasks, type TestingTask } from './testingTasks'
+import { GENERAL_FEEDBACK_LABEL, TESTING_TASKS, allTasksDone, readDoneTasks, writeDoneTasks, type TestingTask } from './testingTasks'
 
 export function TestingChecklist() {
   // Testovací účty vydá backend jen na stagingu – neprázdný seznam = staging
@@ -93,7 +93,7 @@ function TestingChecklistCard() {
             />
           ))}
         </ol>
-        <FeedbackField taskId="general" label="Cokoli dalšího" />
+        <FeedbackField taskId="general" label={GENERAL_FEEDBACK_LABEL} />
       </section>
     </div>
   )
