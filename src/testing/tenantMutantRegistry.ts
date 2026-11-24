@@ -94,8 +94,9 @@ export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
     reason:
       "Načtení navázané zásoby před doplněním. Bez filtru se najde i zásoba chaty B, jenže následný " +
       "`updateMany({ id: inventory.id, cabinId })` ji nezmění (count 0) a `inventory:updated` se nevyšle – " +
-      "odpověď, DB i realtime jsou stejné jako u originálu, který zásobu nenajde. Ekvivalentní díky " +
-      "druhému filtru; test „a vanished or cabin B inventory item is skipped“ v shopping.itest.ts to ověřuje.",
+      "odpověď, DB i realtime jsou stejné jako u originálu, který zásobu nenajde. Ekvivalentní jen díky " +
+      "filtru v `updateMany` (další výjimka) a naopak – oba filtry musí zůstat. Odstranění obou naráz " +
+      "zachytí test „a vanished or cabin B inventory item is skipped“ v shopping.itest.ts (zásoba B beze změny).",
   },
   {
     file: "shoppingList.ts",
@@ -105,7 +106,8 @@ export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
     reason:
       "Doplnění navázané zásoby. `inventory` route načetla přes `findFirst({ id, cabinId })` a `id` je " +
       "primární klíč; `cabinId` zásoby žádná route nemění. `{ id: inventory.id }` tak označí právě tutéž " +
-      "zásobu chaty A jako `{ id: inventory.id, cabinId }` – mutant je ekvivalentní (stejně jako u pledge).",
+      "zásobu chaty A jako `{ id: inventory.id, cabinId }` – mutant je ekvivalentní, dokud zůstává filtr " +
+      "ve `findFirst` (předchozí výjimka; oba naráz hlídá test „a vanished or cabin B inventory item is skipped“).",
   },
   {
     file: "shoppingLists.ts",
