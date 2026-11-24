@@ -151,6 +151,28 @@ describe("gallery: creating against a cabin B target is rejected", () => {
   });
 });
 
+// Same name-uniqueness surface as the POST test above, on rename (#414): the duplicate check must
+// stay cabin-scoped, so renaming to a cabin B folder's name succeeds instead of leaking it via 409.
+// Own fixtures with unique names keep the test independent of the other folder tests and their order.
+describe("gallery: renaming to a cabin B folder's name reveals nothing", () => {
+  test("PATCH /gallery/folders/:id to a name identical to a cabin B folder → 200, not 409 (no leak)", async () => {
+    const takenInB = `${CABIN_B_PREFIX} přejmenovaná B ${randomUUID()}`;
+    const foreignFolder = await createFolder(world.memberB, takenInB);
+    const renamedFolder = await createFolder(world.memberA, `Složka A ${randomUUID()}`);
+    try {
+      const foreignBefore = await folderSnapshot(foreignFolder);
+      const res = await as(app, world.memberA).patch(`/api/gallery/folders/${renamedFolder}`).send({ name: takenInB });
+      assert.equal(res.status, 200);
+      const renamed = await folderSnapshot(renamedFolder);
+      assert.equal(renamed?.name, takenInB);
+      assert.equal(renamed?.cabinId, world.cabinA.id);
+      assert.deepEqual(await folderSnapshot(foreignFolder), foreignBefore);
+    } finally {
+      await prisma.galleryFolder.deleteMany({ where: { id: { in: [renamedFolder, foreignFolder] } } });
+    }
+  });
+});
+
 describe("gallery: same-cabin flows still work (positive control)", () => {
   test("POST /gallery/folders in A → 201 and realtime goes only to cabin A's room", async () => {
     const recorder = recordRealtimeEmits();
