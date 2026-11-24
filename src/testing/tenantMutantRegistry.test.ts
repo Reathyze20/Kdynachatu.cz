@@ -111,6 +111,37 @@ describe("exceptionFor: páruje soubor, routu a normalizovaný úryvek, ne řád
   });
 });
 
+describe("výjimka s mutatedLine a count: holý úryvek sdílený víc mutanty jedné routy", () => {
+  // Tři mutanti `cabinId` v jedné routě; jen dva (shodné řádky) jsou ekvivalentní.
+  const source = [
+    "const active = { cabinId, open: true };",
+    "if (x) {",
+    "  await db.update({ where: { id: item.id, cabinId } });",
+    "}",
+    "await db.update({ where: { id: item.id, cabinId } });",
+  ].join("\n");
+  const removed = (line: number) => source.split("\n").map((text, i) => (i === line - 1 ? text.replace(/,? cabinId/, "") : text)).join("\n");
+  const shared = (line: number) => mutant({ line, original: "cabinId", mutatedSource: removed(line) });
+  const mutants = [shared(1), shared(3), shared(5)];
+  const updates = exception({ original: "cabinId", mutatedLine: "where: { id: item.id }", count: 2 });
+
+  test("mutatedLine páruje podle řádku po mutaci, ne podle čísla řádku", () => {
+    assert.deepEqual(mutants.map((m) => exceptionFor(m, [updates]) !== undefined), [false, true, true]);
+  });
+
+  test("count = počet pokrytých mutantů; jinak je výjimka nejednoznačná", () => {
+    assert.deepEqual(checkMutantRegistries(input({ mutants, exceptions: [updates] })), []);
+    const tooMany = checkMutantRegistries(input({ mutants, exceptions: [exception({ original: "cabinId", count: 2 })] }));
+    assert.deepEqual(tooMany.map((e) => e.kind), ["ambiguous-exception"]);
+    assert.match(tooMany[0].message, /3 mutantům.*čeká se 2/);
+    const noCount = checkMutantRegistries(input({ mutants, exceptions: [{ ...updates, count: undefined }] }));
+    assert.deepEqual(noCount.map((e) => e.kind), ["ambiguous-exception"]);
+    const tooFew = checkMutantRegistries(input({ mutants: [shared(1), shared(3)], exceptions: [updates] }));
+    assert.deepEqual(tooFew.map((e) => e.kind), ["ambiguous-exception"]);
+    assert.match(tooFew[0].message, /1 mutantům.*čeká se 2.*uprav count/);
+  });
+});
+
 describe("tenant mutanti: registry odpovídají skutečným souborům rout a itestů", () => {
   test("mapa i výjimky sedí na nalezené mutanty a existující soubory", () => {
     const errors = checkMutantRegistries({

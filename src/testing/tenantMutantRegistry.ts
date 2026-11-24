@@ -6,6 +6,8 @@
  *    podle souboru, routy (přesně jak ji dá `findTenantMutants`, u helperu i s `, `) a úryvku
  *    s normalizovanými mezerami – číslo řádku se nepoužije, ať výjimku nerozbije vedlejší úprava.
  *    Výjimka musí odpovídat právě jednomu mutantu, jinak je nejednoznačná a úryvek se zpřesní.
+ *    Když holý úryvek (`cabinId`) sdílí v routě víc mutantů, zpřesní ho `mutatedLine` (úryvek řádku
+ *    po mutaci); textově shodná místa se stejným důvodem pokryje jedna výjimka s `count`.
  * `checkMutantRegistries` (čistá, vzor `reconcileCoverage`) hlídá, že registry neodplavou od kódu;
  * meta-test v `tenantMutantRegistry.test.ts` ji pouští nad skutečnými soubory.
  */
@@ -46,6 +48,8 @@ export interface TenantMutantException {
   file: string; // název souboru rout, např. `diary.ts`
   route: string | null; // přesně jako `TenantMutant.route`
   original: string; // úryvek mutovaného místa; mezery a zalomení se při párování normalizují
+  mutatedLine?: string; // volitelně: úryvek, který musí obsahovat řádek mutanta po mutaci (normalizovaně)
+  count?: number; // kolik mutantů výjimka pokrývá, default 1; víc jen pro textově shodná místa
   reason: string; // povinný: proč je mutant ekvivalentní
 }
 
@@ -69,6 +73,18 @@ export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
       "Nedosažitelný kód: `router.delete(\"/:id\")` je registrovaný dřív a `DELETE /api/users/me` obslouží " +
       "s id `me` (člen 403, správce 404), handler `/me` se nespustí nikdy – mutant je ekvivalentní. " +
       "Bug #419; s jeho opravou výjimku smazat a doplnit test posledního admina do users.itest.ts.",
+  },
+  {
+    file: "inventory.ts",
+    route: "POST /api/inventory/:id/pledge",
+    original: "cabinId",
+    mutatedLine: "tx.inventoryItem.updateMany({ where: { id: supply.id }",
+    count: 2,
+    reason:
+      "Doplnění zásoby v obou větvích „Koupím já“ (existující i nová položka nákupu). `supply` route " +
+      "načetla přes `findFirst({ id, cabinId })` (jeho mutanta zabíjí shopping.itest.ts) a `id` je " +
+      "primární klíč; `cabinId` zásoby žádná route nemění. `{ id: supply.id }` tak označí právě tutéž " +
+      "zásobu chaty A jako `{ id: supply.id, cabinId }` – mutant je ekvivalentní.",
   },
 ];
 
@@ -98,12 +114,17 @@ export const routeFileOf = (mutant: TenantMutant) => path.posix.basename(mutant.
 
 const normalize = (snippet: string) => snippet.replace(/\s+/g, " ").trim();
 
-const describeException = (e: TenantMutantException) => `${e.file} ${e.route ?? "(bez routy)"} "${normalize(e.original)}"`;
+const describeException = (e: TenantMutantException) =>
+  `${e.file} ${e.route ?? "(bez routy)"} "${normalize(e.original)}"${e.mutatedLine ? ` (řádek po mutaci "${normalize(e.mutatedLine)}")` : ""}`;
+
+/** Řádek mutanta v jeho zmutovaném zdroji (mutace v rámci řádku čísla řádků neposune). */
+const mutatedLineOf = (mutant: TenantMutant) => mutant.mutatedSource.split("\n")[mutant.line - 1] ?? "";
 
 function matches(mutant: TenantMutant, exception: TenantMutantException): boolean {
   return routeFileOf(mutant) === exception.file &&
     mutant.route === exception.route &&
-    normalize(mutant.original) === normalize(exception.original);
+    normalize(mutant.original) === normalize(exception.original) &&
+    (exception.mutatedLine === undefined || normalize(mutatedLineOf(mutant)).includes(normalize(exception.mutatedLine)));
 }
 
 /** Výjimka, pod kterou mutant spadá (s důvodem), jinak `undefined`. */
@@ -132,10 +153,13 @@ export function checkMutantRegistries({ mutants, routeFiles, itestFiles, map, ex
     const matched = mutants.filter((mutant) => matches(mutant, exception));
     if (matched.length === 0) {
       errors.push({ kind: "unmatched-exception", message: `Výjimce ${describeException(exception)} neodpovídá žádný mutant – smaž ji.` });
-    } else if (matched.length > 1) {
+    } else if (matched.length !== (exception.count ?? 1)) {
       // Holý úryvek `cabinId` sdílí v jedné routě i desítka mutantů; výjimka by umlčela všechny.
       const places = matched.map((mutant) => `${mutant.file}:${mutant.line}`).join(", ");
-      errors.push({ kind: "ambiguous-exception", message: `Výjimka ${describeException(exception)} odpovídá ${matched.length} mutantům (${places}) – zpřesni úryvek.` });
+      const expected = exception.count ?? 1;
+      const hint = matched.length > expected ? "zpřesni úryvek" : "některé místo zmizelo – uprav count nebo úryvek";
+      const countNote = exception.count === undefined ? "" : `, čeká se ${expected}`;
+      errors.push({ kind: "ambiguous-exception", message: `Výjimka ${describeException(exception)} odpovídá ${matched.length} mutantům (${places})${countNote} – ${hint}.` });
     }
   }
   return errors;
