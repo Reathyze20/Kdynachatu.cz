@@ -155,7 +155,7 @@ describe("ideation rank", () => {
   });
 });
 
-type Verdict = { critic: number; first: string; second: string; winner: string };
+type Verdict = { judge: number; first: string; second: string; winner: string };
 
 const SIX = ["P1", "P2", "P3", "P4", "P5", "P6"];
 
@@ -165,10 +165,10 @@ function orderedPairs(candidates: string[]): Array<[string, string]> {
   );
 }
 
-/** Kritik s pevným pořadím: v obou pořadích vyhraje kandidát, který je v `preference` dřív. */
-function consistentCritic(critic: number, preference: string[]): Verdict[] {
+/** Rozhodčí s pevným pořadím: v obou pořadích vyhraje kandidát, který je v `preference` dřív. */
+function consistentJudge(judge: number, preference: string[]): Verdict[] {
   return orderedPairs(preference).map(([first, second]) => ({
-    critic,
+    judge,
     first,
     second,
     winner: preference.indexOf(first) < preference.indexOf(second) ? first : second,
@@ -192,9 +192,9 @@ function advancing(output: string): string[] {
 }
 
 describe("ideation pairwise", () => {
-  test("counts a win only when both orders agree, so a critic who always picks the first one adds nothing", () => {
+  test("counts a win only when both orders agree, so a judge who always picks the first one adds nothing", () => {
     const verdicts = orderedPairs(SIX).map(([first, second]) => ({
-      critic: 1,
+      judge: 1,
       first,
       second,
       winner: first === "P6" || second === "P6" ? "P6" : first,
@@ -206,27 +206,29 @@ describe("ideation pairwise", () => {
     assert.deepEqual(advancing(output), ["P6", "P1", "P2", "P3", "P4"]);
     assert.match(output, /P6: 5 výher/);
     assert.match(output, /P5: 0 výher/);
+    assert.match(output, /Shoda na hranici: P1, P2, P3, P4, P5 mají po 0 výhrách/);
   });
 
-  test("sums wins across 3 critics and lets at most 5 advance", () => {
+  test("sums wins across 3 judges and lets at most 5 advance", () => {
     const preference = ["P4", "P6", "P1", "P2", "P5", "P3"];
-    const verdicts = [1, 2, 3].flatMap((critic) => consistentCritic(critic, preference));
+    const verdicts = [1, 2, 3].flatMap((judge) => consistentJudge(judge, preference));
 
     const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
 
     assert.equal(code, 0, output);
     assert.deepEqual(advancing(output), ["P4", "P6", "P1", "P2", "P5"]);
     assert.match(output, /P4: 15 výher/);
+    assert.doesNotMatch(output, /Shoda na hranici|Bez verdiktu/);
   });
 
-  test("a missing verdict gives no win and is reported", () => {
-    const verdicts = consistentCritic(1, SIX).filter((v) => !(v.first === "P2" && v.second === "P1"));
+  test("a missing verdict or a silent judge gives no win and is reported", () => {
+    const verdicts = consistentJudge(1, SIX).filter((v) => !(v.first === "P2" && v.second === "P1"));
 
     const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
 
     assert.equal(code, 0, output);
     assert.match(output, /P1: 4 výher/);
-    assert.match(output, /Bez verdiktu: kritik 1: P2 před P1/);
+    assert.match(output, /Bez verdiktu: rozhodčí 1: P2 před P1; rozhodčí 2: žádný verdikt; rozhodčí 3: žádný verdikt/);
   });
 
   test("refuses to run with 5 or fewer candidates", () => {
@@ -235,15 +237,15 @@ describe("ideation pairwise", () => {
     const { code, output } = runHelper(
       "pairwise",
       "--root",
-      withPairwise({ candidates: five, verdicts: consistentCritic(1, five) }),
+      withPairwise({ candidates: five, verdicts: consistentJudge(1, five) }),
     );
 
     assert.notEqual(code, 0);
     assert.match(output, /víc než 5/);
   });
 
-  test("refuses a fourth critic", () => {
-    const verdicts = [1, 2, 3, 4].flatMap((critic) => consistentCritic(critic, SIX));
+  test("refuses a fourth judge", () => {
+    const verdicts = [1, 2, 3, 4].flatMap((judge) => consistentJudge(judge, SIX));
 
     const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
 
@@ -252,12 +254,12 @@ describe("ideation pairwise", () => {
   });
 
   test("refuses a winner that is not in the pair", () => {
-    const verdicts = [{ critic: 1, first: "P1", second: "P2", winner: "P3" }];
+    const verdicts = [{ judge: 1, first: "P1", second: "P2", winner: "P3" }];
 
     const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
 
     assert.notEqual(code, 0);
-    assert.match(output, /P3/);
+    assert.match(output, /vítěz P3 není v dvojici/);
   });
 
   test("without parove.json it exits non-zero and names the missing file", () => {

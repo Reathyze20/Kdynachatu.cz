@@ -2,7 +2,7 @@
 
 Prompt kritika = blok **Hranice kritika** níže + všechno pod čarou s doplněným kořenem, jedním kandidátem z kroku 3, shrnutím signálů z kroku 1 a seznamem issues. Seznam issues načti jednou sám (`gh issue list --state all --limit 300 --json number,title,state`) a vlož ho do každého promptu, aby kritik nepotřeboval `gh`.
 
-Každý kritik dostane jen svého kandidáta. Výstupy ostatních kritiků ani ostatní kandidáty do promptu nedávej: nezávislý kritik nekonformuje.
+Každý kritik dostane jen svého kandidáta, bez ostatních kandidátů a bez verdiktů ostatních kritiků: nezávislý kritik nekonformuje.
 
 > **Hranice kritika:** Pracuješ read-only a jen nástroji Read, Grep a Glob: žádný Bash, `gh`, zápis souborů ani subagenti. Z `<kořen>/` čteš jen `lessons.md`, žádné `.env*`. Ve výstupu jen role, žádná jména.
 
@@ -35,7 +35,7 @@ U vyřazeného kandidáta vrať jen řádky Verdikt a Výtky (bod 5); body 2–4
 - **Migrace:** ano / ne podle `prisma/schema.prisma`.
 - **Riziko pro izolaci `cabinId`:** ano / ne a jednou větou proč (nová data chaty, nový dotaz, sdílení mezi chatami).
 
-**3. Tři námitky** jako otázky, které správce položí rodině. Každá míří na předpoklad, na kterém nápad stojí, a jde zodpovědět z vlastní zkušenosti rodiny („Kdo z vás dnes … a jak často?“). Co si rodina myslí, zjistí jen otázka: vlastní odhad jejích preferencí („lidem se to nebude líbit“) nepiš.
+**3. Tři námitky** jako otázky, které správce položí rodině. Každá míří na předpoklad, na kterém nápad stojí, a jde zodpovědět z vlastní zkušenosti rodiny („Kdo z vás dnes … a jak často?“). Co si rodina myslí, zjistí jen otázka, proto verdikt o jejích preferencích (typu „lidem se to nebude líbit“) nevynášíš.
 
 **4. Jedna otázka pro rodinu** ke zkopírování do WhatsAppu: tykání, jedna věta, bez odborných slov, aby šla odpovědět jednou zprávou.
 

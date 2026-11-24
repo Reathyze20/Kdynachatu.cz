@@ -104,14 +104,19 @@ function rank(root: string): CommandResult {
 const PAIRWISE_FILE = "parove.json";
 const MAX_ADVANCING = 5;
 const MAX_CANDIDATES = 10;
-const MAX_CRITICS = 3;
+const JUDGES = [1, 2, 3];
 
 const PairwiseInput = z.object({
   candidates: z.array(z.string().min(1)),
   verdicts: z.array(
-    z.object({ critic: z.number().int(), first: z.string(), second: z.string(), winner: z.string() }),
+    z.object({ judge: z.number().int(), first: z.string(), second: z.string(), winner: z.string() }),
   ),
 });
+
+/** Jedno uspořádané posouzení: rozhodčí viděl `first` jako prvního a `second` jako druhého. */
+function orderedPair(judge: number, first: string, second: string): string {
+  return `rozhodčí ${judge}: ${first} před ${second}`;
+}
 
 function pairwiseInputError({ candidates, verdicts }: z.infer<typeof PairwiseInput>): string | undefined {
   if (candidates.length <= MAX_ADVANCING) {
@@ -121,9 +126,9 @@ function pairwiseInputError({ candidates, verdicts }: z.infer<typeof PairwiseInp
   if (new Set(candidates).size !== candidates.length) return "Kód kandidáta se v `candidates` opakuje.";
 
   const seen = new Set<string>();
-  for (const { critic, first, second, winner } of verdicts) {
-    const label = `kritik ${critic}: ${first} před ${second}`;
-    if (critic < 1 || critic > MAX_CRITICS) return `Kritik ${critic}: párové kolo má nejvýš ${MAX_CRITICS} kritiky (1–${MAX_CRITICS}).`;
+  for (const { judge, first, second, winner } of verdicts) {
+    if (!JUDGES.includes(judge)) return `Rozhodčí ${judge}: párové kolo má nejvýš ${JUDGES.length} rozhodčí (1–${JUDGES.length}).`;
+    const label = orderedPair(judge, first, second);
     for (const id of [first, second, winner]) {
       if (!candidates.includes(id)) return `${label}: neznámý kandidát ${id}.`;
     }
@@ -136,13 +141,13 @@ function pairwiseInputError({ candidates, verdicts }: z.infer<typeof PairwiseInp
 }
 
 /**
- * Kritik dává výhru jen tehdy, když vybral stejného kandidáta v obou pořadích dvojice; tím se
+ * Rozhodčí dává výhru jen tehdy, když vybral stejného kandidáta v obou pořadích dvojice; tím se
  * potlačí poziční zaujatost. Pořadí: počet výher, při shodě pořadí v `candidates` (z kroku 3).
  */
 function pairwise(root: string): CommandResult {
   const inputPath = path.join(root, PAIRWISE_FILE);
   if (!existsSync(inputPath)) {
-    return { code: 1, lines: [`Chybí ${inputPath}. Zapiš do něj kandidáty a verdikty kritiků z kroku 5 a spusť znovu.`] };
+    return { code: 1, lines: [`Chybí ${inputPath}. Zapiš do něj kandidáty a verdikty rozhodčích z kroku 5 a spusť znovu.`] };
   }
   let raw: unknown;
   try {
@@ -152,36 +157,45 @@ function pairwise(root: string): CommandResult {
   }
   const parsed = PairwiseInput.safeParse(raw);
   if (!parsed.success) {
-    return { code: 1, lines: [`${inputPath} nemá tvar { candidates: string[], verdicts: { critic, first, second, winner }[] }.`] };
+    return { code: 1, lines: [`${inputPath} nemá tvar { candidates: string[], verdicts: { judge, first, second, winner }[] }.`] };
   }
   const error = pairwiseInputError(parsed.data);
   if (error) return { code: 1, lines: [error] };
 
   const { candidates, verdicts } = parsed.data;
-  const winnerOf = new Map(verdicts.map((v) => [`${v.critic}|${v.first}|${v.second}`, v.winner]));
-  const critics = [...new Set(verdicts.map((v) => v.critic))].sort((a, b) => a - b);
+  const winnerOf = new Map(verdicts.map((v) => [orderedPair(v.judge, v.first, v.second), v.winner]));
   const wins = new Map(candidates.map((id) => [id, 0]));
   const missing: string[] = [];
 
-  for (const critic of critics) {
+  for (const judge of JUDGES) {
+    if (!verdicts.some((v) => v.judge === judge)) {
+      missing.push(`rozhodčí ${judge}: žádný verdikt`);
+      continue;
+    }
     candidates.forEach((a, i) => {
       for (const b of candidates.slice(i + 1)) {
-        const ab = winnerOf.get(`${critic}|${a}|${b}`);
-        const ba = winnerOf.get(`${critic}|${b}|${a}`);
-        if (ab === undefined) missing.push(`kritik ${critic}: ${a} před ${b}`);
-        if (ba === undefined) missing.push(`kritik ${critic}: ${b} před ${a}`);
+        const ab = winnerOf.get(orderedPair(judge, a, b));
+        const ba = winnerOf.get(orderedPair(judge, b, a));
+        if (ab === undefined) missing.push(orderedPair(judge, a, b));
+        if (ba === undefined) missing.push(orderedPair(judge, b, a));
         if (ab !== undefined && ab === ba) wins.set(ab, (wins.get(ab) ?? 0) + 1);
       }
     });
   }
 
   // Array.prototype.sort je stabilní, takže shoda výher zachová pořadí z kroku 3.
-  const ranked = [...candidates].sort((a, b) => (wins.get(b) ?? 0) - (wins.get(a) ?? 0));
+  const winsOf = (id: string) => wins.get(id) ?? 0;
+  const ranked = [...candidates].sort((a, b) => winsOf(b) - winsOf(a));
   const advancing = ranked.slice(0, MAX_ADVANCING);
   const lines = [
     `Postupují: ${advancing.join(", ")}`,
-    ...ranked.map((id, i) => `${i + 1}. ${id}: ${wins.get(id)} výher${i < MAX_ADVANCING ? " (postupuje)" : ""}`),
+    ...ranked.map((id, i) => `${i + 1}. ${id}: ${winsOf(id)} výher${i < MAX_ADVANCING ? " (postupuje)" : ""}`),
   ];
+  const cutoff = winsOf(ranked[MAX_ADVANCING - 1]);
+  const tied = ranked.filter((id) => winsOf(id) === cutoff);
+  if (winsOf(ranked[MAX_ADVANCING]) === cutoff) {
+    lines.push(`Shoda na hranici: ${tied.join(", ")} mají po ${cutoff} výhrách, o postupu rozhodlo pořadí z kroku 3.`);
+  }
   if (missing.length > 0) lines.push(`Bez verdiktu: ${missing.join("; ")}`);
   return { code: 0, lines };
 }
