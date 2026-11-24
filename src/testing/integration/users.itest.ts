@@ -135,10 +135,40 @@ describe("users: bulk changes from cabin A do not touch cabin B", () => {
 });
 
 describe("users: the last-admin check on leave-cabin counts only admins of the own cabin", () => {
-  // DELETE /api/users/me se sem nepíše: route zastiňuje DELETE /:id (bug #419, výjimka v registru).
   test("POST /api/users/me/leave-cabin by the only admin of a cabin → 400 and they stay in it", async () => {
     const admin = await soleAdminOfNewCabin("odejit");
     const res = await as(app, admin).post("/api/users/me/leave-cabin");
+    assert.equal(res.status, 400);
+    const after = await userSnapshot(admin.id);
+    assert.equal(after?.cabinId, admin.cabinId);
+    assert.equal(after?.role, "admin");
+  });
+});
+
+describe("users: DELETE /api/users/me deletes only the caller's own account (#419)", () => {
+  test("a cabin A member deletes their account with the password → 200, account gone, cabin B unchanged", async () => {
+    const member = await createUser("clen-a-smazat", "user", world.cabinA.id);
+    const adminB = await userSnapshot(world.adminB.id);
+    const memberB = await userSnapshot(world.memberB.id);
+    const res = await as(app, member).delete("/api/users/me").send({ password: TEST_PASSWORD });
+    assert.equal(res.status, 200);
+    assert.equal(await userSnapshot(member.id), null);
+    assert.deepEqual(await userSnapshot(world.adminB.id), adminB);
+    assert.deepEqual(await userSnapshot(world.memberB.id), memberB);
+    assert.ok(await prisma.reservation.findUnique({ where: { id: reservationB } }));
+  });
+
+  test("a wrong password → 400 and the account stays", async () => {
+    const member = await createUser("clen-a-spatne-heslo", "user", world.cabinA.id);
+    const res = await as(app, member).delete("/api/users/me").send({ password: "spatne-heslo-123" });
+    assert.equal(res.status, 400);
+    assert.ok(await userSnapshot(member.id));
+  });
+
+  // Chaty A a B mají vlastní správce; kdyby se počítali do kontroly, jediný správce by se smazal.
+  test("the only admin of a cabin → 400 and the account stays", async () => {
+    const admin = await soleAdminOfNewCabin("smazat");
+    const res = await as(app, admin).delete("/api/users/me").send({ password: TEST_PASSWORD });
     assert.equal(res.status, 400);
     const after = await userSnapshot(admin.id);
     assert.equal(after?.cabinId, admin.cabinId);

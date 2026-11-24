@@ -160,6 +160,55 @@ router.patch("/me/password", protect, validate(changeMyPasswordSchema), async (r
 });
 
 // ============================================================================
+//               DELETE MY ACCOUNT (GDPR Art. 17 — Self-service)
+// ============================================================================
+// Must be registered before `router.delete("/:id")`, otherwise Express routes `/me` there with id `me` (#419).
+router.delete("/me", protect, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
+
+    const { password } = req.body;
+    if (!password || typeof password !== "string") {
+      return res.status(400).json({ message: "Pro smazání účtu zadej heslo." });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return res.status(404).json({ message: "Uživatel nenalezen." });
+
+    // Verify password
+    const isValid = await verifyPassword(password, user.passwordHash);
+    if (!isValid) {
+      return res.status(400).json({ message: "Nesprávné heslo." });
+    }
+
+    // If admin, check if they're the only one
+    if (user.cabinId && req.user.role === "admin") {
+      const adminCount = await prisma.user.count({
+        where: { cabinId: user.cabinId, role: "admin" },
+      });
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          message: "Jsi poslední admin chaty. Nejdřív předej roli admina jinému členovi.",
+        });
+      }
+    }
+
+    // Delete user — Prisma cascade handles related records
+    await prisma.user.delete({ where: { id: req.user.userId } });
+
+    logger.info("USERS", "User self-deleted account (GDPR)", {
+      userId: req.user.userId,
+      username: req.user.username,
+    });
+
+    res.json({ message: "Tvůj účet jsme nenávratně smazali." });
+  } catch (error) {
+    logger.error("USERS", "Self-delete account error", { error: String(error) });
+    res.status(500).json({ message: "Chyba při mazání účtu." });
+  }
+});
+
+// ============================================================================
 //                    DELETE USER'S RESERVATIONS
 // ============================================================================
 router.delete("/:id/reservations", protect, requireCabin, async (req: Request, res: Response) => {
@@ -455,54 +504,6 @@ router.get("/me/export", protect, async (req: Request, res: Response) => {
   } catch (error) {
     logger.error("USERS", "Export my data error", { error: String(error) });
     res.status(500).json({ message: "Chyba při exportu dat." });
-  }
-});
-
-// ============================================================================
-//               DELETE MY ACCOUNT (GDPR Art. 17 — Self-service)
-// ============================================================================
-router.delete("/me", protect, async (req: Request, res: Response) => {
-  try {
-    if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
-
-    const { password } = req.body;
-    if (!password || typeof password !== "string") {
-      return res.status(400).json({ message: "Pro smazání účtu zadej heslo." });
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
-    if (!user) return res.status(404).json({ message: "Uživatel nenalezen." });
-
-    // Verify password
-    const isValid = await verifyPassword(password, user.passwordHash);
-    if (!isValid) {
-      return res.status(400).json({ message: "Nesprávné heslo." });
-    }
-
-    // If admin, check if they're the only one
-    if (user.cabinId && req.user.role === "admin") {
-      const adminCount = await prisma.user.count({
-        where: { cabinId: user.cabinId, role: "admin" },
-      });
-      if (adminCount <= 1) {
-        return res.status(400).json({
-          message: "Jsi poslední admin chaty. Nejdřív předej roli admina jinému členovi.",
-        });
-      }
-    }
-
-    // Delete user — Prisma cascade handles related records
-    await prisma.user.delete({ where: { id: req.user.userId } });
-
-    logger.info("USERS", "User self-deleted account (GDPR)", {
-      userId: req.user.userId,
-      username: req.user.username,
-    });
-
-    res.json({ message: "Tvůj účet jsme nenávratně smazali." });
-  } catch (error) {
-    logger.error("USERS", "Self-delete account error", { error: String(error) });
-    res.status(500).json({ message: "Chyba při mazání účtu." });
   }
 });
 
