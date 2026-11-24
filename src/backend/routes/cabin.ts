@@ -1,12 +1,13 @@
 /* ============================================================================
    routes/cabin.ts — Cabin settings CRUD (admin-only configuration)
    ============================================================================ */
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import path from "path";
 import { signAuthToken } from "../../utils/authToken";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { updateCabinSettingsSchema, createCabinSchema, setCabinCoverPhotoSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
@@ -150,12 +151,9 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
 // ============================================================================
 //  PATCH /api/cabin — Update cabin settings (admin only)
 // ============================================================================
-router.patch("/", protect, requireCabin, async (req: Request, res: Response) => {
+router.patch("/", protect, requireCabin, requireRole(["admin"], "Pouze admin může měnit nastavení chaty."), async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Pouze admin může měnit nastavení chaty." });
-    }
 
     const {
       name,
@@ -276,12 +274,7 @@ router.patch("/", protect, requireCabin, async (req: Request, res: Response) => 
 // ============================================================================
 const coversPath = path.join(UPLOADS_PATH, "covers");
 
-function requireCabinAdmin(req: Request, res: Response, next: NextFunction) {
-  if (req.user?.role !== "admin") {
-    return res.status(403).json({ message: "Titulní fotku může měnit jen správce chaty." });
-  }
-  next();
-}
+const requireCabinAdmin = requireRole(["admin"], "Titulní fotku může měnit jen správce chaty.");
 
 router.put("/cover-photo", protect, requireCabin, requireCabinAdmin, validate(setCabinCoverPhotoSchema), async (req: Request, res: Response) => {
   const cabinId = req.user!.cabinId!;

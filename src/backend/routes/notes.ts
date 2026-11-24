@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createNoteSchema, editNoteSchema, noteReactionSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
@@ -166,11 +167,7 @@ router.post("/", protect, requireCabin, validate(createNoteSchema), async (req: 
 // ============================================================================
 //                        MARK NOTE AS RESOLVED (task created)
 // ============================================================================
-router.patch("/:id/resolve", protect, requireCabin, async (req: Request, res: Response) => {
-  if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Nemáš oprávnění." });
-  }
-
+router.patch("/:id/resolve", protect, requireCabin, requireRole(["admin", "user"]), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
@@ -271,11 +268,7 @@ router.patch("/:id", protect, requireCabin, async (req: Request, res: Response) 
 // ============================================================================
 //                           TOGGLE PIN
 // ============================================================================
-router.patch("/:id/pin", protect, requireCabin, async (req: Request, res: Response) => {
-  if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Nemáš oprávnění." });
-  }
-
+router.patch("/:id/pin", protect, requireCabin, requireRole(["admin", "user"]), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {

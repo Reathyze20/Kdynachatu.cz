@@ -2,17 +2,14 @@
 import prisma from "../../utils/prisma";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import logger from "../../utils/logger";
 
 const router = Router();
 
-router.get("/system", protect, requireCabin, async (req: Request, res: Response) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Přístup pouze pro administrátora." });
-  }
-
+router.get("/system", protect, requireCabin, requireRole(["admin"], "Přístup pouze pro administrátora."), async (req: Request, res: Response) => {
   try {
-    const cabinId = req.user.cabinId!;
+    const cabinId = req.user!.cabinId!;
     const [userCount, reservationCount, photoCount, noteCount] = await Promise.all([
       prisma.user.count({ where: { cabinId } }),
       prisma.reservation.count({ where: { cabinId } }),

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { editNoteSchema, noteReactionSchema } from "../../validators/schemas";
@@ -84,11 +85,7 @@ router.delete("/:messageId", protect, requireCabin, async (req: Request, res: Re
 // ============================================================================
 //  PATCH /api/messages/:messageId/pin — toggle pin (non-guest only)
 // ============================================================================
-router.patch("/:messageId/pin", protect, requireCabin, async (req: Request, res: Response) => {
-  if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Hosté nemohou připínat zprávy." });
-  }
-
+router.patch("/:messageId/pin", protect, requireCabin, requireRole(["admin", "user"], "Hosté nemohou připínat zprávy."), async (req: Request, res: Response) => {
   const { messageId } = req.params;
 
   try {
@@ -114,11 +111,7 @@ router.patch("/:messageId/pin", protect, requireCabin, async (req: Request, res:
 // ============================================================================
 //  PATCH /api/messages/:messageId/resolve — mark as resolved (converted to task)
 // ============================================================================
-router.patch("/:messageId/resolve", protect, requireCabin, async (req: Request, res: Response) => {
-  if (req.user!.role === "guest") {
-    return res.status(403).json({ message: "Nemáš oprávnění." });
-  }
-
+router.patch("/:messageId/resolve", protect, requireCabin, requireRole(["admin", "user"]), async (req: Request, res: Response) => {
   const { messageId } = req.params;
 
   try {

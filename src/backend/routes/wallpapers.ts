@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
 import { protect } from "../../middleware/authMiddleware";
+import { requireRole } from "../../middleware/roleMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { UPLOADS_PATH } from "../../config/config";
@@ -48,6 +49,8 @@ router.get(
 router.post(
   "/",
   protect,
+  // Před uploadem: soubor od hosta se ani nenačte do paměti.
+  requireRole(["admin", "user"], "Host nemůže nahrávat tapety"),
   upload.single("image"),
   expressAsyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.cabinId) {
@@ -56,12 +59,6 @@ router.post(
     }
     if (!req.file) {
       res.status(400).json({ message: "Žádný soubor nebyl nahrán" });
-      return;
-    }
-
-    const isGuest = req.user.role === "guest";
-    if (isGuest) {
-      res.status(403).json({ message: "Host nemůže nahrávat tapety" });
       return;
     }
 
