@@ -48,7 +48,7 @@ function slashStartsRegex(src: string, i: number): boolean {
 
 /**
  * Vrátí všechny řetězcové literály souboru ('…', "…", `…`) s odstraněnými escapy (`\n` a
- * `\t` se stanou mezerou, `á` znakem). Komentáře a regex literály přeskočí. Z template
+ * `\t` se stanou mezerou, `\u00e1` znakem). Komentáře a regex literály přeskočí. Z template
  * literálu bere statické části, výrazy `${…}` prochází rekurzivně, takže řetězce uvnitř
  * výrazu se najdou jako samostatné literály.
  */
@@ -56,7 +56,6 @@ export function extractStringLiterals(src: string): StringLiteral[] {
   const out: StringLiteral[] = [];
   /** Pro každou otevřenou `(`: jde o volání logu? */
   const parens: boolean[] = [];
-  const inLogCall = () => parens.includes(true);
   let line = 1;
   let i = 0;
 
@@ -69,64 +68,38 @@ export function extractStringLiterals(src: string): StringLiteral[] {
 
   /** Přečte escape sekvenci na pozici `\` a vrátí znak, který zastupuje. */
   const readEscape = (): string => {
-    advance(); // \
-    const ch = src[i] ?? "";
-    const hex = (len: number) => {
-      const code = parseInt(src.slice(i + 1, i + 1 + len), 16);
-      advance(1 + len);
-      return Number.isNaN(code) ? "" : String.fromCodePoint(code);
-    };
-    if (ch === "u" && src[i + 1] === "{") {
-      const end = src.indexOf("}", i);
-      const code = parseInt(src.slice(i + 2, end), 16);
-      advance(end - i + 1);
-      return Number.isNaN(code) ? "" : String.fromCodePoint(code);
+    const ch = src[i + 1] ?? "";
+    const hex = ch === "u" && src[i + 2] === "{"
+      ? src.slice(i + 3, src.indexOf("}", i))
+      : ch === "u" ? src.slice(i + 2, i + 6) : ch === "x" ? src.slice(i + 2, i + 4) : null;
+    if (hex === null) {
+      advance(2);
+      return /[nrt\n]/.test(ch) ? " " : ch;
     }
-    if (ch === "u") return hex(4);
-    if (ch === "x") return hex(2);
-    advance();
-    if (ch === "n" || ch === "r" || ch === "t" || ch === "\n") return " ";
-    return ch;
+    advance(2 + hex.length + (src[i + 2] === "{" ? 2 : 0));
+    const code = parseInt(hex, 16);
+    return Number.isNaN(code) ? "" : String.fromCodePoint(code);
   };
 
-  const readQuoted = (quote: string) => {
-    const startLine = line;
-    const startsInLog = inLogCall();
-    let text = "";
+  /** Přečte '…', "…" nebo `…`; výrazy `${…}` v template literálu nahradí mezerou. */
+  const readString = (quote: string) => {
+    const literal = { line, text: "", inLogCall: parens.includes(true) };
     advance(); // otevírací uvozovka
-    while (i < src.length && src[i] !== quote && src[i] !== "\n") {
+    while (i < src.length && src[i] !== quote && (quote === "`" || src[i] !== "\n")) {
       if (src[i] === "\\") {
-        text += readEscape();
-      } else {
-        text += src[i];
-        advance();
-      }
-    }
-    advance(); // zavírací uvozovka
-    out.push({ line: startLine, text, inLogCall: startsInLog });
-  };
-
-  const readTemplate = () => {
-    const startLine = line;
-    const startsInLog = inLogCall();
-    let text = "";
-    advance(); // `
-    while (i < src.length && src[i] !== "`") {
-      if (src[i] === "\\") {
-        text += readEscape();
-      } else if (src[i] === "$" && src[i + 1] === "{") {
-        // Výraz nahradí mezera, ať se nespojí slova kolem něj.
-        text += " ";
+        literal.text += readEscape();
+      } else if (quote === "`" && src[i] === "$" && src[i + 1] === "{") {
+        literal.text += " ";
         advance(2);
         readCode("}");
         advance(); // }
       } else {
-        text += src[i];
+        literal.text += src[i];
         advance();
       }
     }
-    advance(); // `
-    out.push({ line: startLine, text, inLogCall: startsInLog });
+    advance(); // zavírací uvozovka
+    out.push(literal);
   };
 
   const skipRegex = () => {
@@ -160,10 +133,8 @@ export function extractStringLiterals(src: string): StringLiteral[] {
       } else if (ch === "/" && src[i + 1] === "*") {
         const end = src.indexOf("*/", i + 2);
         advance((end < 0 ? src.length : end + 2) - i);
-      } else if (ch === "'" || ch === '"') {
-        readQuoted(ch);
-      } else if (ch === "`") {
-        readTemplate();
+      } else if (ch === "'" || ch === '"' || ch === "`") {
+        readString(ch);
       } else if (ch === "/" && slashStartsRegex(src, i)) {
         skipRegex();
       } else {
