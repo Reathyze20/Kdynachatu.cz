@@ -7,7 +7,6 @@ import { CabinToday } from '@/features/dashboard/CabinToday'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import apiClient from '@/api/client'
 import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
-import statusHeaderCss from '@/styles/status-header.css?raw'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
 const { responses, weather } = vi.hoisted(() => ({ responses: new Map<string, unknown>(), weather: { current: null as unknown } }))
@@ -82,7 +81,8 @@ const NOVAKOVI_NOW = {
 }
 
 describe('Přehled: hlavička teď → příště (#272)', () => {
-  it('teď a příště jsou v jedné kartě s avatarem, iniciálou a jménem, detail pod „příště“ a řetězec až za ním', async () => {
+  // #366: hlavička je osa teď → příště → pak; účel a spolucestující z ní zmizely (změna zadání #272).
+  it('teď, příště a pak jsou sloupce v jedné kartě s avatarem, jménem a jedním řádkem „kdy“', async () => {
     renderOverview(reservations({
       activeReservation: NOVAKOVI_NOW,
       upcomingReservations: [
@@ -101,12 +101,13 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     expect(within(now).getByText('N')).toBeInTheDocument()
     expect(next).toHaveTextContent(/Jana\s*od po 14\. 12\./)
     expect(within(next).getByText('J')).toBeInTheDocument()
-    expect(next).toHaveTextContent('Řezání dřeva · 3 noci')
-    expect(within(next).getAllByTitle('Petr').length).toBeGreaterThan(0)
+    expect(next).toHaveTextContent('od po 14. 12. · 3 noci')
+    expect(header).not.toHaveTextContent('Řezání dřeva')
+    expect(within(header).queryAllByTitle('Petr')).toHaveLength(0)
     // Jméno a datum dalšího pobytu jsou jen v hlavičce (upřesnění 1), karta „Další příjezd“ zanikla.
-    const chain = within(header).getByRole('group', { name: 'Řetězec turnusu' })
-    expect(chain).toHaveTextContent('Pak: Ty (po 28. 12.)')
-    expect(chain).not.toHaveTextContent('Teď:')
+    const later = within(header).getByRole('group', { name: 'Pak' })
+    expect(later).toHaveTextContent(/Ty\s*od po 28\. 12\./)
+    expect(screen.queryByRole('group', { name: 'Řetězec turnusu' })).not.toBeInTheDocument()
     expect(document.body.textContent?.match(/14\. 12\./g)).toHaveLength(1)
     expect(screen.queryByText(/Tvůj pobyt/)).not.toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
@@ -129,6 +130,38 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     const header = await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(within(header).getByRole('group', { name: 'Teď' })).toHaveTextContent('Chata je volná')
     expect(within(header).getByRole('group', { name: 'Příště' })).toHaveTextContent(/Jana\s*od po 28\. 12\./)
+    expect(within(header).queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
+  })
+
+  it('volná chata ukáže pod sebou, jak dlouho je prázdná; „Checklist OK“ zmizí, nevyplněný checklist zůstane', async () => {
+    const lastStay = { username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-30', to: '2026-12-02', daysEmpty: 8 }
+    const next = [upcoming('r-petr', 'Petr', '2026-12-28', '2026-12-30')]
+    renderOverview(reservations({ upcomingReservations: next, lastStay: { ...lastStay, isCheckoutCompleted: true } }))
+
+    let header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(header).getByRole('group', { name: 'Teď' })).toHaveTextContent(/Chata je volná\s*prázdná 8 dní$/)
+    expect(header).not.toHaveTextContent(/Checklist/i)
+
+    cleanup()
+    renderOverview(reservations({ upcomingReservations: next, lastStay: { ...lastStay, isCheckoutCompleted: false } }))
+    header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(header).getByRole('group', { name: 'Teď' })).toHaveTextContent('prázdná 8 dní · checklist nevyplněn')
+  })
+
+  it('„Od minule“ odděluje stav chaty od vzkazů; popisky vzkazů jsou pro čtečky', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [upcoming('r-petr', 'Petr', '2026-12-28', '2026-12-30')],
+      lastStay: {
+        username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-30', to: '2026-12-02', daysEmpty: 8, isCheckoutCompleted: true,
+        checkoutState: { gas: 'low', heatingOff: true, waterOff: true, broken: 'Kape kohoutek.', leftBehind: 'Dřevo u kamen.', note: 'Past na myši.' },
+      },
+    }))
+
+    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(header).getByText('Od minule — Jana')).toBeInTheDocument()
+    const items = (name: string) => within(within(header).getByRole('list', { name })).getAllByRole('listitem').map((li) => li.textContent)
+    expect(items('Stav chaty')).toEqual(['Plynová bomba: Dochází', 'Topení vypnuté', 'Voda uzavřená'])
+    expect(items('Vzkazy')).toEqual(['Rozbité: Kape kohoutek.', 'Nechal/a: Dřevo u kamen.', 'Poznámka: Past na myši.'])
   })
 
   it('když po aktuálním pobytu nic není, vpravo je „Zatím nikdo“', async () => {
@@ -136,14 +169,40 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
 
     const header = await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(within(header).getByRole('group', { name: 'Příště' })).toHaveTextContent('Zatím nikdo')
+    expect(within(header).queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
   })
 
-  it('když není nic naplánováno, zůstane prázdný stav Přehledu bez hlavičky a řetězce', async () => {
+  it('sloupec „Pak“ ukáže první další pevný pobyt a počet dalších za ním', async () => {
+    renderOverview(reservations({
+      upcomingReservations: [
+        upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'),
+        upcoming('r-petr', 'Petr', '2026-12-20', '2026-12-22'),
+        upcoming('r-ota', 'Ota', '2026-12-20', '2026-12-21'),
+        upcoming('r-ida', 'Ida', '2027-01-02', '2027-01-04'),
+      ],
+    }))
+
+    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    const later = within(header).getByRole('group', { name: 'Pak' })
+    expect(later).toHaveTextContent(/Ota\s*od ne 20\. 12\.\s*\+2/)
+    expect(later).not.toHaveTextContent('a víc')
+  })
+
+  it('když API pošle plný seznam pěti pobytů, „Pak“ přizná, že jich může být víc', async () => {
+    renderOverview(reservations({
+      upcomingReservations: ['14', '16', '18', '20', '22'].map((day, i) => upcoming(`r-${i}`, `Host${i}`, `2026-12-${day}`, `2026-12-${Number(day) + 1}`)),
+    }))
+
+    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(header).getByRole('group', { name: 'Pak' })).toHaveTextContent(/Host1\s*od st 16\. 12\.\s*\+3 a víc/)
+  })
+
+  it('když není nic naplánováno, zůstane prázdný stav Přehledu bez hlavičky', async () => {
     renderOverview(reservations())
 
     await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Na chatě teď' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('group', { name: 'Řetězec turnusu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
   })
 
   it('můj pevný pobyt, který není v hlavičce ani v řetězci, ukáže karta zvlášť', async () => {
@@ -153,10 +212,6 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     }))
 
     expect(await screen.findByRole('region', { name: 'Na chatě teď' })).toHaveTextContent('Tvůj pobyt za 18 dní')
-  })
-
-  it('detail pod osobou (účel, noci, s kým) ukazuje jen desktop od 1024 px', () => {
-    expect(statusHeaderCss).toMatch(/@media \(max-width: 1023px\)\s*\{\s*\.status-header__detail\s*\{\s*display: none;/)
   })
 
   it('můj záložní pobyt se jako příjezd neukáže, počítají se jen pevné', async () => {
