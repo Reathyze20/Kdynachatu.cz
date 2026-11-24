@@ -68,6 +68,33 @@
     }
 }
 
+/* ── Karta „Co vyzkoušet“ (jen staging, #399): plovoucí, mimo tok stránky ── */
+/* Pod zásuvkami a dialogy; toasty se nad ni zvednou (--testing-card-clearance, toast.css) */
+.testing-card {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: var(--z-header);
+    width: 360px;
+}
+
+.testing-card--collapsed {
+    width: auto;
+}
+
+.testing-card__panel {
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+}
+
+/* Chat: dole je pole zprávy, karta jde nahoru pod hlavičku chatu */
+@media (min-width: 769px) {
+    body.page-notes .testing-card {
+        top: 112px;
+        bottom: auto;
+    }
+}
+
 /* ── Help Modal ─────────────────────────────────────────────────────── */
 .help-modal-overlay {
     position: fixed;
@@ -212,6 +239,29 @@
 
     .help-modal-card {
         max-height: 75vh;
+    }
+
+    /* Přes šířku s okraji nad nápovědou (48 px, 12 px nad lištou); sbalená v řadě vedle ní */
+    .testing-card {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        bottom: calc(var(--mobile-nav-height) + 68px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .testing-card__panel {
+        max-height: calc(100dvh - 144px - var(--mobile-nav-height) - env(safe-area-inset-bottom, 0px));
+    }
+
+    .testing-card--collapsed {
+        left: auto;
+        right: 72px;
+        bottom: calc(var(--mobile-nav-height) + 12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Otevřený chat: karta by ležela přes pole zprávy (jako nápověda výše) */
+    body.notes-chat-open .testing-card {
+        display: none;
     }
 
     .help-modal-body {

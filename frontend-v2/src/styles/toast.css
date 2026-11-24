@@ -7,7 +7,7 @@
 /* ── Container pro stacking toastů ─────────────────────────────────────── */
 .toast-container {
   position: fixed;
-  bottom: 20px;
+  bottom: max(20px, var(--testing-card-clearance, 0px)); /* nad kartou „Co vyzkoušet“ (#399) */
   right: 20px;
   z-index: var(--z-toast);
   display: flex;
@@ -21,7 +21,7 @@
 /* Mobile: lift above bottom nav */
 @media (max-width: 768px) {
   .toast-container {
-    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    bottom: max(calc(80px + env(safe-area-inset-bottom, 0px)), var(--testing-card-clearance, 0px));
     right: 12px;
     left: 12px;
     max-width: none;

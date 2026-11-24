@@ -3,19 +3,19 @@
  * Karta „Co vyzkoušet“ (#388): provede testera na stagingu aplikací. Jen na stagingu –
  * pozná se stejně jako testovací účty na přihlašovací obrazovce (backend je vydá jen tam).
  *
- * Po přihlášení (= připojení AppShell) se karta otevře sama, dokud nejsou všechny úkoly hotové,
- * jinak je sbalená do tlačítka. „Ukaž mi kde“ kartu sbalí, aby obrazovka byla vidět celá.
- * Karta je v toku stránky nad obsahem (ne plovoucí), takže nepřekrývá spodní lištu ani přehled.
- * Zpětná vazba (#389): pole u každého úkolu (`TestingTaskItem`) + obecné pole pod seznamem.
+ * Plovoucí mini-karta (#399) vpravo dole, na mobilu nad lištou a nápovědou (help.css) – nic neodsouvá.
+ * Jeden úkol, šipky přepínají, „Hotovo“ posune na další nehotový. Rozbalená, dokud není vše hotové;
+ * sbalení si pamatuje prohlížeč. „Ukaž mi kde“ ji nechá otevřenou. Zpětná vazba (#389) až na kliknutí.
  */
-import { useId, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardList, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
 import { useDemoAccounts } from '@/features/auth/hooks/useDemoAccounts'
+import { cn } from '@/lib/utils'
 import { FeedbackField } from './FeedbackField'
-import { GENERAL_FEEDBACK_LABEL, TESTING_TASKS, allTasksDone, readDoneTasks, writeDoneTasks, type TestingTask } from './testingTasks'
+import { GENERAL_FEEDBACK_LABEL, TESTING_TASKS, allTasksDone, nextUndoneIndex, readCollapsed, readDoneTasks, writeCollapsed, writeDoneTasks } from './testingTasks'
 
 export function TestingChecklist() {
   // Testovací účty vydá backend jen na stagingu – neprázdný seznam = staging
@@ -28,24 +28,66 @@ function TestingChecklistCard() {
   const { user } = useAuth()
   const userId = user?.userId
   const [done, setDone] = useState<string[]>(() => readDoneTasks(userId))
-  const [open, setOpen] = useState(() => !allTasksDone(done))
+  const [open, setOpenState] = useState(() => !allTasksDone(done) && !readCollapsed(userId))
+  const [index, setIndex] = useState(() => nextUndoneIndex(done))
+  const [feedback, setFeedback] = useState<'task' | 'general' | null>(null)
   const headingId = useId()
+  const cardRef = useRef<HTMLDivElement>(null)
 
-  const toggleDone = (taskId: string) => {
-    const next = done.includes(taskId) ? done.filter((id) => id !== taskId) : [...done, taskId]
+  // Toasty (toast.css) se zvednou nad kartu: vzdálenost její horní hrany od spodku okna + mezera.
+  // Jen když je karta dole – ne skrytá ani nahoře (chat, help.css); pozici mění i třídy na <body>.
+  useLayoutEffect(() => {
+    const el = cardRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const root = document.documentElement
+    const update = () => {
+      const { top, bottom } = el.getBoundingClientRect()
+      if (el.offsetHeight === 0 || window.innerHeight - bottom > 200) root.style.removeProperty('--testing-card-clearance')
+      else root.style.setProperty('--testing-card-clearance', `${Math.ceil(window.innerHeight - top + 8)}px`)
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    const bodyClass = new MutationObserver(update)
+    bodyClass.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    return () => {
+      observer.disconnect()
+      bodyClass.disconnect()
+      root.style.removeProperty('--testing-card-clearance')
+    }
+  }, [open])
+
+  const total = TESTING_TASKS.length
+  const task = TESTING_TASKS[index]
+  const taskDone = done.includes(task.id)
+  const progress = `${done.length}/${total}`
+
+  const setOpen = (next: boolean) => {
+    setOpenState(next)
+    writeCollapsed(userId, !next)
+  }
+  const goTo = (i: number) => {
+    setIndex((i + total) % total)
+    setFeedback(null)
+  }
+  const saveDone = (next: string[]) => {
     setDone(next)
     writeDoneTasks(userId, next)
   }
-
-  const progress = `${done.length} z ${TESTING_TASKS.length}`
+  const markDone = () => {
+    const next = [...done, task.id]
+    saveDone(next)
+    if (allTasksDone(next)) setOpen(false)
+    else goTo(nextUndoneIndex(next, index))
+  }
 
   if (!open) {
     return (
-      <div className="flex shrink-0 justify-end px-3 pb-3 md:px-0">
+      <div ref={cardRef} className="testing-card testing-card--collapsed">
         <Button
           type="button"
           variant="outline"
-          className="rounded-full bg-sheet"
+          className="rounded-full bg-sheet shadow-lift"
           aria-expanded={false}
           onClick={() => setOpen(true)}
           data-testid="testing-checklist-toggle"
@@ -58,81 +100,45 @@ function TestingChecklistCard() {
   }
 
   return (
-    <div className="shrink-0 px-3 pb-3 md:px-0">
+    <div ref={cardRef} className="testing-card">
       <section
         aria-labelledby={headingId}
-        className="rounded-2xl border border-rule-soft bg-sheet p-4 shadow-lift md:p-5"
+        className="testing-card__panel rounded-2xl border border-rule-soft bg-sheet p-3 shadow-lift"
         data-testid="testing-checklist"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 id={headingId} className="text-lg font-semibold">Co vyzkoušet</h2>
-            <p className="text-sm text-muted-foreground">
-              Zkus tyhle věci a odškrtni, co máš hotové. Hotovo {progress}.
-            </p>
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <h2 id={headingId} className="text-sm font-semibold">Co vyzkoušet</h2>
+            <p className="text-sm text-muted-foreground" aria-live="polite">Úkol {index + 1} ze {total}</p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Zavřít seznam Co vyzkoušet"
-            onClick={() => setOpen(false)}
-          >
-            <X aria-hidden="true" />
+          <Button type="button" variant="ghost" size="icon" aria-label="Předchozí úkol" onClick={() => goTo(index - 1)}><ChevronLeft aria-hidden="true" /></Button>
+          <Button type="button" variant="ghost" size="icon" aria-label="Další úkol" onClick={() => goTo(index + 1)}><ChevronRight aria-hidden="true" /></Button>
+          <Button type="button" variant="ghost" size="icon" aria-label="Sbalit Co vyzkoušet" aria-expanded onClick={() => setOpen(false)}><ChevronDown aria-hidden="true" /></Button>
+        </div>
+        <p className={cn('mt-1 font-medium', taskDone && 'text-muted-foreground line-through')}>{task.title}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {task.places.map((place) => (
+            <Button key={place.to} asChild variant="outline" size="sm">
+              <Link to={place.to}>{place.name ? `Ukaž mi kde: ${place.name}` : 'Ukaž mi kde'}</Link>
+            </Button>
+          ))}
+          {taskDone ? (
+            <Button type="button" variant="outline" size="sm" onClick={() => saveDone(done.filter((id) => id !== task.id))}><Undo2 aria-hidden="true" />Vrátit odškrtnutí</Button>
+          ) : (
+            <Button type="button" size="sm" onClick={markDone}><Check aria-hidden="true" />Hotovo</Button>
+          )}
+        </div>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <Button type="button" variant="link" size="sm" className="px-2" aria-expanded={feedback === 'task'} onClick={() => setFeedback(feedback === 'task' ? null : 'task')}>
+            Napsat, co nešlo
+          </Button>
+          <Button type="button" variant="link" size="sm" className="px-2" aria-expanded={feedback === 'general'} onClick={() => setFeedback(feedback === 'general' ? null : 'general')}>
+            {GENERAL_FEEDBACK_LABEL}
           </Button>
         </div>
-        <ol className="mt-3 grid max-h-[55vh] gap-2 overflow-y-auto md:max-h-[40vh] lg:grid-cols-2">
-          {TESTING_TASKS.map((task, i) => (
-            <TestingTaskItem
-              key={task.id}
-              task={task}
-              order={i + 1}
-              done={done.includes(task.id)}
-              onToggleDone={() => toggleDone(task.id)}
-              onShowWhere={() => setOpen(false)}
-            />
-          ))}
-        </ol>
-        <FeedbackField taskId="general" label={GENERAL_FEEDBACK_LABEL} />
+        {feedback === 'task' && <FeedbackField key={task.id} taskId={task.id} label="Co ti nešlo / co ti chybí?" />}
+        {feedback === 'general' && <FeedbackField taskId="general" label={GENERAL_FEEDBACK_LABEL} />}
       </section>
     </div>
-  )
-}
-
-interface TestingTaskItemProps {
-  task: TestingTask
-  order: number
-  done: boolean
-  onToggleDone: () => void
-  onShowWhere: () => void
-}
-
-function TestingTaskItem({ task, order, done, onToggleDone, onShowWhere }: TestingTaskItemProps) {
-  return (
-    <li className="rounded-xl bg-inset p-3">
-      <p className={done ? 'text-muted-foreground line-through' : undefined}>
-        {order}. {task.title}
-      </p>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {task.places.map((place) => (
-          <Button key={place.to} asChild variant="outline" size="sm">
-            <Link to={place.to} onClick={onShowWhere}>
-              {place.name ? `Ukaž mi kde: ${place.name}` : 'Ukaž mi kde'}
-            </Link>
-          </Button>
-        ))}
-        <label className="inline-flex min-h-(--touch-target-min) cursor-pointer items-center gap-2 px-2 text-sm font-medium">
-          <input
-            type="checkbox"
-            className="size-5 accent-[var(--brand-primary)]"
-            checked={done}
-            onChange={onToggleDone}
-            aria-label={`Hotovo: ${task.title}`}
-          />
-          Hotovo
-        </label>
-      </div>
-      <FeedbackField taskId={task.id} label="Co ti nešlo / co ti chybí?" />
-    </li>
   )
 }
