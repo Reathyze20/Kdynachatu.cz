@@ -35,10 +35,13 @@ const RAW = import.meta.glob<string>(['../**/*.{ts,tsx,css}', '!../test/**', '!.
 /** Zdrojáky aplikace (TS, TSX, CSS pod `src/`, bez testů); klíč je cesta od `src/`. */
 export const SOURCES: Sources = Object.fromEntries(Object.entries(RAW).map(([path, raw]) => [path.slice(3), raw]))
 
-/** Odstraní komentáře, zalomení řádků nechá, aby čísla řádků seděla. `//` v CSS ani v URL komentář není. */
+/** Řetězec (`'image/*'` komentář neotevírá), blokový komentář, v TS i řádkový komentář (ne `https://`). */
+const CSS_TOKENS = /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|\/\*[\s\S]*?\*\//g
+const TS_TOKENS = /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<!:)\/\/.*$/gm
+
+/** Odstraní komentáře, řetězce nechá a zalomení řádků taky, aby čísla řádků seděla. */
 export function stripComments(source: string, file: string): string {
-  const noBlocks = source.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ''))
-  return file.endsWith('.css') ? noBlocks : noBlocks.replace(/(^|[^:\\])\/\/.*$/gm, '$1')
+  return source.replace(file.endsWith('.css') ? CSS_TOKENS : TS_TOKENS, (m, str) => str ?? m.replace(/[^\n]/g, ''))
 }
 
 function find(rule: DesignRule, source: string, file: string): string[] {

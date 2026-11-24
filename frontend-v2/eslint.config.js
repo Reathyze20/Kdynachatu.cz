@@ -7,6 +7,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import designAllowlist from './src/test/designAllowlist.json' with { type: 'json' }
 
 const COLD_PALETTE = String.raw`/\b(slate|emerald)-\d|\bbg-white\b/`
+const COLD_PALETTE_ALLOWED = Object.values(designAllowlist.coldPalette ?? {}).flat().map((file) => `src/${file}`)
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -48,8 +49,6 @@ export default defineConfig([
       }))],
     },
   },
-  {
-    files: Object.values(designAllowlist.coldPalette).flat().map((file) => `src/${file}`),
-    rules: { 'no-restricted-syntax': 'off' },
-  },
+  // Prázdné `files` ESLint odmítne, proto blok jen dokud allowlist coldPalette něco obsahuje.
+  ...(COLD_PALETTE_ALLOWED.length ? [{ files: COLD_PALETTE_ALLOWED, rules: { 'no-restricted-syntax': 'off' } }] : []),
 ])

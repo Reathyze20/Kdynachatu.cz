@@ -44,6 +44,11 @@ describe('designGuard: pravidlo s allowlistem, který se smí jen zmenšovat', (
     expect(evaluateRule(HEX, { 'a.css': css, 'b.ts': ts }, {}).violations).toEqual(['a.css:3  #abc', 'b.ts:3  #123'])
   })
 
+  it('"/*" uvnitř řetězce komentář neotevírá', () => {
+    const tsx = '<input accept="image/*" />\n<p style={{ color: "#fff" }} />\n{/* náhledy */}'
+    expect(evaluateRule(HEX, { 'a.tsx': tsx }, {}).violations).toEqual(['a.tsx:2  #fff'])
+  })
+
   it('pravidlo může místo regexu vracet výskyty funkcí (celý soubor)', () => {
     const rule: DesignRule = { name: 'css', hint: 'žádný nový .css', match: (_s, file) => (file.endsWith('.css') ? ['soubor .css'] : []) }
     const report = evaluateRule(rule, { 'a.css': '', 'b.tsx': '' }, {})

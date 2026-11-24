@@ -29,7 +29,7 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
   breakpoint: {
     bad: ['@media (max-width: 768px) {', '@media (min-width: 769px) {', 'className="sm:grid-cols-2"', 'className="max-xl:hidden"', 'className="min-[900px]:flex"', 'className="hover:sm:flex"'],
     good: [
-      '@media (min-width: 768px) {', '@media (min-width: 1024px) {', '@media (max-width: 767.98px) {', "matchMedia('(max-width: 1023px)')",
+      '@media (min-width: 768px) {', '@media (min-width: 1024px) {', '@media (max-width: 767.98px ) {', "matchMedia('(max-width: 1023px)')",
       'className="md:flex lg:grid max-md:hidden"', 'size: { sm: "h-8" }', 'className="@max-[280px]:hidden"', '.a { max-width: 1200px; }',
     ],
   },

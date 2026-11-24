@@ -10,7 +10,7 @@ const PERMANENT_CSS = ['index.css', ...TOKEN_FILES]
 const outsideTokens = (file: string) => !TOKEN_FILES.includes(file)
 
 /** Povolené šířky v media query: `md` (768) a `lg` (1024), pro „pod md/lg“ o pixel méně. */
-const ALLOWED_WIDTH = String.raw`min-width:\s*(?:768|1024)px\)|max-width:\s*(?:767|1023)(?:\.98)?px\)`
+const ALLOWED_WIDTH = String.raw`min-width:\s*(?:768|1024)px\s*\)|max-width:\s*(?:767|1023)(?:\.98)?px\s*\)`
 /** Tailwind varianta breakpointu mimo `md`/`lg` na začátku třídy (`sm:`, `max-xl:`, `min-[900px]:`), ne container query `@sm:`. */
 const TW_BREAKPOINT = String.raw`(?<=^|[\s"'\`{:])(?:max-)?(?:sm|xl|2xl|min-\[[^\]]+\]|max-\[[^\]]+\]):(?=[\w[(!-])`
 
