@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import prisma from "../../utils/prisma";
 import { setupIntegrationFile, teardownIntegrationFile, type TestWorld } from "./harness";
 
-// Expand migrace #471: sloupec pro zneplatňování tokenů (#485). Zatím ho žádný kód nečte.
+// Expand migrace #471: sloupec pro zneplatňování tokenů (#485).
 let world: TestWorld;
 
 before(async () => {
@@ -22,7 +22,7 @@ describe("users.token_version (#471)", () => {
     assert.deepEqual(columns, [{ data_type: "integer", is_nullable: "NO", column_default: "0" }]);
   });
 
-  test("a user created without it starts at version 0", async () => {
+  test("a newly created user has tokenVersion 0", async () => {
     const user = await prisma.user.findUnique({ where: { id: world.memberA.id }, select: { tokenVersion: true } });
 
     assert.equal(user?.tokenVersion, 0);
