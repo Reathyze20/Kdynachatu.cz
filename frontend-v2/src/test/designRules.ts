@@ -117,8 +117,9 @@ export const DESIGN_RULES: DesignRule[] = [
     name: 'legacyButton',
     hint: 'legacy třídy .btn a .btn-* jsou zmrazené (#452), akce je <Button variant="primary|secondary|ghost|danger"> z components/ui/button',
     scope: (file) => /\.tsx?$/.test(file),
-    // Třída `btn`/`btn-…` jako slovo v řetězci (className, clsx, querySelector('.btn')), ne `id="btn-…"` ani `gallery-btn`.
-    match: /(?<!\bid=["'`])(?<=["'`\s{.])btn(?:-[\w-]*)?(?=["'`\s}$])/g,
+    // Třída `btn`/`btn-…` jako slovo v řetězci (className, clsx, querySelector('.btn:hover')),
+    // ne hodnota `id`, `htmlFor`, `name`, `data-testid` ani `gallery-btn`.
+    match: /(?<!\b(?:id|htmlFor|name|data-testid)=["'`])(?<=["'`\s{.])btn(?:-[\w-]*)?(?=["'`\s}$:.,])/g,
   },
   {
     name: 'newCssFile',

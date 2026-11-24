@@ -40,24 +40,24 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  /** Vykreslí potomka (např. `<Link>`) se vzhledem tlačítka. Spinner pro `pending` se pak nepřidá. */
+  /** Vykreslí potomka (např. `<Link>`) se vzhledem tlačítka. `pending` pak dá jen `aria-busy`, spinner ani blokaci ne. */
   asChild?: boolean
   /** Probíhá odesílání: spinner v tlačítku, `aria-busy` a tlačítko nejde stisknout znovu. Text piš v 1. osobě („Ukládám…“). */
   pending?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, pending = false, disabled, children, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, pending = false, children, ...props }, ref) => {
     const classes = cn(buttonVariants({ variant, size, className }))
     if (asChild) {
       return (
-        <Slot className={classes} ref={ref} disabled={disabled} aria-busy={pending || undefined} {...props}>
+        <Slot className={classes} ref={ref} aria-busy={pending || undefined} {...props}>
           {children}
         </Slot>
       )
     }
     return (
-      <button className={classes} ref={ref} disabled={disabled || pending} aria-busy={pending || undefined} {...props}>
+      <button className={classes} ref={ref} aria-busy={pending || undefined} {...props} disabled={props.disabled || pending}>
         {pending && <LoaderCircle aria-hidden="true" className="animate-spin motion-reduce:animate-none" />}
         {children}
       </button>
