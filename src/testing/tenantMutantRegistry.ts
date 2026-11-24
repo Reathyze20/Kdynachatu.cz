@@ -56,16 +56,6 @@ export interface TenantMutantException {
 /** Ekvivalentní mutanti. Každý přeživší je nejdřív kandidát na test, sem jen s doloženým důvodem. */
 export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
   {
-    file: "users.ts",
-    route: "POST /api/users",
-    original: "cabinId: req.user.cabinId",
-    reason:
-      "Kontrola duplicity jména před create. `User.username` je ve schématu globálně @unique, takže jméno " +
-      "z cizí chaty nevznikne ani bez filtru: originál skončí na unikátním indexu (500), mutant hláškou " +
-      "„Uživatel již existuje.“ (400). Nic se nevytvoří ani nezmění a mutant neprozradí nic nového – " +
-      "globální obsazenost jména hlásí už veřejná registrace (409). Test v users.itest.ts to ověřuje.",
-  },
-  {
     file: "inventory.ts",
     route: "POST /api/inventory/:id/pledge",
     original: "cabinId",

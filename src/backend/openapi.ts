@@ -186,6 +186,27 @@ const schemas: Record<string, JsonSchema> = {
       newPassword: { type: "string", format: "password" },
     },
   },
+  CreateUserRequest: {
+    type: "object",
+    required: ["username", "password"],
+    properties: {
+      username: { type: "string", minLength: 2, maxLength: 50 },
+      password: { type: "string", format: "password", minLength: 8, maxLength: 100 },
+      role: { type: "string", enum: ["admin", "user", "guest"], default: "user" },
+    },
+  },
+  CreateUserResponse: {
+    type: "object",
+    required: ["message", "user"],
+    properties: {
+      message: { type: "string", example: "Uživatel vytvořen." },
+      user: {
+        type: "object",
+        required: ["id", "username"],
+        properties: { id: { type: "string", format: "uuid" }, username: { type: "string" } },
+      },
+    },
+  },
   MessageResponse: {
     type: "object",
     required: ["message"],
@@ -677,6 +698,21 @@ const paths: Record<string, OpenApiObject> = {
       responses: {
         "200": jsonResponse(ref("MunicipalitySearchResponse"), "Obce s okresem a krajem, bez souradnic"),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Chybi dotaz nebo je kratsi nez 2 znaky"),
+      },
+    },
+  },
+  "/api/users": {
+    post: {
+      tags: ["Users"],
+      summary: "Spravce zalozi clena sve chaty (cabinId z prihlaseni)",
+      security: bearerSecurity,
+      requestBody: jsonRequestBody(ref("CreateUserRequest")),
+      responses: {
+        "201": jsonResponse(ref("CreateUserResponse"), "Clen byl vytvoren v chate spravce"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Prihlaseny neni spravce nebo nema prirazenou chatu"),
+        "409": jsonResponse(ref("ErrorResponse"), "Jmeno je obsazene v jakekoli chate, bez ohledu na velikost pismen (jako registrace)"),
       },
     },
   },
