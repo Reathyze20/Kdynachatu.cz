@@ -182,7 +182,7 @@ router.post("/:id/add-to-cart", protect, requireCabin, validate(addToCartSchema)
       return res.status(409).json({ message: "Položka je již přidána do nákupu." });
     }
 
-    const added = await prisma.$transaction(async (tx) => {
+    const listFound = await prisma.$transaction(async (tx) => {
       let targetListId: string;
 
       if (listId) {
@@ -220,7 +220,7 @@ router.post("/:id/add-to-cart", protect, requireCabin, validate(addToCartSchema)
       });
       return true;
     });
-    if (!added) {
+    if (!listFound) {
       return res.status(404).json({ message: "Seznam nenalezen." });
     }
 
