@@ -44,7 +44,13 @@ Oba seznamy návrhů z jeho výstupu ukaž uživateli odděleně a počkej na od
 - **Nové kódy** (signál zatím bez kódu): obecný souhlas („schvaluji“) platí pro celý seznam.
 - **Překódování** (signál, který kód už má): platí jen návrh, u kterého uživatel výslovně jmenuje ID signálu („S-6 na offline ano“). Obecný souhlas se vztahuje jen na nové kódy, takže signál bez výslovného souhlasu zůstává ve svém shluku.
 
-Schválené kódy zapiš do sloupce Shluk v `<kořen>/signals.md` a přesuň signály do odpovídajících shluků; signál s neschváleným novým kódem zůstane v tomto běhu bez shluku. Finální shluky zapiš ve formátu bloků z `ukotveni.md` do `<kořen>/shluky.md` (přepiš ho) a spusť `npm run --silent ideation -- rank --root <kořen>`. Helper je seřadí podle počtu ručních signálů `S-n` a počet issues bere jen jako rozhodčího při shodě, aby témata rodiny nepřehlušila issues od správce. Hotovo, když máš shrnutí signálů a shluky v pořadí z helperu; toto pořadí platí pro kroky 2 a 3 i pro výstup.
+Po odpovědi:
+
+1. Schválené kódy zapiš do sloupce Shluk v `<kořen>/signals.md`. Signál s neschváleným novým kódem zůstane v tomto běhu bez shluku.
+2. Finální shluky zapiš do `<kořen>/shluky.md` (přepiš ho) ve formátu bloků z `ukotveni.md`: schválené signály přesuň do bloků jejich kódů, pro nový kód bez bloku založ blok s potíží z návrhu.
+3. Spusť `npm run --silent ideation -- rank --root <kořen>`. Helper řadí podle signálů rodiny `S-n`, aby jejich témata nepřehlušila issues od správce. Při nenulovém exit kódu oprav `shluky.md` podle hlášky helperu a spusť znovu.
+
+Hotovo, když máš shrnutí signálů a shluky v pořadí z helperu; toto pořadí platí pro kroky 2 a 3 i pro výstup.
 
 ### 2. Nezávislé generování (8 generátorů)
 

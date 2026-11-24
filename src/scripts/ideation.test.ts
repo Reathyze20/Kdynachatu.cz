@@ -137,6 +137,13 @@ describe("ideation rank", () => {
     assert.deepEqual(headingOrder(output), ["b", "a"]);
   });
 
+  test("a shluky.md without any cluster block exits non-zero", () => {
+    const { code, output } = runHelper("rank", "--root", withClusters("# Shluky\n\nzatím nic\n"));
+
+    assert.notEqual(code, 0);
+    assert.match(output, /žádný blok/);
+  });
+
   test("without shluky.md it exits non-zero and names the missing file", () => {
     const root = freshRoot();
     mkdirSync(root, { recursive: true });

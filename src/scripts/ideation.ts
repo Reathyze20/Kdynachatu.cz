@@ -75,9 +75,9 @@ function check(root: string): CommandResult {
 
 const CLUSTERS_FILE = "shluky.md";
 
-function countIds(block: string, id: RegExp): number {
+function countIds(block: string, pattern: RegExp): number {
   const signalsLine = block.split(/\r?\n/).find((line) => line.startsWith("- Signály:")) ?? "";
-  return signalsLine.match(id)?.length ?? 0;
+  return signalsLine.match(pattern)?.length ?? 0;
 }
 
 function rank(root: string): CommandResult {
@@ -94,8 +94,8 @@ function rank(root: string): CommandResult {
 
   // Array.prototype.sort je stabilní, takže úplná shoda zachová pořadí ze souboru.
   const ranked = blocks
-    .map((block) => ({ block, family: countIds(block, /\bS-\d+/g), issues: countIds(block, /#\d+/g) }))
-    .sort((a, b) => b.family - a.family || b.issues - a.issues);
+    .map((block) => ({ block, familySignals: countIds(block, /\bS-\d+/g), issues: countIds(block, /#\d+/g) }))
+    .sort((a, b) => b.familySignals - a.familySignals || b.issues - a.issues);
   return { code: 0, lines: [ranked.map(({ block }) => block).join("\n\n")] };
 }
 

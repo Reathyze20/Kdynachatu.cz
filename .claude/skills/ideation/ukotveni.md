@@ -10,7 +10,7 @@ Připravuješ podklady pro hledání nápadů v rodinné aplikaci „Kdy na chat
 4. Ke každému ručnímu signálu bez kódu navrhni kód (existující, nebo nový: krátký, malými písmeny, bez diakritiky) s jednou větou proč.
 5. Když ti u signálu, který kód už má, sedí jiný kód líp, nech signál ve shluku jeho stávajícího kódu a návrh zapiš zvlášť do **Překódování**. O překódování rozhoduje správce u každého signálu jednotlivě.
 
-Vrať přesně tento Markdown:
+Vrať přesně tento Markdown. Bloky shluků čte helper `rank`: každý blok začíná `### `, všechny jeho signály stojí na jednom řádku `- Signály:`.
 
 ```
 ## Shrnutí signálů
