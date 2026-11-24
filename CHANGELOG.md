@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.12.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.11.0...v1.12.0) (2026-11-24)
+
+
+### Features
+
+* **auth:** add User.tokenVersion column (expand migration) ([#490](https://github.com/Reathyze20/Kdynachatu.cz/issues/490)) ([e354ea5](https://github.com/Reathyze20/Kdynachatu.cz/commit/e354ea57e4ad0251d3adecf5ae751b192f780ecf))
+* **format:** one cs-CZ formatting module with a guard ([#489](https://github.com/Reathyze20/Kdynachatu.cz/issues/489)) ([915c320](https://github.com/Reathyze20/Kdynachatu.cz/commit/915c3202635eb3705cb0bb0487b77caeb39077a1))
+* **ideation:** blind baseline mixed into the run output ([#443](https://github.com/Reathyze20/Kdynachatu.cz/issues/443)) ([32d5841](https://github.com/Reathyze20/Kdynachatu.cz/commit/32d584179ad0d23c1bbfcc808abab5b8cd85fdef))
+* **ideation:** grounded critic, tie-breaker pairwise round and lessons ([#441](https://github.com/Reathyze20/Kdynachatu.cz/issues/441)) ([87225da](https://github.com/Reathyze20/Kdynachatu.cz/commit/87225dacebade9cf402f0679e7d5cf6ed28ad283))
+* **ui:** Button, Input and DropdownMenu on our tokens; drop unused primitives ([#469](https://github.com/Reathyze20/Kdynachatu.cz/issues/469)) ([c51da9e](https://github.com/Reathyze20/Kdynachatu.cz/commit/c51da9e2151bc8c1618948110d8603016f89e4d5))
+
+
+### Bug Fixes
+
+* **api:** informal address in user-facing backend messages + guard ([#465](https://github.com/Reathyze20/Kdynachatu.cz/issues/465)) ([fc1475a](https://github.com/Reathyze20/Kdynachatu.cz/commit/fc1475ac618e3dd9afec8d66262c25a5b35dab12))
+* **inventory:** return 404 for a foreign, missing or archived listId in add-to-cart ([#463](https://github.com/Reathyze20/Kdynachatu.cz/issues/463)) ([6de628b](https://github.com/Reathyze20/Kdynachatu.cz/commit/6de628b4e5c4be455414a344f696bacadd81c4d3))
+* **security:** validate() passes the parsed body on and drops unknown fields ([#491](https://github.com/Reathyze20/Kdynachatu.cz/issues/491)) ([8b5db21](https://github.com/Reathyze20/Kdynachatu.cz/commit/8b5db21a4590417da95e61b902d4b621a552a167))
+* **ui:** thin rule under the mobile header instead of the zigzag ([#439](https://github.com/Reathyze20/Kdynachatu.cz/issues/439)) ([fe89ac5](https://github.com/Reathyze20/Kdynachatu.cz/commit/fe89ac50aeb5a92801560a02895b11e4c064ab9d))
+* **users:** register DELETE /api/users/me before DELETE /:id ([#444](https://github.com/Reathyze20/Kdynachatu.cz/issues/444)) ([cf27396](https://github.com/Reathyze20/Kdynachatu.cz/commit/cf273967e354a5fbc6bc7a0355dc329b0308fb3d))
+* **users:** return 409 for a username taken in any cabin ([#446](https://github.com/Reathyze20/Kdynachatu.cz/issues/446)) ([c004dde](https://github.com/Reathyze20/Kdynachatu.cz/commit/c004dde0da1e64061c687766924d48c0f001579f))
+
 ## [1.11.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.10.1...v1.11.0) (2026-11-24)
 
 
