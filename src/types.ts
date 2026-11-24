@@ -149,6 +149,32 @@ export interface DemoAccountsResponse {
   accounts: DemoAccount[];
 }
 
+// POST /api/staging-feedback – zpětná vazba testera z karty „Co vyzkoušet“, jen na stagingu (#389)
+/** id úkolu z karty (frontend-v2 features/staging/testingTasks.ts) nebo „general“ = obecné pole */
+export type StagingFeedbackTaskId =
+  | "general" | "prehled" | "rezervace" | "nakup" | "poznamka-mesic" | "chat" | "predavka" | "galerie";
+
+export interface StagingFeedbackRequest {
+  taskId: StagingFeedbackTaskId;
+  text: string;
+  screen: string; // cesta obrazovky
+  viewportWidth: number; // px – mobil/desktop
+}
+
+/** Jeden řádek souboru se zpětnou vazbou (JSON Lines); cabinId a uživatel z přihlášení */
+export interface StagingFeedbackRecord extends StagingFeedbackRequest {
+  id: string;
+  createdAt: string; // ISO
+  cabinId: string;
+  userId: string;
+  username: string;
+}
+
+export interface StagingFeedbackResponse {
+  id: string;
+  createdAt: string;
+}
+
 // GET /api/municipalities?q= – obce ČR z RÚIAN pro výběr nejbližší obce chaty (ADR-0006)
 export interface MunicipalityOption {
   code: number; // kód obce v RÚIAN

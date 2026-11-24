@@ -48,6 +48,7 @@ import { municipalitySearchHandler } from "./routes/municipalities";
 import { validate } from "../validators/validate";
 import { municipalitySearchSchema } from "../validators/schemas";
 import { demoAccountsHandler, resolveDemoAccounts } from "./routes/demoAccounts";
+import { createStagingFeedbackRouter, isStagingFeedbackEnabled, stagingFeedbackFilePath } from "./routes/stagingFeedback";
 
 export interface CreateAppOptions {
   /** Rate limitery; vypíná je jen testovací harness (jeden klient by narážel na limity). */
@@ -284,6 +285,10 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   app.use("/api/wallpapers", wallpapersRoutes);
   app.use("/api/invites/accept", authLimiter); // Rate limit invite accept (public)
   app.use("/api/invites", invitesRoutes);
+  // Zpětná vazba testerů – jen na stagingu (stejná brána jako demo účty), jinde obecná 404 níže
+  if (isStagingFeedbackEnabled(process.env)) {
+    app.use("/api/staging-feedback", createStagingFeedbackRouter(stagingFeedbackFilePath(UPLOADS_PATH)));
+  }
 
   // Keep unknown API routes out of the SPA fallback so clients get a real API error.
   app.use("/api", (_req, res) => {
