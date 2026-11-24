@@ -25,7 +25,7 @@ export const ROUTE_ITEST_MAP: RouteItestMap = {
   "admin.ts": ["admin.itest.ts"],
   "cabin.ts": ["cabinCoverPhoto.itest.ts", "cabinMunicipality.itest.ts"],
   "channels.ts": ["chat.itest.ts"],
-  "dashboard.ts": ["handover.itest.ts", "shopping.itest.ts"],
+  "dashboard.ts": ["dashboard.itest.ts", "handover.itest.ts", "shopping.itest.ts"],
   "diary.ts": ["diary.itest.ts"],
   "gallery.ts": ["gallery.itest.ts", "cabinCoverPhoto.itest.ts"],
   "inventory.ts": ["inventory.itest.ts", "shopping.itest.ts"],
