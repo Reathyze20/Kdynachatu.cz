@@ -47,7 +47,8 @@ async function readCabinFeedback(filePath: string, cabinId: string): Promise<Sta
     if (!line.trim()) return [];
     try {
       const record = JSON.parse(line) as StagingFeedbackRecord;
-      return record?.cabinId === cabinId && typeof record.createdAt === "string" ? [record] : [];
+      const complete = typeof record?.createdAt === "string" && typeof record.text === "string" && typeof record.viewportWidth === "number";
+      return complete && record.cabinId === cabinId ? [record] : [];
     } catch {
       return [];
     }

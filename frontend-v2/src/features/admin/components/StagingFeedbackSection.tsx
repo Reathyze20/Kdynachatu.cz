@@ -8,14 +8,14 @@ import { useId } from 'react'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { useDemoAccounts } from '@/features/auth/hooks/useDemoAccounts'
 import { useStagingFeedback } from '@/features/admin/hooks/useAdmin'
-import { TESTING_TASKS } from '@/features/staging/testingTasks'
+import { GENERAL_FEEDBACK_LABEL, TESTING_TASKS } from '@/features/staging/testingTasks'
 import type { StagingFeedbackRecord } from '@/api/stagingFeedback'
 
 /** Stejná hranice jako mobilní shell (`max-width: 768px` v styles/nav.css) */
 const MOBILE_MAX_WIDTH = 768
 
 function taskLabel(taskId: StagingFeedbackRecord['taskId']): string {
-  return TESTING_TASKS.find((t) => t.id === taskId)?.title ?? 'Cokoli dalšího'
+  return TESTING_TASKS.find((t) => t.id === taskId)?.title ?? GENERAL_FEEDBACK_LABEL
 }
 
 function formatTime(iso: string): string {

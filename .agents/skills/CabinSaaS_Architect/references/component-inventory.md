@@ -161,6 +161,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | AdminPage | Page | ✅ Member management |
 | hooks/useAdmin | Hook | ✅ |
+| components/StagingFeedbackSection | Card in AdminPage (staging only) | ✅ „Zpětná vazba z testování“ (#390), list of tester feedback for the cabin admin |
 
 ### Cabin Settings (`features/settings/`)
 | Component | Type | Status |
