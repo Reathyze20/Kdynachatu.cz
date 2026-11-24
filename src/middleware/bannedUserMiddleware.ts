@@ -55,7 +55,7 @@ export const checkBannedUser = async (
       });
 
       res.status(403).json({
-        message: "Váš účet byl pozastaven. Kontaktujte podporu.",
+        message: "Tvůj účet byl pozastaven. Kontaktuj podporu.",
         reason: "account_suspended",
       });
       return;

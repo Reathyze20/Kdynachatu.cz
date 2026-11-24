@@ -39,7 +39,7 @@ export const requireSuperAdmin = async (
     }
 
     if (user.isBanned) {
-      res.status(403).json({ message: "Váš účet byl pozastaven. Kontaktujte podporu." });
+      res.status(403).json({ message: "Tvůj účet byl pozastaven. Kontaktuj podporu." });
       return;
     }
 

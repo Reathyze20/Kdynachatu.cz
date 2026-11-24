@@ -10,7 +10,7 @@ import { Request, Response, NextFunction } from "express";
 export const requireCabin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.user?.cabinId) {
     return res.status(403).json({
-      message: "Nemáte přiřazenou žádnou chatu. Kontaktujte administrátora.",
+      message: "Nemáš přiřazenou žádnou chatu. Kontaktuj administrátora.",
     });
   }
   next();
