@@ -63,8 +63,8 @@ describe("findTenantMutants: odstranění cabinId z where", () => {
       "  await prisma.note.count({ where: { cabinId, isPinned: true } });",
     ], "get", "/");
     const mutants = findTenantMutants(source, FILE);
-    assert.deepEqual(mutants.map((m) => m.line), [5, 6]);
-    for (const mutant of mutants) assert.equal(mutant.mutatedSource.split("cabinId").length, source.split("cabinId").length - 1);
+    assert.deepEqual(mutants.map((m) => [m.line, m.route]), [[5, "GET /"], [6, "GET /"]]);
+    for (const mutant of mutants) assertOnlyMutatedSpot(source, mutant);
   });
 
   test("relační filtr přes rodiče a filtr v proměnné (ternár, rozbalení, přiřazení)", () => {
@@ -81,7 +81,8 @@ describe("findTenantMutants: odstranění cabinId z where", () => {
     ], "get", "/");
     const mutants = findTenantMutants(source, FILE);
     assert.deepEqual(mutants.map((m) => m.line), [5, 6, 6, 8, 11]);
-    assert.ok(mutants.every((m) => m.kind === "remove-where-cabinId"));
+    assert.ok(mutants.every((m) => m.kind === "remove-where-cabinId" && m.route === "GET /"));
+    for (const mutant of mutants) assertOnlyMutatedSpot(source, mutant);
   });
 
   test("updateMany a kontrola členství uživatele v chatě", () => {
@@ -90,7 +91,8 @@ describe("findTenantMutants: odstranění cabinId z where", () => {
       "  await prisma.user.count({ where: { id: { in: userIds }, cabinId: req.user!.cabinId } });",
     ], "patch");
     const mutants = findTenantMutants(source, FILE);
-    assert.deepEqual(mutants.map((m) => m.original), ["cabinId", "cabinId: req.user!.cabinId"]);
+    assert.deepEqual(mutants.map((m) => [m.line, m.route, m.original]), [[4, "PATCH /:id", "cabinId"], [5, "PATCH /:id", "cabinId: req.user!.cabinId"]]);
+    for (const mutant of mutants) assertOnlyMutatedSpot(source, mutant);
     assert.ok(mutants[0].mutatedSource.includes("where: { id: { in: ids } }, data: { inCart: false }"));
   });
 

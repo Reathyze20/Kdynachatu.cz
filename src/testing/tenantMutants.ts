@@ -13,8 +13,8 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { PROJECT_ROOT } from "./integration/cabinTenantCoverage";
 
 export type TenantMutantKind = "remove-where-cabinId" | "neutralize-cabin-check";
 
@@ -98,7 +98,7 @@ function collectFilterProperties(value: ts.Expression, found: Set<ts.ObjectLiter
       if (ts.isSpreadAssignment(property)) next(property.expression);
       const name = property.name && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) ? property.name.text : "";
       if (name === "cabinId") found.add(property);
-      else if (name.includes("_")) continue; // složený klíč (`cabinId_year_month`)
+      else if (name.split("_").includes("cabinId")) continue; // složený klíč (`cabinId_year_month`)
       else if (ts.isPropertyAssignment(property)) next(property.initializer);
       else if (ts.isShorthandPropertyAssignment(property)) next(property.name);
     }
@@ -216,17 +216,16 @@ export function findRouterMounts(appSource: string): Map<string, string> {
   return mounts;
 }
 
-export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const ROUTES_DIR = "src/backend/routes";
 
 /** Mutanti ze všech produkčních souborů rout (bez `*.test.ts`), s prefixy z `app.ts`. */
-export function findRouteFileMutants(projectRoot: string = PROJECT_ROOT): TenantMutant[] {
-  const mounts = findRouterMounts(fs.readFileSync(path.join(projectRoot, "src/backend/app.ts"), "utf8"));
-  return fs.readdirSync(path.join(projectRoot, ROUTES_DIR))
+export function findRouteFileMutants(): TenantMutant[] {
+  const mounts = findRouterMounts(fs.readFileSync(path.join(PROJECT_ROOT, "src/backend/app.ts"), "utf8"));
+  return fs.readdirSync(path.join(PROJECT_ROOT, ROUTES_DIR))
     .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
     .sort()
     .flatMap((name) => findTenantMutants(
-      fs.readFileSync(path.join(projectRoot, ROUTES_DIR, name), "utf8"),
+      fs.readFileSync(path.join(PROJECT_ROOT, ROUTES_DIR, name), "utf8"),
       `${ROUTES_DIR}/${name}`,
       { mountPrefix: mounts.get(path.basename(name, ".ts")) },
     ));
