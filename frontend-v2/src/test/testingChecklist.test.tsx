@@ -176,8 +176,7 @@ describe('karta „Co vyzkoušet“ (staging)', () => {
     await userEvent.click(within(card).getByRole('link', { name: place ? `Ukaž mi kde: ${place}` : 'Ukaž mi kde' }))
 
     expect(screen.getByTestId('location').textContent).toBe(path)
-    const stillOpen = screen.getByRole('region', { name: 'Co vyzkoušet' })
-    expect(within(stillOpen).getByText(new RegExp(title))).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Co vyzkoušet' })).getByText(new RegExp(title))).toBeInTheDocument()
   })
 
   it('floats outside the page flow: fixed, above the bottom nav on mobile', () => {

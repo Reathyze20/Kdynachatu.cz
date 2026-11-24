@@ -87,6 +87,14 @@
     overflow-y: auto;
 }
 
+/* Chat: dole je pole zprávy, karta jde nahoru pod hlavičku chatu */
+@media (min-width: 769px) {
+    body.page-notes .testing-card {
+        top: 112px;
+        bottom: auto;
+    }
+}
+
 /* ── Help Modal ─────────────────────────────────────────────────────── */
 .help-modal-overlay {
     position: fixed;
@@ -251,8 +259,8 @@
         bottom: calc(var(--mobile-nav-height) + 12px + env(safe-area-inset-bottom, 0px));
     }
 
-    /* Otevřený chat: tlačítko by leželo přes pole zprávy (jako nápověda výše) */
-    body.notes-chat-open .testing-card--collapsed {
+    /* Otevřený chat: karta by ležela přes pole zprávy (jako nápověda výše) */
+    body.notes-chat-open .testing-card {
         display: none;
     }
 

@@ -34,22 +34,25 @@ function TestingChecklistCard() {
   const headingId = useId()
   const cardRef = useRef<HTMLDivElement>(null)
 
-  // Toasty (toast.css) se zvednou nad kartu: vzdálenost její horní hrany od spodku okna + mezera
+  // Toasty (toast.css) se zvednou nad kartu: vzdálenost její horní hrany od spodku okna + mezera.
+  // Jen když je karta dole – ne skrytá ani nahoře (chat, help.css); pozici mění i třídy na <body>.
   useLayoutEffect(() => {
     const el = cardRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
     const root = document.documentElement
     const update = () => {
-      if (el.offsetHeight === 0) root.style.removeProperty('--testing-card-clearance') // skrytá (display: none)
-      else root.style.setProperty('--testing-card-clearance', `${Math.ceil(window.innerHeight - el.getBoundingClientRect().top + 8)}px`)
+      const { top, bottom } = el.getBoundingClientRect()
+      if (el.offsetHeight === 0 || window.innerHeight - bottom > 200) root.style.removeProperty('--testing-card-clearance')
+      else root.style.setProperty('--testing-card-clearance', `${Math.ceil(window.innerHeight - top + 8)}px`)
     }
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
-    window.addEventListener('resize', update)
+    const bodyClass = new MutationObserver(update)
+    bodyClass.observe(document.body, { attributes: true, attributeFilter: ['class'] })
     return () => {
       observer.disconnect()
-      window.removeEventListener('resize', update)
+      bodyClass.disconnect()
       root.style.removeProperty('--testing-card-clearance')
     }
   }, [open])
@@ -103,7 +106,7 @@ function TestingChecklistCard() {
         className="testing-card__panel rounded-2xl border border-rule-soft bg-sheet p-3 shadow-lift"
         data-testid="testing-checklist"
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <h2 id={headingId} className="text-sm font-semibold">Co vyzkoušet</h2>
             <p className="text-sm text-muted-foreground" aria-live="polite">Úkol {index + 1} ze {total}</p>
@@ -125,7 +128,7 @@ function TestingChecklistCard() {
             <Button type="button" size="sm" onClick={markDone}><Check aria-hidden="true" />Hotovo</Button>
           )}
         </div>
-        <div className="mt-1 flex flex-wrap">
+        <div className="mt-1 flex flex-wrap gap-2">
           <Button type="button" variant="link" size="sm" className="px-2" aria-expanded={feedback === 'task'} onClick={() => setFeedback(feedback === 'task' ? null : 'task')}>
             Napsat, co nešlo
           </Button>

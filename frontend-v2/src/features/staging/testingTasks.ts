@@ -64,11 +64,8 @@ export function allTasksDone(done: readonly string[]): boolean {
 /** Index prvního nehotového úkolu za `after` (dokola); vše hotové = `after` (nebo první úkol) */
 export function nextUndoneIndex(done: readonly string[], after = -1): number {
   const total = TESTING_TASKS.length
-  for (let step = 1; step <= total; step++) {
-    const i = (after + step) % total
-    if (!done.includes(TESTING_TASKS[i].id)) return i
-  }
-  return Math.max(after, 0)
+  const order = Array.from({ length: total }, (_, step) => (after + 1 + step) % total)
+  return order.find((i) => !done.includes(TESTING_TASKS[i].id)) ?? Math.max(after, 0)
 }
 
 /** Sbalení karty (#399) má vlastní klíč – formát odškrtnutí zůstává */
