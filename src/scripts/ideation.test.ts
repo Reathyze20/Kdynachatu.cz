@@ -154,3 +154,119 @@ describe("ideation rank", () => {
     assert.match(output, /shluky\.md/);
   });
 });
+
+type Verdict = { critic: number; first: string; second: string; winner: string };
+
+const SIX = ["P1", "P2", "P3", "P4", "P5", "P6"];
+
+function orderedPairs(candidates: string[]): Array<[string, string]> {
+  return candidates.flatMap((first) =>
+    candidates.filter((second) => second !== first).map((second): [string, string] => [first, second]),
+  );
+}
+
+/** Kritik s pevným pořadím: v obou pořadích vyhraje kandidát, který je v `preference` dřív. */
+function consistentCritic(critic: number, preference: string[]): Verdict[] {
+  return orderedPairs(preference).map(([first, second]) => ({
+    critic,
+    first,
+    second,
+    winner: preference.indexOf(first) < preference.indexOf(second) ? first : second,
+  }));
+}
+
+function withPairwise(input: unknown): string {
+  const root = freshRoot();
+  mkdirSync(root, { recursive: true });
+  writeFileSync(path.join(root, "parove.json"), JSON.stringify(input));
+  return root;
+}
+
+function advancing(output: string): string[] {
+  const line = output.split(/\r?\n/).find((l) => l.startsWith("Postupují:")) ?? "";
+  return line
+    .replace("Postupují:", "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+describe("ideation pairwise", () => {
+  test("counts a win only when both orders agree, so a critic who always picks the first one adds nothing", () => {
+    const verdicts = orderedPairs(SIX).map(([first, second]) => ({
+      critic: 1,
+      first,
+      second,
+      winner: first === "P6" || second === "P6" ? "P6" : first,
+    }));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(advancing(output), ["P6", "P1", "P2", "P3", "P4"]);
+    assert.match(output, /P6: 5 výher/);
+    assert.match(output, /P5: 0 výher/);
+  });
+
+  test("sums wins across 3 critics and lets at most 5 advance", () => {
+    const preference = ["P4", "P6", "P1", "P2", "P5", "P3"];
+    const verdicts = [1, 2, 3].flatMap((critic) => consistentCritic(critic, preference));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(advancing(output), ["P4", "P6", "P1", "P2", "P5"]);
+    assert.match(output, /P4: 15 výher/);
+  });
+
+  test("a missing verdict gives no win and is reported", () => {
+    const verdicts = consistentCritic(1, SIX).filter((v) => !(v.first === "P2" && v.second === "P1"));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.equal(code, 0, output);
+    assert.match(output, /P1: 4 výher/);
+    assert.match(output, /Bez verdiktu: kritik 1: P2 před P1/);
+  });
+
+  test("refuses to run with 5 or fewer candidates", () => {
+    const five = SIX.slice(0, 5);
+
+    const { code, output } = runHelper(
+      "pairwise",
+      "--root",
+      withPairwise({ candidates: five, verdicts: consistentCritic(1, five) }),
+    );
+
+    assert.notEqual(code, 0);
+    assert.match(output, /víc než 5/);
+  });
+
+  test("refuses a fourth critic", () => {
+    const verdicts = [1, 2, 3, 4].flatMap((critic) => consistentCritic(critic, SIX));
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.notEqual(code, 0);
+    assert.match(output, /nejvýš 3/);
+  });
+
+  test("refuses a winner that is not in the pair", () => {
+    const verdicts = [{ critic: 1, first: "P1", second: "P2", winner: "P3" }];
+
+    const { code, output } = runHelper("pairwise", "--root", withPairwise({ candidates: SIX, verdicts }));
+
+    assert.notEqual(code, 0);
+    assert.match(output, /P3/);
+  });
+
+  test("without parove.json it exits non-zero and names the missing file", () => {
+    const root = freshRoot();
+    mkdirSync(root, { recursive: true });
+
+    const { code, output } = runHelper("pairwise", "--root", root);
+
+    assert.notEqual(code, 0);
+    assert.match(output, /parove\.json/);
+  });
+});
