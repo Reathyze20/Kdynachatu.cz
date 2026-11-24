@@ -45,6 +45,13 @@ const channelSnapshot = (id: string) => prisma.noteThread.findUnique({ where: { 
 const messageSnapshot = (id: string) =>
   prisma.note.findUnique({ where: { id }, include: { reactions: { orderBy: { id: "asc" } } } });
 
+type ChannelSummary = { id: string | null; messageCount: number; hasUnread: boolean };
+function mainChannelOf(channels: ChannelSummary[]): ChannelSummary {
+  const main = channels.find((c) => c.id === null);
+  assert.ok(main, "GET /api/channels has no main channel");
+  return main;
+}
+
 before(async () => {
   ({ app, world } = await setupIntegrationFile());
   channelA = await createChannel(world.memberA, "Kanál A");
@@ -171,7 +178,7 @@ describe("chat: lists for cabin A contain nothing from cabin B", () => {
     assert.ok((await prisma.note.count({ where: { cabinId: world.cabinB.id, threadId: null } })) > 0);
     const res = await as(app, world.memberA).get("/api/channels");
     assert.equal(res.status, 200);
-    const main = res.body.find((c: { id: string | null }) => c.id === null);
+    const main = mainChannelOf(res.body);
     assert.equal(main.messageCount, await prisma.note.count({ where: { cabinId: world.cabinA.id, threadId: null } }));
   });
 
@@ -194,14 +201,15 @@ describe("chat: lists for cabin A contain nothing from cabin B", () => {
 //  for the main channel; it must not affect cabin A
 // ---------------------------------------------------------------------------
 describe("read status: a stale cabin B read status of a moved member does not leak into cabin A", () => {
-  const LATE = new Date("2100-01-01T00:00:00.000Z"); // pozdější než každá zpráva, nezávislé na dnešním datu
+  const FAR_FUTURE_READ_AT = new Date("2100-01-01T00:00:00.000Z"); // pozdější než každá zpráva, nezávislé na dnešním datu
 
+  /** Člen chaty A, který dřív byl v chatě B: zůstal mu tam stav přečtení hlavního kanálu. */
   async function createMovedMember(username: string): Promise<{ user: TestUser; staleStatusId: string }> {
     const created = await prisma.user.create({
       data: { username, passwordHash: "x", color: "#654321", role: "user", cabinId: world.cabinA.id },
     });
     const stale = await prisma.threadReadStatus.create({
-      data: { userId: created.id, threadId: null, cabinId: world.cabinB.id, lastReadAt: LATE },
+      data: { userId: created.id, threadId: null, cabinId: world.cabinB.id, lastReadAt: FAR_FUTURE_READ_AT },
     });
     return { user: { id: created.id, username, role: "user", cabinId: world.cabinA.id }, staleStatusId: stale.id };
   }
@@ -210,7 +218,7 @@ describe("read status: a stale cabin B read status of a moved member does not le
     const { user } = await createMovedMember("presunuty-a-1");
     const res = await as(app, user).get("/api/channels");
     assert.equal(res.status, 200);
-    const main = res.body.find((c: { id: string | null }) => c.id === null);
+    const main = mainChannelOf(res.body);
     assert.equal(main.hasUnread, true);
   });
 
@@ -222,7 +230,9 @@ describe("read status: a stale cabin B read status of a moved member does not le
     assert.equal(own.length, 1);
     assert.equal(own[0].threadId, null);
     const stale = await prisma.threadReadStatus.findUnique({ where: { id: staleStatusId } });
-    assert.deepEqual(stale?.lastReadAt, LATE);
+    assert.deepEqual(stale?.lastReadAt, FAR_FUTURE_READ_AT);
+    const list = await as(app, user).get("/api/channels");
+    assert.equal(mainChannelOf(list.body).hasUnread, false);
   });
 });
 
