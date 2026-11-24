@@ -1,4 +1,4 @@
-# Krok 4: Výstupní soubor
+# Závěr: výstupní soubor
 
 Česky, kandidáti v pořadí z kroku 3 označení K1, K2… Signály se uvádějí jen jako ID, role a parafráze zůstávají v `signals.md`.
 

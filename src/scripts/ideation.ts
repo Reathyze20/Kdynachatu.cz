@@ -34,8 +34,10 @@ Výtky kritika, které se objevily aspoň ve 2 bězích. Zapisuje se sem jen po 
 Jeden řádek na kandidáta, vyplňuje správce: \`- <běh> <K-ID> | <název> | chtějí / nechtějí / použili | <důvod>\`
 `;
 
+const SIGNALS_FILE = "signals.md";
+
 const TEMPLATES: ReadonlyArray<{ file: string; content: string }> = [
-  { file: "signals.md", content: SIGNALS_TEMPLATE },
+  { file: SIGNALS_FILE, content: SIGNALS_TEMPLATE },
   { file: "lessons.md", content: LESSONS_TEMPLATE },
 ];
 
@@ -55,7 +57,7 @@ function check(root: string): CommandResult {
     lines.push(`Založeno: ${target}`);
   }
 
-  const signalsPath = path.join(root, "signals.md");
+  const signalsPath = path.join(root, SIGNALS_FILE);
   const count = readFileSync(signalsPath, "utf8")
     .split(/\r?\n/)
     .filter((line) => SIGNAL_ROW.test(line)).length;

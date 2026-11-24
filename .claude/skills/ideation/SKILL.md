@@ -7,7 +7,7 @@ argument-hint: "[zkouška]"
 
 # /ideation
 
-Pipeline, která ze skutečných signálů (ruční zpětná vazba rodiny v `signals.md` a GitHub issues) vytáhne kandidáty na funkce. Spec je issue #367. Běh má kroky 0–4: kontrola vstupu, ukotvení, nezávislé generování, deduplikace, zápis výstupu. Výstup je jeden lokální soubor; o kandidátech rozhoduje správce, ne pipeline.
+Pipeline, která ze skutečných signálů (ruční zpětná vazba rodiny v `signals.md` a GitHub issues) vytáhne kandidáty na funkce. Spec je issue #367. Běh má kroky 0–3 (kontrola vstupu, ukotvení, nezávislé generování, deduplikace) a závěrečný zápis výstupu; čísla dalších kroků pipeline drží spec. Výstup je jeden lokální soubor; o kandidátech rozhoduje správce, ne pipeline.
 
 ## Hranice
 
@@ -49,6 +49,6 @@ Rozděl čočky a modely podle [generovani.md](generovani.md) a spusť všech 8 
 
 Spusť jednoho subagenta (`general-purpose`) s promptem z [deduplikace.md](deduplikace.md) a se všemi nápady z kroku 2. Hotovo, když máš kandidáty (nejvýš 10), seznam „posiluje #n“ a vyřazené.
 
-### 4. Výstup
+### Závěr: výstup
 
 Zapiš `<kořen>/runs/<RRRR-MM-DD>.md` podle [vystup.md](vystup.md); když soubor existuje, přidej k datu `-2`, `-3`… Uživateli vypiš cestu k souboru a počty z hlavičky. Hotovo, když soubor existuje a každý kandidát v něm má aspoň jeden odkaz na signál (`S-n` nebo `#n`).
