@@ -56,13 +56,13 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 ### Co se nepíše
 
 - Surový hex nebo `rgb()`/`rgba()` s čísly mimo soubory s definicí tokenů. `rgb(var(--sheet))` je token, ne surová barva.
-- Barvy z palety Tailwindu (`slate-*`, `emerald-*`, `teal-*`, `red-600`, `bg-white` …). Nový kód bere barvu jen z tokenů. `emerald-*` a `teal-*` dnes hlídá `noEmeraldTeal.test.ts`, `slate-*` a `bg-white` přidá #450.
+- Barvy z palety Tailwindu (`slate-*`, `emerald-*`, `teal-*`, `red-600`, `bg-white` …). Nový kód bere barvu jen z tokenů. `emerald-*` a `teal-*` hlídá `noEmeraldTeal.test.ts`, `slate-*`, `emerald-*` a `bg-white` guard `coldPalette` a ESLint.
 - Barevný levý okraj karty, pole, citace nebo řádku (`noLeftStripes.test.ts`).
 - `backdrop-blur` na obsahové kartě. Sklo jen jako akcent: modál, overlay, toast, lišta (`lightSurfaces.test.tsx`).
 
 ### Breakpointy a styly
 
-- Jen Tailwind `md` (768 px) a `lg` (1024 px). Mobil je pod `md`, desktopový rám od `md`, široký desktop od `lg` (`WIDE_DESKTOP_QUERY`). Legacy páry `max-width: 768px` / `min-width: 769px` a ostatní šířky jsou v allowlistu (#450).
+- Jen Tailwind `md` (768 px) a `lg` (1024 px). Mobil je pod `md`, desktopový rám od `md`, široký desktop od `lg` (`WIDE_DESKTOP_QUERY`). V CSS a `matchMedia` jen `min-width: 768px` / `1024px`, pro „pod“ `max-width: 767px` / `1023px`. Container query (`@max-[280px]:`) breakpoint není. Legacy páry `max-width: 768px` / `min-width: 769px` a ostatní šířky jsou v allowlistu (#450).
 - Jediná výjimka je uvnitř `Modal`: do 640 px se zobrazí jako bottom sheet (#453). Obrazovky si vlastní práh nezavádějí.
 - Nový soubor `.css` nevzniká. Nový vzhled se píše utilitami Tailwindu nad tokeny v TSX. Stávající CSS se mění jen při převodu obrazovky.
 
@@ -221,23 +221,35 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 
 **Dnešní guardy:** `uiIconography` (emoji a dingbaty jako ikony), `noEmeraldTeal`, `noLeftStripes`, `lightSurfaces` (plné karty, sklo jen jako akcent), `textAndTouchTokens` (16/14 px, 48/56 px), `mutedTextContrast`, `statusBadgeContrast`, `brandGreen` (kontrast značkové zelené), `themeBridge` (most shadcn).
 
+**Guard `designRules.test.ts`** (pravidla v `designRules.ts`, výjimky v `designAllowlist.json`, #450). Soubory s definicí tokenů (`styles/variables.css`, `styles/shadcn-tokens.css`) jsou mimo rozsah prvních tří pravidel.
+
+| Pravidlo | Co selže |
+|---|---|
+| `rawColour` | surový hex nebo `rgb()`/`rgba()` s čísly, i jako fallback `var(--x, #hex)` |
+| `rawPalette` | `--raw-*` |
+| `legacyColorAlias` | deprecated `--color-*` |
+| `coldPalette` | `slate-*`, `emerald-*`, `bg-white` (v `className` hlídá i ESLint, výjimky bere ze stejného allowlistu) |
+| `breakpoint` | media query mimo 768/1024 px (viz kapitola 2), Tailwind `sm:`, `xl:`, `2xl:`, `min-[…]:`, `max-[…]:` |
+| `newCssFile` | každý `.css` pod `src/` kromě `index.css` a souborů s definicí tokenů |
+
 **Přibudou:**
 
 | Pravidlo | Ticket |
 |---|---|
-| surový hex/rgba mimo tokeny, `--raw-*` mimo definici, deprecated `--color-*`, třídy `slate-*`/`emerald-*`/`bg-white` (i ESLint), breakpointy mimo `md`/`lg`, nový soubor `.css` | #450 |
 | řez 800 a nenačtené řezy, Kalam mimo Deník, inline `<svg>`, velikost ikon 16/20/24, ESLint jen `lucide-react` | #451 |
 | zmrazené `.btn-*` | #452 |
 | zmrazené `page-card`, `glass-card`, `admin-card`, `.card`, `*-empty-*` | #454 |
 | `toLocaleDateString` a pole měsíců mimo formátovací modul | #455 |
 | vykání v hláškách backendu (node:test) | #457 |
 
-Pravidla allowlistu (pomocník vznikne v #450, stávající guardy na něj převede #459):
+Pravidla allowlistu (pomocník `designGuard.ts`, stávající guardy na něj převede #459):
 
-- Stávající porušení jsou v jednom allowlistu **soubor → důvod**. Položka bez důvodu selže.
+- Stávající porušení jsou v jednom allowlistu **soubor → důvod**, v JSON seskupené `pravidlo → důvod → soubory`. Položka bez důvodu nebo soubor uvedený u pravidla dvakrát selže.
 - Guard selže na nový výskyt i na položku allowlistu, která už je čistá. Allowlist se tak smí jen **zmenšovat**.
 - Přidat položku jde jen v PR, které ji výslovně zdůvodní (např. nový soubor třetí strany). Review takové PR posuzuje zvlášť.
 - Výstup guardu ukazuje počet zbývajících výjimek u každého pravidla. Prázdný allowlist znamená, že „Krok 6 design systém“ v #69 je hotový.
+- **Jak allowlist zmenšit:** převeď soubor tak, aby pravidlo neporušoval, a smaž ho ze seznamu u daného pravidla (prázdnou skupinu i s důvodem). Výjimka platí pro celý soubor: dokud v něm zbývá jediný výskyt, položka zůstává, a jakmile je čistý, guard sám vyžádá její smazání. Seznam porušení ukáže dočasné odebrání souboru z allowlistu a `npx vitest run src/test/designRules.test.ts`.
+- **Nové pravidlo:** objekt `DesignRule` (jméno, nápověda, `scope`, regex nebo funkce `match`) v `designRules.ts`, příklady do `designRules.test.ts` a stávající porušení pod jeho jménem do `designAllowlist.json`.
 
 ## 11. Postup převodu obrazovky
 
