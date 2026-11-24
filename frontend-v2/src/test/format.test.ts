@@ -12,6 +12,7 @@ import {
   TIME_ZONE,
   weekdayName,
 } from '@/lib/format'
+import { formatDateRange as formatLongDateRange } from '@/lib/dateUtils'
 
 /**
  * Formáty z DESIGN.md §9 (#455). Pevná data: kalendářní den „YYYY-MM-DD“ se nikdy neposouvá,
@@ -110,6 +111,18 @@ describe('lib/format', () => {
     expect(formatAmount(-0.4)).toBe(`0${NBSP}Kč`)
     expect(formatAmount(-1234)).toBe(`-1${NBSP}234${NBSP}Kč`)
     expect(formatAmount(999)).toBe(`999${NBSP}Kč`)
+  })
+
+  it('neplatné nebo prázdné datum dá prázdný řetězec místo pádu', () => {
+    expect(formatDate('')).toBe('')
+    expect(formatTime('nesmysl')).toBe('')
+    expect(formatDayDate(Number.NaN)).toBe('')
+  })
+
+  it('dlouhý rozsah z dateUtils má přes přelom roku rok u obou dnů', () => {
+    expect(formatLongDateRange('2026-12-30', '2027-01-02')).toBe('30. prosince 2026 – 2. ledna 2027')
+    expect(formatLongDateRange('2026-06-30', '2026-07-02')).toBe('30. června – 2. července 2026')
+    expect(formatLongDateRange('2026-03-12', '2026-03-14')).toBe('12. – 14. března 2026')
   })
 
   it('procenta z hodnoty v procentech, celá čísla', () => {

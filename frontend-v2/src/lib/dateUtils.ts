@@ -5,9 +5,10 @@ import { formatDateRange as formatRange, formatDayDate, formatLongDate, formatSh
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const dayOf = (iso: string) => Number(iso.slice(8, 10));
 
-/** „12. – 14. března 2026“, přes měsíc „30. června – 2. července 2026“. Vstup YYYY-MM-DD. */
+/** „12. – 14. března 2026“, přes měsíc „30. června – 2. července 2026“, přes rok s rokem u obou dnů. Vstup YYYY-MM-DD. */
 export function formatDateRange(from: string, to: string): string {
-  const start = from.slice(0, 7) === to.slice(0, 7) ? `${dayOf(from)}.` : formatLongDate(from);
+  const sameYear = from.slice(0, 4) === to.slice(0, 4);
+  const start = from.slice(0, 7) === to.slice(0, 7) ? `${dayOf(from)}.` : formatLongDate(from, { year: !sameYear });
   return `${start} – ${formatLongDate(to, { year: true })}`;
 }
 

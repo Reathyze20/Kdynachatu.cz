@@ -16,13 +16,16 @@ export type DateInput = string | number | Date
 const CALENDAR_DAY = /^\d{4}-\d{2}-\d{2}$/
 const formatters = new Map<string, Intl.DateTimeFormat>()
 
+/** Neplatné nebo prázdné datum dá prázdný řetězec; `Intl` by vyhodil RangeError a shodil vykreslení. */
 function dateFormat(options: Intl.DateTimeFormatOptions, input: DateInput): string {
   const day = typeof input === 'string' && CALENDAR_DAY.test(input)
+  const time = day ? Date.parse(`${input}T00:00:00Z`) : new Date(input).getTime()
+  if (Number.isNaN(time)) return ''
   const timeZone = day ? 'UTC' : TIME_ZONE
   const key = timeZone + JSON.stringify(options)
   let formatter = formatters.get(key)
   if (!formatter) formatters.set(key, (formatter = new Intl.DateTimeFormat(LOCALE, { ...options, timeZone })))
-  return formatter.format(day ? Date.parse(`${input}T00:00:00Z`) : new Date(input))
+  return formatter.format(time)
 }
 
 /** Plné datum „21. 3. 2026“. */
@@ -67,8 +70,8 @@ export function formatDateRange(from: DateInput, to: DateInput, { year = false }
 const amountFormat = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 })
 const percentFormat = new Intl.NumberFormat(LOCALE, { style: 'unit', unit: 'percent', maximumFractionDigits: 0 })
 
-/** Částka v celých korunách „1 234 Kč“ (mezery nezlomitelné), záporná „-1 234 Kč“, nula bez znaménka. */
-export const formatAmount = (crowns: number) => amountFormat.format(Math.round(crowns) || 0)
+/** Částka v celých korunách „1 234 Kč“ (mezery nezlomitelné), záporná „-1 234 Kč“; `+ 0` udělá z -0 nulu bez znaménka. */
+export const formatAmount = (crowns: number) => amountFormat.format(Math.round(crowns) + 0)
 
 /** Procenta z hodnoty v procentech (12 → „12 %“), zaokrouhlená na celá čísla. */
-export const formatPercent = (percent: number) => percentFormat.format(Math.round(percent) || 0)
+export const formatPercent = (percent: number) => percentFormat.format(Math.round(percent) + 0)
