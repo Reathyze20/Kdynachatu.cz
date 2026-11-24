@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.10.0...v1.10.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ideation:** tighten grounding and dedup after the dry run ([#404](https://github.com/Reathyze20/Kdynachatu.cz/issues/404)) ([cb5d2b7](https://github.com/Reathyze20/Kdynachatu.cz/commit/cb5d2b7ef4f4712e97ed7ad9007c39e8c4b9fd4a))
+
 ## [1.10.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.9.0...v1.10.0) (2026-11-24)
 
 
