@@ -1,6 +1,6 @@
 # Krok 4: Ukotvená kritika
 
-Prompt kritika = blok **Hranice kritika** níže + všechno pod čarou s doplněným kořenem, jedním kandidátem z kroku 3, shrnutím signálů z kroku 1 a seznamem issues. Seznam issues načti jednou sám (`gh issue list --state all --limit 300 --json number,title,state`) a vlož ho do každého promptu, aby kritik nepotřeboval `gh`.
+Prompt kritika = blok **Hranice kritika** níže + všechno pod čarou s doplněným kořenem, jedním kandidátem z kroku 3 nebo z baseline (bez údaje o původu a bez štítku Navrhlo), shrnutím signálů z kroku 1 a seznamem issues. Seznam issues načti jednou sám (`gh issue list --state all --limit 300 --json number,title,state`) a vlož ho do každého promptu, aby kritik nepotřeboval `gh`.
 
 Každý kritik dostane jen svého kandidáta, bez ostatních kandidátů a bez verdiktů ostatních kritiků: nezávislý kritik nekonformuje.
 
@@ -26,7 +26,7 @@ Posuzuješ jednoho kandidáta na funkci rodinné aplikace „Kdy na chatu“. Ka
 - důkaz nemá ani jeden odkaz `S-n` nebo `#n`, který je ve shrnutí signálů;
 - duplikát issue ze seznamu: stejná potíž řešená stejným způsobem.
 
-U vyřazeného kandidáta vrať jen řádky Verdikt a Výtky (bod 5); body 2–4 jsou pro ponechané.
+Body 2–5 vyplň u každého kandidáta, i u vyřazeného.
 
 **2. Štítky:**
 - **Oblast:** jádro / doplněk podle sekce „Jádro vs. doplňky“ v `PRODUCT.md`. Rozvoj doplňku dostane varování „rozvíjí doplněk“.
@@ -59,4 +59,4 @@ Vrať přesně tento Markdown:
 - Výtky: <výtka>; <výtka> / žádné
 ```
 
-Hotovo, když je verdikt podložený odkazem na fakt a ponechaný kandidát má všech pět štítků, tři námitky jako otázky a otázku pro rodinu.
+Hotovo, když je verdikt podložený odkazem na fakt a kandidát má všech pět štítků, tři námitky jako otázky a otázku pro rodinu.

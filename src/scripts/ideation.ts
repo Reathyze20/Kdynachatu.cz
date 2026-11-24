@@ -1,12 +1,14 @@
 /**
- * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank|pairwise> [--root <dir>]`.
+ * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank|pairwise|blind> [--root <dir>]`.
  * `check` založí chybějící šablony (existující nikdy nepřepíše) a pod minimem ručních signálů skončí
  * exit kódem 1 s počtem chybějících. `rank` vypíše bloky shluků z `shluky.md` seřazené podle počtu
  * ručních signálů `S-n`; počet issues rozhoduje jen při shodě (#386). `pairwise` sečte verdikty
- * párového kola z `parove.json` a vybere nejvýš 5 postupujících (#370). Bez sítě, DB a `.env`.
- * Další podpříkazy patří do `COMMANDS`.
+ * párového kola z `parove.json` a vybere nejvýš 5 postupujících (#370). `blind --run <běh> [--seed <n>]`
+ * zamíchá kandidáty pipeline a baseline ze `slepe.json` do K1…Kn a klíč původu zapíše do
+ * `runs/<běh>.klic.json` (#371). Bez sítě, DB a `.env`. Další podpříkazy patří do `COMMANDS`.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { randomInt } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
@@ -48,7 +50,7 @@ const SIGNAL_ROW = /^\|\s*S-\d+\s*\|/;
 
 type CommandResult = { code: number; lines: string[] };
 
-type Command = (root: string) => CommandResult;
+type Command = (root: string, args: string[]) => CommandResult;
 
 function check(root: string): CommandResult {
   const lines: string[] = [];
@@ -200,9 +202,128 @@ function pairwise(root: string): CommandResult {
   return { code: 0, lines };
 }
 
-const COMMANDS: Record<string, Command> = { check, rank, pairwise };
+const BLIND_FILE = "slepe.json";
+const MAX_PER_SIDE = 5;
+const RUN_NAME = /^\d{4}-\d{2}-\d{2}(-\d+)?$/;
 
-const USAGE = `Použití: tsx src/scripts/ideation.ts <${Object.keys(COMMANDS).join("|")}> [--root <dir>] (výchozí kořen .ideation)`;
+// `.strict()` odmítne navíc pole (třeba původ nebo štítek Navrhlo), která by ve výstupu prozradila stranu.
+const BlindCandidate = z
+  .object({
+    title: z.string().min(1),
+    summary: z.string().min(1),
+    evidence: z.string().min(1),
+    labels: z.string().min(1),
+    objections: z.array(z.string().min(1)).length(3),
+    question: z.string().min(1),
+  })
+  .strict();
+
+const BlindInput = z
+  .object({ pipeline: z.array(BlindCandidate), baseline: z.array(BlindCandidate) })
+  .strict();
+
+type Origin = "pipeline" | "baseline";
+
+function flagValue(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  return index === -1 ? undefined : args[index + 1];
+}
+
+/** Mulberry32: malý deterministický generátor, aby stejný seed dal v testu stejné zamíchání. */
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffle<T>(items: T[], random: () => number): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function renderCandidate(id: string, c: z.infer<typeof BlindCandidate>): string {
+  return [
+    `### ${id} – ${c.title}`,
+    c.summary,
+    "",
+    `- Důkaz: ${c.evidence}`,
+    `- Štítky: ${c.labels}`,
+    "- Námitky:",
+    ...c.objections.map((objection, i) => `  ${i + 1}. ${objection}`),
+    "",
+    "Otázka pro rodinu (ke zkopírování):",
+    "",
+    `> ${c.question}`,
+  ].join("\n");
+}
+
+/**
+ * Slepé míchání: stdout nese jen K-ID a obsah kandidátů, původ jde jen do klíče. Vstup `slepe.json`
+ * po zápisu klíče smaže, aby původ v kořeni neležel na dvou místech.
+ */
+function blind(root: string, args: string[]): CommandResult {
+  const runName = flagValue(args, "--run");
+  if (!runName || !RUN_NAME.test(runName)) {
+    return { code: 2, lines: ["blind potřebuje --run <RRRR-MM-DD> nebo <RRRR-MM-DD-n>, název běhu, ke kterému klíč patří."] };
+  }
+  const seedFlag = flagValue(args, "--seed");
+  if (seedFlag !== undefined && !/^\d+$/.test(seedFlag)) return { code: 2, lines: ["--seed musí být nezáporné celé číslo."] };
+
+  const inputPath = path.join(root, BLIND_FILE);
+  if (!existsSync(inputPath)) {
+    return { code: 1, lines: [`Chybí ${inputPath}. Zapiš do něj kandidáty pipeline a baseline a spusť znovu.`] };
+  }
+  const keyPath = path.join(root, "runs", `${runName}.klic.json`);
+  if (existsSync(keyPath)) {
+    return { code: 1, lines: [`Klíč ${keyPath} už existuje a nepřepisuje se. Zvol další název běhu (-2, -3…).`] };
+  }
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(inputPath, "utf8"));
+  } catch {
+    return { code: 1, lines: [`${inputPath} není platný JSON.`] };
+  }
+  const parsed = BlindInput.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      code: 1,
+      lines: [
+        `${inputPath} nemá tvar { pipeline: K[], baseline: K[] }, K = { title, summary, evidence, labels, objections: [3 otázky], question } bez dalších polí.`,
+      ],
+    };
+  }
+  const sides: Array<[Origin, z.infer<typeof BlindCandidate>[]]> = [
+    ["pipeline", parsed.data.pipeline],
+    ["baseline", parsed.data.baseline],
+  ];
+  for (const [origin, list] of sides) {
+    if (list.length > MAX_PER_SIDE) return { code: 1, lines: [`Kandidátů ${origin} je ${list.length}, na stranu jich smí být nejvýš ${MAX_PER_SIDE}.`] };
+  }
+  const all = sides.flatMap(([origin, list]) => list.map((c) => ({ origin, c })));
+  if (all.length === 0) return { code: 1, lines: ["Ve slepe.json není žádný kandidát."] };
+
+  const seed = seedFlag === undefined ? randomInt(2 ** 32) : Number(seedFlag);
+  const mixed = shuffle(all, seededRandom(seed)).map((entry, i) => ({ id: `K${i + 1}`, ...entry }));
+
+  mkdirSync(path.dirname(keyPath), { recursive: true });
+  const key = { run: runName, candidates: mixed.map(({ id, origin, c }) => ({ id, origin, title: c.title })) };
+  writeFileSync(keyPath, `${JSON.stringify(key, null, 2)}\n`);
+  rmSync(inputPath);
+  return { code: 0, lines: [mixed.map(({ id, c }) => renderCandidate(id, c)).join("\n\n")] };
+}
+
+const COMMANDS: Record<string, Command> = { check, rank, pairwise, blind };
+
+const USAGE = `Použití: tsx src/scripts/ideation.ts <${Object.keys(COMMANDS).join("|")}> [--root <dir>] (výchozí kořen .ideation); blind navíc --run <běh> [--seed <n>]`;
 
 function run(argv: string[]): CommandResult {
   const [name, ...rest] = argv;
@@ -212,7 +333,7 @@ function run(argv: string[]): CommandResult {
   const rootFlag = rest.indexOf("--root");
   const root = rootFlag === -1 ? ".ideation" : rest[rootFlag + 1];
   if (!root) return { code: 2, lines: [USAGE] };
-  return command(path.resolve(root));
+  return command(path.resolve(root), rest);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

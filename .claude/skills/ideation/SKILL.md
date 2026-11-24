@@ -7,7 +7,7 @@ argument-hint: "[zkouška]"
 
 # /ideation
 
-Pipeline, která ze skutečných signálů (ruční zpětná vazba rodiny v `signals.md` a GitHub issues) vytáhne kandidáty na funkce. Spec je issue #367. Běh má kroky 0–5 (kontrola vstupu, ukotvení, nezávislé generování, deduplikace, ukotvená kritika, párové porovnání), zápis výstupu a návrh poučení. Výstup je jeden lokální soubor; o kandidátech rozhoduje správce, ne pipeline.
+Pipeline, která ze skutečných signálů (ruční zpětná vazba rodiny v `signals.md` a GitHub issues) vytáhne kandidáty na funkce. Spec je issue #367. Běh má kroky 0–5 (kontrola vstupu, ukotvení, nezávislé generování, deduplikace, ukotvená kritika, párové porovnání), zápis výstupu a návrh poučení. Vedle pipeline běží levná **baseline** (jeden silný prompt) a výstup ukáže kandidáty obou naslepo zamíchané jako K1–K10, aby správce mohl podle verdiktů rodiny posoudit, jestli se pipeline vyplácí. Výstup je jeden lokální soubor; o kandidátech rozhoduje správce, ne pipeline.
 
 ## Hranice
 
@@ -17,14 +17,15 @@ Lokální databáze obsahuje produkční data rodiny a autopilot postaví cokoli
 - Zapisuješ jen do `<kořen>/` (gitignored). Na GitHub nezapisuješ nic: žádné `gh issue create` / `edit` / `comment` / `close`, žádné labely, PR ani `gh api` mimo GET. Z `<kořen>/` nic necommituješ.
 - Žádné `psql`, `docker`, `prisma`, žádné čtení `.env*`, žádný jiný přístup k databázi.
 - Ve výstupech jen role (prarodič, rodič…), nikdy jména.
+- Klíč původu `<kořen>/runs/*.klic.json` nečteš ty ani žádný subagent, ani jeho obsah nevypisuješ. Slepé míchání drží, jen když původ kandidátů zná helper a správce; odkrytí patří do `/ideation vyhodnoť`.
 
 Na začátek promptu každého subagenta kromě kritiků a rozhodčích (ti mají přísnější blok v [kritik.md](kritik.md) a [parove.md](parove.md)) vlož doslova tento blok:
 
-> **Hranice:** Pracuješ read-only. GitHub jen `gh issue list` a `gh issue view`. Žádné `psql`, `docker`, `prisma`, žádné čtení `.env*`, žádný zápis souborů ani na GitHub. Ve výstupu jen role, žádná jména.
+> **Hranice:** Pracuješ read-only. GitHub jen `gh issue list` a `gh issue view`. Žádné `psql`, `docker`, `prisma`, žádné čtení `.env*` ani `<kořen>/runs/*.klic.json`, žádný zápis souborů ani na GitHub. Ve výstupu jen role, žádná jména.
 
 ## Stropy
 
-Na jeden běh nejvýš: krok 1 = 1 subagent, krok 2 = 8 generátorů, krok 3 = 1 subagent, krok 4 = 1 kritik na kandidáta (nejvýš 10), krok 5 = 3 rozhodčí v 1 kole. Subagent, který selže nebo vrátí nepoužitelný výstup, se nenahrazuje: pokračuj s tím, co máš, a uveď to v hlavičce výstupu.
+Na jeden běh nejvýš: krok 1 = 1 subagent, krok 2 = 8 generátorů + 1 baseline, krok 3 = 1 subagent, krok 4 = 1 kritik na kandidáta (nejvýš 10 z pipeline + 5 z baseline), krok 5 = 3 rozhodčí v 1 kole. Subagent, který selže nebo vrátí nepoužitelný výstup, se nenahrazuje: pokračuj s tím, co máš, a uveď to v hlavičce výstupu.
 
 ## Postup
 
@@ -52,9 +53,9 @@ Po odpovědi:
 
 Hotovo, když máš shrnutí signálů a shluky v pořadí z helperu; toto pořadí platí pro kroky 2 a 3 i pro výstup.
 
-### 2. Nezávislé generování (8 generátorů)
+### 2. Nezávislé generování (8 generátorů + baseline)
 
-Rozděl čočky a modely podle [generovani.md](generovani.md) a spusť všech 8 generátorů najednou. Každý dostane jen svůj prompt, žádný sdílený kontext. Hotovo, když máš výstup od každého generátoru, který doběhl.
+Rozděl čočky a modely podle [generovani.md](generovani.md) a ve stejné zprávě spusť všech 8 generátorů i baseline podle [baseline.md](baseline.md). Každý dostane jen svůj prompt, žádný sdílený kontext. Od baseline vezmi nejvýš prvních 5 kandidátů v pořadí, v jakém je vrátila; baseline neprochází krokem 3 ani 5. Hotovo, když máš výstup od každého generátoru a od baseline, pokud doběhli.
 
 ### 3. Deduplikace (1 subagent)
 
@@ -64,7 +65,13 @@ Spusť jednoho subagenta (`general-purpose`) s promptem z [deduplikace.md](dedup
 
 ### 4. Ukotvená kritika (1 kritik na kandidáta)
 
-Na každého kandidáta z kroku 3 spusť jednoho kritika: subagent `Explore` (bez nástrojů pro zápis) s `model: "opus"` a promptem z [kritik.md](kritik.md), všechny v jedné zprávě. Kandidát s verdiktem „vyřadit“ jde do přílohy „vyřazeno“ s důvodem kritika. Kandidát, jehož kritik selhal, nemá štítky ani námitky, takže jde do přílohy s důvodem „bez kritiky (kritik selhal)“. Hotovo, když má každý kandidát verdikt nebo je v příloze.
+Na každého kandidáta z kroku 3 i z baseline spusť jednoho kritika: subagent `Explore` (bez nástrojů pro zápis) s `model: "opus"` a promptem z [kritik.md](kritik.md), všechny v jedné zprávě. Kritik původ kandidáta nezná: prompt je pro obě strany stejný.
+
+- **Pipeline:** kandidát s verdiktem „vyřadit“ jde do přílohy „vyřazeno“ s důvodem kritika.
+- **Baseline:** verdikt nic nevyřazuje, kandidát zůstává se štítky a námitkami od kritika. Filtr kritika je součást pipeline, kterou baseline testuje, takže by ji nespravedlivě vylepšil.
+- Kandidát, jehož kritik selhal, nemá štítky ani námitky, takže jde do přílohy s důvodem „bez kritiky (kritik selhal)“, na obou stranách.
+
+Hotovo, když má každý kandidát obou stran verdikt nebo je v příloze.
 
 ### 5. Párové porovnání (jen při víc než 5 kandidátech)
 
@@ -72,7 +79,19 @@ Když po kroku 4 zbývá nejvýš 5 ponechaných kandidátů, krok přeskoč: po
 
 ### Závěr: výstup
 
-Zapiš `<kořen>/runs/<RRRR-MM-DD>.md` podle [vystup.md](vystup.md); když soubor existuje, přidej k datu `-2`, `-3`… Uživateli vypiš cestu k souboru a počty z hlavičky. Hotovo, když soubor existuje, má nejvýš 5 kandidátů a každý má aspoň jeden odkaz na signál (`S-n` nebo `#n`), štítky, tři námitky a otázku pro rodinu.
+Název běhu je `<RRRR-MM-DD>`; když `<kořen>/runs/<název>.md` existuje, přidej k datu `-2`, `-3`…
+
+1. Zapiš `<kořen>/slepe.json` s postupujícími kandidáty pipeline z kroku 5 (v jejich pořadí) a kandidáty baseline z kroku 4, nejvýš 5 na stranu:
+
+   ```json
+   { "pipeline": [{ "title": "", "summary": "", "evidence": "", "labels": "", "objections": ["", "", ""], "question": "" }], "baseline": [] }
+   ```
+
+   `title` je název, `summary` 2–3 věty, co dělá, `evidence` odkazy `S-n` a `#n` z důkazu, `labels` štítky kritika ve tvaru řádku Štítky z [vystup.md](vystup.md), `objections` tři námitky a `question` otázka pro rodinu. Jiná pole helper odmítne, aby nic neprozradilo stranu.
+2. Spusť `npm run --silent ideation -- blind --root <kořen> --run <název>`. Helper kandidáty zamíchá, přidělí K1…Kn, klíč původu zapíše do `<kořen>/runs/<název>.klic.json` a `slepe.json` smaže. Při nenulovém exit kódu oprav `slepe.json` podle hlášky helperu (u existujícího klíče zvol další příponu názvu) a spusť znovu.
+3. Zapiš `<kořen>/runs/<název>.md` podle [vystup.md](vystup.md); sekce Kandidáti je doslova výstup helperu.
+
+Uživateli vypiš cestu k souboru a počty z hlavičky. Hotovo, když soubor existuje, v sekci Kandidáti je přesně výstup `blind` (nejvýš 10 kandidátů K1…Kn, každý s odkazem na signál, štítky, třemi námitkami a otázkou pro rodinu) a klíč běhu existuje.
 
 ### Poučení
 
