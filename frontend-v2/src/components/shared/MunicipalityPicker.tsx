@@ -123,7 +123,7 @@ export function MunicipalityPicker({ id, value, onChange, onPendingChange, place
               id={`${listId}-${i}`}
               role="option"
               aria-selected={i === active}
-              className={`flex min-h-11 cursor-pointer flex-col justify-center px-3 py-2 ${i === active ? 'bg-emerald-50' : 'hover:bg-slate-50'}`}
+              className={`flex min-h-11 cursor-pointer flex-col justify-center px-3 py-2 ${i === active ? 'bg-accent' : 'hover:bg-slate-50'}`}
               // mousedown by jinak inputu sebral focus dřív, než se klik stihne zpracovat
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => pick(m)}

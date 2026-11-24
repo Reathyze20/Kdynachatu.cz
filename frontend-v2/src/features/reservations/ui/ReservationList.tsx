@@ -83,8 +83,8 @@ function MonthPicker({
               onClick={() => { onSelect(i, pickerYear); onClose(); }}
               className={`min-h-11 rounded-lg px-1 py-2 text-xs font-medium transition-colors ${
                 isActive
-                  ? "bg-emerald-600 text-white"
-                  : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-slate-600 hover:bg-accent hover:text-primary"
               }`}
             >
               {name.slice(0, 3)}
@@ -364,7 +364,7 @@ export function ReservationList({
               </button>
               <button
                 type="button"
-                className="text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+                className="text-sm font-semibold text-primary-foreground bg-primary hover:bg-(--brand-primary-hover) rounded-lg transition-colors disabled:opacity-50"
                 disabled={noteText.length > NOTE_MAX_LENGTH || updateNote.isPending}
                 onClick={handleSaveNote}
               >
@@ -387,7 +387,7 @@ export function ReservationList({
             maxLength={NOTE_MAX_LENGTH + 20}
             rows={3}
             placeholder={'Např. „V březnu přijede instalatér 15.–16., buďte prosím doma."'}
-            className="w-full resize-none rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition-colors"
+            className="w-full resize-none rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
           />
           {noteSaveError ? (
             <div className="error-message show" role="alert">{noteSaveError}</div>
