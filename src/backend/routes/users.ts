@@ -162,7 +162,7 @@ router.patch("/me/password", protect, validate(changeMyPasswordSchema), async (r
 // ============================================================================
 //               DELETE MY ACCOUNT (GDPR Art. 17 — Self-service)
 // ============================================================================
-// Musí být registrovaná před `router.delete("/:id")`, jinak Express pošle `/me` tam s id `me` (#419).
+// Must be registered before `router.delete("/:id")`, otherwise Express routes `/me` there with id `me` (#419).
 router.delete("/me", protect, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
