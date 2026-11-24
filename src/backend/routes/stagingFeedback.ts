@@ -1,5 +1,6 @@
 /**
  * POST /api/staging-feedback – tester na stagingu pošle z karty „Co vyzkoušet“, co mu nešlo (#389).
+ * GET /api/staging-feedback – správce chaty si záznamy své chaty přečte ve Správě (#390).
  * Router se připojí jen na stagingu (app.ts, stejná brána jako demo účty), jinde obecná 404.
  * cabinId a uživatel jsou z přihlášení (req.user), nikdy z těla requestu.
  *
@@ -16,7 +17,7 @@ import { requireCabin } from "../../middleware/cabinMiddleware";
 import { validate } from "../../validators/validate";
 import { stagingFeedbackSchema } from "../../validators/schemas";
 import logger from "../../utils/logger";
-import type { StagingFeedbackRecord, StagingFeedbackResponse } from "../../types";
+import type { StagingFeedbackListResponse, StagingFeedbackRecord, StagingFeedbackResponse } from "../../types";
 import { resolveSeedConfig } from "../../scripts/seedStagingConfig";
 
 /** Staging = platná konfigurace seedu, shodně s routes/demoAccounts.ts. */
@@ -31,6 +32,28 @@ export function isStagingFeedbackEnabled(env: Record<string, string | undefined>
 
 export function stagingFeedbackFilePath(uploadsPath: string): string {
   return path.join(path.dirname(path.resolve(uploadsPath)), "staging-feedback.jsonl");
+}
+
+/** Záznamy jedné chaty od nejnovějších; chybějící soubor = prázdno, poškozený řádek se přeskočí. */
+async function readCabinFeedback(filePath: string, cabinId: string): Promise<StagingFeedbackRecord[]> {
+  let content: string;
+  try {
+    content = await fs.promises.readFile(filePath, "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw err;
+  }
+  const records = content.split("\n").flatMap((line): StagingFeedbackRecord[] => {
+    if (!line.trim()) return [];
+    try {
+      const record = JSON.parse(line) as StagingFeedbackRecord;
+      return record?.cabinId === cabinId && typeof record.createdAt === "string" ? [record] : [];
+    } catch {
+      return [];
+    }
+  });
+  // Soubor je v pořadí zápisu – otočit, stabilní řazení pak drží novější i při shodném čase
+  return records.reverse().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function createStagingFeedbackRouter(filePath: string): Router {
@@ -59,6 +82,19 @@ export function createStagingFeedbackRouter(filePath: string): Router {
     logger.info("STAGING_FEEDBACK", "Uložena zpětná vazba", { taskId: record.taskId });
     const body: StagingFeedbackResponse = { id: record.id, createdAt: record.createdAt };
     return res.status(201).json(body);
+  });
+
+  router.get("/", async (req: Request, res: Response) => {
+    const user = req.user!;
+    // Člen dostane 404 jako cizí zdroj (#390) – neprozradit, že čtení existuje
+    if (user.role !== "admin") return res.status(404).json({ message: "API endpoint nenalezen" });
+    try {
+      const body: StagingFeedbackListResponse = { feedback: await readCabinFeedback(filePath, user.cabinId as string) };
+      return res.json(body);
+    } catch (err) {
+      logger.error("STAGING_FEEDBACK", "Čtení zpětné vazby selhalo", { error: err instanceof Error ? err.message : String(err) });
+      return res.status(500).json({ message: "Zpětnou vazbu se nepodařilo načíst. Zkus to znovu." });
+    }
   });
 
   return router;

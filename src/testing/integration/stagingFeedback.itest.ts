@@ -70,6 +70,33 @@ test("staging feedback: empty/too long text, unknown task, anonymous and non-sta
   assert.equal(readRecords().length, before);
 });
 
+test("staging feedback read: admin sees only own cabin, newest first; missing file and broken line are fine", async () => {
+  fs.rmSync(feedbackFile, { force: true });
+  const list = (user: typeof world.adminA) => as(stagingApp, user).get("/api/staging-feedback");
+  assert.deepEqual((await list(world.adminA)).body, { feedback: [] });
+
+  const send = async (user: typeof world.adminA, text: string) =>
+    (await as(stagingApp, user).post("/api/staging-feedback").send(body(text))).body.id as string;
+  const first = await send(world.memberA, "A první");
+  const fromB = await send(world.memberB, "B tajné");
+  fs.appendFileSync(feedbackFile, "{poškozený řádek\n");
+  const second = await send(world.adminA, "A druhý");
+
+  const resA = await list(world.adminA);
+  assert.equal(resA.status, 200);
+  assert.deepEqual(resA.body.feedback.map((r: StagingFeedbackRecord) => r.id), [second, first]);
+  assert.equal(resA.body.feedback[1].username, world.memberA.username);
+  assert.deepEqual((await list(world.adminB)).body.feedback.map((r: StagingFeedbackRecord) => r.id), [fromB]);
+  fs.rmSync(feedbackFile, { force: true }); // poškozený řádek by rozbil readRecords() dalších testů
+});
+
+test("staging feedback read: member 404, anonymous 401, outside staging 404", async () => {
+  assert.equal((await as(stagingApp, world.memberA).get("/api/staging-feedback")).status, 404);
+  assert.equal((await as(stagingApp, world.memberB).get("/api/staging-feedback")).status, 404);
+  assert.equal((await request(stagingApp).get("/api/staging-feedback")).status, 401);
+  assert.equal((await as(productionApp, world.adminA).get("/api/staging-feedback")).status, 404);
+});
+
 test("staging feedback: a demo cabin record survives another staging seed run", async () => {
   await runStagingSeed(prisma, { ...PASSWORDS, uploadsPath: UPLOADS_PATH });
   const jana = await prisma.user.findUniqueOrThrow({ where: { username: "demo-jana" } });

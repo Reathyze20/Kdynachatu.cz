@@ -29,6 +29,7 @@ import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import { Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
+import { StagingFeedbackSection } from '@/features/admin/components/StagingFeedbackSection'
 import { CabinSettingsPanel } from '@/features/settings/CabinSettingsPage'
 
 type UserRoleFilter = 'all' | CabinUser['role']
@@ -998,6 +999,9 @@ export function AdminPage() {
 
         <AdminSectionMenu active={activeWorkspace} />
       </section>
+
+      {/* Jen staging (#390); na stagingu je Správa hlavně kvůli ní, proto nahoře ve výchozím panelu */}
+      {activeWorkspace === 'members' ? <StagingFeedbackSection /> : null}
 
       {activeWorkspace === 'members' ? (
         <div className="admin-layout-grid">

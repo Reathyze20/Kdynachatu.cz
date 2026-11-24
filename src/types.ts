@@ -175,6 +175,11 @@ export interface StagingFeedbackResponse {
   createdAt: string;
 }
 
+// GET /api/staging-feedback – jen správce, jen záznamy jeho chaty, od nejnovějších (#390)
+export interface StagingFeedbackListResponse {
+  feedback: StagingFeedbackRecord[];
+}
+
 // GET /api/municipalities?q= – obce ČR z RÚIAN pro výběr nejbližší obce chaty (ADR-0006)
 export interface MunicipalityOption {
   code: number; // kód obce v RÚIAN

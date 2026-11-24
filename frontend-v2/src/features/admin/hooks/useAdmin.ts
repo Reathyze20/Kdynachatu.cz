@@ -3,11 +3,13 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/admin'
+import { stagingFeedbackApi } from '@/api/stagingFeedback'
 import { handleMutationError } from '@/lib/mutationError'
 
 const USERS_QK = ['admin-users'] as const
 const SYSTEM_QK = ['admin-system'] as const
 const INVITES_QK = ['admin-invites'] as const
+const STAGING_FEEDBACK_QK = ['admin-staging-feedback'] as const
 
 export function useAdminUsers() {
   return useQuery({
@@ -131,5 +133,14 @@ export function useRevokeInvite() {
     mutationFn: adminApi.revokeInvite,
     onSuccess: () => qc.invalidateQueries({ queryKey: INVITES_QK }),
     onError: handleMutationError('Nepodařilo se zrušit pozvánku'),
+  })
+}
+
+/** Zpětná vazba testerů (#390) – volat jen na stagingu, jinde endpoint neexistuje */
+export function useStagingFeedback() {
+  return useQuery({
+    queryKey: STAGING_FEEDBACK_QK,
+    queryFn: stagingFeedbackApi.list,
+    staleTime: 30_000,
   })
 }
