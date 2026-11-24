@@ -5,7 +5,7 @@
 | Čočka | `opus` | `sonnet` |
 |---|---|---|
 | pevná | G1 (čočka 1), G3 (čočka 3) | G2 (čočka 2), G4 (čočka 4) |
-| shluk (1 = největší) | G6 (shluk 2), G8 (shluk 4) | G5 (shluk 1), G7 (shluk 3) |
+| shluk (pořadí z kroku 1) | G6 (shluk 2), G8 (shluk 4) | G5 (shluk 1), G7 (shluk 3) |
 
 Když je shluků méně než 4, generátor bez shluku `G(4+i)` dostane pevnou čočku `i`. Tatáž pevná čočka tak běží i na druhém modelu a počet generátorů zůstává 8.
 

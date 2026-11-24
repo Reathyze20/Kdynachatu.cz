@@ -86,3 +86,71 @@ describe("ideation check", () => {
     assert.match(output, /check/);
   });
 });
+
+function withClusters(markdown: string): string {
+  const root = freshRoot();
+  mkdirSync(root, { recursive: true });
+  writeFileSync(path.join(root, "shluky.md"), markdown);
+  return root;
+}
+
+function headingOrder(output: string): string[] {
+  return output
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("### "))
+    .map((line) => line.slice(4).split(" ")[0]);
+}
+
+const manyIssues = Array.from({ length: 70 }, (_, i) => `#${i + 100}`).join(", ");
+
+describe("ideation rank", () => {
+  test("orders clusters by family signals S-n, so many issues cannot drown them", () => {
+    const root = withClusters(
+      [
+        "### ovladani – aplikace mate",
+        `- Signály: S-1, ${manyIssues}`,
+        "- Potíž: mnoho issues od správce.",
+        "",
+        "### udrzba – závady nemají kam",
+        "- Signály: S-2, S-3",
+        "- Potíž: dva signály rodiny.",
+        "",
+        "### naklady – roční útraty",
+        "- Signály: S-4, S-5, #9",
+        "- Potíž: dva signály rodiny a jedno issue.",
+        "",
+      ].join("\n"),
+    );
+
+    const { code, output } = runHelper("rank", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(headingOrder(output), ["naklady", "udrzba", "ovladani"]);
+    assert.match(output, /- Potíž: dva signály rodiny a jedno issue\./);
+  });
+
+  test("keeps the original order when S-n and issue counts tie", () => {
+    const root = withClusters("### b – B\n- Signály: S-1, #2\n\n### a – A\n- Signály: S-3, #4\n");
+
+    const { output } = runHelper("rank", "--root", root);
+
+    assert.deepEqual(headingOrder(output), ["b", "a"]);
+  });
+
+  test("a shluky.md without any cluster block exits non-zero", () => {
+    const { code, output } = runHelper("rank", "--root", withClusters("# Shluky\n\nzatím nic\n"));
+
+    assert.notEqual(code, 0);
+    assert.match(output, /žádný blok/);
+  });
+
+  test("without shluky.md it exits non-zero and names the missing file", () => {
+    const root = freshRoot();
+    mkdirSync(root, { recursive: true });
+
+    const { code, output } = runHelper("rank", "--root", root);
+
+    assert.notEqual(code, 0);
+    assert.match(output, /shluky\.md/);
+  });
+});
