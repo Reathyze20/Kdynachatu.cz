@@ -8,7 +8,7 @@
 
    JAK: Níže definujeme sémantické shadcn tokeny (`--primary`, `--background`,
    `--border` …). Light (`:root`) odkazuje přímo na sémantické tokeny palety
-   „Moderní Les" (emerald/slate) z `variables.css`, takže přepnutí palety přes
+   „Jedle na papíře" z `variables.css`, takže přepnutí palety přes
    `[data-theme]` se propíše i do shadcn primitiv. Dark (`.dark`) má vlastní
    hodnoty. Blok `@theme inline` je pak zpřístupní jako Tailwind utility.
 
@@ -26,7 +26,7 @@
   --popover: var(--bg-card);
   --popover-foreground: var(--text-main);
 
-  /* Brand — šalvějová emerald */
+  /* Brand — Jedle (#427) */
   --primary: var(--brand-primary);
   --primary-foreground: var(--text-on-primary);
 

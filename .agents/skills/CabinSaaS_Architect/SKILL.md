@@ -104,20 +104,30 @@ export const SHOPPING_KEYS = {
 
 ## Rule 2 — The "Cabin SaaS" Aesthetic
 
-This app is used by families planning weekend getaways. It should evoke warmth, nature, and calm — not enterprise gray. The design language is **"floating glass in a forest."**
+This app is used by families planning weekend getaways. It should evoke warmth, nature, and calm — not enterprise gray. The design language is **"warm paper in a forest"**: solid cards in the colour of old paper, floating over the cabin's cover photo under a warm veil. The reference is the desktop Overview (Přehled) as of 1.10.1 (#427).
+
+What carries the feel, and what a new screen must keep:
+
+- **Paper, not white, not glass.** Cards are `bg-sheet` (246 240 230) with a `border-rule-soft` line and `shadow-lift`. No `bg-white/95`, no `backdrop-blur` on content cards.
+- **One accent.** The brand green Jedle (`--brand-primary`) is reserved for the main action, the active nav item and links. Everything else is ink, muted brown and paper.
+- **Quiet tone.** Warnings and states use a tinted icon and a small label (`DOŠLO`, `DOCHÁZÍ`, `ZÁVADA`), never a loud banner or a coloured stripe.
+- **Warm tints only.** A soft highlight is the brand green mixed into paper (`--brand-primary-light`), never mint or teal. Hover surfaces are `--bg-hover` (warm).
+- **Air.** Gaps between cards let the photo show through. Do not pack a page edge to edge with widgets.
 
 ### The Core Wrapper Pattern
 
-The application renders above a fullscreen nature-photograph background. Main content floats in generously padded, rounded, frosted-glass or solid-white cards:
+The application renders above a fullscreen nature-photograph background (`AppBackdrop`, the cabin cover under `--backdrop-veil`). Main content floats in generously padded, rounded paper cards:
 
 ```tsx
 {/* Page-level wrapper for new pages (RouteTransitionSkeleton uses the same frame) */}
 <div className="p-3 md:p-0 space-y-6">
-  <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-6 md:p-8">
+  <div className="rounded-2xl border border-rule-soft bg-sheet shadow-lift p-6 md:p-8">
     {/* Content lives here, never touching outer edges */}
   </div>
 </div>
 ```
+
+In CSS, use the shared `.glass-card` / `.page-card` classes (`styles/dashboard.css`, `styles/base.css`); despite the name, `.glass-card` is a solid paper surface.
 
 The page renders inside `AppShell`'s `<main id="page-container">`, which already owns the page frame. Don't add outer page padding for it:
 
@@ -137,13 +147,13 @@ The page renders inside `AppShell`'s `<main id="page-container">`, which already
 
 ### Color System
 
-The app uses a two-layer design-token architecture defined in `variables.css`. When writing Tailwind, map to these semantic tokens:
+The app uses a two-layer design-token architecture defined in `variables.css`. When writing Tailwind, map to these semantic tokens. The `slate-*` equivalents below are legacy (they are cool grey); in new code use the token or the shadcn utility:
 
 | Purpose | CSS Custom Property | Tailwind Equivalent |
 |---|---|---|
-| Primary action | `--brand-primary` (#3d7861) | `bg-emerald-600` / `hover:bg-emerald-700` |
-| Primary dark | `--brand-primary-hover` (#1a2721) | `bg-emerald-900` |
-| Primary light bg | `--brand-primary-light` (#e8f4ef) | `bg-emerald-50` |
+| Primary action | `--brand-primary` (#3e5c47, Jedle) | `bg-primary` / `hover:bg-[var(--brand-primary-hover)]` |
+| Primary hover | `--brand-primary-hover` (#2f4636, darker Jedle, not near-black) | – |
+| Primary light bg | `--brand-primary-light` (`color-mix` of 10 % Jedle into `--page`) | `bg-accent` |
 | Muted text | `--text-muted` (#5e5246, warm) | `text-slate-600` |
 | Placeholder | `--text-placeholder` (#9ca3af) | `text-slate-400` |
 | Borders | `--border-strong` (#e5e7eb) | `border-slate-200` |
@@ -153,7 +163,7 @@ The app uses a two-layer design-token architecture defined in `variables.css`. W
 
 **shadcn semantic utilities** (`bg-primary`, `text-muted-foreground`, `border-input`, `ring-ring`, `bg-destructive`, …) are wired to these tokens by the theme bridge in `src/styles/shadcn-tokens.css` (light `:root` references `variables.css`, dark = `.dark` class). Prefer them in new components; do not redefine legacy `--color-*` aliases there.
 
-**Do not** introduce chaotic palettes. Stick to **Emerald** for primary actions and **Slate** for neutrals. Danger = `red-600`, Success = `green-600`, Warning = `amber-600`, Info = `blue-600`.
+**Do not** introduce chaotic palettes. Primary actions use the brand tokens above, not Tailwind `emerald-*` / `teal-*` (those lean blue and clash with the warm paper; existing uses are legacy). Neutrals are the warm tokens (`--text-muted`, `--rule`, `--inset`). Status colours: supply states `--ok` / `--low` / `--empty`, otherwise Danger = `red-600`, Warning = `amber-600`, Info = `blue-600`. A new colour is a design decision: make a picker in `docs/design/` (like `10-zelena-atomy.html`) and let the user choose.
 
 ### Typography
 
@@ -417,7 +427,7 @@ Before finishing any component, verify:
 - [ ] No content touches parent outer edges (generous padding/gaps)
 - [ ] Page wrapper is `p-3 md:p-0`; the shell (`#page-container`, `.app-shell-body`) provides the nav space and desktop frame
 - [ ] Main column + side context panel uses `TwoColumnLayout` (master-detail: Recipe 7)
-- [ ] Colors use Emerald (primary) + Slate (neutral) — no rogue palettes
+- [ ] Colors use the brand tokens (Jedle) and warm neutrals — no `emerald-*`/`teal-*`, no mint or white glass cards
 - [ ] No coloured left stripes; tone comes from an icon, label or soft background
 - [ ] Inline styles use CSS custom properties (`var(--brand-primary)`) — no hardcoded hex
 - [ ] No `window.confirm()` / `window.prompt()` — use `<ConfirmDialog>` / `<PromptDialog>`
