@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.10.1...v1.11.0) (2026-11-24)
+
+
+### Features
+
+* **ui:** warm Jedle brand green and paper tints instead of mint ([#430](https://github.com/Reathyze20/Kdynachatu.cz/issues/430)) ([ef972f2](https://github.com/Reathyze20/Kdynachatu.cz/commit/ef972f22fd524c56a340ea76a94bbb53ba4750b6))
+
+
+### Bug Fixes
+
+* **ui:** replace hardcoded emerald classes with brand tokens ([#434](https://github.com/Reathyze20/Kdynachatu.cz/issues/434)) ([cc63051](https://github.com/Reathyze20/Kdynachatu.cz/commit/cc63051c43b8b0b6d3118673b4de60b289e9ff55))
+
 ## [1.10.1](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.10.0...v1.10.1) (2026-11-24)
 
 
