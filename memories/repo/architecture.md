@@ -19,5 +19,5 @@ Uživatelské texty, chybové hlášky a většina komentářů jsou **česky** 
 - `src/api/client.ts`: jediná Axios instance (`baseURL: '/api'`) – JWT, `X-Cabin-Id`, 401, `ACCOUNT_BANNED`, síťové chyby, neúspěšné mutace do `src/lib/offlineQueue.ts` (replay s `X-Offline-Replay`). Nikdy nevolej `fetch()` přímo.
 - Jeden API modul na doménu v `src/api/`, hooky po featurách (např. `features/reservations/hooks/useReservations.ts`) exportují query keys. `src/hooks/useRealtimeSync.ts` mapuje Socket.IO eventy na `invalidateQueries` – nový serverový event = nová invalidace tam.
 - Chyby mutací přes `src/lib/mutationError.ts`, toasty `src/lib/toast.ts`. Před prací na frontendu přečti `.agents/skills/CabinSaaS_Architect/SKILL.md`.
-- Vzhled: jediný zdroj pravdy je `DESIGN.md` v kořeni repa (tokeny ze `src/styles/variables.css` + most `shadcn-tokens.css`, kanonické komponenty v `components/ui/` a `components/shared/`, vzory, hlas textů, formáty, guard testy s allowlistem). Při rozporu s jiným dokumentem platí `DESIGN.md`.
+- Vzhled, komponenty a texty UI: pravidla v `DESIGN.md` v kořeni repa.
 

@@ -34,7 +34,7 @@ V tomto repu tento tok nahrazuje `superpowers:brainstorming`, `superpowers:writi
 - `src/validators/schemas.ts` – všechna Zod schémata vstupů; `src/backend/openapi.ts` – ručně psaná API spec, mění se s každým endpointem.
 - `src/types.ts` ↔ `frontend-v2/src/api/*.ts` – wire typy záměrně zdvojené, mění se spolu.
 - `frontend-v2/src/hooks/useRealtimeSync.ts` – Socket.IO event → invalidace dotazů; nový serverový event sem patří vždy.
-- `DESIGN.md` – závazná pravidla vzhledu a textů UI (tokeny, komponenty, vzory, hlas, formáty); přečti před prací na UI, při rozporu s jiným dokumentem platí on.
+- `DESIGN.md` – závazná pravidla vzhledu a textů UI; přečti před prací na UI.
 - `.agents/skills/CabinSaaS_Architect/SKILL.md` – pravidla a inventář komponent pro `frontend-v2/`; přečti před prací na UI.
 
 ## Agent skills

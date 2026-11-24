@@ -30,8 +30,6 @@ Co hlídá CI (typecheck, build, `.only`/`.skip`, neměnné migrace, velikost PR
 - Chyby mutací přes `src/lib/mutationError.ts`, hlášky přes `src/lib/toast.ts`. Žádné `alert()` a žádné vlastní ad-hoc toasty.
 - Mutace, které má uživatel vidět hned (nákupní seznam, poznámky, rezervace), jsou optimistické s rollbackem v `onError`.
 - Vzhled a texty UI se posuzují podle `DESIGN.md` (tokeny, typografie, ikony, kanonické komponenty, vzory, hlas textů, formáty). Porušení pravidla z `DESIGN.md` je nález, stejně jako duplikát komponenty z `components/ui/` nebo `components/shared/`.
-- Nová položka v allowlistu design guardů je nález, pokud ji PR výslovně nezdůvodní (`DESIGN.md`, kapitola Vymáhání).
-
 ## Texty a jazyk
 
 - Vše, co uvidí uživatel (UI, chybové hlášky z API, e-maily), je česky, s diakritikou, tykání v aktivním hlasu (vzor: „Zkus to znovu.“). Kód, identifikátory, commity a titulky PR anglicky.

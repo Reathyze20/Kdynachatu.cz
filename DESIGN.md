@@ -56,7 +56,7 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 ### Co se nepíše
 
 - Surový hex nebo `rgb()`/`rgba()` s čísly mimo soubory s definicí tokenů. `rgb(var(--sheet))` je token, ne surová barva.
-- Barvy z palety Tailwindu (`slate-*`, `emerald-*`, `teal-*`, `red-600`, `bg-white` …). Nový kód bere barvu jen z tokenů. `slate-*`, `emerald-*`, `teal-*` a `bg-white` hlídají guardy.
+- Barvy z palety Tailwindu (`slate-*`, `emerald-*`, `teal-*`, `red-600`, `bg-white` …). Nový kód bere barvu jen z tokenů. `emerald-*` a `teal-*` dnes hlídá `noEmeraldTeal.test.ts`, `slate-*` a `bg-white` přidá #450.
 - Barevný levý okraj karty, pole, citace nebo řádku (`noLeftStripes.test.ts`).
 - `backdrop-blur` na obsahové kartě. Sklo jen jako akcent: modál, overlay, toast, lišta (`lightSurfaces.test.tsx`).
 
@@ -109,14 +109,14 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | Komponenta | Kde | Kdy a jak | Stav |
 |---|---|---|---|
 | `Button` | `ui/` | Každá akce. Varianty `primary`, `secondary`, `ghost`, `danger`. Výška ≥ 48 px, hlavní akce obrazovky 56 px a plně kulatá. Stav disabled a pending (spinner v tlačítku). | Dnes má varianty `default`/`destructive`/`outline`/`secondary`/`ghost`/`link`. **Cíl** #452 |
-| `Input` | `ui/` | Pole formuláře, chybový stav s `aria-invalid`. | **Cíl** #452 |
-| `DropdownMenu` | `ui/` | Kebab menu akcí nad položkou, ovladatelné klávesnicí i dotykem. | **Cíl** #452 |
+| `Input` | `ui/` | Pole formuláře, chybový stav s `aria-invalid`. | existuje nepřestylované shadcn, přestylování a chybový stav **Cíl** #452 |
+| `DropdownMenu` | `ui/` | Kebab menu akcí nad položkou, ovladatelné klávesnicí i dotykem. | existuje nepřestylované shadcn, přestylování **Cíl** #452 |
 | `Dialog` | `ui/` | Jen základ pro `Modal`. Obrazovky ho přímo nepoužívají. | existuje |
 | `Modal` | `shared/` | Každý dialog a krátký formulář. API `isOpen`, `onClose`, `title`, `children`, `footer`, `maxWidth`, `persistent`. Do 640 px bottom sheet. | API existuje, postavení na `ui/dialog` **Cíl** #453 |
 | `ConfirmDialog`, `PromptDialog` | `shared/` | Potvrzení mazání, opsání slova. Nikdy `window.confirm()` / `window.prompt()`. | existují, staví na `Modal` |
 | `PageHeader` | `shared/` | Hlavička každé stránky (viz vzor Hlavička). | **Cíl** #454 |
 | `EmptyState` | `shared/` | Prázdná sekce: ikona lucide 24 px, jedna věta, volitelná akce. | **Cíl** #454 |
-| `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`. | **Cíl** #454 |
+| `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`. | **Cíl** #454. Nepoužité `ui/card` se smaže, nebo se stane jejím základem (#452) |
 | `ListRow` | `shared/` | Řádek seznamu, výška 48 px, slot pro obsah a akci. | **Cíl** #454 |
 | `FeatureErrorFallback` | `shared/` | Selhání načtení sekce, s tlačítkem znovu. | existuje |
 | `TwoColumnLayout` | `layout/` | Hlavní sloupec + boční panel na desktopu. Master-detail seznamy jsou výjimka. | existuje |
@@ -162,7 +162,7 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | Všechno ostatní | `ConfirmDialog` s `danger`, potvrzovací tlačítko pojmenuje akci („Smazat“) |
 | Hromadné nevratné mazání | `PromptDialog`, uživatel opíše potvrzovací slovo |
 
-Mazání se neprovádí optimisticky. Položka zmizí, až server potvrdí.
+Mazání s potvrzením se neprovádí optimisticky, položka zmizí, až server potvrdí. Lehká položka smí zmizet hned (optimisticky s rollbackem).
 
 ### Formuláře
 
@@ -209,6 +209,7 @@ Jediný jazyk je čeština (`cs-CZ`). Formátovat bude jeden modul na `Intl`, kt
 | Čas, 24 h | 9:40 |
 | Částka | 1 234 Kč |
 | Procenta | 12 % |
+| Názvy měsíců | jen z modulu, žádné lokální pole |
 
 - Rozsah se píše s pomlčkou „–“ bez mezer.
 - `Intl` dává u částek a procent nezlomitelnou mezeru (` `). Testy s ní musí počítat.
