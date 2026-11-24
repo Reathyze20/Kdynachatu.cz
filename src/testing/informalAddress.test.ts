@@ -18,10 +18,12 @@ describe("findFormalAddress: pozná vykání", () => {
     assert.deepEqual(findFormalAddress("Nemáte oprávnění."), ["Nemáte"]);
   });
 
-  test("formální zájmena v kterémkoli pádě a velikosti písmen", () => {
+  test("formální zájmena v kterémkoli pádě a velikosti písmen, i bez diakritiky", () => {
     assert.deepEqual(findFormalAddress("Vaše e-mailová adresa"), ["Vaše"]);
     assert.deepEqual(findFormalAddress("Poslali jsme vám e-mail"), ["vám"]);
     assert.deepEqual(findFormalAddress("Váš účet"), ["Váš"]);
+    assert.deepEqual(findFormalAddress("Otevři vaši schránku"), ["vaši"]);
+    assert.deepEqual(findFormalAddress("Prihlaste se, vas ucet vyprsel"), ["vas", "Prihlaste"]);
   });
 
   test("tykání a neutrální texty projdou", () => {
@@ -29,12 +31,17 @@ describe("findFormalAddress: pozná vykání", () => {
     assert.deepEqual(findFormalAddress("Nemáš oprávnění k této akci."), []);
     assert.deepEqual(findFormalAddress("Tvoje e-mailová adresa ještě nebyla ověřena."), []);
     assert.deepEqual(findFormalAddress("Rezervace v chatě nebyla nalezena"), []);
+    assert.deepEqual(findFormalAddress("canvas, vase.png"), []);
   });
 
-  test("anglická slova na -te nejsou vykání", () => {
+  test("anglická slova na -te a identifikátory nejsou vykání", () => {
     assert.deepEqual(findFormalAddress("Failed to delete note, update state"), []);
+    assert.deepEqual(findFormalAddress("Chybí startDate nebo endDate."), []);
+    assert.deepEqual(findFormalAddress("no-cache, must-revalidate"), []);
   });
 });
+
+const texts = (src: string) => extractStringLiterals(src).map(({ line, text }) => ({ line, text }));
 
 describe("extractStringLiterals: komentáře a regexy nejsou hlášky", () => {
   test("přeskočí řádkové i blokové komentáře", () => {
@@ -44,30 +51,33 @@ describe("extractStringLiterals: komentáře a regexy nejsou hlášky", () => {
       "   administrátora */",
       'const a = "Zkus to znovu.";',
     ].join("\n");
-    assert.deepEqual(extractStringLiterals(src), [{ line: 4, text: "Zkus to znovu." }]);
+    assert.deepEqual(texts(src), [{ line: 4, text: "Zkus to znovu." }]);
   });
 
   test("regex literál s uvozovkou nerozbije čtení dalších řetězců", () => {
     const src = ['const re = /["\']/g;', 'const b = "Zkuste";'].join("\n");
-    assert.deepEqual(extractStringLiterals(src), [{ line: 2, text: "Zkuste" }]);
+    assert.deepEqual(texts(src), [{ line: 2, text: "Zkuste" }]);
   });
 
   test("template literál: statické části i řetězce ve výrazu", () => {
     const src = "const t = `Ahoj ${name ? \"Vám\" : x}, vítej`;";
     assert.deepEqual(
-      extractStringLiterals(src).map((l) => l.text).sort(),
+      texts(src).map((l) => l.text).sort(),
       ["Ahoj  , vítej", "Vám"].sort(),
     );
   });
 
   test("escapované uvozovky zůstanou uvnitř literálu", () => {
-    assert.deepEqual(extractStringLiterals('x("Řekni \\"Zkus\\" znovu")'), [
-      { line: 1, text: 'Řekni "Zkus" znovu' },
-    ]);
+    assert.deepEqual(texts('x("Řekni \\"Zkus\\" znovu")'), [{ line: 1, text: 'Řekni "Zkus" znovu' }]);
+  });
+
+  test("\\n a \\t oddělí slova, \\u escapy se dekódují", () => {
+    assert.deepEqual(texts('x("Chyba.\\nZkuste\\tznovu")'), [{ line: 1, text: "Chyba. Zkuste znovu" }]);
+    assert.deepEqual(texts('x("Nem\\u00e1te \\u{161}anci")'), [{ line: 1, text: "Nemáte šanci" }]);
   });
 });
 
-describe("scanSource: interní logy jsou vyjmuté", () => {
+describe("scanSource: argumenty interních logů jsou vyjmuté", () => {
   test("logger.* a console.* se nehlídají, odpověď API ano", () => {
     const src = [
       'logger.warn("AUTH", "Zkuste znovu");',
@@ -78,6 +88,16 @@ describe("scanSource: interní logy jsou vyjmuté", () => {
     assert.equal(hits.length, 1);
     assert.equal(hits[0].line, 3);
     assert.deepEqual(hits[0].words, ["Nemáte"]);
+  });
+
+  test("log a odpověď na stejném řádku: odpověď se hlídá", () => {
+    const src = 'logger.warn("A", { error: String(e) }); res.status(403).json({ message: "Nemáte přístup." });';
+    assert.deepEqual(scanSource("x.ts", src).map((h) => h.words), [["Nemáte"]]);
+  });
+
+  test("víceřádkové volání logu se nehlídá ani na dalších řádcích", () => {
+    const src = ['logger.warn(', '  "AUTH",', '  `Zkuste znovu ${id}`,', ");"].join("\n");
+    assert.deepEqual(scanSource("x.ts", src), []);
   });
 });
 

@@ -462,7 +462,7 @@ router.post("/reset-password", validate(resetPasswordSchema), async (req: Reques
 
     logger.info("AUTH", "Password reset completed", { userId: user.id, username: user.username });
 
-    return res.json({ message: "Heslo bylo změněno. Teď se můžeš přihlásit." });
+    return res.json({ message: "Heslo je změněné. Teď se můžeš přihlásit." });
   } catch (error) {
     logger.error("AUTH", "Reset password error", { error: String(error) });
     return res.status(500).json({ message: "Chyba serveru." });
@@ -510,7 +510,7 @@ router.get("/verify-token", async (req: Request, res: Response) => {
     });
 
     res.json({
-      message: "Účet byl aktivován. Teď se můžeš přihlásit.",
+      message: "Účet je aktivní. Teď se můžeš přihlásit.",
     });
   } catch (error) {
     logger.error("AUTH", "Token verification error", {
@@ -553,7 +553,7 @@ router.post("/verify-email", validate(verifyEmailSchema), async (req: Request, r
       }
     });
 
-    res.json({ message: "E-mail byl ověřen. Teď se můžeš přihlásit." });
+    res.json({ message: "E-mail je ověřený. Teď se můžeš přihlásit." });
   } catch (error) {
     logger.error("AUTH", "Verify error", { error: String(error) });
     res.status(500).json({ message: "Chyba serveru při ověřování." });

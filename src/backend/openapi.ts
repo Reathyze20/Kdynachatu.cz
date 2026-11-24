@@ -1082,7 +1082,7 @@ const paths: Record<string, OpenApiObject> = {
             },
           },
         },
-        "V Postmanu pouzij form-data pole folderId a jedno nebo vice poli photos"
+        "V Postmanu použij form-data pole folderId a jedno nebo více polí photos"
       ),
       responses: {
         "200": jsonResponse(ref("GalleryUploadResponse"), "Fotky byly uspesne nahrane"),

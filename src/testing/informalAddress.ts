@@ -2,25 +2,32 @@
  * Guard tykání v backendových hláškách (#457, spec #445). Aplikace tyká všude, i v chybách
  * z API, které frontend zobrazuje, a v e-mailech (CODING_STANDARDS.md). Tento modul je čistá
  * statická analýza: vytáhne ze zdrojáků řetězcové literály (komentáře přeskočí), vynechá
- * interní logy (`logger.*`, `console.*`) a v ostatních hledá formální tvary oslovení.
+ * argumenty interních logů (`logger.*`, `console.*`) a v ostatních hledá formální oslovení.
  * Test `informalAddress.test.ts` ho pouští nad backendovými zdrojáky v `npm run test:backend`.
+ *
+ * Známé meze lexeru: regex literál hned za `)` nebo `}` (`if (x) /re/.test(s)`) považuje za
+ * dělení. V backendu se takový zápis nevyskytuje; kdyby přibyl, guard spíš zčervená, než aby
+ * mlčel, protože čtení řetězců se rozjede.
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+import { PROJECT_ROOT } from "./integration/cabinTenantCoverage";
 
 /** Adresáře s kódem, jehož texty vidí uživatel (API odpovědi, validace, e-maily). */
-export const SCANNED_DIRS = ["src/backend", "src/middleware", "src/validators", "src/utils", "src/config"];
+const SCANNED_DIRS = ["src/backend", "src/middleware", "src/validators", "src/utils", "src/config"];
 
 export interface StringLiteral {
   /** Řádek (od 1), na kterém literál začíná. */
   line: number;
   text: string;
+  /** Literál je (i nepřímo) argumentem volání `logger.*(…)` nebo `console.*(…)`. */
+  inLogCall: boolean;
 }
 
 const isIdentChar = (ch: string) => /[\p{L}\p{N}_$]/u.test(ch);
+
+/** Konec kódu před `(` je jméno logovací funkce (`logger.warn`, `console.error`). */
+const LOG_CALLEE = /\b(logger|console)\s*\.\s*\w+\s*$/;
 
 /**
  * Lomítko začíná regex literál, když za předchozím významným znakem nemůže stát dělení
@@ -40,67 +47,86 @@ function slashStartsRegex(src: string, i: number): boolean {
 }
 
 /**
- * Vrátí všechny řetězcové literály souboru ('…', "…", `…`). Komentáře a regex literály
- * přeskočí. Z template literálu bere jen statické části, výrazy `${…}` prochází rekurzivně,
- * takže řetězce uvnitř výrazu se najdou jako samostatné literály.
+ * Vrátí všechny řetězcové literály souboru ('…', "…", `…`) s odstraněnými escapy (`\n` a
+ * `\t` se stanou mezerou, `á` znakem). Komentáře a regex literály přeskočí. Z template
+ * literálu bere statické části, výrazy `${…}` prochází rekurzivně, takže řetězce uvnitř
+ * výrazu se najdou jako samostatné literály.
  */
 export function extractStringLiterals(src: string): StringLiteral[] {
   const out: StringLiteral[] = [];
+  /** Pro každou otevřenou `(`: jde o volání logu? */
+  const parens: boolean[] = [];
+  const inLogCall = () => parens.includes(true);
   let line = 1;
   let i = 0;
 
-  const advance = () => {
-    if (src[i] === "\n") line++;
-    i++;
+  const advance = (n = 1) => {
+    for (let k = 0; k < n && i < src.length; k++) {
+      if (src[i] === "\n") line++;
+      i++;
+    }
+  };
+
+  /** Přečte escape sekvenci na pozici `\` a vrátí znak, který zastupuje. */
+  const readEscape = (): string => {
+    advance(); // \
+    const ch = src[i] ?? "";
+    const hex = (len: number) => {
+      const code = parseInt(src.slice(i + 1, i + 1 + len), 16);
+      advance(1 + len);
+      return Number.isNaN(code) ? "" : String.fromCodePoint(code);
+    };
+    if (ch === "u" && src[i + 1] === "{") {
+      const end = src.indexOf("}", i);
+      const code = parseInt(src.slice(i + 2, end), 16);
+      advance(end - i + 1);
+      return Number.isNaN(code) ? "" : String.fromCodePoint(code);
+    }
+    if (ch === "u") return hex(4);
+    if (ch === "x") return hex(2);
+    advance();
+    if (ch === "n" || ch === "r" || ch === "t" || ch === "\n") return " ";
+    return ch;
   };
 
   const readQuoted = (quote: string) => {
     const startLine = line;
+    const startsInLog = inLogCall();
     let text = "";
     advance(); // otevírací uvozovka
     while (i < src.length && src[i] !== quote && src[i] !== "\n") {
       if (src[i] === "\\") {
+        text += readEscape();
+      } else {
+        text += src[i];
         advance();
-        if (i < src.length) {
-          text += src[i];
-          advance();
-        }
-        continue;
       }
-      text += src[i];
-      advance();
     }
     advance(); // zavírací uvozovka
-    out.push({ line: startLine, text });
+    out.push({ line: startLine, text, inLogCall: startsInLog });
   };
 
   const readTemplate = () => {
     const startLine = line;
+    const startsInLog = inLogCall();
     let text = "";
     advance(); // `
     while (i < src.length && src[i] !== "`") {
       if (src[i] === "\\") {
-        advance();
-        if (i < src.length) {
-          text += src[i];
-          advance();
-        }
-        continue;
-      }
-      if (src[i] === "$" && src[i + 1] === "{") {
-        // Statická část před výrazem; výraz nahradí mezera, ať se nespojí slova.
+        text += readEscape();
+      } else if (src[i] === "$" && src[i + 1] === "{") {
+        // Výraz nahradí mezera, ať se nespojí slova kolem něj.
         text += " ";
-        advance();
-        advance();
+        advance(2);
         readCode("}");
         advance(); // }
-        continue;
+      } else {
+        text += src[i];
+        advance();
       }
-      text += src[i];
-      advance();
     }
     advance(); // `
-    out.push({ line: startLine, text });
+    out.push({ line: startLine, text, inLogCall: startsInLog });
   };
 
   const skipRegex = () => {
@@ -109,8 +135,7 @@ export function extractStringLiterals(src: string): StringLiteral[] {
     while (i < src.length && src[i] !== "\n") {
       const ch = src[i];
       if (ch === "\\") {
-        advance();
-        advance();
+        advance(2);
         continue;
       }
       if (ch === "[") inClass = true;
@@ -133,11 +158,8 @@ export function extractStringLiterals(src: string): StringLiteral[] {
       if (ch === "/" && src[i + 1] === "/") {
         while (i < src.length && src[i] !== "\n") advance();
       } else if (ch === "/" && src[i + 1] === "*") {
-        advance();
-        advance();
-        while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) advance();
-        advance();
-        advance();
+        const end = src.indexOf("*/", i + 2);
+        advance((end < 0 ? src.length : end + 2) - i);
       } else if (ch === "'" || ch === '"') {
         readQuoted(ch);
       } else if (ch === "`") {
@@ -145,6 +167,8 @@ export function extractStringLiterals(src: string): StringLiteral[] {
       } else if (ch === "/" && slashStartsRegex(src, i)) {
         skipRegex();
       } else {
+        if (ch === "(") parens.push(LOG_CALLEE.test(src.slice(Math.max(0, i - 40), i)));
+        else if (ch === ")") parens.pop();
         advance();
       }
     }
@@ -154,11 +178,9 @@ export function extractStringLiterals(src: string): StringLiteral[] {
   return out;
 }
 
-/** Interní log: řádek, na kterém literál začíná, volá `logger.*` nebo `console.*`. */
-const LOG_CALL = /\b(logger|console)\.\w+\s*\(/;
-
-/** Formální zájmena (vy): „Váš účet“, „Poslali jsme vám“, „bez vás“. */
-const FORMAL_PRONOUN = /(?<![\p{L}])(váš|vaše|vašeho|vašemu|vaším|vaší|vašich|vašim|vašimi|vám|vás|vámi)(?![\p{L}])/giu;
+/** Formální zájmena (vy), s diakritikou i bez: „Váš účet“, „Poslali jsme vám“, „vaši schránku“. */
+const FORMAL_PRONOUN =
+  /(?<![\p{L}\p{N}_])(vy|v[aá]š|v[aá]š[ei]|v[aá]šeho|v[aá]šemu|v[aá]š[ií]m|v[aá]šich|v[aá]šimi|v[aá][ms]|v[aá]mi)(?![\p{L}\p{N}_])/giu;
 
 /**
  * Slovesa ve 2. osobě množného čísla končí na „-te“ (Kontaktujte, Zkuste, můžete, jste).
@@ -166,15 +188,16 @@ const FORMAL_PRONOUN = /(?<![\p{L}])(váš|vaše|vašeho|vašemu|vaším|vaší|
  * jinak by chytalo angličtinu (`must-revalidate`, `/:id/vote`) a vývojářské popisy bez
  * diakritiky v OpenAPI. Identifikátory v camelCase (`startDate`) se přeskočí.
  */
-const SECOND_PERSON_PLURAL = /(?<![\p{L}])(\p{L}{2,}te)(?![\p{L}])/giu;
+const SECOND_PERSON_PLURAL = /(?<![\p{L}\p{N}_])(\p{L}{2,}te)(?![\p{L}\p{N}_])/giu;
 const CZECH_DIACRITIC = /[áčďéěíňóřšťúůýž]/iu;
 const CAMEL_CASE = /^\p{L}+\p{Lu}/u;
 
 /** Nejčastější vykání bez diakritiky; hlídá se i v textech, kde diakritika chybí. */
-const FORMAL_ASCII = /(?<![\p{L}])(zkuste|kontaktujte|zkontrolujte|zadejte|vyberte|pouzijte|muzete|nemate|jste|budete|chcete)(?![\p{L}])/giu;
+const FORMAL_ASCII =
+  /(?<![\p{L}\p{N}_])(zkuste|kontaktujte|zkontrolujte|zadejte|vyberte|pouzijte|prihlaste|overte|kliknete|muzete|nemate|jste|budete|chcete)(?![\p{L}\p{N}_])/giu;
 
-/** Anglická slova na „-te“, která se objeví i v české větě (názvy akcí, polí). */
-const NOT_FORMAL_TE = new Set([
+/** Anglická slova na „-te“, která se smí objevit v české větě (názvy akcí, polí). */
+const ENGLISH_TE_WORDS = new Set([
   "complete", "create", "date", "delete", "invite", "note", "private", "quote", "remote",
   "route", "site", "state", "template", "update", "validate", "write",
 ]);
@@ -189,7 +212,7 @@ export function findFormalAddress(text: string): string[] {
   if (isCzechSentence(text)) {
     for (const m of text.matchAll(SECOND_PERSON_PLURAL)) {
       const word = m[1];
-      if (!CAMEL_CASE.test(word) && !NOT_FORMAL_TE.has(word.toLowerCase())) found.add(word);
+      if (!CAMEL_CASE.test(word) && !ENGLISH_TE_WORDS.has(word.toLowerCase())) found.add(word);
     }
   }
   return [...found];
@@ -204,10 +227,9 @@ export interface FormalAddressHit {
 
 /** Projde zdroják jednoho souboru a vrátí uživatelské literály s formálním oslovením. */
 export function scanSource(file: string, src: string): FormalAddressHit[] {
-  const lines = src.split("\n");
   const hits: FormalAddressHit[] = [];
   for (const literal of extractStringLiterals(src)) {
-    if (LOG_CALL.test(lines[literal.line - 1] ?? "")) continue;
+    if (literal.inLogCall) continue;
     const words = findFormalAddress(literal.text);
     if (words.length > 0) hits.push({ file, line: literal.line, words, text: literal.text });
   }
@@ -215,10 +237,10 @@ export function scanSource(file: string, src: string): FormalAddressHit[] {
 }
 
 /** Backendové produkční zdrojáky (`.ts`), bez testů. Cesty relativně ke kořeni repa, s `/`. */
-export function listScannedFiles(root = PROJECT_ROOT): string[] {
+export function listScannedFiles(): string[] {
   const files: string[] = [];
   const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(path.join(PROJECT_ROOT, dir), { withFileTypes: true })) {
       const rel = `${dir}/${entry.name}`;
       if (entry.isDirectory()) walk(rel);
       else if (rel.endsWith(".ts") && !/\.(i?test|d)\.ts$/.test(rel)) files.push(rel);
@@ -227,3 +249,5 @@ export function listScannedFiles(root = PROJECT_ROOT): string[] {
   for (const dir of SCANNED_DIRS) walk(dir);
   return files.sort();
 }
+
+export { PROJECT_ROOT };
