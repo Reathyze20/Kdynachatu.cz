@@ -39,6 +39,7 @@ const EXCLUDED_URL_PARTS = [
   '/forgot-password',
   '/reset-password',
   '/logs/client',
+  '/staging-feedback', // tester má hned vidět, že se neuložilo, a text mu zůstane v poli
 ]
 
 function readQueue(): QueuedMutation[] {

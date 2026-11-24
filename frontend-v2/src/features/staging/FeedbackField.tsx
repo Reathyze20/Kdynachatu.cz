@@ -21,16 +21,14 @@ export function FeedbackField({ taskId, label }: FeedbackFieldProps) {
   const [text, setText] = useState('')
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle')
 
-  const saved = () => {
-    setText('')
-    setStatus('saved')
-  }
+  // Bez offline fronty (lib/offlineQueue.ts): bez signálu skončí chybou a text zůstane v poli
   const send = useMutation({
     mutationFn: stagingFeedbackApi.send,
-    onSuccess: saved,
+    onSuccess: () => {
+      setText('')
+      setStatus('saved')
+    },
     onError: (err: Error) => {
-      // Offline: klient request zařadil do fronty a odešle ho sám (a řekne to toastem) – neposílat znovu
-      if ((err as Error & { queuedOffline?: boolean }).queuedOffline) return saved()
       handleMutationError('Zpětnou vazbu se nepodařilo odeslat', { component: 'FeedbackField', silent: true })(err)
       setStatus('error')
     },
@@ -60,8 +58,8 @@ export function FeedbackField({ taskId, label }: FeedbackFieldProps) {
         <Button type="submit" variant="outline" size="sm" disabled={!text.trim() || send.isPending}>
           {send.isPending ? 'Odesílám…' : 'Odeslat'}
         </Button>
-        {status === 'saved' && <p role="status" className="text-sm font-medium text-green-700">Díky, uloženo</p>}
-        {status === 'error' && <p role="alert" className="text-sm text-red-700">Nepodařilo se odeslat. Text zůstal v poli, zkus to znovu.</p>}
+        {status === 'saved' && <p role="status" className="text-sm font-medium text-green-600">Díky, uloženo</p>}
+        {status === 'error' && <p role="alert" className="text-sm text-destructive">Nepodařilo se odeslat. Text zůstal v poli, zkus to znovu.</p>}
       </div>
     </form>
   )
