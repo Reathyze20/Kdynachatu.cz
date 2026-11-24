@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 · Zelená a podbarvení úkolu – picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Tokeny z frontend-v2/src/styles/variables.css (stav main po 1.10.1).
+   Picker mění jen --brand, --brand-hover a --brand-light; papír a text zůstávají. */
+:root {
+  --page: 246 240 230; --sheet: 246 240 230; --inset: 238 230 217; --rule: 230 221 207;
+  --ink: 38 33 28; --ink-2: 94 82 70;
+  --brand: #3d7861; --brand-hover: #1a2721; --brand-light: #e8f4ef;
+  --low: 138 75 6; --empty: 180 35 35;
+  --lift: 0 1px 2px rgb(0 0 0 / .06), 0 14px 32px -16px rgb(30 20 10 / .45);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 400 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: rgb(var(--ink)); background: #ece6dc; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 24px; }
+h1 { margin: 0 0 4px; font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.lead { margin: 0 0 18px; color: rgb(var(--ink-2)); max-width: 900px; }
+.controls { display: flex; flex-direction: column; gap: 10px; position: sticky; top: 0; z-index: 10; background: #ece6dcf2; padding: 12px 0; backdrop-filter: blur(6px); }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ctl > b { width: 130px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--ink-2)); }
+.ctl button { border: 1px solid rgb(var(--rule)); background: #fffdf8; color: rgb(var(--ink)); font: 600 14px/1.2 inherit; padding: 8px 14px; border-radius: 999px; cursor: pointer; min-height: 40px; display: inline-flex; align-items: center; gap: 8px; }
+.ctl button[aria-pressed="true"] { outline: 2px solid rgb(var(--ink)); outline-offset: 1px; }
+.sw { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgb(0 0 0 / .15); }
+.rec { font-size: 11px; font-weight: 700; opacity: .7; }
+.note { font-size: 14px; color: rgb(var(--ink-2)); margin: 2px 0 0 138px; max-width: 980px; }
+.note code { font-size: 13px; }
+
+/* ---------- Scéna ---------- */
+.stage { position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px -20px rgb(0 0 0 / .4); margin-top: 8px; min-height: 760px; }
+.bg { position: absolute; inset: 0; }
+.bg.fog { background:
+  radial-gradient(900px 400px at 30% 85%, #b98d55 0%, transparent 70%),
+  radial-gradient(1200px 500px at 60% 10%, #e7d6bc 0%, transparent 70%),
+  linear-gradient(180deg, #d9c4a2 0%, #c9ab7e 55%, #a77d47 100%); }
+.bg.photo { background: url("07-teplo-chata.webp") center / cover; }
+.bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(30 22 14 / .10), rgb(30 22 14 / .35)); }
+.cols { position: relative; display: grid; grid-template-columns: 200px minmax(0, 1fr) 380px; gap: 20px; padding: 20px; align-items: start; }
+.card { background: rgb(var(--sheet)); border: 1px solid rgb(var(--rule)); border-radius: 18px; box-shadow: var(--lift); padding: 16px 18px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgb(var(--ink-2)); margin: 0 0 10px; }
+.title { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+.muted { color: rgb(var(--ink-2)); font-size: 14px; }
+
+/* Sidebar */
+.nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; color: rgb(var(--ink)); text-decoration: none; font-size: 16px; }
+.nav a.on { background: var(--brand-light); color: var(--brand); font-weight: 600; }
+.nav .ic { width: 18px; height: 18px; border: 2px solid currentColor; border-radius: 5px; opacity: .8; }
+
+/* Na chatě teď */
+.timeline { display: flex; align-items: center; gap: 18px; }
+.who { display: flex; align-items: center; gap: 10px; }
+.dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; }
+.dot.home { background: var(--brand); }
+.dot.ava { background: #d9c3a3; color: rgb(var(--ink)); }
+.who b { display: block; font-size: 17px; }
+.arrow { color: rgb(var(--ink-2)); }
+hr { border: 0; border-top: 1px solid rgb(var(--rule)); margin: 12px 0; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { border: 1px solid rgb(var(--rule)); background: transparent; border-radius: 999px; padding: 8px 16px; font: 600 14px/1.2 inherit; color: rgb(var(--ink)); }
+.pill.brand { border-color: color-mix(in srgb, var(--brand) 40%, transparent); background: var(--brand-light); }
+
+/* Počasí */
+.days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.day { background: rgb(var(--inset)); border-radius: 14px; padding: 10px; text-align: center; font-size: 14px; border: 1.5px solid transparent; }
+.day.on { border-color: var(--brand); }
+.day b { display: block; font-size: 16px; margin-top: 6px; }
+.link { color: var(--brand); font-weight: 600; font-size: 15px; }
+.uv { color: var(--brand); font-weight: 600; }
+
+/* Visí na tobě */
+.nudge { border-radius: 12px; padding: 12px 14px; border: 1px solid rgb(var(--rule)); }
+.nudge.first { background: var(--nudge-bg); border-color: var(--nudge-border); }
+.nudge .row { display: flex; gap: 10px; align-items: baseline; }
+.nudge .flame { color: rgb(var(--low)); }
+.actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 999px; min-height: 48px; padding: 0 20px; font: 700 15px/1 inherit; cursor: pointer; }
+.btn.primary { background: var(--brand); color: #fff; }
+.btn.primary:hover, .btn.primary.force-hover { background: var(--brand-hover); }
+.btn.ghost { background: #fff; color: rgb(var(--ink)); border: 1px solid rgb(var(--rule)); font-weight: 500; }
+.chip { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
+.chip.empty { color: rgb(var(--empty)); background: color-mix(in srgb, rgb(var(--empty)) 14%, rgb(var(--sheet))); }
+.chip.low { color: rgb(var(--low)); background: color-mix(in srgb, rgb(var(--low)) 14%, rgb(var(--sheet))); }
+.item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgb(var(--rule)); }
+.item:last-of-type { border-bottom: 0; }
+.item .btn { margin-left: auto; min-height: 44px; font-weight: 500; }
+.contrast { font-size: 12px; color: rgb(var(--ink-2)); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>10 · Zelená a podbarvení úkolu</h1>
+  <p class="lead">Dnešní šalvějová <code>#3d7861</code> a mátové podbarvení <code>#e8f4ef</code> jsou studené (do modra). Na teplém papíře a sépiové fotce proto působí cize. Vyber zelenou a podbarvení karty „Visí na tobě“. Hover tlačítka je u nových variant tmavší odstín téže zelené, ne skoro černá jako dnes.</p>
+
+  <div class="controls">
+    <div class="ctl" id="ctl-green"><b>Zelená</b></div>
+    <p class="note" id="green-note"></p>
+    <div class="ctl" id="ctl-nudge"><b>Podbarvení úkolu</b></div>
+    <p class="note" id="nudge-note"></p>
+    <div class="ctl" id="ctl-bg"><b>Pozadí</b></div>
+  </div>
+
+  <div class="stage">
+    <div class="bg fog" id="bg"></div>
+    <div class="cols">
+      <div class="card nav">
+        <div class="title" style="padding: 4px 12px">Testovací chata</div>
+        <a class="on"><span class="ic"></span>Přehled</a>
+        <a><span class="ic"></span>Kalendář</a>
+        <a><span class="ic"></span>Předávka</a>
+        <a><span class="ic"></span>Zásoby</a>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <p class="eyebrow">Na chatě teď</p>
+          <div class="timeline">
+            <div class="who"><span class="dot home">⌂</span><div><b>Chata je volná</b><span class="muted">prázdná 7 dní</span></div></div>
+            <span class="arrow">→</span>
+            <div class="who"><span class="dot ava">P</span><div><b>demo-petr</b><span class="muted">od ne 29. 11. · 3 noci</span></div></div>
+          </div>
+          <hr>
+          <div class="pills"><span class="pill brand">Volný víkend So 5. – Ne 6. prosince</span><span class="pill">Kalendář</span></div>
+        </div>
+        <div class="card">
+          <div style="display:flex; justify-content: space-between; align-items: baseline">
+            <p class="eyebrow">Počasí na pobyt</p><span class="link">Hodinový graf ⌄</span>
+          </div>
+          <div class="days">
+            <div class="day on">Ne 29.<b>2° / −5°</b></div>
+            <div class="day">Po 30.<b>0° / −3°</b></div>
+            <div class="day">Út 1.<b>1° / −6°</b></div>
+            <div class="day">St 2.<b>−2° / −7°</b></div>
+          </div>
+          <p class="muted" style="margin: 10px 0 0">07:35 · 16:04 · <span class="uv">UV 2 nízký</span></p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <p class="title">Visí na tobě</p>
+          <div class="nudge first">
+            <div class="row"><span class="flame">🔥</span><div><b style="font-weight:600">Plynová bomba: Dochází</b><div class="muted">Nahlásila to poslední návštěva při odjezdu.</div></div></div>
+            <div class="actions"><button class="btn primary">Otevřít Zásoby</button><button class="btn primary force-hover">Hover</button><button class="btn ghost">Zkopírovat pro WhatsApp</button></div>
+          </div>
+          <p class="contrast" id="contrast"></p>
+        </div>
+        <div class="card">
+          <p class="title">Potřebuje pozornost</p>
+          <div class="item"><span class="chip empty">DOŠLO</span>Pivo<button class="btn ghost">Koupím já</button></div>
+          <div class="item"><span class="chip low">DOCHÁZÍ</span>Toaletní papír<button class="btn ghost">Koupím já</button></div>
+          <p style="margin: 8px 0 0"><span class="link">+ 2 další potřebují pozornost ›</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GREENS = [
+  { id: 'dnes', name: 'Dnes · šalvěj', c: '#3d7861', hover: '#1a2721', light: '#e8f4ef',
+    note: 'Současný stav pro srovnání. Kontrast na papíře 4,57 : 1 (těsně nad hranicí), do modra, mátové podbarvení.' },
+  { id: 'jedle', name: 'Jedle', c: '#3e5c47', hover: '#2f4636', rec: 'doporučuji',
+    note: 'Ztlumená lesní zelená, posunutá k teplé. Pořád jasně „zelená“, ale ladí s hnědou fotkou. Kontrast na papíře 6,55 : 1, bílý text 7,43 : 1.' },
+  { id: 'mech', name: 'Mech', c: '#4d5e38', hover: '#3a4729',
+    note: 'Olivovější, mechová. Nejvíc „chata“, méně „aplikace“. Kontrast 6,23 : 1.' },
+  { id: 'olivova', name: 'Olivová', c: '#5c6236', hover: '#464a29',
+    note: 'Nejteplejší, skoro khaki. S okrovými štítky DOCHÁZÍ může splývat. Kontrast 5,69 : 1.' },
+  { id: 'smrk', name: 'Smrk', c: '#35503f', hover: '#283c30',
+    note: 'Nejtmavší, téměř smrková. Hodně klidná, tlačítka těžší. Kontrast 7,81 : 1.' },
+];
+const NUDGES = [
+  { id: 'dnes', name: 'Dnes · máta', bg: () => '#e8f4ef', border: () => 'transparent',
+    note: 'Současné tyrkysové podbarvení.' },
+  { id: 'tint', name: 'Nádech zelené', rec: 'doporučuji', bg: g => `color-mix(in srgb, ${g} 10%, rgb(246 240 230))`, border: g => `color-mix(in srgb, ${g} 18%, rgb(246 240 230))`,
+    note: '10 % vybrané zelené vmíchané do papíru (<code>color-mix</code>). Pořád je vidět, že je to „tvoje“ věc, ale teple.' },
+  { id: 'inset', name: 'Papír bez zelené', bg: () => 'rgb(238 230 217)', border: () => 'transparent',
+    note: 'Stejný tón jako dny v počasí (<code>--inset</code>). Úkol odliší jen ikona a tlačítko.' },
+  { id: 'none', name: 'Bez podbarvení', bg: () => 'transparent', border: () => 'rgb(230 221 207)',
+    note: 'Jen linka jako ostatní řádky. Nejklidnější, ale první úkol už nevystoupí.' },
+];
+const BGS = [ { id: 'fog', name: 'Sépiová mlha (jako na screenshotu)' }, { id: 'photo', name: 'Les (fotka z pickeru 07)' } ];
+const state = { green: 'jedle', nudge: 'tint', bg: 'fog' };
+
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const lum = h => { const [r, g, b] = hex(h).map(v => v / 255).map(c => c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4); return .2126 * r + .7152 * g + .0722 * b; };
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return ((x + .05) / (y + .05)).toFixed(2).replace('.', ','); };
+const mixHex = (a, b, t) => '#' + hex(a).map((v, i) => Math.round(v * t + hex(b)[i] * (1 - t)).toString(16).padStart(2, '0')).join('');
+
+function render() {
+  const g = GREENS.find(x => x.id === state.green);
+  const n = NUDGES.find(x => x.id === state.nudge);
+  const root = document.documentElement.style;
+  root.setProperty('--brand', g.c);
+  root.setProperty('--brand-hover', g.hover);
+  root.setProperty('--brand-light', g.light || `color-mix(in srgb, ${g.c} 10%, rgb(246 240 230))`);
+  root.setProperty('--nudge-bg', n.bg(g.c));
+  root.setProperty('--nudge-border', n.border(g.c));
+  document.getElementById('bg').className = 'bg ' + state.bg;
+  document.getElementById('green-note').textContent = g.note;
+  document.getElementById('nudge-note').innerHTML = n.note;
+  const tint = n.id === 'tint' ? mixHex(g.c, '#f6f0e6', .10) : n.id === 'dnes' ? '#e8f4ef' : n.id === 'inset' ? '#eee6d9' : '#f6f0e6';
+  document.getElementById('contrast').textContent = `Kontrast odkazu na podbarvení ${ratio(g.c, tint)} : 1 · bílý text na tlačítku ${ratio(g.c, '#ffffff')} : 1 · hover ${ratio(g.hover, '#ffffff')} : 1`;
+  for (const [key, el] of [['green', 'ctl-green'], ['nudge', 'ctl-nudge'], ['bg', 'ctl-bg']])
+    document.querySelectorAll(`#${el} button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === state[key])));
+}
+function buttons(el, list, key, swatch) {
+  const box = document.getElementById(el);
+  for (const item of list) {
+    const b = document.createElement('button');
+    b.dataset.id = item.id;
+    b.innerHTML = (swatch ? `<span class="sw" style="background:${item.c}"></span>` : '') + item.name + (item.rec ? ` <span class="rec">${item.rec}</span>` : '');
+    b.onclick = () => { state[key] = item.id; render(); };
+    box.appendChild(b);
+  }
+}
+buttons('ctl-green', GREENS, 'green', true);
+buttons('ctl-nudge', NUDGES, 'nudge', false);
+buttons('ctl-bg', BGS, 'bg', false);
+render();
+</script>
+</body>
+</html>

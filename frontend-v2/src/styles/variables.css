@@ -8,25 +8,26 @@
    ============================================================================ */
 :root {
   /* =========================================================================
-     VRSTVA 1 — RAW PALETTE  "Moderní Les" (zeleno-šedá)
+     VRSTVA 1 — RAW PALETTE  "Jedle na papíře" (teplá lesní zelená, #427)
      ========================================================================= */
 
   --raw-color-1: #1a2721;
   /* Nejtmavší      — Velmi tmavá zeleno-šedá (hover tlačítek; text bere --raw-ink) */
-  --raw-color-2: #3d7861;
-  /* Výrazná/Akcent  — Svěží šalvějová zelená (Tlačítka). O kousek tmavší než #3f7b63,
-     aby odkaz měl kontrast ≥ 4,5 : 1 i na teplém --page (#320). */
+  --raw-color-2: #3e5c47;
+  /* Výrazná/Akcent  — Jedle, ztlumená lesní zelená posunutá k teplé (tlačítka, odkazy).
+     Šalvějová #3d7861 táhla do tyrkysova a na sépiové fotce působila cize (#427,
+     picker docs/design/10-zelena-atomy.html). Kontrast na --page 6,55 : 1. */
   --raw-color-3: #6b7280;
   /* Střední tón     — Neutrální šedá (Sekundární texty)    */
   --raw-color-4: #e5e7eb;
   /* Světlejší tón   — Světle šedá (Rámečky, oddělovače)   */
-  --raw-color-5: #f4f7f5;
-  /* Nejsvětlejší    — Jemně mentolově-bílý nádech (Pozadí) */
+  --raw-color-5: #f8f4ec;
+  /* Nejsvětlejší    — Teplá lomená bílá (Pozadí); dřív mátová #f4f7f5 (#427) */
 
   /* Stálé barvy — nemění se mezi paletami */
   --raw-white: #ffffff;
-  --raw-off-white: #f4f7f5;
-  /* Jemně mentolově-bílý nádech — pozadí */
+  --raw-off-white: #f8f4ec;
+  /* Teplá lomená bílá — pozadí */
 
   /* Teplý papír (D4, #320): text a pozadí stránky. Stejné barvy jako --page a text mocku 07-teplo-atomy. */
   --raw-ink: #26211c;
@@ -52,10 +53,10 @@
   --bg-app: var(--raw-paper);
   /* Legacy pozadí stránky stejné teplé jako --page, ať legacy a redesign nemají dvě pozadí */
   --bg-card: var(--raw-white);
-  --bg-card-hover: #edf1ee;
-  /* Mírné ztmavení karet na hover        */
-  --bg-hover: #e8ece9;
-  /* Hover stav řádků, listů              */
+  --bg-card-hover: #f3ede3;
+  /* Mírné ztmavení bílých karet na hover, teplé (#427) */
+  --bg-hover: #ece5d9;
+  /* Hover stav řádků, listů; o kousek tmavší než --page, teplé (#427) */
 
   /* ── Texty ─────────────────────────────────────────────────────────── */
   --text-main: var(--raw-ink);
@@ -70,11 +71,11 @@
 
   /* ── Brand ─────────────────────────────────────────────────────────── */
   --brand-primary: var(--raw-color-2);
-  /* Okr — hlavní akce        */
-  --brand-primary-hover: var(--raw-color-1);
-  /* Tmavší na hover          */
-  --brand-primary-light: #e8f4ef;
-  /* Jemné pozadí pro outline */
+  /* Jedle — hlavní akce      */
+  --brand-primary-hover: #2f4636;
+  /* Tmavší odstín téže zelené na hover, ne skoro černá --raw-color-1 (#427) */
+  --brand-primary-light: color-mix(in srgb, var(--brand-primary) 10%, rgb(var(--page)));
+  /* Jemné pozadí (aktivní položka menu, úkol ve „Visí na tobě“): 10 % zelené v papíru místo máty (#427) */
 
   /* ── Linky a rámečky ────────────────────────────────────────────────── */
   --border-light: var(--raw-color-5);
