@@ -1,19 +1,10 @@
 /**
- * `npm run test:tenant-mutations [-- notes.ts …]` — kontrola tenant izolace mutacemi (#361, #365).
- * Spouští se ručně před release tagem. Pro každého tenant mutanta v souborech rout pustí itesty
- * z `ROUTE_ITEST_MAP` a vypíše, které úniky dat mezi chatami žádný test nezachytí.
- *
- *  1. Kontrola registrů (mapa, výjimky) – při chybě konec dřív, než se cokoli spustí.
- *  2. Dočasná kopie projektu v os.tmpdir(): `src/`, `prisma/`, tsconfig, prisma.config.ts,
- *     `package.json`; `node_modules` jen odkazem (na Windows junction). Mutace se zapisují jen do
- *     kopie, do pracovního stromu nikdy. Kopie se maže ve `finally`, při SIGINT/SIGTERM i při `exit`.
- *  3. Jedna testovací DB a jedna migrace na celý běh (`withTestDatabase`, lokálně Docker 5433,
- *     jinak TEST_DATABASE_URL). Lokální DB na 5432 se nepoužije nikdy.
- *  4. Kontrolní běh bez mutací pro každou skupinu itestů; selhání = konec s chybou, bez mutantů.
- *  5. Mutanti sériově: zmutovaný soubor v kopii → itesty skupiny (timeout 3× kontrolní doba,
- *     min. 60 s) → obnova souboru. Výsledek na řádek, na konci souhrn a doba; exit kód 1 při
- *     přeživším mimo výjimky.
- * Volitelné argumenty = názvy souborů rout, na které se běh omezí (registry se kontrolují vždy celé).
+ * `npm run test:tenant-mutations [-- notes.ts …]` – ruční kontrola tenant izolace před release
+ * tagem (#361, #365). Po kontrole registrů vytvoří dočasnou kopii projektu v os.tmpdir()
+ * (`node_modules` jen odkazem), pustí jednu testovací DB přes `withTestDatabase` (Docker 5433 nebo
+ * TEST_DATABASE_URL, nikdy 5432), kontrolní běh každé skupiny itestů a pak každého mutanta proti
+ * itestům z `ROUTE_ITEST_MAP`. Mutace se zapisují jen do kopie, pracovní strom se nemění; kopie se
+ * maže ve `finally`, při SIGINT/SIGTERM i při `exit`. Argumenty omezí běh na dané soubory rout.
  */
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
@@ -22,17 +13,8 @@ import path from "node:path";
 import { projectRoot, withTestDatabase } from "../testing/integration/testDatabase";
 import { checkMutantRegistries, itestFileNames, ROUTE_ITEST_MAP, TENANT_MUTANT_EXCEPTIONS } from "../testing/tenantMutantRegistry";
 import { findRouteFileMutants, routeFileNames } from "../testing/tenantMutants";
-import {
-  columnWidths,
-  exitCodeFor,
-  formatMutantLine,
-  formatSummary,
-  mutantTimeoutMs,
-  planMutant,
-  resultOfOutcome,
-  type MutantResult,
-  type TestOutcome,
-} from "../testing/tenantMutationRun";
+import { columnWidths, exitCodeFor, formatMutantLine, formatSummary, mutantTimeoutMs, planMutant, resultOfOutcome } from "../testing/tenantMutationRun";
+import type { MutantResult, TestOutcome } from "../testing/tenantMutationRun";
 
 const COPIED_ENTRIES = ["src", "prisma", "tsconfig.json", "prisma.config.ts", "package.json"];
 const ITEST_DIR = "src/testing/integration";
@@ -57,11 +39,8 @@ function removeProjectCopy(): void {
   const dir = copyDir;
   copyDir = null;
   // Odkaz nejdřív odpojit, ať rekurzivní mazání nikdy nesáhne do skutečných node_modules.
-  try {
-    fs.unlinkSync(path.join(dir, "node_modules"));
-  } catch {
-    // rmSync odkaz stejně jen odpojí (lstat ho vidí jako symlink)
-  }
+  const link = path.join(dir, "node_modules");
+  if (fs.lstatSync(link, { throwIfNoEntry: false })) fs.unlinkSync(link); // u junction smaže jen odkaz
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
@@ -74,15 +53,9 @@ function pathInCopy(root: string, relative: string): string {
 
 function killTree(child: ChildProcess): void {
   if (child.pid === undefined || child.exitCode !== null) return;
-  if (process.platform === "win32") {
-    spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
-  } else {
-    try {
-      process.kill(-child.pid, "SIGKILL"); // detached → vlastní skupina procesů (i podprocesy node --test)
-    } catch {
-      child.kill("SIGKILL");
-    }
-  }
+  // Celý strom: node --test pouští každý soubor v podprocesu. Mimo Windows je dítě detached = skupina.
+  if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+  else try { process.kill(-child.pid, "SIGKILL"); } catch { /* skupina už doběhla */ }
 }
 
 function checkInterrupted(): void {
@@ -112,18 +85,11 @@ function runItests(cwd: string, itests: readonly string[], env: NodeJS.ProcessEn
     child.stdout?.on("data", collect);
     child.stderr?.on("data", collect);
     let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      killTree(child);
-    }, timeoutMs);
-    child.on("error", (error) => {
-      clearTimeout(timer);
-      currentChild = null;
-      reject(error);
-    });
+    const timer = setTimeout(() => ((timedOut = true), killTree(child)), timeoutMs);
+    const done = () => (clearTimeout(timer), (currentChild = null));
+    child.on("error", (error) => (done(), reject(error)));
     child.on("exit", (code) => {
-      clearTimeout(timer);
-      currentChild = null;
+      done();
       const outcome: TestOutcome = timedOut ? "timeout" : code === 0 ? "passed" : "failed";
       resolve({ outcome, output, durationMs: Date.now() - started });
     });
@@ -219,9 +185,7 @@ async function main(): Promise<number> {
 }
 
 main().then(
-  (code) => {
-    process.exitCode = code;
-  },
+  (code) => (process.exitCode = code),
   (error: unknown) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

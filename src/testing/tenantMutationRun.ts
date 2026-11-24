@@ -55,17 +55,12 @@ const resultLabel = (result: MutantResult) => (result.kind === "exception" ? `v�
 const locationOf = (mutant: TenantMutant) => `${mutant.file}:${mutant.line}`;
 const routeOf = (mutant: TenantMutant) => mutant.route ?? "(bez routy)";
 
-export interface ColumnWidths {
-  location: number;
-  route: number;
-}
+export type ColumnWidths = { location: number; route: number };
 
-/** Šířky sloupců, aby se výpis dal zarovnat už během běhu (řádky se tisknou průběžně). */
+/** Šířky sloupců předem (řádky se tisknou průběžně). Routu helperu (víc rout) nezarovnává nad 40 znaků. */
 export function columnWidths(mutants: readonly TenantMutant[]): ColumnWidths {
-  return {
-    location: Math.max(0, ...mutants.map((m) => locationOf(m).length)),
-    route: Math.max(0, ...mutants.map((m) => routeOf(m).length)),
-  };
+  const widest = (texts: string[]) => Math.max(0, ...texts.map((t) => t.length));
+  return { location: widest(mutants.map(locationOf)), route: Math.min(40, widest(mutants.map(routeOf))) };
 }
 
 /** `src/backend/routes/notes.ts:177  GET /api/notes/:id  zabit` */
