@@ -1,5 +1,5 @@
 /**
- * Rychlé přihlášení demo účty na stagingu: přihlašovací obrazovka pod formulářem nabídne jména
+ * Rychlé přihlášení demo účty na stagingu: přihlašovací obrazovka nad formulářem nabídne jména
  * fiktivních účtů ze seedu a kliknutí předvyplní jméno a heslo.
  *
  * Hesla nejsou ve frontend bundlu – posílá je jen tento endpoint, a to jen když běží staging
