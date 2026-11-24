@@ -55,13 +55,13 @@ describe("superadmin: cabin admin endpoints answer 404 like for a non-existent u
 
   for (const [name, call] of cases) {
     test(name, async () => {
-      const before = await userSnapshot(superadmin.id);
+      const snapshotBefore = await userSnapshot(superadmin.id);
       const missing = await call(world.adminA, randomUUID());
       const res = await call(world.adminA, superadmin.id);
       assert.equal(missing.status, 404);
       assert.equal(res.status, 404);
       assert.deepEqual(res.body, missing.body);
-      assert.deepEqual(await userSnapshot(superadmin.id), before);
+      assert.deepEqual(await userSnapshot(superadmin.id), snapshotBefore);
     });
   }
 });
@@ -108,8 +108,11 @@ describe("superadmin: own endpoints keep working", () => {
   });
 
   test("positive control: admin A still changes the role of a regular cabin A member", async () => {
-    const res = await as(app, world.adminA).put(`/api/users/${world.memberA.id}/role`).send({ role: "guest" });
+    const member = await prisma.user.create({
+      data: { username: "clen-a-role", passwordHash: "x", color: "#5d9b62", role: "user", cabinId: world.cabinA.id },
+    });
+    const res = await as(app, world.adminA).put(`/api/users/${member.id}/role`).send({ role: "guest" });
     assert.equal(res.status, 200);
-    assert.equal((await userSnapshot(world.memberA.id))?.role, "guest");
+    assert.equal((await userSnapshot(member.id))?.role, "guest");
   });
 });
