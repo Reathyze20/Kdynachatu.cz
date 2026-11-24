@@ -23,6 +23,7 @@
     "db:push": "prisma db push",
     "validate:ai": "tsx src/scripts/validateAiAssets.ts",
     "report:ai": "tsx src/scripts/reportAiGovernance.ts",
+    "ideation": "tsx src/scripts/ideation.ts",
     "db:seed": "tsx src/scripts/seedStaging.ts",
     "db:migrate-json": "tsx src/scripts/migrateData.ts",
     "staging:seed-smoke": "tsx src/scripts/seedStagingSmoke.ts",
