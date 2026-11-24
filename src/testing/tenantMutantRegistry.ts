@@ -66,15 +66,6 @@ export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
       "globální obsazenost jména hlásí už veřejná registrace (409). Test v users.itest.ts to ověřuje.",
   },
   {
-    file: "users.ts",
-    route: "DELETE /api/users/me",
-    original: "cabinId: user.cabinId",
-    reason:
-      "Nedosažitelný kód: `router.delete(\"/:id\")` je registrovaný dřív a `DELETE /api/users/me` obslouží " +
-      "s id `me` (člen 403, správce 404), handler `/me` se nespustí nikdy – mutant je ekvivalentní. " +
-      "Bug #419; s jeho opravou výjimku smazat a doplnit test posledního admina do users.itest.ts.",
-  },
-  {
     file: "inventory.ts",
     route: "POST /api/inventory/:id/pledge",
     original: "cabinId",
