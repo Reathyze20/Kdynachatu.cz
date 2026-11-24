@@ -136,6 +136,9 @@ describe("výjimka s mutatedLine a count: holý úryvek sdílený víc mutanty j
     assert.match(tooMany[0].message, /3 mutantům.*čeká se 2/);
     const noCount = checkMutantRegistries(input({ mutants, exceptions: [{ ...updates, count: undefined }] }));
     assert.deepEqual(noCount.map((e) => e.kind), ["ambiguous-exception"]);
+    const tooFew = checkMutantRegistries(input({ mutants: [shared(1), shared(3)], exceptions: [updates] }));
+    assert.deepEqual(tooFew.map((e) => e.kind), ["ambiguous-exception"]);
+    assert.match(tooFew[0].message, /1 mutantům.*čeká se 2.*uprav count/);
   });
 });
 

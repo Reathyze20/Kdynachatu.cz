@@ -156,8 +156,10 @@ export function checkMutantRegistries({ mutants, routeFiles, itestFiles, map, ex
     } else if (matched.length !== (exception.count ?? 1)) {
       // Holý úryvek `cabinId` sdílí v jedné routě i desítka mutantů; výjimka by umlčela všechny.
       const places = matched.map((mutant) => `${mutant.file}:${mutant.line}`).join(", ");
-      const expected = exception.count === undefined ? "" : `, čeká se ${exception.count}`;
-      errors.push({ kind: "ambiguous-exception", message: `Výjimka ${describeException(exception)} odpovídá ${matched.length} mutantům (${places})${expected} – zpřesni úryvek.` });
+      const expected = exception.count ?? 1;
+      const hint = matched.length > expected ? "zpřesni úryvek" : "některé místo zmizelo – uprav count nebo úryvek";
+      const countNote = exception.count === undefined ? "" : `, čeká se ${expected}`;
+      errors.push({ kind: "ambiguous-exception", message: `Výjimka ${describeException(exception)} odpovídá ${matched.length} mutantům (${places})${countNote} – ${hint}.` });
     }
   }
   return errors;

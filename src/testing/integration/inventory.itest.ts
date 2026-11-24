@@ -201,8 +201,8 @@ describe("inventory: shopping paths from cabin A never touch cabin B's lists", (
 
     const res = await as(app, world.memberA).post(`/api/inventory/${id}/add-to-cart`).send({ listId: listB.id });
     // Cizí seznam je pro chatu A neexistující. Kontrakt je 404, route dnes vrací 500 (bug #424);
-    // test proto hlídá jen odmítnutí a hlavně to, že se do seznamu B nic nezapsalo.
-    assert.notEqual(res.status, 200);
+    // po opravě #424 zúžit na 404. Hlavní je, že se do seznamu B nic nezapsalo.
+    assert.ok([404, 500].includes(res.status), `unexpected status ${res.status}`);
     assert.deepEqual(await itemsOn(listB.id), []);
     assert.equal(await prisma.shoppingListItem.count(), shoppingItemCount, "shopping item created");
     assert.equal((await itemSnapshot(id))?.inCart, false);
@@ -216,7 +216,8 @@ describe("inventory: shopping paths from cabin A never touch cabin B's lists", (
     const res = await as(app, world.memberA).post(`/api/inventory/${id}/pledge`);
     assert.equal(res.status, 200);
     const pledged = await prisma.shoppingListItem.findUnique({ where: { id: res.body.id }, include: { list: true } });
-    assert.deepEqual([pledged?.linkedInventoryId, pledged?.list?.cabinId], [id, world.cabinA.id]);
+    assert.equal(pledged?.linkedInventoryId, id, "pledge not linked to the supply");
+    assert.equal(pledged?.list?.cabinId, world.cabinA.id, "pledge landed outside cabin A");
     assert.deepEqual(await itemsOn(newestB.id), []);
   });
 
