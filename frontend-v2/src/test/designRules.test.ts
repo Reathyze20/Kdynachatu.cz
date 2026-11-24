@@ -45,6 +45,15 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
     ],
   },
   diaryFont: { bad: ['font-family: var(--font-diary);', "fontFamily: 'Kalam, cursive'"], good: ['font-family: var(--font-family);'] },
+  localFormatter: {
+    bad: [
+      "d.toLocaleDateString('cs-CZ')", "d.toLocaleTimeString('cs-CZ', { hour: '2-digit' })", "cost.toLocaleString('cs-CZ')",
+      "new Intl.DateTimeFormat('cs-CZ')", 'Intl.NumberFormat("cs-CZ")', "const M = ['ledna'", 'const M = ["Leden"', "'Září'", "'prosinci'",
+    ],
+    good: [
+      "formatDate(d)", "monthName(2, 'genitive')", '<p>Poslední aktualizace: 12. dubna 2026</p>', "'ledovec'", "a.localeCompare(b, 'cs')",
+    ],
+  },
   inlineSvg: { bad: ['<svg viewBox="0 0 24 24"><path d="M1 1" /></svg>'], good: [`${LUCIDE}<Check size={16} />`] },
   iconSize: {
     bad: [
@@ -80,6 +89,11 @@ describe('pravidla DESIGN.md rozpoznají porušení', () => {
   it('inline <svg> hlídá jen TSX, globální fallback je trvalá výjimka (vykreslí se i bez lucide)', () => {
     const sources = { 'a.css': '.a { content: "<svg"; }', 'components/shared/GlobalFallback.tsx': '<svg />', 'b.tsx': '<svg />' }
     expect(evaluateRule(rule('inlineSvg'), sources).violations).toEqual(['b.tsx:1  <svg'])
+  })
+
+  it('formátovat smí jen lib/format.ts a jen v TS/TSX', () => {
+    const sources = { 'lib/format.ts': "new Intl.DateTimeFormat('cs-CZ')", 'a.css': '.a { content: "Leden"; }', 'b.ts': "d.toLocaleDateString()" }
+    expect(evaluateRule(rule('localFormatter'), sources).violations).toEqual(['b.ts:1  .toLocaleDateString('])
   })
 
   it('newCssFile chytí nový .css soubor, vstup Tailwindu a definice tokenů ne', () => {

@@ -1,6 +1,6 @@
 import type { DesignRule } from './designGuard'
 
-/** Strojově ověřitelná pravidla z DESIGN.md (§2–§4, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
+/** Strojově ověřitelná pravidla z DESIGN.md (§2–§4, §9, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
 
 /** Soubory s definicí tokenů: jediné místo, kde smí být surové barvy, `--raw-*` a `--color-*`. */
 export const TOKEN_FILES = ['styles/variables.css', 'styles/shadcn-tokens.css']
@@ -118,5 +118,12 @@ export const DESIGN_RULES: DesignRule[] = [
     hint: 'nový .css soubor nevzniká, nový vzhled se píše utilitami Tailwindu nad tokeny',
     scope: (file) => file.endsWith('.css') && !PERMANENT_CSS.includes(file),
     match: () => ['soubor .css'],
+  },
+  {
+    name: 'localFormatter',
+    hint: 'data, časy, částky a názvy měsíců formátuje jen lib/format.ts (formatDate, formatTime, formatAmount, monthName …), ne toLocale*String, Intl ani lokální pole měsíců',
+    scope: (file) => /\.tsx?$/.test(file) && file !== 'lib/format.ts',
+    // Český název měsíce jako samostatný řetězec (1., 2. i 6. pád) = lokální pole měsíců.
+    match: /\.toLocale(?:Date|Time)?String\(|\bIntl\.(?:DateTimeFormat|NumberFormat)\b|(['"`])(?:led(?:en|n[au])|únor[au]?|břez(?:en|n[au])|dub(?:en|n[au])|květ(?:en|n[au])|červ(?:en(?:ec|c[ei])?|n[au])|srp(?:en|n[au])|září|říj(?:en|n[au])|listopadu?|prosin(?:ec|c[ei]))\1/giu,
   },
 ]

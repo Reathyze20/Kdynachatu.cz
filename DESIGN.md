@@ -198,22 +198,24 @@ Každá obrazovka s daty řeší čtyři stavy:
 
 ## 9. Formáty
 
-Jediný jazyk je čeština (`cs-CZ`). Formátovat bude jeden modul na `Intl`, který nahradí `lib/dateUtils.ts`, `formatDate` z `lib/utils.ts` a lokální formátovače (**Cíl** #455, převod volajících #456). `date-fns` zůstává jen pro aritmetiku dat, ne pro zobrazení.
+Jediný jazyk je čeština (`cs-CZ`). Formátuje jeden modul na `Intl`, **`frontend-v2/src/lib/format.ts`** (#455). `lib/dateUtils.ts` a `formatDate` z `lib/utils.ts` na něj delegují, lokální formátovače ve featurách převede #456. `date-fns` zůstává jen pro aritmetiku dat, ne pro zobrazení.
 
-| Co | Tvar |
-|---|---|
-| Plné datum | 21. 3. 2026 |
-| Krátké datum | 21. 3. |
-| Datum se dnem | po 21. 3. |
-| Rozsah v měsíci / přes měsíc | 12.–14. 7. / 30. 6.–2. 7. (tvar přes rok určí a otestuje #455) |
-| Čas, 24 h | 9:40 |
-| Částka | 1 234 Kč |
-| Procenta | 12 % |
-| Názvy měsíců | jen z modulu, žádné lokální pole |
+| Co | Tvar | Funkce |
+|---|---|---|
+| Plné datum | 21. 3. 2026 | `formatDate` |
+| Krátké datum | 21. 3. | `formatShortDate` |
+| Datum se dnem | po 21. 3. | `formatDayDate` |
+| Datum s názvem měsíce | 10. prosince, čtvrtek 10. prosince | `formatLongDate` |
+| Rozsah v měsíci / přes měsíc / přes rok | 12.–14. 7. / 30. 6. – 2. 7. / 30. 12. 2026 – 2. 1. 2027 | `formatDateRange` (`year: true` přidá rok vždy) |
+| Čas, 24 h | 9:40, půlnoc 0:00 | `formatTime` |
+| Částka | 1 234 Kč, celé koruny | `formatAmount` |
+| Procenta | 12 % (vstup je hodnota v procentech) | `formatPercent` |
+| Názvy měsíců a dnů | březen / března, po / pondělí | `monthName`, `weekdayName` |
 
-- Rozsah se píše s pomlčkou „–“ bez mezer.
+- Rozsah píše pomlčku „–“ podle české typografie: bez mezer mezi jednoslovnými částmi („12.–14. 7.“), s mezerami mezi víceslovnými („30. 6. – 2. 7.“, tak to už ukazují pobyty, rezervace i přehled). Přes přelom roku má rok u obou dnů, jinak by z rozsahu nebyl poznat.
+- Kalendářní den se předává jako `"YYYY-MM-DD"` a zobrazí se přesně tak. `Date`, číslo nebo ISO razítko s časem je okamžik a zobrazí se v pražském čase (`Europe/Prague`) bez ohledu na zónu zařízení.
 - `Intl` dává u částek a procent nezlomitelnou mezeru (` `). Testy s ní musí počítat.
-- Lokální pole s názvy měsíců a volání `toLocaleDateString` mimo modul hlídá guard (#455).
+- `toLocale*String`, `Intl.DateTimeFormat`/`NumberFormat` a lokální pole s názvy měsíců mimo modul hlídá guard `localFormatter`.
 
 ## 10. Vymáhání a allowlist
 
@@ -231,6 +233,7 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `coldPalette` | `slate-*`, `emerald-*`, `bg-white` (v `className` hlídá i ESLint, výjimky bere ze stejného allowlistu) |
 | `breakpoint` | media query mimo 768/1024 px (viz kapitola 2), Tailwind `sm:`, `xl:`, `2xl:`, `min-[…]:`, `max-[…]:` |
 | `newCssFile` | každý `.css` pod `src/` kromě `index.css` a souborů s definicí tokenů |
+| `localFormatter` | `toLocale*String`, `Intl.DateTimeFormat`/`NumberFormat` nebo český název měsíce jako řetězec v TS/TSX mimo `lib/format.ts` (kapitola 9) |
 | `fontWeight` | řez mimo načtené 400/500/600/700 (`font-weight: 800`, `font-extrabold`, `font-black`, `font-light` …) |
 | `diaryFont` | Kalam (`--font-diary`) mimo `styles/diary.css` |
 | `inlineSvg` | inline `<svg>` v TSX |
@@ -244,7 +247,6 @@ ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 |---|---|
 | zmrazené `.btn-*` | #452 |
 | zmrazené `page-card`, `glass-card`, `admin-card`, `.card`, `*-empty-*` | #454 |
-| `toLocaleDateString` a pole měsíců mimo formátovací modul | #455 |
 | vykání v hláškách backendu (node:test) | #457 |
 
 Pravidla allowlistu (pomocník `designGuard.ts`, stávající guardy na něj převede #459):
