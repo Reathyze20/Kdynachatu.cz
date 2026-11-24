@@ -119,6 +119,19 @@ export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
       "cabinId })` (jeho mutanta zabíjí shopping.itest.ts přes realtime) a jsou to primární klíče zásob " +
       "chaty A; `{ id: { in: ownedIds } }` tak změní tytéž řádky jako s `cabinId` – mutant je ekvivalentní.",
   },
+  {
+    file: "reservations.ts",
+    route: "PATCH /api/reservations/:id/checkout",
+    original: "cabinId",
+    mutatedLine: "where: { id: reservationId },",
+    reason:
+      "Helper `emitReservationUpdated` načítá payload pro realtime po checkoutu. Jediný volající " +
+      "(PATCH /:id/checkout) předá `id`, které route ověřila přes `findFirst({ id, cabinId })` (jeho " +
+      "mutanta zabíjí handover.itest.ts), a `cabinId` z `req.user`; cizí rezervace skončí 404 dřív, než " +
+      "se helper zavolá. `id` je primární klíč a `cabinId` rezervace žádná route nemění, takže " +
+      "`{ id: reservationId }` najde tutéž rezervaci chaty A – mutant je ekvivalentní. Kdo helper zavolá " +
+      "z nové routy bez předchozí kontroly, musí výjimku smazat a doplnit test.",
+  },
 ];
 
 export type RegistryErrorKind =

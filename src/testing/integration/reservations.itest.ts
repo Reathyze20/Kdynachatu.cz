@@ -220,3 +220,56 @@ describe("reservations: tentative type (status) on create and edit", () => {
     assert.equal(before?.status, "soft");
   });
 });
+
+describe("reservations: cabin B stays and availabilities stay invisible to cabin A (#412)", () => {
+  const createAvailability = async (user: TestUser, start: string, end: string) =>
+    (await prisma.userAvailability.create({
+      data: { userId: user.id, cabinId: user.cabinId, startDate: new Date(start), endDate: new Date(end) },
+    })).id;
+  const availabilitySnapshot = (id: string) => prisma.userAvailability.findUnique({ where: { id } });
+
+  test("create in A over a cabin B primary stay → 201 primary (B's calendar does not collide)", async () => {
+    // Pevná data mimo ostatní testy: v A nic, v B potvrzený pobyt přes celý termín
+    await createReservation(world.memberB, "2028-03-10");
+    const res = await as(app, world.memberA).post("/api/reservations")
+      .send({ from: "2028-03-10", to: "2028-03-12", purpose: "Volno jen v A" });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.status, "primary");
+  });
+
+  test("GET /availabilities lists only cabin A's availability", async () => {
+    const ownA = await createAvailability(world.memberA, "2028-04-01", "2028-04-03");
+    const otherB = await createAvailability(world.adminB, "2028-04-01", "2028-04-03");
+    const res = await as(app, world.memberA).get("/api/reservations/availabilities");
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.map((a: { id: string }) => a.id), [ownA]);
+    const body = JSON.stringify(res.body);
+    for (const leak of [otherB, world.memberB.id, world.adminB.id, world.memberB.username, world.adminB.username]) {
+      assert.equal(body.includes(leak), false, `leaked ${leak}`);
+    }
+  });
+
+  for (const actor of ["memberA", "adminA"] as const) {
+    test(`${actor}: PATCH and DELETE of a cabin B availability → 404, B unchanged`, async () => {
+      const availabilityB = await createAvailability(world.memberB, "2028-05-01", "2028-05-03");
+      const before = await availabilitySnapshot(availabilityB);
+      const patch = await as(app, world[actor]).patch(`/api/reservations/availabilities/${availabilityB}`)
+        .send({ startDate: "2028-05-10", endDate: "2028-05-12" });
+      assert.equal(patch.status, 404);
+      const remove = await as(app, world[actor]).delete(`/api/reservations/availabilities/${availabilityB}`);
+      assert.equal(remove.status, 404);
+      assert.deepEqual(await availabilitySnapshot(availabilityB), before);
+    });
+  }
+
+  test("adminA: PATCH and DELETE of a cabin A member's availability → 200 (positive control)", async () => {
+    const availabilityA = await createAvailability(world.memberA, "2028-06-01", "2028-06-03");
+    const patch = await as(app, world.adminA).patch(`/api/reservations/availabilities/${availabilityA}`)
+      .send({ startDate: "2028-06-10", endDate: "2028-06-12" });
+    assert.equal(patch.status, 200);
+    assert.equal(patch.body.startDate, "2028-06-10");
+    const remove = await as(app, world.adminA).delete(`/api/reservations/availabilities/${availabilityA}`);
+    assert.equal(remove.status, 200);
+    assert.equal(await availabilitySnapshot(availabilityA), null);
+  });
+});
