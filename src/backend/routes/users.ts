@@ -7,10 +7,20 @@ import { hashPassword, verifyPassword } from "../../utils/password";
 import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
+import type { JwtPayload } from "../../types";
 
 const router = Router();
 
 const USERNAME_TAKEN_MESSAGE = "Uživatelské jméno již existuje."; // stejná hláška jako POST /api/register
+
+// Superadmin je pro správce i členy chaty neviditelný (#474): v seznamu chybí a adminské operace
+// na něm odpoví stejnou 404 jako na neexistujícího uživatele. Vidí ho jen superadmin.
+const hideSuperAdminFrom = (caller: JwtPayload): Prisma.UserWhereInput =>
+  caller.isSuperAdmin ? {} : { isSuperAdmin: false };
+
+/** Cíl adminské operace: uživatel z chaty volajícího, kterého volající smí vidět, jinak null (→ 404). */
+const findCabinTarget = (id: string, caller: JwtPayload) =>
+  prisma.user.findFirst({ where: { id, cabinId: caller.cabinId, ...hideSuperAdminFrom(caller) } });
 
 // ============================================================================
 //                          GET ALL USERS (safe)
@@ -18,7 +28,7 @@ const USERNAME_TAKEN_MESSAGE = "Uživatelské jméno již existuje."; // stejná
 router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
-      where: { cabinId: req.user!.cabinId },
+      where: { cabinId: req.user!.cabinId, ...hideSuperAdminFrom(req.user!) },
       select: {
         id: true,
         username: true,
@@ -254,7 +264,7 @@ router.put("/:id/role", protect, requireCabin, validate(changeRoleSchema), async
 
   try {
     // Verify target user belongs to same cabin
-    const targetUser = await prisma.user.findFirst({ where: { id, cabinId: req.user.cabinId } });
+    const targetUser = await findCabinTarget(id, req.user);
     if (!targetUser) {
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
@@ -283,7 +293,7 @@ router.put("/:id/password", protect, requireCabin, validate(changePasswordSchema
 
   try {
     // Verify target user belongs to same cabin
-    const targetUser = await prisma.user.findFirst({ where: { id, cabinId: req.user.cabinId } });
+    const targetUser = await findCabinTarget(id, req.user);
     if (!targetUser) {
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
@@ -316,7 +326,7 @@ router.patch("/:id", protect, requireCabin, validate(adminUpdateUserSchema), asy
 
   try {
     // Verify target user belongs to same cabin
-    const targetUser = await prisma.user.findFirst({ where: { id, cabinId: req.user.cabinId } });
+    const targetUser = await findCabinTarget(id, req.user);
     if (!targetUser) {
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
@@ -352,7 +362,7 @@ router.delete("/:id", protect, requireCabin, async (req: Request, res: Response)
 
   try {
     // Verify target user belongs to same cabin
-    const targetUser = await prisma.user.findFirst({ where: { id, cabinId: req.user.cabinId } });
+    const targetUser = await findCabinTarget(id, req.user);
     if (!targetUser) {
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
@@ -385,9 +395,7 @@ router.patch("/:id/remove-from-cabin", protect, requireCabin, async (req: Reques
     }
 
     // Verify target user belongs to same cabin
-    const targetUser = await prisma.user.findFirst({
-      where: { id, cabinId: req.user.cabinId },
-    });
+    const targetUser = await findCabinTarget(id, req.user);
     if (!targetUser) {
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
