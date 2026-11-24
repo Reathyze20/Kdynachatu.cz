@@ -17,6 +17,7 @@ import { useDemoAccounts } from '@/features/auth/hooks/useDemoAccounts'
 import { TESTING_TASKS, allTasksDone, readDoneTasks, writeDoneTasks, type TestingTask } from './testingTasks'
 
 export function TestingChecklist() {
+  // Testovací účty vydá backend jen na stagingu – neprázdný seznam = staging
   const isStaging = useDemoAccounts().length > 0
   if (!isStaging) return null
   return <TestingChecklistCard />
@@ -111,9 +112,13 @@ function TestingTaskItem({ task, order, done, onToggleDone, onShowWhere }: Testi
         {order}. {task.title}
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Button asChild variant="outline" size="sm">
-          <Link to={task.to} onClick={onShowWhere}>Ukaž mi kde</Link>
-        </Button>
+        {task.places.map((place) => (
+          <Button key={place.to} asChild variant="outline" size="sm">
+            <Link to={place.to} onClick={onShowWhere}>
+              {place.name ? `Ukaž mi kde: ${place.name}` : 'Ukaž mi kde'}
+            </Link>
+          </Button>
+        ))}
         <label className="inline-flex min-h-(--touch-target-min) cursor-pointer items-center gap-2 px-2 text-sm font-medium">
           <input
             type="checkbox"

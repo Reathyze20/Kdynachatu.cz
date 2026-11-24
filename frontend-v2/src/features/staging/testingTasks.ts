@@ -4,23 +4,28 @@
  * `id` úkolu je stabilní – zpětná vazba k úkolu (#389) se na něj bude odkazovat.
  */
 
+/** Cíl „Ukaž mi kde“ – cesta z routeru frontendu; `name` rozliší víc cílů jednoho úkolu */
+export interface TaskPlace {
+  to: string
+  name?: string
+}
+
 export interface TestingTask {
   id: string
   title: string
-  /** Cíl „Ukaž mi kde“ – cesta z routeru frontendu */
-  to: string
+  places: readonly TaskPlace[]
 }
 
 export const TESTING_TASKS: readonly TestingTask[] = [
-  { id: 'prehled', title: 'Rozhlédni se po přehledu – co na něm vidíš? Čemu nerozumíš? Co ti tam chybí?', to: '/dashboard' },
-  { id: 'rezervace', title: 'Zarezervuj si víkend v kalendáři', to: '/reservations' },
-  { id: 'nakup', title: 'Přidej něco do nákupního seznamu', to: '/shopping' },
+  { id: 'prehled', title: 'Rozhlédni se po přehledu – co na něm vidíš? Čemu nerozumíš? Co ti tam chybí?', places: [{ to: '/dashboard' }] },
+  { id: 'rezervace', title: 'Zarezervuj si víkend v kalendáři', places: [{ to: '/reservations' }] },
+  { id: 'nakup', title: 'Přidej něco do nákupního seznamu', places: [{ to: '/shopping' }] },
   // Poznámka k měsíci je pod kalendářem na stránce rezervací
-  { id: 'poznamka-mesic', title: 'Napiš poznámku k měsíci', to: '/reservations' },
-  { id: 'chat', title: 'Pošli zprávu do chatu', to: '/notes' },
+  { id: 'poznamka-mesic', title: 'Napiš poznámku k měsíci', places: [{ to: '/reservations' }] },
+  { id: 'chat', title: 'Pošli zprávu do chatu', places: [{ to: '/notes' }] },
   // Stejný cíl jako záložka Předávka ve spodní liště (lib/navRoutes.ts)
-  { id: 'predavka', title: 'Projdi předávku chaty', to: '/reservations?sekce=predavka' },
-  { id: 'galerie', title: 'Prohlédni si galerii / deník', to: '/gallery' },
+  { id: 'predavka', title: 'Projdi předávku chaty', places: [{ to: '/reservations?sekce=predavka' }] },
+  { id: 'galerie', title: 'Prohlédni si galerii / deník', places: [{ to: '/gallery', name: 'galerie' }, { to: '/diary', name: 'deník' }] },
 ]
 
 /** Klíč podle uživatele – na sdíleném zařízení si každý tester odškrtává sám */

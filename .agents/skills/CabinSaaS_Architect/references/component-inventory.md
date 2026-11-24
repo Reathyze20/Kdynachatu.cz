@@ -183,6 +183,11 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 |---|---|---|
 | InvitePage | Page | ✅ Token join flow |
 
+### Staging (`features/staging/`)
+| Component | Type | Status |
+|---|---|---|
+| TestingChecklist | Card in AppShell (staging only) | ✅ „Co vyzkoušet“ checklist (#388); tasks in `testingTasks.ts`, ticks in localStorage |
+
 ---
 
 ## API Modules (`api/`)

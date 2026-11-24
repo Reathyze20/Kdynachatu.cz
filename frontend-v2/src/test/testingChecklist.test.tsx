@@ -51,7 +51,7 @@ describe('karta „Co vyzkoušet“ (staging)', () => {
     renderChecklist()
 
     const card = await screen.findByRole('region', { name: 'Co vyzkoušet' })
-    expect(within(card).getAllByRole('listitem')).toHaveLength(7)
+    expect(within(card).getAllByRole('listitem')).toHaveLength(TESTING_TASKS.length)
     expect(within(card).getByText(/Zarezervuj si víkend v kalendáři/)).toBeInTheDocument()
   })
 
@@ -113,15 +113,16 @@ describe('karta „Co vyzkoušet“ (staging)', () => {
     ['Napiš poznámku k měsíci', '/reservations'],
     ['Pošli zprávu do chatu', '/notes'],
     ['Projdi předávku chaty', '/reservations?sekce=predavka'],
-    ['Prohlédni si galerii', '/gallery'],
-  ])('"Ukaž mi kde" for "%s" goes to %s and collapses the card', async (title, path) => {
+    ['Prohlédni si galerii', '/gallery', 'galerie'],
+    ['Prohlédni si galerii', '/diary', 'deník'],
+  ])('"Ukaž mi kde" for "%s" goes to %s and collapses the card', async (title, path, place?: string) => {
     mockDemoAccounts(STAGING_ACCOUNTS)
     renderChecklist()
 
     const card = await screen.findByRole('region', { name: 'Co vyzkoušet' })
     const item = within(card).getByText(new RegExp(title)).closest('li')
     expect(item).not.toBeNull()
-    await userEvent.click(within(item as HTMLElement).getByRole('link', { name: /Ukaž mi kde/ }))
+    await userEvent.click(within(item as HTMLElement).getByRole('link', { name: place ? `Ukaž mi kde: ${place}` : 'Ukaž mi kde' }))
 
     expect(screen.getByTestId('location').textContent).toBe(path)
     expect(screen.queryByRole('region', { name: 'Co vyzkoušet' })).not.toBeInTheDocument()
