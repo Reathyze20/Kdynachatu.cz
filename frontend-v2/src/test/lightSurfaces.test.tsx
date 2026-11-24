@@ -216,6 +216,14 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
     expect(lastDecl(rules, 'background')).toBe('rgb(var(--sheet))')
   })
 
+  // Zubatá „silueta hor“ pod horní lištou působila jako natržený okraj (#438); lišty mají stejnou tenkou linku.
+  it('mobil: horní lišta má dole linku --rule-soft jako spodní navigace nahoře, bez zubaté ozdoby', () => {
+    const mobile = (selector: string) => rulesFor('nav.css', selector).filter((r) => r.media?.includes('max-width: 768px'))
+    expect(lastDecl(mobile('.mobile-header'), 'border-bottom')).toBe('1px solid rgb(var(--rule-soft))')
+    expect(lastDecl(mobile('.mobile-nav'), 'border-top')).toBe('1px solid rgb(var(--rule-soft))')
+    expect(rulesFor('nav.css', '.mobile-header::after')).toHaveLength(0)
+  })
+
   it('boční panel Kalendáře je papírová karta a plocha Zásob vnořené pole, ne studená bílá (#339)', () => {
     const panel = ALL_RULES.filter((r) => r.file.endsWith('/reservations/Reservations.module.css') && r.selectors.includes('.listContainer') && r.media === null)
     expect(lastDecl(panel, 'background')).toBe('rgb(var(--sheet))')
