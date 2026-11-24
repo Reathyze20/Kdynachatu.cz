@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const integrationDir = path.dirname(fileURLToPath(import.meta.url));
+export const integrationDir = path.dirname(fileURLToPath(import.meta.url));
 export const PROJECT_ROOT = path.resolve(integrationDir, "../../..");
 export const SCHEMA_PATH = path.join(PROJECT_ROOT, "prisma", "schema.prisma");
 

@@ -10,7 +10,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { PROJECT_ROOT } from "./integration/cabinTenantCoverage";
+import { integrationDir } from "./integration/cabinTenantCoverage";
 import type { TenantMutant } from "./tenantMutants";
 
 /**
@@ -19,7 +19,9 @@ import type { TenantMutant } from "./tenantMutants";
  * `/api/users` žádný itest nevolá: mutace tu díru ukáže. Soubor bez mutantů (`workspace.ts`)
  * zápis nepotřebuje.
  */
-export const ROUTE_ITEST_MAP: Record<string, readonly string[]> = {
+export type RouteItestMap = Readonly<Record<string, readonly string[]>>;
+
+export const ROUTE_ITEST_MAP: RouteItestMap = {
   "admin.ts": ["admin.itest.ts"],
   "cabin.ts": ["cabinCoverPhoto.itest.ts", "cabinMunicipality.itest.ts"],
   "channels.ts": ["chat.itest.ts"],
@@ -48,7 +50,7 @@ export interface TenantMutantException {
 }
 
 /** Ekvivalentní mutanti. Na začátku prázdné; každý přeživší je nejdřív kandidát na test, ne sem. */
-export const TENANT_MUTANT_EXCEPTIONS: TenantMutantException[] = [];
+export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [];
 
 export type RegistryErrorKind =
   | "unmapped-route-file"
@@ -66,16 +68,19 @@ export interface RegistryInput {
   mutants: TenantMutant[];
   routeFiles: string[]; // existující soubory rout (názvy)
   itestFiles: string[]; // existující `*.itest.ts` (názvy)
-  map: Record<string, readonly string[]>;
-  exceptions: TenantMutantException[];
+  map: RouteItestMap;
+  exceptions: readonly TenantMutantException[];
 }
+
+/** Soubor rout mutanta tak, jak se píše v mapě a výjimkách (`notes.ts`). */
+const routeFileOf = (mutant: TenantMutant) => path.posix.basename(mutant.file);
 
 const normalize = (snippet: string) => snippet.replace(/\s+/g, " ").trim();
 
 const describeException = (e: TenantMutantException) => `${e.file} ${e.route ?? "(bez routy)"} "${normalize(e.original)}"`;
 
 function matches(mutant: TenantMutant, exception: TenantMutantException): boolean {
-  return path.posix.basename(mutant.file) === exception.file &&
+  return routeFileOf(mutant) === exception.file &&
     mutant.route === exception.route &&
     normalize(mutant.original) === normalize(exception.original);
 }
@@ -87,7 +92,7 @@ export function exceptionFor(mutant: TenantMutant, exceptions = TENANT_MUTANT_EX
 
 export function checkMutantRegistries({ mutants, routeFiles, itestFiles, map, exceptions }: RegistryInput): RegistryError[] {
   const errors: RegistryError[] = [];
-  const mutatedFiles = [...new Set(mutants.map((m) => path.posix.basename(m.file)))].sort();
+  const mutatedFiles = [...new Set(mutants.map(routeFileOf))].sort();
   for (const file of mutatedFiles.filter((f) => !(f in map))) {
     errors.push({ kind: "unmapped-route-file", message: `${file}: má tenant mutanty, ale chybí v ROUTE_ITEST_MAP (přidej itesty, nebo [] = bez testu).` });
   }
@@ -112,5 +117,5 @@ export function checkMutantRegistries({ mutants, routeFiles, itestFiles, map, ex
 
 /** Názvy existujících `*.itest.ts` v `src/testing/integration/`. */
 export function itestFileNames(): string[] {
-  return fs.readdirSync(path.join(PROJECT_ROOT, "src/testing/integration")).filter((name) => name.endsWith(".itest.ts")).sort();
+  return fs.readdirSync(integrationDir).filter((name) => name.endsWith(".itest.ts")).sort();
 }

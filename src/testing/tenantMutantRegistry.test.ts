@@ -43,8 +43,6 @@ function input(overrides: Partial<RegistryInput> = {}): RegistryInput {
   };
 }
 
-const kinds = (registryInput: RegistryInput) => checkMutantRegistries(registryInput).map((error) => error.kind);
-
 describe("checkMutantRegistries: chyby registrů", () => {
   test("konzistentní registry a prázdný seznam itestů (bez testu) → žádná chyba", () => {
     assert.deepEqual(checkMutantRegistries(input()), []);
@@ -81,7 +79,7 @@ describe("checkMutantRegistries: chyby registrů", () => {
   });
 
   test("soubor bez mutantů smí v mapě chybět", () => {
-    assert.deepEqual(kinds(input({ routeFiles: ["notes.ts", "logs.ts", "workspace.ts"] })), []);
+    assert.deepEqual(checkMutantRegistries(input({ routeFiles: ["notes.ts", "logs.ts", "workspace.ts"] })), []);
   });
 });
 
