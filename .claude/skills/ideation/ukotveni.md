@@ -1,8 +1,6 @@
 # Krok 1: Ukotvení
 
-Prompt subagenta = blok **Hranice** ze `SKILL.md` + text níže, v němž `<kořen>` nahradíš skutečným kořenem běhu.
-
----
+Prompt subagenta = blok **Hranice** ze `SKILL.md` + všechno pod tímto odstavcem, v němž `<kořen>` nahradíš skutečným kořenem běhu.
 
 Připravuješ podklady pro hledání nápadů v rodinné aplikaci „Kdy na chatu“ (co produkt je a není: `docs/PRODUCT.md`).
 

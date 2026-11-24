@@ -1,8 +1,6 @@
 # Krok 3: Deduplikace
 
-Prompt subagenta = blok **Hranice** ze `SKILL.md` + text níže s doplněným kořenem, shrnutím signálů z kroku 1 a všemi nápady z kroku 2 (s označením generátoru).
-
----
+Prompt subagenta = blok **Hranice** ze `SKILL.md` + všechno pod tímto odstavcem s doplněným kořenem, shrnutím signálů z kroku 1 a všemi nápady z kroku 2 (s označením generátoru).
 
 Dostáváš nápady od až 8 nezávislých generátorů a shrnutí signálů, ze kterých vycházejí. Přečti celý `<kořen>/lessons.md`: sekce A jsou opakované výtky z minulých běhů, sekce B verdikty rodiny k dřívějším kandidátům.
 

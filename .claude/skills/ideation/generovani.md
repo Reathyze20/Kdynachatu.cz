@@ -26,9 +26,7 @@ Generátory G1–G8 spouštěj jako subagenty `general-purpose` s parametrem `mo
 
 ## Prompt generátoru
 
-Blok **Hranice** ze `SKILL.md`, pak tento text s doplněnými hodnotami. Z `lessons.md` dostává generátor jen sekci B; výtky ze sekce A by ho tlačily k opatrnému průměru.
-
----
+Blok **Hranice** ze `SKILL.md`, pak všechno pod tímto odstavcem s doplněnými hodnotami. Z `lessons.md` dostává generátor jen sekci B; výtky ze sekce A by ho tlačily k opatrnému průměru.
 
 Navrhuješ funkce pro rodinnou aplikaci „Kdy na chatu“: 2–4 dospělí z několika domácností sdílejí jednu chatu a koordinují rezervace, nákupy, předávku a poznámky. Mezi sebou mluví hlavně ve WhatsAppu nebo osobně.
 
