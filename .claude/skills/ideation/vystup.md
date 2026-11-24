@@ -1,8 +1,8 @@
 # Závěr: výstupní soubor
 
-Česky. Sekce Kandidáti je doslova výstup helperu `blind`: kandidáti pipeline a baseline naslepo zamíchaní jako K1…Kn, všichni ve stejném tvaru. Proto v ní není nic, co má jen jedna strana (štítek Navrhlo, pořadí z kroku 5, verdikt kritika). Signály se uvádějí jen jako ID, role a parafráze zůstávají v `signals.md`. Shluky signálů jdou v pořadí z kroku 1. Příloha „vyřazeno“ sbírá vyřazené z kroků 3, 4 i 5 a kandidáty se selhaným kritikem. Do sekce Výtky kritika patří výtky všech kritiků z kroku 4, každá jednou.
+Česky. Sekce Kandidáti je doslova výstup helperu `blind`: kandidáti pipeline a baseline naslepo zamíchaní jako K1…Kn, všichni ve stejném tvaru. Proto v ní není nic, co má jen jedna strana (pořadí z kroku 5, verdikt kritika). Signály se uvádějí jen jako ID, role a parafráze zůstávají v `signals.md`. Shluky signálů jdou v pořadí z kroku 1. Příloha „vyřazeno“ sbírá vyřazené z kroků 3, 4 i 5 a kandidáty se selhaným kritikem. Do sekce Výtky kritika patří výtky všech kritiků z kroku 4, každá jednou.
 
-Šablona souboru; K1 ukazuje tvar kandidáta z výstupu `blind`, řádek Štítky je pole `labels` ve `slepe.json`:
+Šablona souboru:
 
 ```
 # /ideation – <název běhu>
@@ -15,19 +15,7 @@
 
 ## Kandidáti
 
-### K1 – <název>
-<2–3 věty, co dělá>
-
-- Důkaz: S-…, #…
-- Štítky: jádro / doplněk (rozvíjí doplněk) · metrika 30. 6. 2027: ano / ne · velikost: S / M / L (potřebuje rozpad) · migrace: ano / ne · riziko cabinId: ano / ne: <proč>
-- Námitky:
-  1. <otázka>
-  2. <otázka>
-  3. <otázka>
-
-Otázka pro rodinu (ke zkopírování):
-
-> <otázka>
+<výstup helperu blind beze změny>
 
 ## Posiluje existující issues
 - #n <titulek>: nápad „<název>“ přidává S-…, #…

@@ -1,6 +1,6 @@
 # Krok 4: Ukotvená kritika
 
-Prompt kritika = blok **Hranice kritika** níže + všechno pod čarou s doplněným kořenem, jedním kandidátem z kroku 3 nebo z baseline (bez údaje o původu a bez štítku Navrhlo), shrnutím signálů z kroku 1 a seznamem issues. Seznam issues načti jednou sám (`gh issue list --state all --limit 300 --json number,title,state`) a vlož ho do každého promptu, aby kritik nepotřeboval `gh`.
+Prompt kritika = blok **Hranice kritika** níže + všechno pod čarou s doplněným kořenem, jedním kandidátem z kroku 3 nebo z baseline (bez údaje o původu), shrnutím signálů z kroku 1 a seznamem issues. Seznam issues načti jednou sám (`gh issue list --state all --limit 300 --json number,title,state`) a vlož ho do každého promptu, aby kritik nepotřeboval `gh`.
 
 Každý kritik dostane jen svého kandidáta, bez ostatních kandidátů a bez verdiktů ostatních kritiků: nezávislý kritik nekonformuje.
 

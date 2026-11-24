@@ -17,7 +17,7 @@ Lokální databáze obsahuje produkční data rodiny a autopilot postaví cokoli
 - Zapisuješ jen do `<kořen>/` (gitignored). Na GitHub nezapisuješ nic: žádné `gh issue create` / `edit` / `comment` / `close`, žádné labely, PR ani `gh api` mimo GET. Z `<kořen>/` nic necommituješ.
 - Žádné `psql`, `docker`, `prisma`, žádné čtení `.env*`, žádný jiný přístup k databázi.
 - Ve výstupech jen role (prarodič, rodič…), nikdy jména.
-- Klíč původu `<kořen>/runs/*.klic.json` nečteš ty ani žádný subagent, ani jeho obsah nevypisuješ. Slepé míchání drží, jen když původ kandidátů zná helper a správce; odkrytí patří do `/ideation vyhodnoť`.
+- Původ kandidátů znají jen helper a správce: klíč `<kořen>/runs/*.klic.json` otevírá jen správce a odkrytí patří do `/ideation vyhodnoť`. Ty ani žádný subagent ho nečtete ani nevypisujete, jinak slepé míchání nedrží.
 
 Na začátek promptu každého subagenta kromě kritiků a rozhodčích (ti mají přísnější blok v [kritik.md](kritik.md) a [parove.md](parove.md)) vlož doslova tento blok:
 
@@ -61,7 +61,7 @@ Rozděl čočky a modely podle [generovani.md](generovani.md) a ve stejné zprá
 
 Od každého generátoru vezmi nejvýš jeho prvních 5 nápadů v pořadí, v jakém je vrátil; generátory počet nedodržují spolehlivě. Kolik nápadů a u kterého generátoru jsi odřízl, uveď v Poznámkách výstupu.
 
-Spusť jednoho subagenta (`general-purpose`) s promptem z [deduplikace.md](deduplikace.md), s těmito nápady a se shrnutím signálů a seřazenými shluky z kroku 1. Hotovo, když máš kandidáty (nejvýš 10) se štítkem Navrhlo, seznam „posiluje #n“ a vyřazené s důvody.
+Spusť jednoho subagenta (`general-purpose`) s promptem z [deduplikace.md](deduplikace.md), s těmito nápady a se shrnutím signálů a seřazenými shluky z kroku 1. Hotovo, když máš kandidáty (nejvýš 10), seznam „posiluje #n“ a vyřazené s důvody.
 
 ### 4. Ukotvená kritika (1 kritik na kandidáta)
 
@@ -75,7 +75,7 @@ Hotovo, když má každý kandidát obou stran verdikt nebo je v příloze.
 
 ### 5. Párové porovnání (jen při víc než 5 kandidátech)
 
-Když po kroku 4 zbývá nejvýš 5 ponechaných kandidátů, krok přeskoč: postupují všichni v pořadí z kroku 3. Jinak postupuj podle [parove.md](parove.md). Postupují kandidáti z řádku `Postupují:` helperu v jeho pořadí, ostatní jdou do přílohy „vyřazeno“ s důvodem „nepostoupil z párového kola (<n> výher)“. Hotovo, když máš nejvýš 5 postupujících.
+Krok se týká jen kandidátů pipeline. Když po kroku 4 zbývá nejvýš 5 ponechaných kandidátů pipeline, krok přeskoč: postupují všichni v pořadí z kroku 3. Jinak postupuj podle [parove.md](parove.md). Postupují kandidáti z řádku `Postupují:` helperu v jeho pořadí, ostatní jdou do přílohy „vyřazeno“ s důvodem „nepostoupil z párového kola (<n> výher)“. Hotovo, když máš nejvýš 5 postupujících.
 
 ### Závěr: výstup
 
@@ -87,17 +87,17 @@ Název běhu je `<RRRR-MM-DD>`; když `<kořen>/runs/<název>.md` existuje, při
    { "pipeline": [{ "title": "", "summary": "", "evidence": "", "labels": "", "objections": ["", "", ""], "question": "" }], "baseline": [] }
    ```
 
-   `title` je název, `summary` 2–3 věty, co dělá, `evidence` odkazy `S-n` a `#n` z důkazu, `labels` štítky kritika ve tvaru řádku Štítky z [vystup.md](vystup.md), `objections` tři námitky a `question` otázka pro rodinu. Jiná pole helper odmítne, aby nic neprozradilo stranu.
+   `title` je název, `summary` 2–3 věty, co dělá, `evidence` odkazy `S-n` a `#n` z důkazu, `labels` štítky kritika v jednom řádku `jádro / doplněk (rozvíjí doplněk) · metrika 30. 6. 2027: ano / ne · velikost: S / M / L (potřebuje rozpad) · migrace: ano / ne · riziko cabinId: ano / ne: <proč>`, `objections` tři námitky a `question` otázka pro rodinu. Jiná pole helper odmítne, aby nic neprozradilo stranu.
 2. Spusť `npm run --silent ideation -- blind --root <kořen> --run <název>`. Helper kandidáty zamíchá, přidělí K1…Kn, klíč původu zapíše do `<kořen>/runs/<název>.klic.json` a `slepe.json` smaže. Při nenulovém exit kódu oprav `slepe.json` podle hlášky helperu (u existujícího klíče zvol další příponu názvu) a spusť znovu.
 3. Zapiš `<kořen>/runs/<název>.md` podle [vystup.md](vystup.md); sekce Kandidáti je doslova výstup helperu.
 
-Uživateli vypiš cestu k souboru a počty z hlavičky. Hotovo, když soubor existuje, v sekci Kandidáti je přesně výstup `blind` (nejvýš 10 kandidátů K1…Kn, každý s odkazem na signál, štítky, třemi námitkami a otázkou pro rodinu) a klíč běhu existuje.
+Uživateli vypiš cestu k souboru a počty z hlavičky. Hotovo, když soubor existuje, v sekci Kandidáti je přesně výstup `blind` (nejvýš 10 kandidátů K1…Kn, každý se štítky, třemi námitkami a otázkou pro rodinu, každý kandidát pipeline s odkazem na signál) a klíč běhu existuje.
 
 ### Poučení
 
 Sekce A v `<kořen>/lessons.md` je paměť, kterou spravuje správce: zapisuješ do ní jen výtky, které uživatel v tomto běhu výslovně potvrdil.
 
-1. Z předchozích výstupů v `<kořen>/runs/` přečti jen sekce `## Výtky kritika`.
+1. Z předchozích výstupů `<kořen>/runs/*.md` přečti jen sekce `## Výtky kritika`.
 2. Najdi výtky, které se svým smyslem objevily v bězích aspoň 2 různých dnů (aktuální běh se počítá, opakovaný běh téhož dne ne) a v sekci A ještě nejsou. Ukaž je uživateli očíslované, u každé s daty běhů, a zeptej se, které uložit. Když žádná taková není, napiš „Žádné opakované výtky k uložení.“ a běh končí.
 3. Potvrzené výtky (čísla nebo „všechny“) zapiš pod nadpis `## A. Opakované výtky` jako `- <výtka> (běhy: <data>)`. Odpověď bez čísel ani „všechny“ znamená, že `lessons.md` zůstane beze změny.
 

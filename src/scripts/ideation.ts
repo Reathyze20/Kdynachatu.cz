@@ -223,6 +223,7 @@ const BlindInput = z
   .strict();
 
 type Origin = "pipeline" | "baseline";
+type Candidate = z.infer<typeof BlindCandidate>;
 
 function flagValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
@@ -250,7 +251,7 @@ function shuffle<T>(items: T[], random: () => number): T[] {
   return result;
 }
 
-function renderCandidate(id: string, c: z.infer<typeof BlindCandidate>): string {
+function renderCandidate(id: string, c: Candidate): string {
   return [
     `### ${id} – ${c.title}`,
     c.summary,
@@ -301,7 +302,7 @@ function blind(root: string, args: string[]): CommandResult {
       ],
     };
   }
-  const sides: Array<[Origin, z.infer<typeof BlindCandidate>[]]> = [
+  const sides: Array<[Origin, Candidate[]]> = [
     ["pipeline", parsed.data.pipeline],
     ["baseline", parsed.data.baseline],
   ];
