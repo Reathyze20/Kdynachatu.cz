@@ -78,6 +78,15 @@ describe("checkMutantRegistries: chyby registrů", () => {
     assert.match(errors[0].message, /DELETE \/api\/notes\/:id/);
   });
 
+  test("výjimka, které odpovídá víc mutantů, je nejednoznačná a vypíše je", () => {
+    const mutants = [mutant({ line: 10 }), mutant({ line: 42, original: "cabinId:\n req.user!.cabinId" })];
+    const errors = checkMutantRegistries(input({ mutants }));
+    assert.deepEqual(errors.map((e) => e.kind), ["ambiguous-exception"]);
+    assert.match(errors[0].message, /2 mutantům/);
+    assert.match(errors[0].message, /notes\.ts:10/);
+    assert.match(errors[0].message, /notes\.ts:42/);
+  });
+
   test("soubor bez mutantů smí v mapě chybět", () => {
     assert.deepEqual(checkMutantRegistries(input({ routeFiles: ["notes.ts", "logs.ts", "workspace.ts"] })), []);
   });

@@ -15,6 +15,7 @@
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "node --import tsx --import ./src/testing/unitTestEnv.ts --test \"src/**/*.test.ts\"",
     "test:integration": "tsx src/scripts/runIntegrationTests.ts",
+    "test:tenant-mutations": "tsx src/scripts/runTenantMutations.ts",
     "test:frontend": "npm --prefix frontend-v2 run test:run",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
