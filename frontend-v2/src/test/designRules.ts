@@ -1,6 +1,6 @@
 import type { DesignRule } from './designGuard'
 
-/** Strojově ověřitelná pravidla z DESIGN.md (§2, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
+/** Strojově ověřitelná pravidla z DESIGN.md (§2–§4, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
 
 /** Soubory s definicí tokenů: jediné místo, kde smí být surové barvy, `--raw-*` a `--color-*`. */
 export const TOKEN_FILES = ['styles/variables.css', 'styles/shadcn-tokens.css']
@@ -44,7 +44,7 @@ function iconSizes(code: string): string[] {
   const tag = new RegExp(String.raw`<(?:${[...names, String.raw`\w*Icon`, String.raw`[a-z]\w*\.icon`].join('|')})(?=[\s/>])`, 'g')
   return [...code.matchAll(tag)].flatMap((m) => {
     const text = jsxTag(code, m.index)
-    const sizeExpr = /\bsize=(?:\{([^}]*)\}|["']([^"']*)["'])/.exec(text)
+    const sizeExpr = /(?<![\w-])size=(?:\{([^}]*)\}|["']([^"']*)["'])/.exec(text)
     const px = (sizeExpr?.[1] ?? sizeExpr?.[2] ?? '').match(/\d+(?:\.\d+)?/g) ?? []
     const tw = [...text.matchAll(/(?<![\w-])(?:size|h|w)-(\[[^\]\s]+\]|\d+(?:\.\d+)?)(?![\w.-])/g)].map((t) => t[1])
     if (px.every((n) => ICON_PX.has(n)) && tw.every((t) => ICON_TW.has(t))) return []

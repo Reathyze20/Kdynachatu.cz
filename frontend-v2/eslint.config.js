@@ -56,7 +56,7 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [{
-          regex: String.raw`^(?!\.|@/)(?!lucide-react$).*(?:icon|fontawesome|feather|phosphor|^lucide)`,
+          regex: String.raw`^(?!\.|@/)(?!lucide-react(?:\/|$)).*(?:icon|fontawesome|feather|phosphor|^lucide)`,
           caseSensitive: false,
           message: 'Ikony jen z lucide-react (DESIGN.md §4).',
         }],

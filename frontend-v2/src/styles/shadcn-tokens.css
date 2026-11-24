@@ -123,13 +123,13 @@
   /* Typová škála DESIGN.md §3 (#451): role místo velikosti v px. Barvu nese zvlášť text-(--text-main) / text-(--text-muted),
      eyebrow se píše `text-eyebrow uppercase`. */
   --text-page-title: var(--font-size-2xl);
-  --text-page-title--line-height: 1.25;
+  --text-page-title--line-height: 1.875rem;
   --text-page-title--font-weight: 700;
   --text-card-title: var(--font-size-base);
-  --text-card-title--line-height: 1.375;
+  --text-card-title--line-height: 1.375rem;
   --text-card-title--font-weight: 600;
   --text-body: var(--font-size-base);
-  --text-body--line-height: 1.5;
+  --text-body--line-height: 1.5rem;
   --text-body--font-weight: 400;
   --text-label: var(--font-size-sm);
   --text-label--line-height: 1.25rem;

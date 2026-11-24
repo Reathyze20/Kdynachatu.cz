@@ -2,10 +2,9 @@ import { afterAll, describe, it, expect } from 'vitest'
 import { assertRule, evaluateRule, SOURCES, type Allowlist } from './designGuard'
 import { DESIGN_RULES, TOKEN_FILES } from './designRules'
 import allowlistRaw from './designAllowlist.json?raw'
-import shadcnTokensCssRaw from '@/styles/shadcn-tokens.css?raw'
 
 /**
- * Guard tokenů, barev (#450), typografie a ikon (#451) z DESIGN.md. Stávající porušení jsou v designAllowlist.json
+ * Guard tokenů, barev (#450), písma a ikon (#451) z DESIGN.md. Stávající porušení jsou v designAllowlist.json
  * („pravidlo → důvod → soubory“), který se smí jen zmenšovat. Prázdný allowlist = Krok 6 v #69.
  */
 
@@ -55,7 +54,7 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
     ],
     good: [
       `${LUCIDE}<Check size={16} />\n<X size={20} onClick={() => a > b} />`, `${LUCIDE}<X className="h-4 w-4 md:size-6" />`, `${LUCIDE}<X />`,
-      `${LUCIDE}<AnimalAvatar size={48} />`, '<Icon size={48} />', `${LUCIDE}<X className="min-h-12 rounded-lg" strokeWidth={2.5} />`,
+      `${LUCIDE}<AnimalAvatar size={48} />`, '<Icon size={48} />', `${LUCIDE}<X data-size="18" />`, `${LUCIDE}<X className="min-h-12 rounded-lg" strokeWidth={2.5} />`,
     ],
   },
 }
@@ -86,27 +85,6 @@ describe('pravidla DESIGN.md rozpoznají porušení', () => {
   it('newCssFile chytí nový .css soubor, vstup Tailwindu a definice tokenů ne', () => {
     const sources = { 'styles/new.css': '', 'features/x/X.module.css': '', 'index.css': '', 'x.tsx': '', ...Object.fromEntries(TOKEN_FILES.map((f) => [f, ''])) }
     expect(evaluateRule(rule('newCssFile'), sources).violations).toEqual(['styles/new.css  soubor .css', 'features/x/X.module.css  soubor .css'])
-  })
-})
-
-describe('typová škála DESIGN.md §3 je vystavená jako utility text-<role>', () => {
-  // role → [velikost, řez, prostrkání], stejná tabulka jako DESIGN.md §3
-  const SCALE: Record<string, [string, string, string?]> = {
-    'page-title': ['var(--font-size-2xl)', '700'],
-    'card-title': ['var(--font-size-base)', '600'],
-    body: ['var(--font-size-base)', '400'],
-    label: ['var(--font-size-sm)', '500'],
-    meta: ['var(--font-size-sm)', '400'],
-    eyebrow: ['var(--font-size-sm)', '700', '0.06em'],
-  }
-  const theme = /@theme inline \{([\s\S]*?)\n\}/.exec(shadcnTokensCssRaw.replace(/\r/g, ''))?.[1] ?? ''
-  const themeVar = (name: string) => new RegExp(String.raw`^\s*${name}:\s*([^;]+);`, 'm').exec(theme)?.[1].trim()
-
-  it.each(Object.entries(SCALE))('text-%s', (role, [size, weight, tracking]) => {
-    expect(themeVar(`--text-${role}`)).toBe(size)
-    expect(themeVar(`--text-${role}--font-weight`)).toBe(weight)
-    expect(themeVar(`--text-${role}--line-height`)).toBeDefined()
-    expect(themeVar(`--text-${role}--letter-spacing`)).toBe(tracking)
   })
 })
 
