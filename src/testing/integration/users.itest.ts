@@ -10,6 +10,8 @@ import { as, setupIntegrationFile, teardownIntegrationFile, TEST_PASSWORD, type 
 // a člen B zůstane beze změny, seznam členů A neobsahuje nikoho z B, hromadné mazání rezervací
 // z A nesáhne na B a kontrola „poslední admin" počítá jen správce vlastní chaty.
 
+const USERNAME_TAKEN = "Uživatelské jméno již existuje.";
+
 let app: Express;
 let world: TestWorld;
 let reservationB: string;
@@ -124,13 +126,51 @@ describe("users: bulk changes from cabin A do not touch cabin B", () => {
   });
 
   // Uživatelské jméno je v DB globálně unikátní, takže jméno z chaty B v A nevznikne nikdy;
-  // filtr `cabinId` tu mění jen chybový kód (viz výjimka v TENANT_MUTANT_EXCEPTIONS).
+  // obsazenost hlásí stejně jako veřejná registrace (409), bez ohledu na chatu (#420).
   test("POST /api/users with a cabin B username creates nothing and leaves the B member unchanged", async () => {
     const before = await userSnapshot(world.memberB.id);
     const res = await as(app, world.adminA).post("/api/users").send({ username: world.memberB.username, password: "nove-heslo-123" });
-    assert.notEqual(res.status, 201);
+    assert.equal(res.status, 409);
+    assert.deepEqual(res.body, { message: USERNAME_TAKEN });
     assert.equal(await prisma.user.count({ where: { username: world.memberB.username } }), 1);
     assert.deepEqual(await userSnapshot(world.memberB.id), before);
+  });
+});
+
+// Správce zakládá člena (#420): jméno je obsazené v jakékoli chatě a bez ohledu na velikost
+// písmen, stejně jako u veřejné registrace (409 „Uživatelské jméno již existuje.“).
+describe("users: POST /api/users rejects a taken username like the public registration", () => {
+  const usernameCount = (username: string) =>
+    prisma.user.count({ where: { username: { equals: username, mode: "insensitive" } } });
+  const post = (username: string) =>
+    as(app, world.adminA).post("/api/users").send({ username, password: "nove-heslo-123" });
+
+  const cases: [string, () => string][] = [
+    ["an own cabin username in different case", () => world.memberA.username.toUpperCase()],
+    ["a cabin B username in different case", () => world.memberB.username.toUpperCase()],
+  ];
+  for (const [name, username] of cases) {
+    test(`${name} → 409 and nothing is created`, async () => {
+      const res = await post(username());
+      assert.equal(res.status, 409);
+      assert.deepEqual(res.body, { message: USERNAME_TAKEN });
+      assert.equal(await usernameCount(username()), 1);
+    });
+  }
+
+  // Obě žádosti projdou kontrolou dřív, než jedna z nich zapíše; druhá skončí na unikátním
+  // indexu a i ta musí dostat 409, ne 500.
+  test("two concurrent requests for the same new username → one 201 and one 409", async () => {
+    const statuses = (await Promise.all([post("soubezny-clen"), post("soubezny-clen")])).map((r) => r.status);
+    assert.deepEqual(statuses.sort(), [201, 409]);
+    assert.equal(await usernameCount("soubezny-clen"), 1);
+  });
+
+  test("positive control: a free username → 201 in the admin's cabin", async () => {
+    const res = await post("novy-clen-a");
+    assert.equal(res.status, 201);
+    const created = await prisma.user.findUnique({ where: { username: "novy-clen-a" }, select: { cabinId: true } });
+    assert.equal(created?.cabinId, world.cabinA.id);
   });
 });
 

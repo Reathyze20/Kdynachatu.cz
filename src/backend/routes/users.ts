@@ -5,9 +5,12 @@ import { validate } from "../../validators/validate";
 import { createUserSchema, updateProfileSchema, changeMyPasswordSchema, changeRoleSchema, changePasswordSchema, adminUpdateUserSchema } from "../../validators/schemas";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import prisma from "../../utils/prisma";
+import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
 
 const router = Router();
+
+const USERNAME_TAKEN_MESSAGE = "Uživatelské jméno již existuje."; // stejná hláška jako POST /api/register
 
 // ============================================================================
 //                          GET ALL USERS (safe)
@@ -53,9 +56,14 @@ router.post("/", protect, requireCabin, validate(createUserSchema), async (req: 
   const { username, password, role } = req.body;
 
   try {
-    const existingUser = await prisma.user.findFirst({ where: { username, cabinId: req.user.cabinId } });
+    // Jméno je unikátní napříč chatami: kontrola globálně a bez ohledu na velikost písmen, se stejnou
+    // odpovědí jako veřejná registrace – neprozradí víc než ona (#420).
+    const existingUser = await prisma.user.findFirst({
+      where: { username: { equals: username, mode: "insensitive" } },
+      select: { id: true },
+    });
     if (existingUser) {
-      return res.status(400).json({ message: "Uživatel již existuje." });
+      return res.status(409).json({ message: USERNAME_TAKEN_MESSAGE });
     }
 
     const passwordHash = await hashPassword(password);
@@ -72,6 +80,10 @@ router.post("/", protect, requireCabin, validate(createUserSchema), async (req: 
 
     res.status(201).json({ message: "Uživatel vytvořen.", user: { id: newUser.id, username: newUser.username } });
   } catch (error) {
+    // Souběžná žádost o stejné jméno prošla kontrolou dřív, než tahle zapsala – unikátní index.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return res.status(409).json({ message: USERNAME_TAKEN_MESSAGE });
+    }
     logger.error("USERS", "Create user error", { error: String(error) });
     res.status(500).json({ message: "Chyba." });
   }
