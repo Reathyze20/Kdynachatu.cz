@@ -103,6 +103,8 @@ model User {
   passwordResetToken String?  @map("password_reset_token")
   passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
   role              String   @default("user") // "admin" | "user" | "guest"
+  // Verze tokenu pro zneplatnění přihlášení (#470); token s jinou verzí bude neplatný (#485).
+  tokenVersion      Int      @default(0) @map("token_version")
   createdAt         DateTime @default(now()) @map("created_at")
 
   // ── Cabin relation ────────────────────────────────────────────────────
