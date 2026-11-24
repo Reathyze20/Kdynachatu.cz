@@ -4,37 +4,55 @@ import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastSt
 import { daysUntil, formatDateRange, formatShortDayDate, formatWeekendRange, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
 import { pluralize } from "@/lib/utils";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
-import { TurnusChainLine } from "@/components/shared/TurnusChainLine";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";
 import { gasLine } from "@/lib/gasLevel";
 import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
-import { ParticipantStack } from "./ParticipantStack";
-import { ArrowRight, CalendarPlus, CircleCheck, DoorOpen, House, TriangleAlert } from "lucide-react";
+import { ArrowRight, CalendarPlus, CircleCheck, DoorOpen, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
   cabinDepartureChecklist: string[];
 }
 
-/** Arrival briefing derived from the last completed stay's checkout state. */
+interface BriefingRow { icon: LucideIcon; text: string; label?: string; warn?: boolean }
+
+/**
+ * „Od minule“ ze stavu předávky posledního pobytu (#366): vlevo stav chaty, vpravo vzkazy.
+ * Popisky vzkazů nahrazuje ikona, čtečky je slyší (sr-only). Jantarově jen to, co chce akci.
+ */
 function buildArrivalBriefing(lastStay: LastStay): React.ReactNode {
   const s = lastStay.checkoutState;
   if (!s) return null;
-  const chips: string[] = [];
   const gas = gasLine(s.gas);
-  if (gas) chips.push(gas);
-  if (s.heatingOff) chips.push("topení vypnuté");
-  if (s.waterOff) chips.push("voda uzavřená");
-  const hasText = !!(s.broken || s.leftBehind || s.note);
-  if (chips.length === 0 && !hasText) return null;
+  const state: BriefingRow[] = [
+    ...(gas ? [{ icon: Flame, text: gas, warn: s.gas === "low" || s.gas === "empty" }] : []),
+    ...(s.heatingOff ? [{ icon: Thermometer, text: "Topení vypnuté" }] : []),
+    ...(s.waterOff ? [{ icon: Droplet, text: "Voda uzavřená" }] : []),
+  ];
+  const notes: BriefingRow[] = [
+    ...(s.broken ? [{ icon: Wrench, label: "Rozbité", text: s.broken, warn: true }] : []),
+    ...(s.leftBehind ? [{ icon: Package, label: "Nechal/a", text: s.leftBehind }] : []),
+    ...(s.note ? [{ icon: MessageSquare, label: "Poznámka", text: s.note }] : []),
+  ];
+  if (state.length === 0 && notes.length === 0) return null;
+  const list = (name: string, rows: BriefingRow[], modifier: string) => rows.length > 0 && (
+    <ul className={`arrival-briefing-list arrival-briefing-list--${modifier}`} aria-label={name}>
+      {rows.map(({ icon: Icon, text, label, warn }) => (
+        <li key={label ?? text} className={warn ? "arrival-briefing-item arrival-briefing-item--warn" : "arrival-briefing-item"}>
+          <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>{label && <span className="sr-only">{label}: </span>}{text}</span>
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <div className="arrival-briefing">
       <div className="arrival-briefing-title">Od minule — {lastStay.username}</div>
-      {chips.length > 0 && <div className="arrival-briefing-chips">{chips.join(" · ")}</div>}
-      {s.broken && <div className="arrival-briefing-line"><strong>Rozbité:</strong> {s.broken}</div>}
-      {s.leftBehind && <div className="arrival-briefing-line"><strong>Nechal/a:</strong> {s.leftBehind}</div>}
-      {s.note && <div className="arrival-briefing-line">{s.note}</div>}
+      <div className="arrival-briefing-body">
+        {list("Stav chaty", state, "state")}
+        {list("Vzkazy", notes, "notes")}
+      </div>
     </div>
   );
 }
@@ -81,8 +99,8 @@ function inDaysLabel(from: string): string {
   return `za ${days} ${pluralize(days, "den", "dny", "dní")}`;
 }
 
-/** Jedna strana hlavičky: avatar s iniciálou (nebo značka, když nikdo není) a jméno (G4), pod tím do/od kdy. */
-function HeaderPerson({ stay, name, when, mark }: { stay?: HeaderStay; name: string; when?: string; mark?: "free" | "none" }) {
+/** Jeden sloupec osy: avatar s iniciálou (nebo značka, když nikdo není) a jméno (G4), pod tím jeden řádek „kdy“. */
+function HeaderPerson({ stay, name, when, mark }: { stay?: HeaderStay; name: string; when?: React.ReactNode; mark?: "free" | "none" }) {
   return (
     <div className="status-header__person">
       {stay ? (
@@ -98,22 +116,21 @@ function HeaderPerson({ stay, name, when, mark }: { stay?: HeaderStay; name: str
   );
 }
 
-/** Detail pobytu pod osobou, CSS ho ukáže jen na desktopu (upřesnění 1 k návrhu #6): účel, noci, kdo jede s ním. */
-function StayDetail({ stay, withNights }: { stay: HeaderStay; withNights: boolean }) {
-  const nights = withNights ? nightsBetween(stay.from, stay.to) : 0;
-  const meta = [stay.purpose, nights > 0 ? `${nights} ${nightsLabel(nights)}` : ""].filter(Boolean).join(" · ");
+function emptyForLabel(lastStay: LastStay): React.ReactNode {
+  const days = lastStay.daysEmpty;
+  const missingChecklist = !lastStay.isCheckoutCompleted && days > 0;
   return (
-    <div className="status-header__detail">
-      {meta && <p className="status-header__meta">{meta}</p>}
-      <ParticipantStack participants={stay.participants} />
-    </div>
+    <>
+      <span className={days >= 14 ? "status-header__warn" : undefined}>prázdná {days === 0 ? "od dneška" : `${days} ${pluralize(days, "den", "dny", "dní")}`}</span>
+      {missingChecklist && <> · <span className="status-header__warn">checklist nevyplněn</span></>}
+    </>
   );
 }
 
 /**
- * Hlavička Přehledu teď → příště (#272, návrh #6 díl 2A). Jediné místo se jménem a datem dalšího
- * pobytu, proto řetězec pod ní začíná až za ním. Teď a příště počítá `buildTurnusChain`
- * (jen pevné pobyty, střídací den). Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
+ * Hlavička Přehledu jako osa teď → příště → pak (#366, dřív #272). Jediné místo se jménem a datem
+ * dalších pobytů. Uzly počítá `buildTurnusChain` (jen pevné pobyty, střídací den); „pak“ ukáže první
+ * a počet dalších pevných za ním. Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
  */
 export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   const navigate = useNavigate();
@@ -143,6 +160,9 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     const nameOf = (s: HeaderStay) => (s.username === user?.username ? "Ty" : s.username);
     const now = stayOf(chain[0]);
     const next = stayOf(chain.find((n) => n.kind === "next"));
+    const later = stayOf(chain.find((n) => n.kind === "later"));
+    const moreLater = later ? data.upcomingReservations.filter((r) => r.status === "primary" && r.from > later.from).length : 0;
+    const nextNights = next ? nightsBetween(next.from, next.to) : 0;
     const departingToday = !!now && now.to === todayStr;
     const departed = departingToday && currentHour >= 14;
     const checkoutDone = !!now && "isCheckoutCompleted" in now && now.isCheckoutCompleted;
@@ -167,28 +187,41 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
           <div className="status-header__row">
             <div role="group" aria-label="Teď" className="status-header__side">
               {now && !departed ? (
-                <>
-                  <HeaderPerson stay={now} name={nameOf(now)} when={departingToday ? "do dneška" : `do ${formatShortDayDate(now.to)}`} />
-                  <StayDetail stay={now} withNights={false} />
-                </>
+                <HeaderPerson stay={now} name={nameOf(now)} when={departingToday ? "do dneška" : `do ${formatShortDayDate(now.to)}`} />
               ) : (
-                <HeaderPerson mark="free" name="Chata je volná" when={now ? `Dnes uvolnil${now.username.endsWith("a") ? "a" : ""} ${now.username}` : undefined} />
+                <HeaderPerson
+                  mark="free"
+                  name="Chata je volná"
+                  when={now ? `Dnes uvolnil${now.username.endsWith("a") ? "a" : ""} ${now.username}` : data.lastStay ? emptyForLabel(data.lastStay) : undefined}
+                />
               )}
             </div>
             <ArrowRight className="status-header__arrow" aria-hidden="true" />
             <div role="group" aria-label="Příště" className="status-header__side">
               {next ? (
-                <>
-                  <HeaderPerson stay={next} name={nameOf(next)} when={next.from === todayStr ? "od dneška" : `od ${formatShortDayDate(next.from)}`} />
-                  <StayDetail stay={next} withNights />
-                </>
+                <HeaderPerson
+                  stay={next}
+                  name={nameOf(next)}
+                  when={`${next.from === todayStr ? "od dneška" : `od ${formatShortDayDate(next.from)}`}${nextNights > 0 ? ` · ${nextNights} ${nightsLabel(nextNights)}` : ""}`}
+                />
               ) : (
                 <HeaderPerson mark="none" name="Zatím nikdo" />
               )}
             </div>
+            {later && (
+              <>
+                <ArrowRight className="status-header__arrow" aria-hidden="true" />
+                <div role="group" aria-label="Pak" className="status-header__side">
+                  <HeaderPerson
+                    stay={later}
+                    name={nameOf(later)}
+                    when={<>od {formatShortDayDate(later.from)}{moreLater > 0 && <> <span className="status-header__more">+{moreLater}<span className="sr-only"> další</span></span></>}</>}
+                  />
+                </div>
+              </>
+            )}
           </div>
-          <TurnusChainLine nodes={chain.filter((n) => n.kind === "later")} className="status-chain" />
-          {!now && buildLastStayBlock(data.lastStay)}
+          {!now && data.lastStay && buildArrivalBriefing(data.lastStay)}
           {myNext && !chain.some((n) => n.stay?.id === myNext.id) && (
             <p className="status-header__mine">
               <strong>Tvůj pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}

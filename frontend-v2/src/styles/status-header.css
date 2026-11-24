@@ -1,10 +1,9 @@
-/* ── Hlavička Přehledu teď → příště (#272, návrh #6 díl 2A) ──
-   Jedna karta: vlevo kdo je teď na chatě, šipka, vpravo kdo jede příště. Osoba je vždy
-   avatar s iniciálou + jméno (G4). Barvy z tokenů karty. Text 16/14 px (G3): `max()` drží
-   minimum, dokud tokeny `--font-size-base/sm` nemají 16/14 px (#284). */
+/* ── Hlavička Přehledu: osa teď → příště → pak (#366, dřív #272) ──
+   Jedna karta, tři stejně vysoké sloupce oddělené šipkou. Každý sloupec je avatar s iniciálou
+   (nebo značka) + jméno a jeden řádek „kdy“ (G4). Barvy z tokenů karty. Text 16/14 px (G3): `max()`
+   drží minimum, dokud tokeny `--font-size-base/sm` nemají 16/14 px (#284). */
 .status-header { --status-header-avatar: 40px; --status-header-sm: max(0.875rem, var(--font-size-sm)); }
 .status-header .status-content { gap: var(--space-md); }
-.status-header .status-chain { margin-top: 0; }
 
 .status-header__label {
   margin: 0;
@@ -15,17 +14,26 @@
   color: var(--text-muted);
 }
 
-.status-header__row { display: flex; align-items: flex-start; gap: var(--space-sm); }
-.status-header__side { display: flex; flex: 1 1 0; flex-direction: column; gap: var(--space-sm); min-width: 0; }
+.status-header__row { display: flex; align-items: center; gap: var(--space-sm); }
+.status-header__side { display: flex; flex: 1 1 0; flex-direction: column; min-width: 0; }
 .status-header__person { display: flex; align-items: center; gap: var(--space-sm); min-width: 0; }
 .status-header__text { display: flex; flex-direction: column; min-width: 0; }
 
 /* Dlouhé jméno se zalomí, neusekne (G3, WCAG 1.4.4) */
 .status-header__name { font-size: var(--font-size-lg); font-weight: 800; line-height: 1.25; color: var(--text-main); overflow-wrap: anywhere; }
 .status-header__when { font-size: max(1rem, var(--font-size-base)); line-height: 1.35; color: var(--text-muted); }
+.status-header__warn { color: var(--color-warning-text); font-weight: 600; }
+.status-header__more {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: rgb(var(--inset));
+  font-size: var(--status-header-sm);
+  font-weight: 700;
+  color: var(--text-main);
+}
 
-/* Šipka na ose avataru */
-.status-header__arrow { flex-shrink: 0; width: 20px; height: 20px; margin-top: calc((var(--status-header-avatar) - 20px) / 2); color: var(--text-muted); }
+.status-header__arrow { flex-shrink: 0; width: 20px; height: 20px; color: var(--text-muted); }
 
 .status-header__mark {
   display: inline-flex;
@@ -39,29 +47,16 @@
 .status-header__mark--free { background: var(--brand-primary); color: var(--text-on-primary); }
 .status-header__mark--none { border: 2px dashed var(--text-placeholder); }
 
-/* Detail pod osobou (účel, noci, s kým), zarovnaný pod jméno */
-.status-header__detail { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: calc(var(--status-header-avatar) + var(--space-sm)); }
-.status-header__detail .status-participants { margin-top: 0; }
-.status-header .status-participants-label,
-.status-header .status-participants-names,
-.status-header__meta,
 .status-header__mine { margin: 0; font-size: var(--status-header-sm); line-height: 1.4; color: var(--text-muted); }
 
-/* Detail pobytu nese hlavička jen na desktopu (upřesnění 1 k návrhu #6) */
-@media (max-width: 1023px) {
-  .status-header__detail { display: none; }
-}
-
-/* Desktop: menší svislé mezery, ať se Přehled vejde bez scrollování (#356). Obsah beze změny. */
+/* Desktop: menší svislé mezery, ať se Přehled vejde bez scrollování (#356). */
 @media (min-width: 1024px) {
   .status-header .status-content { gap: 10px; }
-  .status-header .last-stay-inline { margin-top: 0; }
   .status-header .status-cta-row { padding-top: 10px; }
-  .status-header .arrival-briefing { margin-top: 0; padding: 8px 12px; line-height: 1.4; }
-  .status-header .arrival-briefing-title { margin-bottom: 2px; }
 }
 
-/* Úzký telefon: avatar nad jménem, ať se jméno a datum vejdou do poloviny karty */
-@media (max-width: 400px) {
-  .status-header__person { flex-direction: column; align-items: flex-start; }
+/* Telefon: sloupce pod sebou, šipky pryč; pořadí shora dolů čte osu teď → příště → pak */
+@media (max-width: 767px) {
+  .status-header__row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .status-header__arrow { display: none; }
 }
