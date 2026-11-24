@@ -366,6 +366,23 @@ describe("shopping: bring from home counts as resolved and restocks the linked i
     assert.equal((await as(app, world.memberA).delete(`/api/shopping-list/${goneItem}`)).status, 200, "vanished inventory");
   });
 
+  test("deleting an own item or list linked to a cabin B supply leaves that supply in its cart and emits nothing about it", async () => {
+    const invB = await createInventory(world.memberB, "Tajná sůl B2", "LOW");
+    const other = await createList(world.memberA, "Cizí vazba A");
+    const item = await createLinkedItem("Sůl s cizí vazbou", invB);
+    await createLinkedItem("Sůl s cizí vazbou 2", invB, { listId: other });
+    const beforeB = await prisma.inventoryItem.findUnique({ where: { id: invB } });
+
+    for (const path of [`/api/shopping-list/${item}`, `/api/shopping-lists/${other}`]) {
+      const { result: res, rooms, inventoryEmitted } = await recorded(() => as(app, world.memberA).delete(path));
+      assert.equal(res.status, 200, path);
+      assert.deepEqual(rooms, roomA(), path);
+      assert.equal(inventoryEmitted, false, path);
+      assert.deepEqual(await prisma.inventoryItem.findUnique({ where: { id: invB } }), beforeB, path);
+    }
+    assert.deepEqual([await itemSnapshot(item), await listSnapshot(other)], [null, null]);
+  });
+
   // #275 „Potřebuje pozornost“ + „Koupím já“ (slib „Přivezu z domova“)
   type Attention = { name: string; isEmpty: boolean; inventoryId: string | null; shoppingItemId: string | null };
   const attentionOf = async (user: TestUser) => (await as(app, user).get("/api/dashboard/shopping")).body.attention as Attention[];

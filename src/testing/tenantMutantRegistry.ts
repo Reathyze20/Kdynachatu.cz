@@ -86,6 +86,37 @@ export const TENANT_MUTANT_EXCEPTIONS: readonly TenantMutantException[] = [
       "primární klíč; `cabinId` zásoby žádná route nemění. `{ id: supply.id }` tak označí právě tutéž " +
       "zásobu chaty A jako `{ id: supply.id, cabinId }` – mutant je ekvivalentní.",
   },
+  {
+    file: "shoppingList.ts",
+    route: "PUT /api/shopping-list/:itemId/purchase",
+    original: "cabinId",
+    mutatedLine: "where: { id: updatedItem.linkedInventoryId },",
+    reason:
+      "Načtení navázané zásoby před doplněním. Bez filtru se najde i zásoba chaty B, jenže následný " +
+      "`updateMany({ id: inventory.id, cabinId })` ji nezmění (count 0) a `inventory:updated` se nevyšle – " +
+      "odpověď, DB i realtime jsou stejné jako u originálu, který zásobu nenajde. Ekvivalentní díky " +
+      "druhému filtru; test „a vanished or cabin B inventory item is skipped“ v shopping.itest.ts to ověřuje.",
+  },
+  {
+    file: "shoppingList.ts",
+    route: "PUT /api/shopping-list/:itemId/purchase",
+    original: "cabinId",
+    mutatedLine: "where: { id: inventory.id },",
+    reason:
+      "Doplnění navázané zásoby. `inventory` route načetla přes `findFirst({ id, cabinId })` a `id` je " +
+      "primární klíč; `cabinId` zásoby žádná route nemění. `{ id: inventory.id }` tak označí právě tutéž " +
+      "zásobu chaty A jako `{ id: inventory.id, cabinId }` – mutant je ekvivalentní (stejně jako u pledge).",
+  },
+  {
+    file: "shoppingLists.ts",
+    route: "DELETE /api/shopping-lists/:id",
+    original: "cabinId",
+    mutatedLine: "where: { id: { in: ownedIds } }",
+    reason:
+      "Vyjmutí zásob z košíku po smazání seznamu. `ownedIds` vznikly z `findMany({ id: { in: linkedIds }, " +
+      "cabinId })` (jeho mutanta zabíjí shopping.itest.ts přes realtime) a jsou to primární klíče zásob " +
+      "chaty A; `{ id: { in: ownedIds } }` tak změní tytéž řádky jako s `cabinId` – mutant je ekvivalentní.",
+  },
 ];
 
 export type RegistryErrorKind =
