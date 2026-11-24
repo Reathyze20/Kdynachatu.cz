@@ -322,14 +322,14 @@ export function ReservationsPage() {
           <div className="grid grid-cols-1 gap-3">
             <button
               onClick={handleCreateReservation}
-              className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition-colors text-left"
+              className="flex items-center gap-3 p-4 rounded-xl border border-primary/40 bg-accent hover:border-primary transition-colors text-left"
             >
-              <div className="w-10 h-10 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                 <Home size={20} />
               </div>
               <div>
-                <div className="font-semibold text-emerald-900">Rezervovat chatu</div>
-                <div className="text-xs text-emerald-700">Vytvořit pevnou rezervaci pro pobyt</div>
+                <div className="font-semibold text-foreground">Rezervovat chatu</div>
+                <div className="text-xs text-muted-foreground">Vytvořit pevnou rezervaci pro pobyt</div>
               </div>
             </button>
             <button

@@ -53,7 +53,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
 
   // Typ jako na kartě v seznamu; štítek 14 px (G3), velká písmena jen stylem.
   const status = r.status ?? "primary";
-  const statusCls = { primary: "bg-emerald-50 text-emerald-700", backup: "bg-amber-50 text-amber-700", soft: "bg-slate-50 text-slate-700" }[status];
+  const statusCls = { primary: "bg-accent text-primary", backup: "bg-amber-50 text-amber-700", soft: "bg-slate-50 text-slate-700" }[status];
 
   // Watch status
   const { data: watchData, refetch: refetchWatch } = useQuery<WatchStatus>({

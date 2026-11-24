@@ -142,7 +142,7 @@ function ThreadsLayout() {
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className={`max-w-[84%] space-y-2 rounded-2xl px-4 py-3 ${index % 2 === 0 ? 'mr-auto bg-slate-100/85' : 'ml-auto bg-emerald-50/85'}`}
+              className={`max-w-[84%] space-y-2 rounded-2xl px-4 py-3 ${index % 2 === 0 ? 'mr-auto bg-slate-100/85' : 'ml-auto bg-accent/85'}`}
             >
               <Block className="h-3 w-28 rounded-full" />
               <Block className="h-3 w-full rounded-full" />

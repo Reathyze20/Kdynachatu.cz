@@ -429,18 +429,18 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                   }}
                   className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-colors ${
                     !soft
-                      ? "border-emerald-500 bg-emerald-50"
+                      ? "border-primary bg-accent"
                       : "border-slate-200 bg-white hover:bg-slate-50"
                   }`}
                 >
                   <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${
-                    !soft ? "bg-emerald-200 text-emerald-800" : "bg-slate-100 text-slate-500"
+                    !soft ? "bg-primary/20 text-primary" : "bg-slate-100 text-slate-500"
                   }`}>
                     <Home size={18} />
                   </div>
                   <div>
-                    <div className={`font-semibold text-sm ${!soft ? "text-emerald-900" : "text-slate-700"}`}>Pevná</div>
-                    <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-emerald-700" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
+                    <div className={`font-semibold text-sm ${!soft ? "text-foreground" : "text-slate-700"}`}>Pevná</div>
+                    <div className={`text-[10px] leading-tight mt-0.5 ${!soft ? "text-muted-foreground" : "text-slate-500"}`}>Závazný pobyt na chatě</div>
                   </div>
                 </button>
 
