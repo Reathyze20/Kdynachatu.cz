@@ -3,12 +3,11 @@
  * mutanta, formát výpisu a exit kód. Žádný disk, proces ani DB – to dělá
  * `src/scripts/runTenantMutations.ts`.
  */
-import path from "node:path";
-import { exceptionFor, type RouteItestMap, type TenantMutantException } from "./tenantMutantRegistry";
+import { exceptionFor, routeFileOf, type RouteItestMap, type TenantMutantException } from "./tenantMutantRegistry";
 import type { TenantMutant } from "./tenantMutants";
 
 /** Spodní hranice timeoutu mutanta: start tsx + import aplikace trvá i bez testů desítky sekund. */
-export const MIN_MUTANT_TIMEOUT_MS = 60_000;
+const MIN_MUTANT_TIMEOUT_MS = 60_000;
 
 /** Timeout mutanta = 3× doba kontrolního běhu téže skupiny itestů, minimálně 60 s. */
 export function mutantTimeoutMs(controlMs: number): number {
@@ -31,7 +30,7 @@ export type MutantPlan = { result: MutantResult } | { itests: readonly string[] 
 export function planMutant(mutant: TenantMutant, map: RouteItestMap, exceptions: readonly TenantMutantException[]): MutantPlan {
   const exception = exceptionFor(mutant, exceptions);
   if (exception) return { result: { kind: "exception", reason: exception.reason } };
-  const itests = map[path.posix.basename(mutant.file)];
+  const itests = map[routeFileOf(mutant)];
   // Kontrola registrů běží před plánováním, sem se soubor bez záznamu nedostane.
   if (!itests) throw new Error(`${mutant.file}: chybí v ROUTE_ITEST_MAP.`);
   return itests.length === 0 ? { result: { kind: "survived-untested" } } : { itests };
@@ -79,10 +78,7 @@ export function formatSummary(results: readonly MutantResult[], durationMs: numb
   return `Souhrn: ${results.length} mutantů – ${[...counts, `výjimka ${count("exception")}`].join(", ")}. Doba běhu: ${formatDuration(durationMs)}.`;
 }
 
-/**
- * 1, když přežil mutant mimo výjimky (včetně „bez testu“), jinak 0. Selhání kontroly registrů
- * a kontrolního běhu ukončí spouštěč s 1 dřív, než se k výsledkům mutantů dojde.
- */
+/** 1 při přeživším mimo výjimky (i „bez testu“). Chyba registrů / kontrolního běhu končí 1 už ve spouštěči. */
 export function exitCodeFor(results: readonly MutantResult[]): 0 | 1 {
   return results.some((r) => r.kind === "survived" || r.kind === "survived-untested") ? 1 : 0;
 }

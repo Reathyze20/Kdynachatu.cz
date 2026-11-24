@@ -75,7 +75,7 @@ export interface RegistryInput {
 }
 
 /** Soubor rout mutanta tak, jak se píše v mapě a výjimkách (`notes.ts`). */
-const routeFileOf = (mutant: TenantMutant) => path.posix.basename(mutant.file);
+export const routeFileOf = (mutant: TenantMutant) => path.posix.basename(mutant.file);
 
 const normalize = (snippet: string) => snippet.replace(/\s+/g, " ").trim();
 

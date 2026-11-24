@@ -11,7 +11,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { projectRoot, withTestDatabase } from "../testing/integration/testDatabase";
-import { checkMutantRegistries, itestFileNames, ROUTE_ITEST_MAP, TENANT_MUTANT_EXCEPTIONS } from "../testing/tenantMutantRegistry";
+import { checkMutantRegistries, itestFileNames, ROUTE_ITEST_MAP, routeFileOf, TENANT_MUTANT_EXCEPTIONS } from "../testing/tenantMutantRegistry";
 import { findRouteFileMutants, routeFileNames } from "../testing/tenantMutants";
 import { columnWidths, exitCodeFor, formatMutantLine, formatSummary, mutantTimeoutMs, planMutant, resultOfOutcome } from "../testing/tenantMutationRun";
 import type { MutantResult, TestOutcome } from "../testing/tenantMutationRun";
@@ -41,7 +41,7 @@ function removeProjectCopy(): void {
   // Odkaz nejdřív odpojit, ať rekurzivní mazání nikdy nesáhne do skutečných node_modules.
   const link = path.join(dir, "node_modules");
   if (fs.lstatSync(link, { throwIfNoEntry: false })) fs.unlinkSync(link); // u junction smaže jen odkaz
-  fs.rmSync(dir, { recursive: true, force: true });
+  fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5 }); // Windows: soubory chvíli drží zabitý proces
 }
 
 /** Cesta souboru v kopii; nikdy mimo ni (mutace nesmí skončit v pracovním stromu). */
@@ -62,11 +62,7 @@ function checkInterrupted(): void {
   if (interrupted) throw new Error("Běh přerušen.");
 }
 
-interface ItestRun {
-  outcome: TestOutcome;
-  output: string;
-  durationMs: number;
-}
+type ItestRun = { outcome: TestOutcome; output: string; durationMs: number };
 
 /** Itesty skupiny v kopii, se stejnými volbami jako `test:integration` (sériově, --test-force-exit). */
 function runItests(cwd: string, itests: readonly string[], env: NodeJS.ProcessEnv, timeoutMs: number): Promise<ItestRun> {
@@ -96,27 +92,41 @@ function runItests(cwd: string, itests: readonly string[], env: NodeJS.ProcessEn
   });
 }
 
+/** Žádný process.exit: úklid (kopie, Docker kontejner) proběhne přes `finally`, i po opakovaném Ctrl+C. */
 function onSignal(signal: NodeJS.Signals): void {
-  if (interrupted) {
-    removeProjectCopy();
-    process.exit(130);
-  }
+  if (!interrupted) console.error(`
+${signal}: ukončuji běh a uklízím (dočasná kopie, testovací DB)…`);
   interrupted = true;
-  console.error(`\n${signal}: ukončuji běh a uklízím (dočasná kopie, testovací DB)…`);
   if (currentChild) killTree(currentChild);
+}
+
+const groupKey = (itests: readonly string[]) => itests.join(",");
+
+/**
+ * Kontrolní běh bez mutací: doba každé skupiny. Pouští se i po mutantech – když mezitím selže
+ * infrastruktura (DB, kontejner), mutanti by se falešně hlásili jako zabití.
+ */
+async function controlRun(cwd: string, groups: readonly (readonly string[])[], env: NodeJS.ProcessEnv): Promise<Map<string, number>> {
+  const durations = new Map<string, number>();
+  for (const itests of groups) {
+    checkInterrupted();
+    const run = await runItests(cwd, itests, env, CONTROL_TIMEOUT_MS);
+    checkInterrupted();
+    if (run.outcome !== "passed") throw new Error(`Kontrolní běh bez mutací selhal (${itests.join(", ")}).
+${run.output}`);
+    durations.set(groupKey(itests), run.durationMs);
+    console.log(`Kontrolní běh ${itests.join(", ")}: ok za ${Math.round(run.durationMs / 1000)} s`);
+  }
+  return durations;
 }
 
 async function main(): Promise<number> {
   const started = Date.now();
   const routeFiles = routeFileNames();
   const allMutants = findRouteFileMutants();
-  const registryErrors = checkMutantRegistries({
-    mutants: allMutants,
-    routeFiles,
-    itestFiles: itestFileNames(),
-    map: ROUTE_ITEST_MAP,
-    exceptions: TENANT_MUTANT_EXCEPTIONS,
-  });
+  const registryErrors = checkMutantRegistries(
+    { mutants: allMutants, routeFiles, itestFiles: itestFileNames(), map: ROUTE_ITEST_MAP, exceptions: TENANT_MUTANT_EXCEPTIONS },
+  );
   if (registryErrors.length > 0) {
     console.error("Chyba kontroly registrů tenant mutací:");
     for (const error of registryErrors) console.error(`  ${error.message}`);
@@ -129,10 +139,10 @@ async function main(): Promise<number> {
     console.error(`Neznámý soubor rout: ${unknown.join(", ")}`);
     return 1;
   }
-  const mutants = only.length > 0 ? allMutants.filter((m) => only.includes(path.posix.basename(m.file))) : allMutants;
+  const mutants = only.length > 0 ? allMutants.filter((m) => only.includes(routeFileOf(m))) : allMutants;
   const plans = mutants.map((mutant) => ({ mutant, plan: planMutant(mutant, ROUTE_ITEST_MAP, TENANT_MUTANT_EXCEPTIONS) }));
   const groups = new Map<string, readonly string[]>();
-  for (const { plan } of plans) if ("itests" in plan) groups.set(plan.itests.join(","), plan.itests);
+  for (const { plan } of plans) if ("itests" in plan) groups.set(groupKey(plan.itests), plan.itests);
   console.log(`=== Tenant mutace: ${mutants.length} mutantů, ${groups.size} skupin itestů ===`);
 
   process.on("SIGINT", onSignal);
@@ -141,18 +151,7 @@ async function main(): Promise<number> {
   const cwd = createProjectCopy();
   try {
     const results = await withTestDatabase(async (env) => {
-      const controlMs = new Map<string, number>();
-      for (const [key, itests] of groups) {
-        checkInterrupted();
-        const run = await runItests(cwd, itests, env, CONTROL_TIMEOUT_MS);
-        checkInterrupted();
-        if (run.outcome !== "passed") {
-          throw new Error(`Kontrolní běh bez mutací selhal (${itests.join(", ")}), mutanti se nespouští.\n${run.output}`);
-        }
-        controlMs.set(key, run.durationMs);
-        console.log(`Kontrolní běh ${itests.join(", ")}: ok za ${Math.round(run.durationMs / 1000)} s`);
-      }
-
+      const controlMs = await controlRun(cwd, [...groups.values()], env);
       const widths = columnWidths(mutants);
       const results: MutantResult[] = [];
       for (const { mutant, plan } of plans) {
@@ -165,7 +164,7 @@ async function main(): Promise<number> {
           const original = fs.readFileSync(target, "utf8");
           fs.writeFileSync(target, mutant.mutatedSource);
           try {
-            const run = await runItests(cwd, plan.itests, env, mutantTimeoutMs(controlMs.get(plan.itests.join(","))!));
+            const run = await runItests(cwd, plan.itests, env, mutantTimeoutMs(controlMs.get(groupKey(plan.itests))!));
             checkInterrupted();
             result = resultOfOutcome(run.outcome);
           } finally {
@@ -175,6 +174,7 @@ async function main(): Promise<number> {
         results.push(result);
         console.log(formatMutantLine(mutant, result, widths));
       }
+      await controlRun(cwd, [...groups.values()], env);
       return results;
     });
     console.log(formatSummary(results, Date.now() - started));
