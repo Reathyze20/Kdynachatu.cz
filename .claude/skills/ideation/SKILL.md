@@ -39,7 +39,12 @@ Spusť `npm run --silent ideation -- check --root <kořen>`. Při nenulovém exi
 
 Spusť jednoho subagenta (`general-purpose`) s promptem z [ukotveni.md](ukotveni.md).
 
-Návrhy kódů shluků z jeho výstupu ukaž uživateli a počkej na odpověď. Schválené kódy zapiš do sloupce Shluk v `<kořen>/signals.md` a započítej je do shluků; neschválené signály zůstanou v tomto běhu bez shluku. Hotovo, když máš shrnutí signálů a finální seznam shluků seřazený podle velikosti.
+Oba seznamy návrhů z jeho výstupu ukaž uživateli odděleně a počkej na odpověď:
+
+- **Nové kódy** (signál zatím bez kódu): obecný souhlas („schvaluji“) platí pro celý seznam.
+- **Překódování** (signál, který kód už má): platí jen návrh, u kterého uživatel výslovně jmenuje ID signálu („S-6 na offline ano“). Obecný souhlas se vztahuje jen na nové kódy, takže signál bez výslovného souhlasu zůstává ve svém shluku.
+
+Schválené kódy zapiš do sloupce Shluk v `<kořen>/signals.md` a přesuň signály do odpovídajících shluků; signál s neschváleným novým kódem zůstane v tomto běhu bez shluku. Finální shluky zapiš ve formátu bloků z `ukotveni.md` do `<kořen>/shluky.md` (přepiš ho) a spusť `npm run --silent ideation -- rank --root <kořen>`. Helper je seřadí podle počtu ručních signálů `S-n` a počet issues bere jen jako rozhodčího při shodě, aby témata rodiny nepřehlušila issues od správce. Hotovo, když máš shrnutí signálů a shluky v pořadí z helperu; toto pořadí platí pro kroky 2 a 3 i pro výstup.
 
 ### 2. Nezávislé generování (8 generátorů)
 
@@ -47,7 +52,9 @@ Rozděl čočky a modely podle [generovani.md](generovani.md) a spusť všech 8 
 
 ### 3. Deduplikace (1 subagent)
 
-Spusť jednoho subagenta (`general-purpose`) s promptem z [deduplikace.md](deduplikace.md) a se všemi nápady z kroku 2. Hotovo, když máš kandidáty (nejvýš 10), seznam „posiluje #n“ a vyřazené.
+Od každého generátoru vezmi nejvýš jeho prvních 5 nápadů v pořadí, v jakém je vrátil; generátory počet nedodržují spolehlivě. Kolik nápadů a u kterého generátoru jsi odřízl, uveď v Poznámkách výstupu.
+
+Spusť jednoho subagenta (`general-purpose`) s promptem z [deduplikace.md](deduplikace.md), s těmito nápady a se shrnutím signálů a seřazenými shluky z kroku 1. Hotovo, když máš kandidáty (nejvýš 10) se štítkem Navrhlo, seznam „posiluje #n“ a vyřazené s důvody.
 
 ### Závěr: výstup
 

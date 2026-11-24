@@ -1,7 +1,9 @@
 /**
- * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts check [--root <dir>]`.
+ * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank> [--root <dir>]`.
  * `check` založí chybějící šablony (existující nikdy nepřepíše) a pod minimem ručních signálů skončí
- * exit kódem 1 s počtem chybějících. Bez sítě, DB a `.env`. Další podpříkazy patří do `COMMANDS`.
+ * exit kódem 1 s počtem chybějících. `rank` vypíše bloky shluků z `shluky.md` seřazené podle počtu
+ * ručních signálů `S-n`; počet issues rozhoduje jen při shodě (#386). Bez sítě, DB a `.env`.
+ * Další podpříkazy patří do `COMMANDS`.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -71,7 +73,33 @@ function check(root: string): CommandResult {
   return { code: 0, lines };
 }
 
-const COMMANDS: Record<string, Command> = { check };
+const CLUSTERS_FILE = "shluky.md";
+
+function countIds(block: string, id: RegExp): number {
+  const signalsLine = block.split(/\r?\n/).find((line) => line.startsWith("- Signály:")) ?? "";
+  return signalsLine.match(id)?.length ?? 0;
+}
+
+function rank(root: string): CommandResult {
+  const clustersPath = path.join(root, CLUSTERS_FILE);
+  if (!existsSync(clustersPath)) {
+    return { code: 1, lines: [`Chybí ${clustersPath}. Zapiš do něj finální shluky z kroku 1 a spusť znovu.`] };
+  }
+
+  const blocks = readFileSync(clustersPath, "utf8")
+    .split(/^(?=### )/m)
+    .filter((block) => block.startsWith("### "))
+    .map((block) => block.trimEnd());
+  if (blocks.length === 0) return { code: 1, lines: [`V ${clustersPath} není žádný blok „### <kód> – …“.`] };
+
+  // Array.prototype.sort je stabilní, takže úplná shoda zachová pořadí ze souboru.
+  const ranked = blocks
+    .map((block) => ({ block, family: countIds(block, /\bS-\d+/g), issues: countIds(block, /#\d+/g) }))
+    .sort((a, b) => b.family - a.family || b.issues - a.issues);
+  return { code: 0, lines: [ranked.map(({ block }) => block).join("\n\n")] };
+}
+
+const COMMANDS: Record<string, Command> = { check, rank };
 
 const USAGE = `Použití: tsx src/scripts/ideation.ts <${Object.keys(COMMANDS).join("|")}> [--root <dir>] (výchozí kořen .ideation)`;
 

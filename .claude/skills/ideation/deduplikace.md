@@ -1,14 +1,18 @@
 # Krok 3: Deduplikace
 
-Prompt subagenta = blok **Hranice** ze `SKILL.md` + všechno pod tímto odstavcem s doplněným kořenem, shrnutím signálů z kroku 1 a všemi nápady z kroku 2 (s označením generátoru).
+Prompt subagenta = blok **Hranice** ze `SKILL.md` + všechno pod tímto odstavcem s doplněným kořenem, shrnutím signálů a seřazenými shluky z kroku 1 a nápady z kroku 2 (s označením generátoru).
 
-Dostáváš nápady od až 8 nezávislých generátorů a shrnutí signálů, ze kterých vycházejí. Přečti celý `<kořen>/lessons.md`: sekce A jsou opakované výtky z minulých běhů, sekce B verdikty rodiny k dřívějším kandidátům.
+Dostáváš nápady od až 8 nezávislých generátorů, shrnutí signálů a shluky signálů, ze kterých nápady vycházejí. Přečti celý `<kořen>/lessons.md`: sekce A jsou opakované výtky z minulých běhů, sekce B verdikty rodiny k dřívějším kandidátům.
 
-1. Seskup nápady, které řeší stejnou potíž stejným způsobem; jiný název nevadí.
-2. Z každého shluku vyber jako zástupce nápad, který se nejvíc liší od nápadů v ostatních shlucích. Jeho odkazy na signály doplň o signály ostatních členů shluku. Odkaz, který ve shrnutí signálů neexistuje, škrtni.
-3. Načti issues: `gh issue list --state all --limit 300 --json number,title,state`. Zástupce, který už existuje jako issue (otevřené i zavřené), patří do **Posiluje** s číslem issue a signály, které k němu přidává.
-4. Do **Vyřazeno** s jednořádkovým důvodem patří zástupce bez platného odkazu na signál a zástupce, který opakuje kandidáta ze sekce B. Výtky ze sekce A ber jako nápovědu při výběru zástupce.
-5. Když zůstane víc než 10 kandidátů, ponech 10 navzájem nejodlišnějších; ostatní přesuň do **Vyřazeno** s důvodem „nad strop 10, podobný kandidátovi <název>“.
+1. Seskup do **skupin** nápady, které řeší stejnou potíž stejným způsobem; jiný název nevadí.
+2. Z každé skupiny vyber jako zástupce nápad, který se nejvíc liší od nápadů v ostatních skupinách. Jeho odkazy na signály doplň o signály ostatních členů skupiny. Odkaz, který ve shrnutí signálů neexistuje, škrtni.
+3. Spočítej, kolik různých generátorů nápady skupiny navrhlo: to je štítek **Navrhlo**. Nápad od jediného generátoru je okrajový; štítek ho označí pro správce a o vyřazení nerozhoduje.
+4. Zástupci urči **domovský shluk**: shluk signálů, do kterého patří většina jeho odkazů (při shodě ten s víc odkazy `S-n`, pak ten výš v pořadí shluků).
+5. Načti issues: `gh issue list --state all --limit 300 --json number,title,state`. Zástupce, který už existuje jako issue (otevřené i zavřené), patří do **Posiluje** s číslem issue a signály, které k němu přidává.
+6. Do **Vyřazeno** s jednořádkovým důvodem patří zástupce bez platného odkazu na signál a zástupce, který opakuje kandidáta ze sekce B. Výtky ze sekce A ber jako nápovědu při výběru zástupce.
+7. Když zůstane víc než 10 kandidátů, vyřazuj po jednom, dokud jich není 10. Podobnost porovnávej jen mezi kandidáty se stejným domovským shlukem:
+   - Ve shluku s nejvíc kandidáty vyřaď toho, který se nejvíc kryje s jiným kandidátem z téhož shluku. Důvod: „nad strop 10: shluk `<kód>`, kryje se s kandidátem <název>: <v čem konkrétně>“.
+   - Když má každý domovský shluk už jen jednoho kandidáta, vyřaď kandidáta s nejméně odkazy `S-n` (při shodě s nejméně odkazy celkem). Důvod: „nad strop 10: nejslabší důkaz od rodiny (<jeho odkazy>)“.
 
 Vrať přesně tento Markdown:
 
@@ -17,7 +21,8 @@ Vrať přesně tento Markdown:
 ### <název>
 - Co dělá: 2–3 věty z pohledu rodiny
 - Důkaz: S-…, #…
-- Shluk nápadů: <počet nápadů> z generátorů G…
+- Domovský shluk: `<kód>`
+- Navrhlo: <počet> generátorů (G…)
 
 ## Posiluje
 - #n (open/closed) <titulek issue>: nápad „<název>“ přidává S-…, #…
@@ -26,4 +31,4 @@ Vrať přesně tento Markdown:
 - <název>: <důvod>
 ```
 
-Hotovo, když je každý vstupní nápad v právě jednom shluku a každý shluk skončil v právě jedné ze tří sekcí.
+Hotovo, když je každý vstupní nápad v právě jedné skupině, každá skupina skončila v právě jedné ze tří sekcí a každý důvod „nad strop 10“ jmenuje buď shluk a kandidáta, se kterým se kryje, nebo odkazy nejslabšího důkazu.
