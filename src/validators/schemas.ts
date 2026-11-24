@@ -155,7 +155,7 @@ export const createDiaryFolderSchema = z.object({
   name: z.string().min(1, "Název je povinný").max(100, "Maximální délka je 100 znaků"),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Neplatný formát data"),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Neplatný formát data"),
-  activityTag: z.string().max(50).optional().nullable(),
+  activityTag: z.string().max(50, "Maximální délka je 50 znaků").optional().nullable(),
 });
 
 export const createDiaryEntrySchema = z.object({
@@ -186,11 +186,11 @@ export const createReconstructionItemSchema = z.object({
   cost: z.number().positive().max(999999999, "Maximální hodnota je 999 999 999").optional(),
   status: reconstructionStatusSchema.optional(),
   // Company and task fields, same rules as updateReconstructionItemSchema.
-  tag: z.string().max(50).optional().nullable(),
-  specialization: z.string().max(100).optional().nullable(),
-  email: z.string().email().max(255).optional().or(z.literal("")).or(z.literal(null)),
-  phone: z.string().max(30).optional().nullable(),
-  deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  tag: z.string().max(50, "Maximální délka je 50 znaků").optional().nullable(),
+  specialization: z.string().max(100, "Maximální délka je 100 znaků").optional().nullable(),
+  email: z.string().email("Neplatný e-mail").max(255, "E-mail je příliš dlouhý").optional().or(z.literal("")).or(z.literal(null)),
+  phone: z.string().max(30, "Maximální délka je 30 znaků").optional().nullable(),
+  deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Neplatný formát data").optional().nullable(),
   sourceMessageId: z.string().uuid().optional(),
 });
 

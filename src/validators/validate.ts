@@ -10,9 +10,7 @@ import { z, ZodError } from "zod";
 export const validate = (schema: z.ZodSchema, source: "body" | "params" | "query" = "body") => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = schema.parse(req[source]);
-      // defineProperty rather than assignment: Express 5 exposes `req.query` as a getter only.
-      Object.defineProperty(req, source, { value: parsed, writable: true, enumerable: true, configurable: true });
+      req[source] = schema.parse(req[source]);
       next();
     } catch (error) {
       if (error instanceof ZodError) {
