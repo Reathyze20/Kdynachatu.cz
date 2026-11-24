@@ -114,6 +114,13 @@ export const DESIGN_RULES: DesignRule[] = [
     match: iconSizes,
   },
   {
+    name: 'legacyButton',
+    hint: 'legacy třídy .btn a .btn-* jsou zmrazené (#452), akce je <Button variant="primary|secondary|ghost|danger"> z components/ui/button',
+    scope: (file) => /\.tsx?$/.test(file),
+    // Třída `btn`/`btn-…` jako slovo v řetězci (className, clsx, querySelector('.btn')), ne `id="btn-…"` ani `gallery-btn`.
+    match: /(?<!\bid=["'`])(?<=["'`\s{.])btn(?:-[\w-]*)?(?=["'`\s}$])/g,
+  },
+  {
     name: 'newCssFile',
     hint: 'nový .css soubor nevzniká, nový vzhled se píše utilitami Tailwindu nad tokeny',
     scope: (file) => file.endsWith('.css') && !PERMANENT_CSS.includes(file),

@@ -58,8 +58,22 @@
       "styles/reservations.css", "styles/shopping.css", "styles/status-header.css", "styles/superadmin.css", "styles/toast.css"
     ],
     "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"],
-    "Nepřestylované shadcn primitivum s sm:, přestyluje nebo smaže #452": ["components/ui/dialog.tsx", "components/ui/sheet.tsx"],
+    "Primitivum ui/dialog s sm:, jen základ pro Modal, přestaví se s ním (#453)": ["components/ui/dialog.tsx"],
     "Skeleton s mřížkou sm:/xl:, sjednotí se s rozvržením stránek": ["components/shared/RouteTransitionSkeleton.tsx"]
+  },
+  "legacyButton": {
+    "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
+      "components/shared/ConfirmDialog.tsx", "components/shared/CopyForWhatsAppButton.tsx",
+      "components/shared/LogsPanel.tsx", "components/shared/PromptDialog.tsx", "features/admin/AdminDiagnosticsPage.tsx",
+      "features/admin/AdminPage.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
+      "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx", "features/not-found/NotFoundPage.tsx",
+      "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx", "features/notes/ThreadList.tsx",
+      "features/reconstruction/TaskFormModal.tsx", "features/reservations/calendar/CalendarGrid.tsx",
+      "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
+      "features/reservations/ui/InventoryNotifyDialog.tsx", "features/settings/CabinSettingsPage.tsx",
+      "features/shopping/EditInventoryModal.tsx", "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx",
+      "features/superadmin/SuperAdminPage.tsx"
+    ]
   },
   "newCssFile": {
     "Stávající legacy CSS, zmizí, až se jeho obrazovky převedou na utility (DESIGN.md §11)": [
@@ -93,7 +107,6 @@
       "features/auth/RegisterForm.tsx", "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
       "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx",
       "features/invite/InvitePage.tsx", "features/shopping/PantryView.tsx"
-    ],
-    "Primitivum shadcn: tečka radio položky (8 px) není ikona, přestyluje se s DropdownMenu (#452)": ["components/ui/dropdown-menu.tsx"]
+    ]
   }
 }

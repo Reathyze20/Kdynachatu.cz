@@ -2,13 +2,24 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+export interface InputProps extends React.ComponentProps<"input"> {
+  /** Chybový stav: `aria-invalid` a červený rámeček. Text chyby patří pod pole a propojí se přes `aria-describedby`. */
+  invalid?: boolean
+}
+
+/**
+ * Pole formuláře na tokenech (DESIGN.md §6, #452), vzhledem jako ostatní pole (`styles/forms.css`).
+ * Výšku 48 px a chybový rámeček nese s `!`: globální pravidla pro `input[type=…]` ve forms.css jsou mimo vrstvy
+ * Tailwindu a jinak by utility přebila.
+ */
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, invalid, "aria-invalid": ariaInvalid, ...props }, ref) => {
     return (
       <input
         type={type}
+        aria-invalid={invalid || ariaInvalid || undefined}
         className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "w-full min-h-(--touch-target-min)! rounded-(--radius-md) border border-input bg-(--bg-card) px-3 py-2 text-base text-(--text-main) shadow-xs transition-colors placeholder:text-(--text-placeholder) focus-visible:border-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-(--bg-app) disabled:text-(--text-muted) aria-invalid:border-destructive!",
           className
         )}
         ref={ref}
