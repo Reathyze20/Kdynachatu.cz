@@ -14,6 +14,7 @@ import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
 import { HelpFab } from '@/components/shared/HelpFab'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
+import { TestingChecklist } from '@/features/staging/TestingChecklist'
 import { RouteTransitionSkeleton, getRouteSkeletonVariant } from '@/components/shared/RouteTransitionSkeleton'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
@@ -85,6 +86,8 @@ export function AppShell() {
 
         {/* Page content with route transitions */}
         <main id="page-container" data-testid="app-shell-main">
+          {/* Jen na stagingu: karta „Co vyzkoušet“ v toku nad stránkou (#388) */}
+          <TestingChecklist />
           <motion.div
             key={location.pathname}
             variants={pageVariants}
