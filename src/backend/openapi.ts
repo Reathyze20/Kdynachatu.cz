@@ -138,7 +138,7 @@ const schemas: Record<string, JsonSchema> = {
     type: "object",
     required: ["message"],
     properties: {
-      message: { type: "string", example: "Registrace úspěšná. Zkontrolujte e-mail kvůli ověření účtu." },
+      message: { type: "string", example: "Děkujeme za registraci. Poslali jsme ti e-mail s odkazem pro aktivaci účtu, zkontroluj schránku." },
       testCode: { type: "string", nullable: true, example: "123456" },
     },
   },
@@ -1082,7 +1082,7 @@ const paths: Record<string, OpenApiObject> = {
             },
           },
         },
-        "V Postmanu pouzijte form-data pole folderId a jedno nebo vice poli photos"
+        "V Postmanu pouzij form-data pole folderId a jedno nebo vice poli photos"
       ),
       responses: {
         "200": jsonResponse(ref("GalleryUploadResponse"), "Fotky byly uspesne nahrane"),
