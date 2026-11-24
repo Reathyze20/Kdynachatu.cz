@@ -5,6 +5,7 @@
  *  - `TENANT_MUTANT_EXCEPTIONS`: prokazatelně ekvivalentní mutanti s povinným důvodem. Páruje se
  *    podle souboru, routy (přesně jak ji dá `findTenantMutants`, u helperu i s `, `) a úryvku
  *    s normalizovanými mezerami – číslo řádku se nepoužije, ať výjimku nerozbije vedlejší úprava.
+ *    Výjimka musí odpovídat právě jednomu mutantu, jinak je nejednoznačná a úryvek se zpřesní.
  * `checkMutantRegistries` (čistá, vzor `reconcileCoverage`) hlídá, že registry neodplavou od kódu;
  * meta-test v `tenantMutantRegistry.test.ts` ji pouští nad skutečnými soubory.
  */
@@ -57,7 +58,8 @@ export type RegistryErrorKind =
   | "stale-map-entry"
   | "missing-itest"
   | "exception-without-reason"
-  | "unmatched-exception";
+  | "unmatched-exception"
+  | "ambiguous-exception";
 
 export interface RegistryError {
   kind: RegistryErrorKind;
@@ -108,8 +110,13 @@ export function checkMutantRegistries({ mutants, routeFiles, itestFiles, map, ex
     if (!exception.reason.trim()) {
       errors.push({ kind: "exception-without-reason", message: `Výjimka ${describeException(exception)} nemá důvod.` });
     }
-    if (!mutants.some((mutant) => matches(mutant, exception))) {
+    const matched = mutants.filter((mutant) => matches(mutant, exception));
+    if (matched.length === 0) {
       errors.push({ kind: "unmatched-exception", message: `Výjimce ${describeException(exception)} neodpovídá žádný mutant – smaž ji.` });
+    } else if (matched.length > 1) {
+      // Holý úryvek `cabinId` sdílí v jedné routě i desítka mutantů; výjimka by umlčela všechny.
+      const places = matched.map((mutant) => `${mutant.file}:${mutant.line}`).join(", ");
+      errors.push({ kind: "ambiguous-exception", message: `Výjimka ${describeException(exception)} odpovídá ${matched.length} mutantům (${places}) – zpřesni úryvek.` });
     }
   }
   return errors;
