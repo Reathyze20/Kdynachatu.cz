@@ -86,8 +86,6 @@ export function AppShell() {
 
         {/* Page content with route transitions */}
         <main id="page-container" data-testid="app-shell-main">
-          {/* Jen na stagingu: karta „Co vyzkoušet“ v toku nad stránkou (#388) */}
-          <TestingChecklist />
           <motion.div
             key={location.pathname}
             variants={pageVariants}
@@ -134,6 +132,9 @@ export function AppShell() {
 
       {/* Help FAB + modal */}
       <HelpFab />
+
+      {/* Jen na stagingu: plovoucí karta „Co vyzkoušet“ mimo tok stránky (#399) */}
+      <TestingChecklist />
     </div>
   )
 }

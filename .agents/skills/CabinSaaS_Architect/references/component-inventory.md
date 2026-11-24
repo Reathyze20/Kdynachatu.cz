@@ -187,7 +187,7 @@ These are pre-built, ready to import from `@/components/ui/<name>`:
 ### Staging (`features/staging/`)
 | Component | Type | Status |
 |---|---|---|
-| TestingChecklist | Card in AppShell (staging only) | ✅ „Co vyzkoušet“ checklist (#388); tasks in `testingTasks.ts`, ticks in localStorage |
+| TestingChecklist | Floating card in AppShell (staging only) | ✅ „Co vyzkoušet“ one-task mini card (#388, #399); tasks in `testingTasks.ts`, ticks + collapsed state in localStorage, position in `help.css` |
 
 ---
 

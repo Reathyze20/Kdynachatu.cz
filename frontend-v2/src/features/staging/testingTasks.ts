@@ -60,3 +60,34 @@ export function writeDoneTasks(userId: string | null | undefined, done: string[]
 export function allTasksDone(done: readonly string[]): boolean {
   return TESTING_TASKS.every((t) => done.includes(t.id))
 }
+
+/** Index prvního nehotového úkolu za `after` (dokola); všechno hotové = `after` (nebo první úkol) */
+export function nextUndoneIndex(done: readonly string[], after = -1): number {
+  const total = TESTING_TASKS.length
+  for (let step = 1; step <= total; step++) {
+    const i = (after + step) % total
+    if (!done.includes(TESTING_TASKS[i].id)) return i
+  }
+  return Math.max(after, 0)
+}
+
+/** Sbalení karty (#399) – vlastní klíč vedle odškrtnutí, formát odškrtnutí zůstává */
+function collapsedStorageKey(userId: string | null | undefined): string {
+  return `co-vyzkouset-sbaleno:${userId ?? 'anon'}`
+}
+
+export function readCollapsed(userId: string | null | undefined): boolean {
+  try {
+    return localStorage.getItem(collapsedStorageKey(userId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function writeCollapsed(userId: string | null | undefined, collapsed: boolean): void {
+  try {
+    localStorage.setItem(collapsedStorageKey(userId), collapsed ? '1' : '0')
+  } catch {
+    // úložiště nedostupné – sbalení jen nepřežije obnovení stránky
+  }
+}
