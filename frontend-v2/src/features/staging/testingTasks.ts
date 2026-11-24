@@ -61,7 +61,7 @@ export function allTasksDone(done: readonly string[]): boolean {
   return TESTING_TASKS.every((t) => done.includes(t.id))
 }
 
-/** Index prvního nehotového úkolu za `after` (dokola); všechno hotové = `after` (nebo první úkol) */
+/** Index prvního nehotového úkolu za `after` (dokola); vše hotové = `after` (nebo první úkol) */
 export function nextUndoneIndex(done: readonly string[], after = -1): number {
   const total = TESTING_TASKS.length
   for (let step = 1; step <= total; step++) {
@@ -71,14 +71,12 @@ export function nextUndoneIndex(done: readonly string[], after = -1): number {
   return Math.max(after, 0)
 }
 
-/** Sbalení karty (#399) – vlastní klíč vedle odškrtnutí, formát odškrtnutí zůstává */
-function collapsedStorageKey(userId: string | null | undefined): string {
-  return `co-vyzkouset-sbaleno:${userId ?? 'anon'}`
-}
+/** Sbalení karty (#399) má vlastní klíč – formát odškrtnutí zůstává */
+const collapsedKey = (userId: string | null | undefined) => `co-vyzkouset-sbaleno:${userId ?? 'anon'}`
 
 export function readCollapsed(userId: string | null | undefined): boolean {
   try {
-    return localStorage.getItem(collapsedStorageKey(userId)) === '1'
+    return localStorage.getItem(collapsedKey(userId)) === '1'
   } catch {
     return false
   }
@@ -86,8 +84,6 @@ export function readCollapsed(userId: string | null | undefined): boolean {
 
 export function writeCollapsed(userId: string | null | undefined, collapsed: boolean): void {
   try {
-    localStorage.setItem(collapsedStorageKey(userId), collapsed ? '1' : '0')
-  } catch {
-    // úložiště nedostupné – sbalení jen nepřežije obnovení stránky
-  }
+    localStorage.setItem(collapsedKey(userId), collapsed ? '1' : '0')
+  } catch { /* úložiště nedostupné – sbalení jen nepřežije obnovení stránky */ }
 }
