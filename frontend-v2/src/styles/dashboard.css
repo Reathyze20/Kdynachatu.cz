@@ -82,7 +82,7 @@
 .arrival-briefing-item--warn svg { color: var(--color-warning-text); }
 
 /* Telefon: jeden sloupec, stav chaty jako zalomená řada štítků */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .arrival-briefing-body { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .arrival-briefing-list--state { flex-direction: row; flex-wrap: wrap; gap: 6px; }
   .arrival-briefing-list--state .arrival-briefing-item {

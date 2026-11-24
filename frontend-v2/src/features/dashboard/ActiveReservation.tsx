@@ -36,8 +36,8 @@ function buildArrivalBriefing(lastStay: LastStay): React.ReactNode {
     ...(s.note ? [{ icon: MessageSquare, label: "Poznámka", text: s.note }] : []),
   ];
   if (state.length === 0 && notes.length === 0) return null;
-  const list = (name: string, rows: BriefingRow[], modifier: string) => rows.length > 0 && (
-    <ul className={`arrival-briefing-list arrival-briefing-list--${modifier}`} aria-label={name}>
+  const list = (ariaLabel: string, rows: BriefingRow[], variant: string) => rows.length > 0 && (
+    <ul className={`arrival-briefing-list arrival-briefing-list--${variant}`} aria-label={ariaLabel}>
       {rows.map(({ icon: Icon, text, label, warn }) => (
         <li key={label ?? text} className={warn ? "arrival-briefing-item arrival-briefing-item--warn" : "arrival-briefing-item"}>
           <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -92,6 +92,9 @@ function dashboardChainStays(data: DashboardReservationsData, myUsername: string
 
 type HeaderStay = ActiveStay | UpcomingReservation;
 
+/** Kolik nadcházejících pevných pobytů posílá `/dashboard/reservations` (`take` v routě). */
+const UPCOMING_LIMIT = 5;
+
 function inDaysLabel(from: string): string {
   const days = daysUntil(from);
   if (days === 0) return "dnes";
@@ -116,7 +119,8 @@ function HeaderPerson({ stay, name, when, mark }: { stay?: HeaderStay; name: str
   );
 }
 
-function emptyForLabel(lastStay: LastStay): React.ReactNode {
+/** „prázdná 8 dní“ pod volnou chatou; od 14 dní a u nevyplněného checklistu jantarově. */
+function emptySinceLabel(lastStay: LastStay): React.ReactNode {
   const days = lastStay.daysEmpty;
   const missingChecklist = !lastStay.isCheckoutCompleted && days > 0;
   return (
@@ -161,7 +165,11 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     const now = stayOf(chain[0]);
     const next = stayOf(chain.find((n) => n.kind === "next"));
     const later = stayOf(chain.find((n) => n.kind === "later"));
-    const moreLater = later ? data.upcomingReservations.filter((r) => r.status === "primary" && r.from > later.from).length : 0;
+    // Pevné pobyty za „pak“. API jich posílá nejvýš UPCOMING_LIMIT, plný seznam tedy může být delší.
+    const inChain = new Set(chain.map((n) => n.stay?.id));
+    const moreLater = later ? data.upcomingReservations.filter((r) => r.status === "primary" && r.from >= later.from && !inChain.has(r.id)).length : 0;
+    const maybeMore = data.upcomingReservations.length >= UPCOMING_LIMIT;
+    const fromLabel = (s: HeaderStay) => (s.from === todayStr ? "od dneška" : `od ${formatShortDayDate(s.from)}`);
     const nextNights = next ? nightsBetween(next.from, next.to) : 0;
     const departingToday = !!now && now.to === todayStr;
     const departed = departingToday && currentHour >= 14;
@@ -192,17 +200,17 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
                 <HeaderPerson
                   mark="free"
                   name="Chata je volná"
-                  when={now ? `Dnes uvolnil${now.username.endsWith("a") ? "a" : ""} ${now.username}` : data.lastStay ? emptyForLabel(data.lastStay) : undefined}
+                  when={now ? `Dnes uvolnil${now.username.endsWith("a") ? "a" : ""} ${now.username}` : data.lastStay ? emptySinceLabel(data.lastStay) : undefined}
                 />
               )}
             </div>
             <ArrowRight className="status-header__arrow" aria-hidden="true" />
-            <div role="group" aria-label="Příště" className="status-header__side">
+            <div role="group" aria-label="Příště" className="status-header__side status-header__side--next">
               {next ? (
                 <HeaderPerson
                   stay={next}
                   name={nameOf(next)}
-                  when={`${next.from === todayStr ? "od dneška" : `od ${formatShortDayDate(next.from)}`}${nextNights > 0 ? ` · ${nextNights} ${nightsLabel(nextNights)}` : ""}`}
+                  when={`${fromLabel(next)}${nextNights > 0 ? ` · ${nextNights} ${nightsLabel(nextNights)}` : ""}`}
                 />
               ) : (
                 <HeaderPerson mark="none" name="Zatím nikdo" />
@@ -211,11 +219,11 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
             {later && (
               <>
                 <ArrowRight className="status-header__arrow" aria-hidden="true" />
-                <div role="group" aria-label="Pak" className="status-header__side">
+                <div role="group" aria-label="Pak" className="status-header__side status-header__side--later">
                   <HeaderPerson
                     stay={later}
                     name={nameOf(later)}
-                    when={<>od {formatShortDayDate(later.from)}{moreLater > 0 && <> <span className="status-header__more">+{moreLater}<span className="sr-only"> další</span></span></>}</>}
+                    when={<>{fromLabel(later)}{moreLater > 0 && <> <span className="status-header__more">+{moreLater}{maybeMore ? " a víc" : <span className="sr-only"> další</span>}</span></>}</>}
                   />
                 </div>
               </>

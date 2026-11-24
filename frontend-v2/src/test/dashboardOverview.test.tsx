@@ -130,6 +130,7 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     const header = await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(within(header).getByRole('group', { name: 'Teď' })).toHaveTextContent('Chata je volná')
     expect(within(header).getByRole('group', { name: 'Příště' })).toHaveTextContent(/Jana\s*od po 28\. 12\./)
+    expect(within(header).queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
   })
 
   it('volná chata ukáže pod sebou, jak dlouho je prázdná; „Checklist OK“ zmizí, nevyplněný checklist zůstane', async () => {
@@ -176,14 +177,24 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
       upcomingReservations: [
         upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'),
         upcoming('r-petr', 'Petr', '2026-12-20', '2026-12-22'),
-        upcoming('r-zaloha', 'Karel', '2026-12-24', '2026-12-26', 'backup'),
-        upcoming('r-ota', 'Ota', '2026-12-27', '2026-12-28'),
+        upcoming('r-ota', 'Ota', '2026-12-20', '2026-12-21'),
         upcoming('r-ida', 'Ida', '2027-01-02', '2027-01-04'),
       ],
     }))
 
     const header = await screen.findByRole('region', { name: 'Na chatě teď' })
-    expect(within(header).getByRole('group', { name: 'Pak' })).toHaveTextContent(/Petr\s*od ne 20\. 12\.\s*\+2/)
+    const later = within(header).getByRole('group', { name: 'Pak' })
+    expect(later).toHaveTextContent(/Ota\s*od ne 20\. 12\.\s*\+2/)
+    expect(later).not.toHaveTextContent('a víc')
+  })
+
+  it('když API pošle plný seznam pěti pobytů, „Pak“ přizná, že jich může být víc', async () => {
+    renderOverview(reservations({
+      upcomingReservations: ['14', '16', '18', '20', '22'].map((day, i) => upcoming(`r-${i}`, `Host${i}`, `2026-12-${day}`, `2026-12-${Number(day) + 1}`)),
+    }))
+
+    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(header).getByRole('group', { name: 'Pak' })).toHaveTextContent(/Host1\s*od st 16\. 12\.\s*\+3 a víc/)
   })
 
   it('když není nic naplánováno, zůstane prázdný stav Přehledu bez hlavičky', async () => {
