@@ -10,8 +10,8 @@ import { AXE, CABIN, CABIN_PORCH_ROW, CAR, DORMOUSE, DORMOUSE_SLEEPING, MOON, PO
 const W = 640;
 const H = 76;
 const GROUND = 68;
-/** Zápraží (35), chata (60) a místo vpravo pro špalek nebo auto (70) uprostřed pruhu. */
-const CABIN_X = W / 2 - 45;
+/** Zápraží (28), chata (60) a místo vpravo pro špalek nebo auto (70) uprostřed pruhu. */
+const CABIN_X = W / 2 - 52;
 const CABIN_Y = GROUND - CABIN.length;
 const PORCH_X = CABIN_X - PORCH[0].length;
 /** Horní hrana podlahy zápraží: prodloužení vlevo navazuje na zápraží chaty. */

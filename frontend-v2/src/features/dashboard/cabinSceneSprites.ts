@@ -95,29 +95,28 @@ export const DORMOUSE: Sprite = [
   "...oooooooooo.ooooo.....",
 ];
 
-/** Spící plch 32 × 13 leží na břiše: hlava vlevo na tlapkách se zavřeným okem, huňatý ocas zvednutý za tělem. */
+/** Spící plch 18 × 11 stočený do klubíčka: hlava zastrčená vlevo dole (zavřené oko, bradička, čumák), huňatý ocas
+ * (tmavší) obtočený přes záda a přes hlavu jako peřina. */
 export const DORMOUSE_SLEEPING: Sprite = [
-  "......................oo.o......",
-  "....ooo.............oobboboo....",
-  "...obddo...........obbbbbbbbo...",
-  "...oddddoooooooo..obddbbbbbbbo..",
-  "...obbbbbbbbbbbbooobdbbbbbbbbbo.",
-  "..obbbbbbbbbbbbbbbodbbbbbbbbbdo.",
-  ".obbobbobbbbbbbbbbbodbbbbbbbbdo.",
-  "obbbboobbbbbbbbbbbbbodbbbbbbddoo",
-  "pbbbbbbbbbbbbbbbbbbbbodbbbbbddo.",
-  "obblllbbbbbbbbbbbbbbbbodbbbddo..",
-  ".olllllllbbbbbbbbbbbbbbodddddo..",
-  "..oaaoaaollllllllbbbbbbbooooo...",
-  "...oo.oo.ooooooooooooooo........",
+  "....oooooooo......",
+  "..ooddddbddddoo...",
+  ".odddbbbbbbbdddo..",
+  "oddddbdddddddbddo.",
+  "odbddbbbbbbbbdbddo",
+  "odbdddbbbbbbbbdbdo",
+  "..odddbbbbbbbbdbdo",
+  "obooobbbbbbbbdbdo.",
+  "pllllbbbbbbbbdddo.",
+  ".ollllllbbbbdddo..",
+  "..ooooooooooooo...",
 ];
 
-/** Zápraží 35 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39 chaty): tam spí a odpočívá plch. */
+/** Zápraží 28 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39 chaty): tam spí a odpočívá plch. */
 export const PORCH: Sprite = [
-  "fffFffffFffffFffffFffffFffffFffffFf",
-  "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-  ".oFFo...........oFFo...............",
-  ".oFFo...........oFFo...............",
+  "fffFffffFffffFffffFffffFffff",
+  "FFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+  ".oFFo...........oFFo........",
+  ".oFFo...........oFFo........",
 ];
 
 export const ZZZ: Sprite = ["...oooo", ".....o.", "....o..", "...oooo", "ooo....", ".o.....", "ooo...."];
