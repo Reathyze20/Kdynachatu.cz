@@ -495,14 +495,15 @@
   color: var(--color-warning-text);
 }
 
-/* Sticky: obaly panelu ve správě nesmí být scroll kontejner (clip ořízne rohy, ale ten nevytvoří) */
-.admin-settings-shell.settings-page-card {
-  overflow: clip;
-}
-
+/* Sticky: obal panelu ve správě nesmí být scroll kontejner */
 .admin-settings-shell .main-content-settings,
 .admin-settings-shell .settings-page-card {
   overflow: visible;
+}
+
+/* Ve správě je karta panelu zarovnaná s hlavičkou správy, bez odsazení samostatné stránky */
+.admin-settings-shell .main-content-settings {
+  padding: 0;
 }
 
 /* Mobil scrolluje oknem, sticky by neudržel: pevně nad spodní navigací a bezpečnou zónou (nav.css) */

@@ -63,7 +63,7 @@
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/ConfirmDialog.tsx", "components/shared/CopyForWhatsAppButton.tsx",
       "components/shared/LogsPanel.tsx", "components/shared/PromptDialog.tsx",
-      "features/admin/AdminPage.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
+      "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx", "features/not-found/NotFoundPage.tsx",
       "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx", "features/notes/ThreadList.tsx",
       "features/reservations/calendar/CalendarGrid.tsx",
@@ -76,8 +76,8 @@
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
-      "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx",
-      "features/admin/components/StagingFeedbackSection.tsx", "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
+      "components/shared/LogsPanel.tsx",
+      "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
       "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/onboarding/OnboardingPage.tsx",
@@ -86,7 +86,7 @@
   },
   "legacyEmptyState": {
     "Jednorázový prázdný stav *-empty-*, nahradí ho <EmptyState> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/LogsPanel.tsx", "features/admin/components/StagingFeedbackSection.tsx",
+      "components/shared/LogsPanel.tsx",
       "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx",
       "features/shopping/ListDetail.tsx", "features/shopping/ListMaster.tsx", "features/shopping/PantryView.tsx",
       "features/superadmin/SuperAdminPage.tsx"
@@ -105,7 +105,7 @@
   },
   "localFormatter": {
     "Lokální formátovač data, času nebo částky přes toLocale*String, převede se na lib/format.ts (#456)": [
-      "components/shared/LogsPanel.tsx", "features/admin/components/StagingFeedbackSection.tsx",
+      "components/shared/LogsPanel.tsx",
       "features/dashboard/PinnedNote.tsx", "features/gallery/FolderGrid.tsx", "features/landing/LandingPage.tsx",
       "features/notes/ChatView.tsx",
       "features/superadmin/SuperAdminPage.tsx", "lib/errorDetails.ts"
