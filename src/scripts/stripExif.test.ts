@@ -153,6 +153,18 @@ describe("stripExifFromUploads", () => {
     assert.deepEqual(fs.readdirSync(dir).sort(), ["broken.jpg", "photo.jpg"]);
   });
 
+  test("--dry-run already reports a JPEG that cannot be decoded", async () => {
+    const original = await phoneJpeg();
+    const truncated = original.subarray(0, original.length - 200);
+    fs.writeFileSync(path.join(dir, "truncated.jpg"), truncated);
+
+    const report = await stripExifFromUploads(dir, { dryRun: true });
+
+    assert.deepEqual(report.processed, []);
+    assert.deepEqual(report.failed.map((f) => f.file), ["truncated.jpg"]);
+    assert.ok(fs.readFileSync(path.join(dir, "truncated.jpg")).equals(truncated));
+  });
+
   test("a second run finds nothing to do", async () => {
     fs.writeFileSync(path.join(dir, "photo.jpg"), await phoneJpeg());
     await stripExifFromUploads(dir, { dryRun: false });
@@ -190,7 +202,9 @@ describe("formatStripExifReport", () => {
       failed: [{ file: "b.jpg", error: "boom" }],
     });
     assert.match(text, /DRY RUN/);
-    assert.match(text, /1/);
+    assert.match(text, /Ke zpracování: 1/);
+    assert.match(text, /Přeskočeno.*: 2/);
+    assert.match(text, /Selhalo: 1/);
     assert.match(text, /b\.jpg: boom/);
   });
 });

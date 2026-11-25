@@ -60,13 +60,28 @@ async function startsWithJpegMagic(file: string): Promise<boolean> {
   }
 }
 
-/** Překóduje JPEG bez metadat a atomicky nahradí originál. */
-async function rewriteWithoutMetadata(file: string, original: Buffer): Promise<void> {
-  const stripped = await sharp(original).rotate().jpeg({ quality: JPEG_QUALITY }).toBuffer();
-  const { mode } = await fs.stat(file);
+/** Otočí podle EXIF orientace a překóduje bez metadat (sharp je ve výchozím stavu nezapisuje). */
+function encodeWithoutMetadata(original: Buffer): Promise<Buffer> {
+  return sharp(original).rotate().jpeg({ quality: JPEG_QUALITY }).toBuffer();
+}
+
+/**
+ * Atomicky nahradí originál: dočasný soubor ve stejném adresáři, fsync, rename.
+ * Zachová práva i vlastníka (když skript omylem běží jako root, aplikace soubory dál přečte).
+ */
+async function replaceAtomically(file: string, contents: Buffer): Promise<void> {
+  const { mode, uid, gid } = await fs.stat(file);
   const tempFile = path.join(path.dirname(file), `.${path.basename(file)}.${process.pid}${TEMP_SUFFIX}`);
   try {
-    await fs.writeFile(tempFile, stripped, { flag: "wx", mode });
+    const handle = await fs.open(tempFile, "wx");
+    try {
+      await handle.writeFile(contents);
+      await handle.chmod(mode & 0o7777);
+      if (process.getuid?.() === 0) await handle.chown(uid, gid);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
     await fs.rename(tempFile, file);
   } catch (error) {
     await fs.rm(tempFile, { force: true });
@@ -90,8 +105,10 @@ export async function stripExifFromUploads(rootDir: string, options: StripExifOp
         report.skipped++;
         continue;
       }
+      // Dekóduje i v dry-run, aby report odhalil rozbité soubory dřív než ostrý běh.
+      const stripped = await encodeWithoutMetadata(original);
       if (!options.dryRun) {
-        await rewriteWithoutMetadata(file, original);
+        await replaceAtomically(file, stripped);
       }
       report.processed.push(relative);
     } catch (error) {

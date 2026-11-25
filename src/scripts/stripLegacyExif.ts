@@ -21,6 +21,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("Strip EXIF failed:", error instanceof Error ? error.message : error);
+  console.error("Odstranění EXIF selhalo:",error instanceof Error ? error.message : error);
   process.exit(1);
 });
