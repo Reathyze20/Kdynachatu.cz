@@ -703,7 +703,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
       ) : null}
 
       {isLoading ? (
-        <ul className={MEMBER_LIST_CLASS} aria-hidden="true">
+        <ul className={MEMBER_LIST_CLASS} aria-busy="true" aria-label="Načítám pozvánky…">
           {[0, 1].map((i) => (
             <ListRow as="li" key={i}><div className="grid gap-2"><div className="skeleton h-4 w-2/5" /><div className="skeleton h-4 w-3/5" /></div></ListRow>
           ))}
@@ -779,7 +779,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 as="li"
                 key={inv.id}
                 action={
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRevoke(inv.id)} disabled={revokeInvite.isPending}>
+                  <Button variant="secondary" size="sm" className="text-destructive" onClick={() => handleRevoke(inv.id)} disabled={revokeInvite.isPending}>
                     Odstranit
                   </Button>
                 }
