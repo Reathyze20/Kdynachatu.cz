@@ -360,6 +360,9 @@ export const changeMyPasswordSchema = z.object({
   newPassword: z.string().min(8, "Nové heslo musí mít alespoň 8 znaků").max(100),
 });
 
+// Users — „Odhlásit všude“ (#485): bez vstupu, případná pole v těle se zahodí
+export const logoutEverywhereSchema = z.object({});
+
 // Users — admin update user
 export const adminUpdateUserSchema = z.object({
   role: z.enum(["admin", "user", "guest"]).optional(),

@@ -89,7 +89,7 @@ before(async () => {
     member: tokenFor(memberA),
     admin: tokenFor(adminA),
     foreignAdmin: tokenFor(world.adminB),
-    superadmin: signAuthToken({ id: superadmin.id, username: superadmin.username, role: "admin", cabinId: null, isSuperAdmin: true }),
+    superadmin: signAuthToken({ id: superadmin.id, username: superadmin.username, role: "admin", cabinId: null, isSuperAdmin: true, tokenVersion: superadmin.tokenVersion }),
   });
 
   const owner = { cabinId: cabinA.id };

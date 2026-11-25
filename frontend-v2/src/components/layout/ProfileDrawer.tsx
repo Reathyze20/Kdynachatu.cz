@@ -8,6 +8,8 @@ import apiClient from '@/api/client'
 import { PromptDialog } from '@/components/shared/PromptDialog'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { membersApi } from '@/api/members'
+import { authApi } from '@/api/auth'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
@@ -53,6 +55,11 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
+  // ─── Logout everywhere state ────────────────────────────────────────────────
+  const [showLogoutEverywhereConfirm, setShowLogoutEverywhereConfirm] = useState(false)
+  const [logoutEverywhereLoading, setLogoutEverywhereLoading] = useState(false)
+  const [logoutEverywhereError, setLogoutEverywhereError] = useState('')
+
   // ─── Leave cabin state ──────────────────────────────────────────────────────
   const [showLeaveCabinConfirm, setShowLeaveCabinConfirm] = useState(false)
   const [leaveCabinLoading, setLeaveCabinLoading] = useState(false)
@@ -93,6 +100,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setSecurityError(false)
     setShowDeleteConfirm(false)
     setDeleteLoading(false)
+    setShowLogoutEverywhereConfirm(false)
+    setLogoutEverywhereLoading(false)
+    setLogoutEverywhereError('')
     setShowLeaveCabinConfirm(false)
     setLeaveCabinLoading(false)
     setLeaveCabinError('')
@@ -166,14 +176,26 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       return
     }
 
+    const form = e.currentTarget
     try {
-      const res = await apiClient.patch('/users/me/password', { oldPassword, newPassword })
-      if (res.status === 200) {
-        setSecurityMessage('')
-        setSecurityError(false)
-        ;(e.currentTarget as HTMLFormElement).reset()
-        showToast('Heslo úspěšně změněno', 'success')
+      const res = await authApi.changeMyPassword(oldPassword, newPassword)
+      // Změna hesla zneplatnila všechna přihlášení (#485); tohle zařízení pokračuje s novým tokenem.
+      if (user) {
+        login({
+          token: res.token,
+          username: user.username,
+          userId: user.userId,
+          role: user.role,
+          animalIcon: user.animalIcon,
+          cabinId: user.cabinId,
+          isSuperAdmin: user.isSuperAdmin,
+          remember: localStorage.getItem('authToken') !== null,
+        })
       }
+      setSecurityMessage('')
+      setSecurityError(false)
+      form.reset()
+      showToast('Heslo úspěšně změněno', 'success')
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
       setSecurityMessage(data?.message || 'Chyba.')
@@ -215,6 +237,22 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       showToast(data?.message || 'Chyba při mazání účtu', 'error')
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  // ─── Odhlásit všude (#485) ──────────────────────────────────────────────────
+  async function handleLogoutEverywhere() {
+    setLogoutEverywhereLoading(true)
+    setLogoutEverywhereError('')
+    try {
+      await authApi.logoutEverywhere()
+      setShowLogoutEverywhereConfirm(false)
+      showToast('Odhlášeno na všech zařízeních.', 'success')
+      logout()
+    } catch {
+      setLogoutEverywhereError('Odhlášení se nepovedlo. Zkus to znovu.')
+    } finally {
+      setLogoutEverywhereLoading(false)
     }
   }
 
@@ -473,6 +511,45 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   </p>
                 )}
               </form>
+            </div>
+
+            <div className="drawer-section" style={{ marginTop: '2rem' }}>
+              <h3>Přihlášená zařízení</h3>
+              <p className="mt-2 mb-4 text-sm text-muted-foreground">
+                Ztracený telefon nebo cizí počítač? Odhlas se všude najednou, i na tomhle zařízení.
+              </p>
+
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() => {
+                  setLogoutEverywhereError('')
+                  setShowLogoutEverywhereConfirm(true)
+                }}
+                data-testid="profile-logout-everywhere-button"
+              >
+                Odhlásit všude
+              </Button>
+
+              <ConfirmDialog
+                isOpen={showLogoutEverywhereConfirm}
+                title="Odhlásit všude?"
+                message="Odhlásíme tě na všech zařízeních, i na tomhle. Potom se znovu přihlásíš heslem."
+                errorMessage={logoutEverywhereError || undefined}
+                confirmLabel="Odhlásit všude"
+                cancelLabel="Zrušit"
+                danger
+                loading={logoutEverywhereLoading}
+                onConfirm={() => {
+                  void handleLogoutEverywhere()
+                }}
+                onCancel={() => {
+                  if (logoutEverywhereLoading) return
+                  setShowLogoutEverywhereConfirm(false)
+                  setLogoutEverywhereError('')
+                }}
+              />
             </div>
 
             <div className="drawer-section" style={{ marginTop: '2rem' }}>
