@@ -17,13 +17,11 @@ export interface PageHeaderMenuAction {
   icon?: LucideIcon
   onSelect: () => void
   variant?: "default" | "danger"
-  disabled?: boolean
 }
 
 export interface PageHeaderProps {
   /** Titulek stránky, vždy jediné `h1`. */
   title: ReactNode
-  /** Krátký text pod titulkem. */
   subtitle?: ReactNode
   /** Cesta pro odkaz „Zpět“ nad titulkem. */
   backTo?: string
@@ -39,7 +37,6 @@ export interface PageHeaderProps {
  * podtitulek, vpravo nejvýš jedna primární akce a kebab menu se sekundárními akcemi.
  */
 export function PageHeader({ title, subtitle, backTo, primaryAction, secondaryActions = [], className }: PageHeaderProps) {
-  const hasActions = primaryAction !== undefined || secondaryActions.length > 0
   return (
     <header className={className}>
       {backTo !== undefined && (
@@ -51,47 +48,38 @@ export function PageHeader({ title, subtitle, backTo, primaryAction, secondaryAc
           Zpět
         </Link>
       )}
-      {/* Dlouhý titulek nenechá akce zúžit sloupec pod 10rem, akce se pak na mobilu zalomí pod něj. */}
+      {/* Titulek si drží aspoň 10rem, akce se pak na mobilu zalomí pod něj. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0 flex-[1_1_10rem]">
           <h1 className="text-page-title text-(--text-main) [overflow-wrap:anywhere]">{title}</h1>
           {subtitle && <p className="mt-1 text-body text-(--text-muted)">{subtitle}</p>}
         </div>
-        {hasActions && (
+        {(primaryAction || secondaryActions.length > 0) && (
           <div className="flex shrink-0 items-center gap-2">
             {primaryAction && <ActionButton action={primaryAction} />}
-            {secondaryActions.length > 0 && <HeaderMenu actions={secondaryActions} />}
+            {secondaryActions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Další akce">
+                    <EllipsisVertical aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {secondaryActions.map(({ label, icon: Icon, onSelect, variant }, i) => (
+                    <Fragment key={label}>
+                      {variant === "danger" && i > 0 && secondaryActions[i - 1].variant !== "danger" && <DropdownMenuSeparator />}
+                      <DropdownMenuItem variant={variant} onSelect={onSelect}>
+                        {Icon && <Icon aria-hidden="true" />}
+                        {label}
+                      </DropdownMenuItem>
+                    </Fragment>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         )}
       </div>
     </header>
-  )
-}
-
-function HeaderMenu({ actions }: { actions: PageHeaderMenuAction[] }) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Další akce">
-          <EllipsisVertical aria-hidden="true" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {actions.map((action, i) => {
-          const Icon = action.icon
-          // Mazání se odděluje od ostatních akcí (DESIGN.md §6 DropdownMenu).
-          const separate = action.variant === "danger" && i > 0 && actions[i - 1].variant !== "danger"
-          return (
-            <Fragment key={action.label}>
-              {separate && <DropdownMenuSeparator />}
-              <DropdownMenuItem variant={action.variant} disabled={action.disabled} onSelect={action.onSelect}>
-                {Icon && <Icon aria-hidden="true" />}
-                {action.label}
-              </DropdownMenuItem>
-            </Fragment>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }

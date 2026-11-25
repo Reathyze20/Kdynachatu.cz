@@ -9,31 +9,33 @@ import { Card } from '@/components/shared/Card'
 import { ListRow } from '@/components/shared/ListRow'
 
 /**
- * Kompozity `shared/` (#454, DESIGN.md §6 a §7). Testuje se přes veřejné props to, co vidí uživatel a čtečka.
- * Třída se ověřuje jen tam, kde je sama pravidlem (papír karty, cíl 48 px řádku), protože jsdom layout nepočítá.
+ * Kompozity `shared/` (#454, DESIGN.md §6 a §7) přes veřejné props: co vidí uživatel a čtečka.
+ * Třída se ověřuje jen tam, kde je sama pravidlem (papír karty, cíl 48 px řádku), jsdom layout nepočítá.
  */
 
 beforeAll(() => {
   // jsdom nemá rozhraní, která Radix Popper a Menu volají (kebab menu hlavičky).
-  globalThis.ResizeObserver ??= class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver
+  globalThis.ResizeObserver ??= class { observe() {} unobserve() {} disconnect() {} } as unknown as typeof ResizeObserver
   Element.prototype.scrollIntoView ??= () => {}
   Element.prototype.hasPointerCapture ??= () => false
   Element.prototype.releasePointerCapture ??= () => {}
 })
 
 const inRouter = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>)
+const menuActions = (onRename = vi.fn()) => [
+  { label: 'Přejmenovat', icon: Pencil, onSelect: onRename },
+  { label: 'Smazat album', icon: Trash2, variant: 'danger' as const, onSelect: vi.fn() },
+]
 
 describe('PageHeader', () => {
-  it('titulek je právě jedno h1, podtitulek je pod ním', () => {
+  it('titulek je právě jedno h1, podtitulek je pod ním, bez backTo a akcí nic dalšího', () => {
     inRouter(<PageHeader title="Galerie" subtitle="Fotky z chaty" />)
     const headings = screen.getAllByRole('heading', { level: 1 })
     expect(headings).toHaveLength(1)
     expect(headings[0]).toHaveTextContent('Galerie')
     expect(screen.getByText('Fotky z chaty')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
   it('backTo vykreslí odkaz „Zpět“ na danou stránku', () => {
@@ -41,37 +43,24 @@ describe('PageHeader', () => {
     expect(screen.getByRole('link', { name: 'Zpět' })).toHaveAttribute('href', '/galerie')
   })
 
-  it('bez backTo, akcí a podtitulku je to jen titulek', () => {
-    inRouter(<PageHeader title="Galerie" />)
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button')).not.toBeInTheDocument()
-  })
-
-  it('primární akce je jedno tlačítko s viditelným textem a spustí se klepnutím', async () => {
+  it('primární akce je tlačítko s viditelným textem, s `to` odkaz; bez sekundárních akcí není kebab menu', async () => {
     const onClick = vi.fn()
-    inRouter(<PageHeader title="Galerie" primaryAction={{ label: 'Nové album', icon: Plus, onClick }} />)
+    inRouter(
+      <>
+        <PageHeader title="Galerie" primaryAction={{ label: 'Nové album', icon: Plus, onClick }} secondaryActions={[]} />
+        <PageHeader title="Rezervace" primaryAction={{ label: 'Nová rezervace', icon: Plus, to: '/rezervace/nova' }} />
+      </>,
+    )
     const button = screen.getByRole('button', { name: 'Nové album' })
     expect(button.className).toContain('bg-primary')
     await userEvent.click(button)
     expect(onClick).toHaveBeenCalledTimes(1)
-  })
-
-  it('primární akce s `to` je odkaz se vzhledem tlačítka', () => {
-    inRouter(<PageHeader title="Rezervace" primaryAction={{ label: 'Nová rezervace', icon: Plus, to: '/rezervace/nova' }} />)
     expect(screen.getByRole('link', { name: 'Nová rezervace' })).toHaveAttribute('href', '/rezervace/nova')
+    expect(screen.queryByRole('button', { name: 'Další akce' })).not.toBeInTheDocument()
   })
 
   it('vedle nejvýš jedné primární akce je vidět jen kebab menu, sekundární akce jsou schované v něm', () => {
-    inRouter(
-      <PageHeader
-        title="Album"
-        primaryAction={{ label: 'Nahrát fotky', icon: Plus, onClick: vi.fn() }}
-        secondaryActions={[
-          { label: 'Přejmenovat', icon: Pencil, onSelect: vi.fn() },
-          { label: 'Smazat album', icon: Trash2, variant: 'danger', onSelect: vi.fn() },
-        ]}
-      />,
-    )
+    inRouter(<PageHeader title="Album" primaryAction={{ label: 'Nahrát fotky', onClick: vi.fn() }} secondaryActions={menuActions()} />)
     const buttons = screen.getAllByRole('button')
     expect(buttons.map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['Nahrát fotky', 'Další akce'])
     expect(screen.queryByText('Přejmenovat')).not.toBeInTheDocument()
@@ -79,15 +68,7 @@ describe('PageHeader', () => {
 
   it('sekundární akce se vyberou z kebab menu, mazání je oddělené od ostatních', async () => {
     const onRename = vi.fn()
-    inRouter(
-      <PageHeader
-        title="Album"
-        secondaryActions={[
-          { label: 'Přejmenovat', icon: Pencil, onSelect: onRename },
-          { label: 'Smazat album', icon: Trash2, variant: 'danger', onSelect: vi.fn() },
-        ]}
-      />,
-    )
+    inRouter(<PageHeader title="Album" secondaryActions={menuActions(onRename)} />)
     const trigger = screen.getByRole('button', { name: 'Další akce' })
     expect(trigger).toHaveAttribute('aria-haspopup', 'menu')
     trigger.focus()
@@ -96,15 +77,9 @@ describe('PageHeader', () => {
     const menu = await screen.findByRole('menu')
     expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Přejmenovat', 'Smazat album'])
     expect(within(menu).getByRole('separator')).toBeInTheDocument()
-
     await userEvent.click(within(menu).getByRole('menuitem', { name: 'Přejmenovat' }))
     expect(onRename).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-  })
-
-  it('bez sekundárních akcí kebab menu není', () => {
-    inRouter(<PageHeader title="Galerie" primaryAction={{ label: 'Nové album', onClick: vi.fn() }} secondaryActions={[]} />)
-    expect(screen.queryByRole('button', { name: 'Další akce' })).not.toBeInTheDocument()
   })
 })
 
@@ -116,56 +91,42 @@ describe('EmptyState', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('volitelná akce je tlačítko, které se spustí klepnutím', async () => {
+  it('volitelná akce je tlačítko, které se spustí klepnutím, s `to` odkaz', async () => {
     const onClick = vi.fn()
-    render(<EmptyState icon={Images} message="Zatím tu nejsou žádná alba." action={{ label: 'Nové album', icon: Plus, onClick }} />)
+    inRouter(
+      <>
+        <EmptyState icon={Images} message="Zatím tu nejsou žádná alba." action={{ label: 'Nové album', icon: Plus, onClick }} />
+        <EmptyState icon={Images} message="Žádné fotky." action={{ label: 'Do galerie', to: '/galerie' }} />
+      </>,
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Nové album' }))
     expect(onClick).toHaveBeenCalledTimes(1)
-  })
-
-  it('akce s `to` je odkaz', () => {
-    inRouter(<EmptyState icon={Images} message="Zatím tu nejsou žádná alba." action={{ label: 'Do galerie', to: '/galerie' }} />)
     expect(screen.getByRole('link', { name: 'Do galerie' })).toHaveAttribute('href', '/galerie')
   })
 })
 
-describe('Card', () => {
-  it('je papírová karta (bg-sheet, border-rule-soft, shadow-lift) s obsahem', () => {
-    render(<Card data-testid="card">Na chatě teď</Card>)
-    const card = screen.getByTestId('card')
-    expect(card).toHaveTextContent('Na chatě teď')
-    expect(card).toHaveClass('bg-sheet', 'border-rule-soft', 'shadow-lift')
-  })
-
-  it('`as` změní prvek (sekce s nadpisem), flush odebere vnitřní odsazení pro seznam řádků', () => {
+describe('Card a ListRow', () => {
+  it('Card je papírová karta (bg-sheet, border-rule-soft, shadow-lift), `as` mění prvek, flush je bez odsazení', () => {
     render(
       <>
-        <Card as="section" aria-label="Seznam">
-          <h2>Seznam</h2>
-        </Card>
+        <Card as="section" aria-label="Na chatě teď">Obsah</Card>
         <Card flush data-testid="flush" />
       </>,
     )
-    expect(screen.getByRole('region', { name: 'Seznam' }).tagName).toBe('SECTION')
+    const card = screen.getByRole('region', { name: 'Na chatě teď' })
+    expect(card).toHaveTextContent('Obsah')
+    expect(card).toHaveClass('bg-sheet', 'border-rule-soft', 'shadow-lift')
     expect(screen.getByTestId('flush').className).not.toMatch(/(^|\s)p-\d/)
   })
-})
 
-describe('ListRow', () => {
-  it('má dotykovou výšku 48 px přes token --touch-target-min', () => {
-    render(<ListRow data-testid="row">Mléko</ListRow>)
-    expect(screen.getByTestId('row')).toHaveClass('min-h-(--touch-target-min)')
-  })
-
-  it('vykreslí obsah a akci v jejich slotech, akce je za obsahem', () => {
+  it('ListRow má výšku 48 px přes token --touch-target-min, obsah a za ním akci', () => {
     render(
       <ul>
-        <ListRow as="li" action={<button type="button">Odebrat</button>}>
-          Mléko
-        </ListRow>
+        <ListRow as="li" action={<button type="button">Odebrat</button>}>Mléko</ListRow>
       </ul>,
     )
     const row = screen.getByRole('listitem')
+    expect(row).toHaveClass('min-h-(--touch-target-min)')
     expect(row).toHaveTextContent('MlékoOdebrat')
     expect(within(row).getByRole('button', { name: 'Odebrat' })).toBeInTheDocument()
   })
