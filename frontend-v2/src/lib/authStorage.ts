@@ -1,7 +1,4 @@
-/**
- * lib/authStorage.ts — Čtení přihlášení z úložiště mimo React (api/client.ts, offline fronta).
- * Komponenty berou uživatele a chatu jen přes useAuth().
- */
+/** lib/authStorage.ts — přihlášení z úložiště pro kód mimo React; komponenty jen přes useAuth(). */
 
 export function getStoredUserId(): string | null {
   return sessionStorage.getItem('userId') ?? localStorage.getItem('userId')

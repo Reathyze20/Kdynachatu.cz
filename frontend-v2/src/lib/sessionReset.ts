@@ -1,11 +1,6 @@
 /**
- * lib/sessionReset.ts — Úklid dat předchozího účtu na sdíleném zařízení (#478).
- *
- * Odhlášení, přihlášení jiného účtu (event SESSION_RESET_EVENT z AuthContext),
- * vypršení session (401 → 'auth:expired') i zablokování účtu ('auth:blocked')
- * vyprázdní cache TanStack Query a cache uploadů v service workeru
- * (runtimeCaching 'uploads' ve vite.config.ts), aby další člověk u tabletu
- * neviděl data předchozího účtu.
+ * lib/sessionReset.ts — Sdílené zařízení (#478): odhlášení, přihlášení jiného účtu, 401
+ * i zablokování účtu vyprázdní cache dotazů a cache 'uploads' service workeru (vite.config.ts).
  */
 import type { QueryClient } from '@tanstack/react-query'
 
