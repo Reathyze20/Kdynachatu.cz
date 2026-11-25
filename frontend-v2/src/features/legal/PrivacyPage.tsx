@@ -1,11 +1,19 @@
 /**
  * PrivacyPage.tsx — Ochrana osobních údajů (GDPR / Privacy Policy)
  */
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Download, Pencil, Scale, Trash2 } from 'lucide-react'
 import '@/styles/legal.css'
 
 export function PrivacyPage() {
+  const { hash } = useLocation()
+
+  // Odkaz na sekci (/privacy#cookies z lišty o cookies a z patičky úvodu) otevře stránku rovnou na ní (#516).
+  useEffect(() => {
+    if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'start' })
+  }, [hash])
+
   return (
     <div className="legal-page" data-testid="privacy-page">
       <div className="legal-container">

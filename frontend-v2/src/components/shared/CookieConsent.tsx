@@ -1,30 +1,12 @@
-/**
- * CookieConsent.tsx — GDPR informační banner (s trochou humoru)
- * Informuje uživatele o tom, co ukládáme v prohlížeči.
- * Nepoužíváme tracking → nepotřebujeme granulární souhlas,
- * ale EU ePrivacy + GDPR vyžadují jasné informování.
- */
+/** Jednovětá informace o cookies (#516). Jen technicky nezbytné cookies, takže jen informujeme, souhlas nesbíráme. */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import '@/styles/legal.css'
+import { Button } from '@/components/ui/button'
 
 const CONSENT_KEY = 'cookieConsent'
 
-const COOKIE_JOKES = [
-  'Bohužel nejde sníst.',
-  'Bez cukru, bez mouky. Asi dieta.',
-  'Upozornění: Nejedná se o linecké.',
-  'Vanilkových rohlíčků se netýká.',
-  'Čokoládové naneštěstí nejsou součástí balení.',
-  '* Neobsahují tvaroh ani džem.',
-  'Cookie Monster byl zklamán.',
-  'Konzumace těchto cookies nenasytí.',
-]
-
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
-  const [showDetail, setShowDetail] = useState(false)
-  const [joke] = useState(() => COOKIE_JOKES[Math.floor(Math.random() * COOKIE_JOKES.length)])
 
   useEffect(() => {
     const accepted = localStorage.getItem(CONSENT_KEY)
@@ -42,67 +24,22 @@ export function CookieConsent() {
   if (!visible) return null
 
   return (
-    <div className="cookie-consent-banner" role="dialog" aria-label="Informace o zpracování dat" data-testid="cookie-consent-banner">
-      <div className="cookie-consent-body">
-        <h3 className="cookie-consent-title">
-          <img src="/icons/cookies_icon.svg" alt="" aria-hidden="true" className="cookie-consent-icon" />
-          Používáme cookies!
-        </h3>
-        <p className="cookie-consent-text">
-          <strong>Ukládáme cookies.</strong> Tyhle cookies ale bohužel nejsou k jídlu —
-          slouží jen k přihlášení a základnímu fungování aplikace.
-          Žádné sledování, žádná reklama, žádné sdílení s třetími stranami.
+    <section
+      aria-label="Cookies"
+      data-testid="cookie-consent-banner"
+      // Se spodní mobilní lištou (AppShell) sedí nad ní, ať ji nezakrývá; --mobile-nav-height je jen na mobilu (nav.css).
+      className="fixed inset-x-0 bottom-0 z-(--z-toast) border-t border-rule-soft bg-sheet px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-lift in-[body:has(.mobile-nav)]:bottom-[calc(var(--mobile-nav-height,0px)+env(safe-area-inset-bottom,0px))] in-[body:has(.mobile-nav)]:pb-2"
+    >
+      <div className="mx-auto flex max-w-3xl items-center gap-3">
+        <p className="m-0 flex-1 text-body text-(--text-main)" data-testid="cookie-consent-text">
+          Používáme jen technicky nezbytné cookies, podrobnosti najdeš v{' '}
+          <Link to="/privacy#cookies" className="font-semibold text-primary underline underline-offset-2">Ochraně soukromí</Link>
+          .
         </p>
-        <p className="cookie-consent-joke">
-          <em>{joke}</em>
-        </p>
-
-        {showDetail && (
-          <div className="cookie-consent-detail" data-testid="cookie-consent-detail">
-            <div className="cookie-detail-items">
-              <div className="cookie-detail-item">
-                <span>●</span>
-                <div><strong>Přihlášení</strong><span>Ať nemusíš zadávat heslo pokaždé znovu (7 dní)</span></div>
-              </div>
-              <div className="cookie-detail-item">
-                <span>●</span>
-                <div><strong>Tvoje chata</strong><span>Abychom věděli, ke které chatě patříš</span></div>
-              </div>
-              <div className="cookie-detail-item">
-                <span>●</span>
-                <div><strong>Vzhled</strong><span>Tvoje preference světlého/tmavého režimu</span></div>
-              </div>
-              <div className="cookie-detail-item">
-                <span>●</span>
-                <div><strong>Toto oznámení</strong><span>Aby se ti tenhle výkřik GDPR nezobrazoval znovu</span></div>
-              </div>
-            </div>
-            <p className="cookie-consent-footnote">
-              Vše výše je technicky nezbytné. Dle EU legislativy nepotřebujeme souhlas,
-              ale aspoň víš, co máš v košíku. Bez sušenek, bohužel.
-            </p>
-          </div>
-        )}
-
-        <div className="cookie-consent-actions">
-          <button
-            type="button"
-            className="cookie-consent-detail-btn"
-            onClick={() => setShowDetail(!showDetail)}
-            data-testid="cookie-consent-detail-toggle"
-          >
-            {showDetail ? 'Skrýt podrobnosti' : 'Jaké cookies? (ne ty dobré)'}
-          </button>
-          <div className="cookie-consent-buttons">
-            <Link to="/privacy" className="cookie-consent-link" data-testid="cookie-consent-privacy-link">
-              Ochrana soukromí
-            </Link>
-            <button className="cookie-consent-accept" onClick={handleAccept} data-testid="cookie-consent-accept-button">
-              Rozumím
-            </button>
-          </div>
-        </div>
+        <Button size="sm" onClick={handleAccept} data-testid="cookie-consent-accept-button">
+          Rozumím
+        </Button>
       </div>
-    </div>
+    </section>
   )
 }
