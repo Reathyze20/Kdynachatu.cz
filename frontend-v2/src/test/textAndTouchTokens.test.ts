@@ -66,7 +66,6 @@ const G3_DEBT: Record<string, number> = {
   '../styles/gallery.css': 12,
   '../styles/invite.css': 6,
   '../styles/landing.css': 18,
-  '../styles/legal.css': 3,
   '../styles/notes.css': 25,
   '../styles/reconstruction.css': 3,
   '../styles/reservations.css': 38,
