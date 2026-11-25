@@ -212,6 +212,7 @@ Jediný jazyk je čeština (`cs-CZ`). Formátuje jeden modul na `Intl`, **`front
 | Částka | 1 234 Kč, celé koruny | `formatAmount` |
 | Procenta | 12 % (vstup je hodnota v procentech) | `formatPercent` |
 | Názvy měsíců a dnů | březen / března, po / pondělí | `monthName`, `weekdayName` |
+| Počet s tvarem slova | 1 fotka / 2 fotky / 5 fotek, 21 fotek | `formatCount`, samotný tvar `pluralize` |
 
 - Rozsah píše pomlčku „–“ podle české typografie: bez mezer mezi jednoslovnými částmi („12.–14. 7.“), s mezerami mezi víceslovnými („30. 6. – 2. 7.“, tak to už ukazují pobyty, rezervace i přehled). Přes přelom roku má rok u obou dnů, jinak by z rozsahu nebyl poznat.
 - Kalendářní den se předává jako `"YYYY-MM-DD"` a zobrazí se přesně tak. `Date`, číslo nebo ISO razítko s časem je okamžik a zobrazí se v pražském čase (`Europe/Prague`) bez ohledu na zónu zařízení.

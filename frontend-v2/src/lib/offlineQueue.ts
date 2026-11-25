@@ -231,9 +231,7 @@ export async function flushQueue(): Promise<number> {
     showToast(
       {
         title: 'Změny odeslány',
-        detail: sent === 1
-          ? 'Změna provedená offline byla uložena na server.'
-          : `${formatCount(sent, 'změna provedená', 'změny provedené', 'změn provedených')} offline ${pluralize(sent, 'byla uložena', 'byly uloženy', 'bylo uloženo')} na server.`,
+        detail: `${formatCount(sent, 'změna provedená', 'změny provedené', 'změn provedených')} offline ${pluralize(sent, 'byla uložena', 'byly uloženy', 'bylo uloženo')} na server.`,
       },
       'success',
     )

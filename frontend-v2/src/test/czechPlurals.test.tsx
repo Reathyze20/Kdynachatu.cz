@@ -5,6 +5,7 @@ import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import apiClient from '@/api/client'
 import { adminApi, type CabinUser, type Invite } from '@/api/admin'
+import { LogsPanel } from '@/components/shared/LogsPanel'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
 import { AdminPage } from '@/features/admin/AdminPage'
 import { enqueueMutation, flushQueue } from '@/lib/offlineQueue'
@@ -74,6 +75,7 @@ describe('hlášky po odeslání offline fronty skloňují počet (#509)', () =>
   })
 
   it.each([
+    [1, '1 změna provedená offline byla uložena na server.'],
     [2, '2 změny provedené offline byly uloženy na server.'],
     [5, '5 změn provedených offline bylo uloženo na server.'],
   ])('odesláno: %i', async (count, text) => {
@@ -141,5 +143,29 @@ describe('počty ve správě skloňují podle počtu (#509)', () => {
     renderAdmin('/admin/invites')
 
     expect(await screen.findByText('2 aktivní')).toBeInTheDocument()
+  })
+})
+
+describe('počet záznamů v logu skloňuje podle počtu (#509)', () => {
+  it.each([
+    [1, '1 záznam'],
+    [2, '2 záznamy'],
+    [5, '5 záznamů'],
+  ])('záznamů: %i', async (count, text) => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LogsPanel
+          scopeKey="test-logs"
+          eyebrow="Diagnostika"
+          title="Logy"
+          description="Záznamy aplikace"
+          loadLogFiles={async () => ({ files: [] })}
+          loadLogs={async () => ({ date: '2026-11-25', count, logs: Array.from({ length: count }, (_, i) => ({ level: 'info', msg: `Záznam ${i}` })) })}
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText(text)).toBeInTheDocument()
   })
 })

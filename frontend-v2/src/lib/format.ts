@@ -78,8 +78,8 @@ export const formatPercent = (percent: number) => percentFormat.format(Math.roun
 
 /**
  * Tvar slova podle počtu (#509): 1 → `one`, 2–4 → `few`, jinak (0, 5+, i 21 a 22) → `many`.
- * Čeština po číslici nad 20 neskloňuje podle poslední cifry („21 fotek“), proto ne `Intl.PluralRules`
- * kategorie jako v polštině. Záporný počet se skloňuje jako kladný.
+ * Čeština po číslici nad 20 neskloňuje podle poslední cifry („21 fotek“). Bez `Intl.PluralRules`: tvary se předávají
+ * přímo a kategorie `many` je v `cs` pro desetinná čísla, ne pro „5+“. Záporný počet se skloňuje jako kladný.
  */
 export function pluralize(count: number, one: string, few: string, many: string): string {
   const normalized = Math.abs(count)
