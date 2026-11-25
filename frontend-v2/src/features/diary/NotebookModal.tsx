@@ -15,6 +15,12 @@ import { getNetworkAwareActionMessage } from '@/lib/networkError'
 
 const MAX_CHARS = 20000
 
+function samePhotoIds(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const set = new Set(a)
+  return b.every(id => set.has(id))
+}
+
 const WEEKDAY_LONG = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota']
 const MONTH_CS = ['ledna', 'února', 'března', 'dubna', 'května', 'června',
                   'července', 'srpna', 'září', 'října', 'listopadu', 'prosince']
@@ -41,12 +47,17 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const saveEntry = useSaveDiaryEntry(folderId)
   const deleteEntry = useDeleteDiaryEntry(folderId)
 
   const { data: attachedPhotos = [] } = usePhotosByIds(entryPhotoIds)
+
+  // Neuložené změny proti tomu, co je na serveru – jen ty se ukládají a jen kvůli nim se ptáme.
+  const isDirty = content !== (entry?.content ?? '') || !samePhotoIds(entryPhotoIds, entry?.galleryPhotoIds ?? [])
 
   // ── Navigace prev / next ─────────────────────────────────────────────────
   const dateKey = dateObj.toISOString().slice(0, 10)
@@ -60,11 +71,20 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
     setEntryPhotoIds(entry?.galleryPhotoIds ?? [])
     setSaveError(null)
     setDeleteError(null)
+    setDiscardConfirmOpen(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry?.id, dateKey])
 
+  /** Uloží jen skutečnou změnu; prázdný text server odmítne, tak ho ani neposíláme. */
   async function save(): Promise<boolean> {
     setSaveError(null)
+    if (!isDirty) return true
+    if (content.trim() === '') {
+      setSaveError(entry?.id
+        ? 'Zápis nemůže být prázdný. Napiš pár slov, nebo zápis vytrhni.'
+        : 'Zápis nemůže být prázdný. Napiš pár slov, ať je co uložit.')
+      return false
+    }
     try {
       await saveEntry.mutateAsync({
         entryId: entry?.id ?? null,
@@ -90,7 +110,12 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
     if (ok) onSaved()
   }
 
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  // ×, Esc i klik mimo jdou sem. Esc v otevřeném potvrzení, výběru fotek nebo lightboxu zavírá jen to horní okno.
+  function requestClose() {
+    if (discardConfirmOpen || deleteConfirmOpen || showPickerModal || lightboxIndex !== null) return
+    if (isDirty) setDiscardConfirmOpen(true)
+    else onClose()
+  }
 
   function handleDeleteClick() {
     if (!entry?.id) return
@@ -132,7 +157,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   }
 
   async function navigate(direction: 'prev' | 'next') {
-    // Uložit (tiše) před navigací
+    // Změněný den se před přechodem uloží, nezměněný nebo prázdný projde bez requestu
     const ok = await save()
     if (!ok) return
     const idx = direction === 'prev' ? currentIdx - 1 : currentIdx + 1
@@ -169,7 +194,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
     <>
       <Modal
         isOpen={true}
-        onClose={onClose}
+        onClose={requestClose}
         title={notebookTitle}
         maxWidth="max-w-2xl"
         footer={
@@ -268,6 +293,20 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
           onClose={() => setLightboxIndex(null)}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={discardConfirmOpen}
+        title="Zavřít bez uložení?"
+        message="V zápisníku máš neuložené změny. Když ho teď zavřeš, ztratíš je."
+        confirmLabel="Zavřít bez uložení"
+        cancelLabel="Pokračovat v psaní"
+        danger
+        onConfirm={() => {
+          setDiscardConfirmOpen(false)
+          onClose()
+        }}
+        onCancel={() => setDiscardConfirmOpen(false)}
+      />
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
