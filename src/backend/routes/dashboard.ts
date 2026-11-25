@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
-import { requireCabin } from "../../middleware/cabinMiddleware";
+import { ownReservationsForGuest, requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { calendarTodayIso, departureGate, handoverFault, nextFreeWeekend } from "./reservationHelpers";
@@ -22,7 +22,7 @@ async function findNextFreeWeekend(cabinId: string, todayStr: string): Promise<{
 // ============================================================================
 
 // 1. Reservations Route
-router.get("/reservations", protect, requireCabin, async (req: Request, res: Response) => {
+router.get("/reservations", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ message: "Neautorizováno" });
   }
@@ -31,10 +31,13 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
     const now = new Date();
     const todayStr = calendarTodayIso(now);
     const cabinId = req.user!.cabinId!;
+    // Host vidí jen vlastní pobyt (#484): žádné rezervace, předávky ani volné víkendy ostatních.
+    const own = ownReservationsForGuest(req);
+    const isGuest = req.user.role === "guest";
 
     const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth, lastHandover] = await Promise.all([
       prisma.reservation.findMany({
-        where: { cabinId, dateFrom: { gte: new Date(todayStr) }, status: "primary" },
+        where: { cabinId, ...own, dateFrom: { gte: new Date(todayStr) }, status: "primary" },
         include: {
           user: { select: { username: true, color: true, animalIcon: true } },
           participants: { include: { user: { select: { id: true, username: true, color: true, animalIcon: true } } } },
@@ -43,7 +46,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         take: 5,
       }),
       prisma.reservation.findFirst({
-        where: { cabinId, dateFrom: { lte: new Date(todayStr) }, dateTo: { gte: new Date(todayStr) }, status: "primary" },
+        where: { cabinId, ...own, dateFrom: { lte: new Date(todayStr) }, dateTo: { gte: new Date(todayStr) }, status: "primary" },
         include: {
           user: { select: { username: true, color: true, animalIcon: true } },
           participants: { include: { user: { select: { id: true, username: true, color: true, animalIcon: true } } } },
@@ -59,10 +62,10 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
         where: { cabinId, userId: req.user.userId, dateFrom: { gte: new Date(todayStr) } },
         orderBy: { dateFrom: "asc" },
       }),
-      findNextFreeWeekend(cabinId, todayStr),
+      isGuest ? null : findNextFreeWeekend(cabinId, todayStr),
       // Last completed stay (ended before today)
       prisma.reservation.findFirst({
-        where: { cabinId, dateTo: { lt: new Date(todayStr) }, status: "primary" },
+        where: { cabinId, ...own, dateTo: { lt: new Date(todayStr) }, status: "primary" },
         include: { user: { select: { username: true, color: true, animalIcon: true } } },
         orderBy: { dateTo: "desc" },
       }),
@@ -81,6 +84,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
       prisma.reservation.count({
         where: {
           cabinId,
+          ...own,
           status: "primary",
           dateFrom: { lte: new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`) },
           dateTo: { gte: new Date(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`) },
@@ -88,7 +92,7 @@ router.get("/reservations", protect, requireCabin, async (req: Request, res: Res
       }),
       // Last completed handover; its fault stays until the next handover overwrites it (#275)
       prisma.reservation.findFirst({
-        where: { cabinId, isCheckoutCompleted: true },
+        where: { cabinId, ...own, isCheckoutCompleted: true },
         orderBy: [{ dateTo: "desc" }, { checkoutCompletedAt: "desc" }],
         select: { checkoutState: true, checkoutStateAt: true, checkoutCompletedAt: true, checkoutCompletedBy: true, dateTo: true, user: { select: { username: true } } },
       }),

@@ -31,6 +31,7 @@ const upload = multer({
 router.get(
   "/",
   protect,
+  requireRole(["admin", "user"], "Host do této části chaty nemá přístup."), // #484
   expressAsyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.cabinId) {
       res.status(400).json({ message: "Uživatel nemá přiřazenou chatu" });

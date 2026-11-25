@@ -6,7 +6,7 @@ import crypto from "crypto";
 import path from "path";
 import { signAuthToken } from "../../utils/authToken";
 import { protect } from "../../middleware/authMiddleware";
-import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { updateCabinSettingsSchema, createCabinSchema, setCabinCoverPhotoSchema } from "../../validators/schemas";
@@ -62,7 +62,7 @@ const CABIN_SELECT_MINIMAL = {
 // ============================================================================
 //  GET /api/cabin — Get current cabin settings
 // ============================================================================
-router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
+router.get("/", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 

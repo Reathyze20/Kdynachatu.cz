@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
-import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createUserSchema, updateProfileSchema, changeMyPasswordSchema, logoutEverywhereSchema, changeRoleSchema, changePasswordSchema, adminUpdateUserSchema } from "../../validators/schemas";
@@ -543,7 +543,7 @@ router.get("/me/export", protect, async (req: Request, res: Response) => {
 // ============================================================================
 //                     LEAVE CABIN (SELF-SERVICE)
 // ============================================================================
-router.post("/me/leave-cabin", protect, requireCabin, async (req: Request, res: Response) => {
+router.post("/me/leave-cabin", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 

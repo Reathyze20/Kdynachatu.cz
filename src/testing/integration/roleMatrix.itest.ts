@@ -12,6 +12,7 @@ import { addGuests, setupIntegrationFile, teardownIntegrationFile, tokenFor, typ
 // registr nepovoluje, ověří, že odpověď není úspěšná (401/403/404). Parametry v cestě jsou skutečné
 // záznamy chaty A, takže kontrola role i tenant filtr se projeví (vymyšlené id by dalo 404 vždy).
 // Povolené kombinace se nevolají (zápisy by měnily data), jen u GET se hlídá, že nevrací 401/403.
+// Host je mimo svůj whitelist zakázaný ve výchozím stavu (#484), proto tam musí dostat přesně 403.
 
 type Caller = "anonymous" | "guest" | "member" | "admin" | "foreignAdmin" | "superadmin";
 const CALLERS: Caller[] = ["anonymous", "guest", "member", "admin", "foreignAdmin", "superadmin"];
@@ -44,6 +45,9 @@ const KNOWN_EXCEPTIONS: Readonly<Record<string, Partial<Record<Caller, number>>>
   "DELETE /api/wallpapers/:id": { superadmin: 400 },
   // #492: správce cizí chaty dostane 200, i když se nic nesmaže (deleteMany filtruje jeho cabinId).
   "DELETE /api/users/:id/reservations": { foreignAdmin: 200 },
+  // Router zpětné vazby se mountuje jen na stagingu, tady je 404 pro všechny. Hosta odmítne jeho requireCabin.
+  "POST /api/staging-feedback": { guest: 404 },
+  "GET /api/staging-feedback": { guest: 404 },
 };
 
 /**
@@ -153,6 +157,9 @@ describe("role matrix: a caller the registry does not allow never gets a success
         const { status } = await call(route, caller);
         if (!allowed && !DENIED.has(status) && KNOWN_EXCEPTIONS[route]?.[caller] !== status) {
           problems.push(`${caller}: ${status}, registr ho nepovoluje (čekám 401/403/404)`);
+        }
+        if (!allowed && caller === "guest" && status !== 403 && KNOWN_EXCEPTIONS[route]?.guest !== status) {
+          problems.push(`guest: ${status}, host je mimo whitelist zakázaný (čekám 403)`);
         }
         if (allowed && (status === 401 || status === 403)) {
           problems.push(`${caller}: ${status}, registr ho povoluje – oprav registr, nebo routu`);
