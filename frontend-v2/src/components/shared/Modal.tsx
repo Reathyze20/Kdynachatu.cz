@@ -4,17 +4,28 @@
  * Renders into a React portal attached to document.body.
  * Provides consistent SaaS-grade look: glassmorphism backdrop, white rounded card,
  * structured header/body/footer zones, Escape key & backdrop click to close.
- * Entrance/exit animations via framer-motion.
+ * Entrance/exit animations via framer-motion. Bottom sheet up to 640 px (DESIGN.md §6).
+ *
+ * Built on the ui/dialog primitive (Radix): the title is the accessible name, Esc closes only the
+ * topmost dialog, Tab cycles inside, focus moves in on open and returns on close; `persistent`
+ * blocks Esc and backdrop click. Radix runs with modal={false}: modal mode would aria-hide and
+ * disable pointer events on the rest of the page, including toasts and the diary lightbox opened
+ * above the notebook. The backdrop and scroll lock are therefore handled here.
  *
  * Usage:
  *   <Modal isOpen={open} onClose={close} title="Edit Item" footer={<buttons/>}>
  *     <form>...</form>
  *   </Modal>
  */
-import { useEffect, useRef, type ReactNode, type MouseEvent } from 'react'
+import { useEffect, useState, type ReactNode, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+
+/** The backdrop is the Radix dialog content (role, Esc, focus scope); the card is just the look inside. */
+const MotionDialogContent = motion.create(DialogContent)
+const FIRST_FIELD = 'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), [autofocus]'
 
 export interface ModalProps {
   /** Controls visibility */
@@ -46,7 +57,16 @@ const cardVariants = {
 const overlayTransition = { duration: 0.2, ease: 'easeOut' as const }
 const cardTransition = { duration: 0.25, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
 
-export function Modal({
+export function Modal(props: ModalProps) {
+  const { isOpen, onClose } = props
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }} modal={false}>
+      <ModalLayer {...props} />
+    </Dialog>
+  )
+}
+
+function ModalLayer({
   isOpen,
   onClose,
   title,
@@ -55,38 +75,41 @@ export function Modal({
   maxWidth = 'max-w-lg',
   persistent = false,
 }: ModalProps) {
-  const overlayRef = useRef<HTMLDivElement>(null)
+  // Where focus returns on close: the element active at open time, before autoFocus or Radix move it.
+  const [wasOpen, setWasOpen] = useState(isOpen)
+  const [returnFocusTo, setReturnFocusTo] = useState<Element | null>(() => (isOpen ? document.activeElement : null))
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
+    if (isOpen) setReturnFocusTo(document.activeElement)
+  }
 
-  // Lock body scroll & handle Escape key
+  // Lock body scroll
   useEffect(() => {
     if (!isOpen) return
 
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKey)
-
     return () => {
       document.body.style.overflow = prev
-      document.removeEventListener('keydown', handleKey)
     }
-  }, [isOpen, onClose])
-
-  // Auto-focus first focusable element inside the modal
-  useEffect(() => {
-    if (!isOpen) return
-    // Small delay to ensure DOM is rendered
-    const timer = setTimeout(() => {
-      const el = overlayRef.current?.querySelector<HTMLElement>(
-        'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), [autofocus]'
-      )
-      el?.focus()
-    }, 50)
-    return () => clearTimeout(timer)
   }, [isOpen])
+
+  // First form field, else the first button (close), so Shift+Tab also cycles inside.
+  // Small delay as before, so callers' timing (entrance animation) stays the same.
+  function focusFirstField(e: Event) {
+    e.preventDefault()
+    const layer = e.currentTarget as HTMLElement
+    setTimeout(() => {
+      if (!layer.isConnected) return
+      ;(layer.querySelector<HTMLElement>(FIRST_FIELD) ?? layer.querySelector<HTMLElement>('button') ?? layer).focus()
+    }, 50)
+  }
+
+  function returnFocus(e: Event) {
+    e.preventDefault()
+    if (returnFocusTo instanceof HTMLElement && returnFocusTo.isConnected) returnFocusTo.focus()
+  }
 
   function handleBackdropClick(e: MouseEvent<HTMLDivElement>) {
     if (!persistent && e.target === e.currentTarget) onClose()
@@ -95,13 +118,17 @@ export function Modal({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          ref={overlayRef}
+        <MotionDialogContent
+          forceMount
           className="modal-unified-overlay"
           onClick={handleBackdropClick}
-          role="dialog"
           aria-modal="true"
-          aria-label={typeof title === 'string' ? title : undefined}
+          aria-describedby={undefined}
+          onOpenAutoFocus={focusFirstField}
+          onCloseAutoFocus={returnFocus}
+          onEscapeKeyDown={(e) => { if (persistent) e.preventDefault() }}
+          // Backdrop click is handleBackdropClick; a click into a toast or lightbox does not close.
+          onInteractOutside={(e) => e.preventDefault()}
           variants={overlayVariants}
           initial="hidden"
           animate="visible"
@@ -121,7 +148,9 @@ export function Modal({
           >
             {/* Header */}
             <div className="modal-unified-header">
-              <h3 className="modal-unified-title" data-testid="modal-title">{title}</h3>
+              <DialogTitle asChild>
+                <h3 className="modal-unified-title" data-testid="modal-title">{title}</h3>
+              </DialogTitle>
               <button
                 type="button"
                 className="modal-unified-close"
@@ -129,7 +158,7 @@ export function Modal({
                 aria-label="Zavřít"
                 data-testid="modal-close-button"
               >
-                <X size={18} strokeWidth={2.5} />
+                <X size={20} strokeWidth={2.5} />
               </button>
             </div>
 
@@ -145,7 +174,7 @@ export function Modal({
               </div>
             )}
           </motion.div>
-        </motion.div>
+        </MotionDialogContent>
       )}
     </AnimatePresence>,
     document.body

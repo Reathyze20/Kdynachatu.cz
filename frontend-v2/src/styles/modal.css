@@ -32,6 +32,11 @@
   overflow: hidden;
 }
 
+/* Focus dostane dialog (pozadí), když nemá pole; titulek přečte čtečka, obrys netřeba. */
+.modal-unified-overlay:focus {
+  outline: none;
+}
+
 /* ── Header ───────────────────────────────────────────────────────────────── */
 .modal-unified-header {
   display: flex;
@@ -122,13 +127,15 @@
   min-height: var(--touch-target-min);
 }
 /* ── Responsive ───────────────────────────────────────────────────────────── */
+/* Bottom sheet: jediná výjimka z breakpointů md/lg (DESIGN.md §2, #453) */
 @media (max-width: 640px) {
   .modal-unified-overlay {
-    padding: 12px;
+    padding: var(--space-md) 0 0;
     align-items: flex-end;
   }
 
   .modal-unified-card {
+    max-width: none;
     border-radius: 16px 16px 0 0;
     max-height: 92vh;
     max-height: 92dvh;
