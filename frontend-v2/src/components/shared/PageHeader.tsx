@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ActionButton, type Action } from "./ActionButton"
 
-/** SekundĂˇrnĂ­ akce strĂˇnky v kebab menu hlaviÄŤky. `danger` (Smazat) se v menu oddÄ›lĂ­ od ostatnĂ­ch. */
+/** Sekundární akce stránky v kebab menu hlavičky. `danger` (Smazat) se v menu oddělí od ostatních. */
 export interface PageHeaderMenuAction {
   label: string
   icon?: LucideIcon
@@ -20,21 +20,21 @@ export interface PageHeaderMenuAction {
 }
 
 export interface PageHeaderProps {
-  /** Titulek strĂˇnky, vĹľdy jedinĂ© `h1`. */
+  /** Titulek stránky, vždy jediné `h1`. */
   title: ReactNode
   subtitle?: ReactNode
-  /** Cesta pro odkaz â€žZpÄ›tâ€ś nad titulkem. */
+  /** Cesta pro odkaz „Zpět“ nad titulkem. */
   backTo?: string
-  /** NejvĂ˝Ĺˇ jedna primĂˇrnĂ­ akce vpravo, u vytvoĹ™enĂ­ ikona `Plus` a â€žNovĂˇ/NovĂ© Xâ€ś. */
+  /** Nejvýš jedna primární akce vpravo, u vytvoření ikona `Plus` a „Nová/Nové X“. */
   primaryAction?: Action
-  /** OstatnĂ­ akce strĂˇnky, schovanĂ© v kebab menu â€žDalĹˇĂ­ akceâ€ś. */
+  /** Ostatní akce stránky, schované v kebab menu „Další akce“. */
   secondaryActions?: PageHeaderMenuAction[]
   className?: string
 }
 
 /**
- * HlaviÄŤka kaĹľdĂ© strĂˇnky (DESIGN.md Â§7 â€žHlaviÄŤkaâ€ś, rozhodnutĂ­ #262): odkaz ZpÄ›t, titulek jako jedinĂ© `h1`,
- * podtitulek, vpravo nejvĂ˝Ĺˇ jedna primĂˇrnĂ­ akce a kebab menu se sekundĂˇrnĂ­mi akcemi.
+ * Hlavička každé stránky (DESIGN.md §7 „Hlavička“, rozhodnutí #262): odkaz Zpět, titulek jako jediné `h1`,
+ * podtitulek, vpravo nejvýš jedna primární akce a kebab menu se sekundárními akcemi.
  */
 export function PageHeader({ title, subtitle, backTo, primaryAction, secondaryActions = [], className }: PageHeaderProps) {
   return (
@@ -45,10 +45,10 @@ export function PageHeader({ title, subtitle, backTo, primaryAction, secondaryAc
           className="-ml-2 inline-flex min-h-(--touch-target-min) items-center gap-1 rounded-(--radius-md) px-2 text-body font-semibold text-primary focus-visible:outline-2 focus-visible:outline-ring"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          ZpÄ›t
+          Zpět
         </Link>
       )}
-      {/* Titulek si drĹľĂ­ aspoĹ 10rem, akce se pak na mobilu zalomĂ­ pod nÄ›j. */}
+      {/* Titulek si drží aspoň 10rem, akce se pak na mobilu zalomí pod něj. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0 flex-[1_1_10rem]">
           <h1 className="text-page-title text-(--text-main) [overflow-wrap:anywhere]">{title}</h1>
@@ -60,7 +60,7 @@ export function PageHeader({ title, subtitle, backTo, primaryAction, secondaryAc
             {secondaryActions.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="DalĹˇĂ­ akce">
+                  <Button variant="ghost" size="icon" aria-label="Další akce">
                     <EllipsisVertical aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
