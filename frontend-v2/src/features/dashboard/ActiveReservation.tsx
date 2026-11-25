@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation } from "@/api/dashboard";
+import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation, WeatherResult } from "@/api/dashboard";
 import { daysUntil, formatDateRange, formatShortDayDate, formatWeekendRange, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
 import { pluralize } from "@/lib/format";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
@@ -15,6 +15,8 @@ interface Props {
   data: DashboardReservationsData;
   cabinDepartureChecklist: string[];
   isWinterized?: boolean;
+  /** Dnešní počasí pro scénu chaty (#564). */
+  weather?: WeatherResult;
 }
 
 interface BriefingRow { icon: LucideIcon; text: string; label?: string; warn?: boolean }
@@ -138,7 +140,7 @@ function emptySinceLabel(lastStay: LastStay): React.ReactNode {
  * dalších pobytů. Uzly počítá `buildTurnusChain` (jen pevné pobyty, střídací den); „pak“ ukáže první
  * a počet dalších pevných za ním. Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
  */
-export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized = false }: Props) {
+export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized = false, weather }: Props) {
   const navigate = useNavigate();
   const headingId = useId();
   const { user } = useAuth();
@@ -193,7 +195,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     return (
       <section className="glass-card status-card status-header" id="dashboard-active-reservation" aria-labelledby={headingId}>
         <div className="card-body-full status-content">
-          <CabinScene data={data} winterized={isWinterized} />
+          <CabinScene data={data} winterized={isWinterized} weather={weather} />
           <h2 id={headingId} className="status-header__label">Na chatě teď</h2>
           <div className="status-header__row">
             <div role="group" aria-label="Teď" className="status-header__side">
@@ -254,7 +256,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
   return (
     <section className="glass-card status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
       <div className="card-body-full status-content">
-        <CabinScene data={data} winterized={isWinterized} />
+        <CabinScene data={data} winterized={isWinterized} weather={weather} />
         <h2 id="overview-invite-title" className="overview-invite__title">Chata zatím čeká</h2>
         <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
         {buildLastStayBlock(data.lastStay)}

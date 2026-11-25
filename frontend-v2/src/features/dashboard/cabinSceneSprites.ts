@@ -13,7 +13,7 @@ export const SCENE_PALETTE: Record<string, string> = {
   D: "roof-dark", n: "brass", m: "paper", g: "mist", G: "mist", Q: "paper", X: "paper", Y: "paper", s: "stone", S: "roof",
   f: "log", F: "roof", j: "pine-dark", J: "pine", k: "roof-dark", u: "car", U: "pine-dark", q: "mist",
   y: "light", x: "taillight", h: "steel", b: "fur", d: "fur-dark", l: "belly", e: "ink", i: "light",
-  p: "nose", a: "paw", A: "steel", H: "handle", M: "light", "~": "smoke",
+  p: "nose", a: "paw", A: "steel", H: "handle", M: "light", "~": "smoke", z: "scarf", Z: "scarf-dark",
 };
 
 /** Okno: g sklo, G sklo v místě prken okenic, Q odlesk, X vodorovná příčka, Y svislá (spára okenic). */
@@ -24,8 +24,10 @@ export const WINDOW_LOOK = {
   shut: { g: "roof", G: "roof-dark", Q: "roof", X: "roof", Y: "ink" },
 } satisfies Record<string, Record<string, string>>;
 
-/** Chata zboku 60 × 40. Zápraží (f/F) je řádek `CABIN_PORCH_ROW`, komín nad sloupci 38–43. */
+/** Chata zboku 60 × 40. Zápraží (f/F) je řádek `CABIN_PORCH_ROW`, komín nad sloupci 38–43. Střecha (r/R)
+ * končí okapem na řádku `CABIN_EAVE_ROW`: nad ním ji sníh nebo jinovatka přebarví (#564). */
 export const CABIN_PORCH_ROW = 36;
+export const CABIN_EAVE_ROW = 17;
 export const CABIN: Sprite = [
   ".....................................oooooooo...............",
   ".....................................occcccco...............",
@@ -95,6 +97,17 @@ export const DORMOUSE: Sprite = [
   "...oooooooooo.ooooo.....",
 ];
 
+/** Šála v mrazu (#564) přes krk sedícího plcha: kreslí se na jeho souřadnice, cíp visí přes bříško. */
+export const DORMOUSE_SCARF: Sprite = [
+  "", "", "", "", "", "", "", "", "", "", "",
+  "...zzZzzZzzZz...",
+  "...zZzzZzzZzz...",
+  "..........zZ....",
+  "..........Zz....",
+  "..........zz....",
+  "..........oo....",
+];
+
 /** Spící plch 18 × 11 stočený do klubíčka: hlava zastrčená vlevo dole (zavřené oko, bradička, čumák), huňatý ocas
  * (tmavší) obtočený přes záda a přes hlavu jako peřina. */
 export const DORMOUSE_SLEEPING: Sprite = [
@@ -117,6 +130,15 @@ export const PORCH: Sprite = [
   "FFFFFFFFFFFFFFFFFFFFFFFFFFFF",
   ".oFFo...........oFFo........",
   ".oFFo...........oFFo........",
+];
+
+/** Šála spícího plcha: za hlavou zastrčenou pod ocasem, cíp vykukuje dole. */
+export const DORMOUSE_SLEEPING_SCARF: Sprite = [
+  "", "", "", "", "", "",
+  ".....zZ",
+  ".....Zz",
+  ".....zZ",
+  "......Zz",
 ];
 
 export const ZZZ: Sprite = ["...oooo", ".....o.", "....o..", "...oooo", "ooo....", ".o.....", "ooo...."];

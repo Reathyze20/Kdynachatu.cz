@@ -251,6 +251,13 @@
   --scene-belly: #ece1cc;
   --scene-nose: #c98b86;
   --scene-paw: #c9a99a;
+  /* Počasí ve scéně (#564): zatažená obloha při sněžení, sníh, jinovatka, šála plcha v mrazu */
+  --scene-sky-snow: #ddd5c8;
+  --scene-snow: #ffffff;
+  --scene-snow-shade: #e5e7eb;
+  --scene-rime: #dfe9ee;
+  --scene-scarf: #b23a2e;
+  --scene-scarf-dark: #7f2a22;
 
   /* ── Fotka krajiny — jen přihlášení (.photo-backdrop), ne po přihlášení (C5a) ── */
   --bg-image: url("/bg-hero.jpg");

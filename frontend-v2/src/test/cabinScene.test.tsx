@@ -1,9 +1,10 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import type { ActiveReservation, DashboardReservationsData, UpcomingReservation } from '@/api/dashboard'
+import type { ActiveReservation, DashboardReservationsData, UpcomingReservation, WeatherData } from '@/api/dashboard'
+import { fetchWeather } from '@/api/dashboard'
 
 // Scéna chaty v kartě „Na chatě teď“ (#563). Fiktivní API Přehledu, dnes je čtvrtek 10. 12. 2026.
 const { responses, auth } = vi.hoisted(() => ({ responses: new Map<string, unknown>(), auth: { isGuest: false } }))
@@ -177,5 +178,125 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     const img = await scene()
     expect(img).toHaveAccessibleName(/chata je prázdná/i)
     expect(img).not.toHaveAccessibleName(/někdo je na chatě|auto/i)
+  })
+})
+
+// Počasí ve scéně (#564): podvržené dnešní počasí z `fetchWeather`, jen vnější chování (popis scény).
+function todayWeather(overrides: Partial<WeatherData> = {}): WeatherData {
+  return {
+    temp: 5, description: 'Zataženo', icon: 'cloud', color: '', humidity: 80, windSpeed: 5, feelsLike: 3, city: 'Horní Lhota',
+    sunriseTime: '07:45', sunsetTime: '16:02', uvIndex: 0, precipProbabilityToday: 0, stormAlert: null,
+    hourlyRain: [], hourlyWind: [], hourlyTemp: [], forecast: [], weatherCode: 3, snowDepth: 0, ...overrides,
+  }
+}
+
+/** Počasí je načtené, až ho ukáže karta dneška nahoře na Přehledu; scéna sdílí stejný dotaz. */
+async function weatherLoaded() {
+  await waitFor(() => expect(screen.getByTestId('cabin-today')).toHaveTextContent('°C'))
+}
+
+describe('Počasí a denní doba ve scéně chaty (#564)', () => {
+  afterEach(() => {
+    vi.mocked(fetchWeather).mockImplementation(() => Promise.resolve(null))
+  })
+
+  it('při sněžení padají vločky a popis zmiňuje sněžení, i přes obsazenou chatu', async () => {
+    for (const weatherCode of [71, 73, 77, 85, 86]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
+
+      const img = await screen.findByRole('img', { name: /sněží/i })
+      expect(img).toHaveAccessibleName(/někdo je na chatě/i)
+      cleanup()
+    }
+  })
+
+  it('déšť ani přeháňky nejsou sněžení', async () => {
+    for (const weatherCode of [61, 80, 95]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations())
+
+      await weatherLoaded()
+      expect(await scene()).not.toHaveAccessibleName(/sněží/i)
+      cleanup()
+    }
+  })
+
+  it('při sněhové pokrývce je střecha bílá a popis zmiňuje sníh, i u zazimované chaty', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ snowDepth: 0.12 }))
+    renderOverview(reservations(), { isWinterized: true })
+
+    const img = await screen.findByRole('img', { name: /leží sníh/i })
+    expect(img).toHaveAccessibleName(/střecha je bílá/i)
+    expect(img).toHaveAccessibleName(/zazimovaná/i)
+    expect(img).not.toHaveAccessibleName(/sněží/i)
+  })
+
+  it('bez sněhové pokrývky střecha bílá není', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ snowDepth: 0 }))
+    renderOverview(reservations())
+
+    await weatherLoaded()
+    expect(await scene()).not.toHaveAccessibleName(/sníh|bílá/i)
+  })
+
+  it('při teplotě 0 °C a nižší mrzne: plch má šálu a je vidět jinovatka', async () => {
+    for (const temp of [0, -7]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ temp }))
+      renderOverview(reservations())
+
+      const img = await screen.findByRole('img', { name: /mrzne/i })
+      expect(img).toHaveAccessibleName(/plch má šálu/i)
+      expect(img).toHaveAccessibleName(/jinovatka/i)
+      cleanup()
+    }
+  })
+
+  it('nad nulou nemrzne', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ temp: 1 }))
+    renderOverview(reservations())
+
+    await weatherLoaded()
+    expect(await scene()).not.toHaveAccessibleName(/mrzne|šál|jinovatk/i)
+  })
+
+  it('den a noc podle dnešního východu a západu slunce v obci chaty, ne podle hodin zařízení', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ sunriseTime: '07:45', sunsetTime: '16:02' }))
+    for (const [time, night] of [['07:44', true], ['07:45', false], ['16:01', false], ['16:02', true]] as const) {
+      renderOverview(reservations(), { time })
+
+      await weatherLoaded()
+      if (night) expect(await scene()).toHaveAccessibleName(/je noc/i)
+      else expect(await scene()).not.toHaveAccessibleName(/noc/i)
+      cleanup()
+    }
+
+    // Letní večer: podle hodin zařízení by byla noc, slunce ale ještě nezapadlo.
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ sunriseTime: '04:55', sunsetTime: '21:10' }))
+    renderOverview(reservations(), { time: '20:30' })
+    await weatherLoaded()
+    expect(await scene()).not.toHaveAccessibleName(/noc/i)
+  })
+
+  it('bez obce, s nenalezenou obcí i při selhání počasí je scéna bez počasí, bez chyby, noc podle zařízení', async () => {
+    const failures: (() => Promise<never> | Promise<'EMPTY_LOCATION' | 'LOCATION_NOT_FOUND' | null>)[] = [
+      () => Promise.resolve('EMPTY_LOCATION'),
+      () => Promise.resolve('LOCATION_NOT_FOUND'),
+      () => Promise.resolve(null),
+      () => Promise.reject(new Error('Open-Meteo nedostupné')),
+    ]
+    for (const failure of failures) {
+      vi.mocked(fetchWeather).mockClear()
+      vi.mocked(fetchWeather).mockImplementation(failure)
+      renderOverview(reservations(), { time: '21:30' })
+
+      await waitFor(() => expect(fetchWeather).toHaveBeenCalled())
+      await act(async () => {})
+      const img = await scene()
+      expect(img).toHaveAccessibleName(/je noc/i)
+      expect(img).not.toHaveAccessibleName(/sněží|sníh|mrzne/i)
+      expect(screen.queryByText(/chyba|nepodařilo/i)).not.toBeInTheDocument()
+      cleanup()
+    }
   })
 })
