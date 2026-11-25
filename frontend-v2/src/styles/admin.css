@@ -566,11 +566,6 @@
   min-width: 0;
 }
 
-.admin-user-avatar {
-  border: 2px solid rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 20px rgba(63, 123, 99, 0.14);
-}
-
 .admin-user-identity {
   min-width: 0;
   display: flex;
@@ -696,24 +691,6 @@
 .admin-user-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.admin-user-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.admin-user-metric {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: rgba(248, 251, 249, 0.95);
-  color: var(--text-muted, #6b7280);
-  font-size: 0.78rem;
-  font-weight: 600;
 }
 
 .admin-user-actions .btn {

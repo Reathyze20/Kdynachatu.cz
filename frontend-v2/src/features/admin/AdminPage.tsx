@@ -2,7 +2,7 @@
  * features/admin/AdminPage.tsx
  * Admin panel: user management, invites and cabin settings.
  */
-import { useState, useEffect, type SelectHTMLAttributes } from 'react'
+import { Fragment, useState, useEffect, type SelectHTMLAttributes } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
@@ -20,16 +20,20 @@ import {
 } from './hooks/useAdmin'
 import { type CabinUser, type Invite } from '@/api/admin'
 import { showToast } from '@/lib/toast'
-import { formatCount } from '@/lib/format'
+import { formatCount, formatDate } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { Card } from '@/components/shared/Card'
+import { ListRow } from '@/components/shared/ListRow'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
-import { ChevronDown, Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
+import { ChevronDown, Mail, Pencil, ScrollText, Search, SearchX, SlidersHorizontal, TicketPlus, UserPlus, Users } from 'lucide-react'
+import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 import { StagingFeedbackSection } from '@/features/admin/components/StagingFeedbackSection'
@@ -468,26 +472,70 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
 
 // ─── UserListSkeleton ─────────────────────────────────────────────────────────
 
+/** Řádek meta textu, položky oddělené tečkou. Každá položka je vlastní prvek, aby ji šlo najít podle textu („1 rezervace“). */
+function MetaLine({ items }: { items: string[] }) {
+  return (
+    <p className="flex flex-wrap gap-x-2 text-meta text-(--text-muted) wrap-anywhere">
+      {items.map((item, index) => (
+        <Fragment key={index}>
+          {index > 0 ? <span aria-hidden="true">·</span> : null}
+          <span>{item}</span>
+        </Fragment>
+      ))}
+    </p>
+  )
+}
+
 function UserListSkeleton() {
   return (
-    <div className="admin-members-list">
+    <ul className="-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6" aria-hidden="true">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="admin-user-card admin-user-card--skeleton">
-          <div className="admin-user-main">
-            <div className="skeleton admin-user-avatar-skeleton" />
-            <div className="admin-user-skeleton-copy">
-              <div className="skeleton admin-skeleton-line admin-skeleton-line--lg" />
-              <div className="skeleton admin-skeleton-line admin-skeleton-line--sm" />
-            </div>
+        <ListRow as="li" key={i} action={<div className="skeleton h-12 w-24" />}>
+          <div className="flex items-center gap-3">
+            <div className="skeleton size-10 shrink-0 rounded-full" />
+            <div className="grid flex-1 gap-2"><div className="skeleton h-4 w-2/5" /><div className="skeleton h-4 w-3/5" /></div>
           </div>
-          <div className="admin-user-tags">
-            <div className="skeleton admin-skeleton-pill" />
-            <div className="skeleton admin-skeleton-pill admin-skeleton-pill--muted" />
-          </div>
-          <div className="skeleton admin-skeleton-button" />
-        </div>
+        </ListRow>
       ))}
-    </div>
+    </ul>
+  )
+}
+
+function UserRow({ user, isSelf, onEdit }: { user: CabinUser; isSelf: boolean; onEdit: () => void }) {
+  const statusMeta = getUserStatusMeta(user)
+  const createdAt = formatDate(user.createdAt)
+
+  return (
+    <ListRow
+      as="li"
+      data-testid="admin-user-card"
+      data-user-id={user.id}
+      action={
+        <Button variant="secondary" size="sm" onClick={onEdit} aria-label={`Upravit účet ${user.username}`} data-testid="admin-edit-user-button">
+          <Pencil aria-hidden="true" />Upravit
+        </Button>
+      }
+    >
+      <div className="flex items-center gap-3">
+        <div className="hidden shrink-0 md:block"><AnimalAvatar icon={user.animalIcon} username={user.username} color={user.avatarColor ?? undefined} size={40} /></div>
+        <div className="grid min-w-0 gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold wrap-anywhere">{user.username}</span>
+            {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
+            <span className={getRoleBadgeClass(user.role)}>{getRoleLabel(user.role)}</span>
+            <span className={statusMeta.className}>{statusMeta.label}</span>
+          </div>
+          <MetaLine items={[user.email || 'Bez e-mailu', ...(createdAt ? [`Vytvořen ${createdAt}`] : [])]} />
+          <MetaLine
+            items={[
+              formatCount(user.reservationCount, 'rezervace', 'rezervace', 'rezervací'),
+              formatCount(user.photoCount, 'fotka', 'fotky', 'fotek'),
+              formatCount(user.threadCount, 'vlákno', 'vlákna', 'vláken'),
+            ]}
+          />
+        </div>
+      </div>
+    </ListRow>
   )
 }
 
@@ -862,6 +910,7 @@ export function AdminPage() {
 
   const [editUser, setEditUser] = useState<CabinUser | null>(null)
   const [createUserError, setCreateUserError] = useState<string | null>(null)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<UserRoleFilter>('all')
 
@@ -973,8 +1022,9 @@ export function AdminPage() {
       password: String(fd.get('password') ?? ''),
       role: String(fd.get('role') ?? 'user'),
     }
-    if (!body.username || !body.password) {
-      setCreateUserError('Vyplň uživatelské jméno a heslo.')
+    // Prázdné heslo zastaví už `required`, jméno ze samých mezer až tady
+    if (!body.username) {
+      setUsernameError('Vyplň uživatelské jméno.')
       return
     }
     setCreateUserError(null)
@@ -1030,56 +1080,48 @@ export function AdminPage() {
 
       {activeWorkspace === 'members' ? (
         <div className="admin-layout-grid">
-          <section className="page-card admin-page-card admin-card admin-users-card" id="admin-users" data-testid="admin-users-section">
-            <div className="admin-card-header">
-              <div>
-                <div className="admin-card-eyebrow">Účty a role</div>
-                <div className="admin-card-title-row">
-                  <h2 className="admin-card-title">Přehled uživatelů</h2>
-                  <span className="admin-card-counter">
-                    {usersLoading || usersFailed ? 'Načítám…' : `${filteredUsers.length}/${users.length}`}
-                  </span>
-                </div>
-                <p className="admin-card-description">
-                  Hledej podle jména nebo e-mailu, filtruj role a otevři detail účtu pro změnu oprávnění, hesla nebo mazání rezervací.
-                </p>
-              </div>
+          <Card as="section" className="space-y-4" id="admin-users" data-testid="admin-users-section">
+            <AdminCardHeading
+              eyebrow="Účty a role"
+              title="Přehled uživatelů"
+              description="Hledej podle jména nebo e-mailu, filtruj role a otevři detail účtu pro změnu oprávnění, hesla nebo mazání rezervací."
+            />
+
+            <div className="relative">
+              <Search size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--text-muted)" />
+              <Input
+                id="admin-user-search"
+                type="search"
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Hledat člena"
+                aria-label="Hledat člena"
+                data-testid="admin-user-search-input"
+              />
             </div>
 
-            <div className="admin-toolbar">
-              <label className="admin-search" htmlFor="admin-user-search">
-                <Search size={16} aria-hidden="true" />
-                <input
-                  id="admin-user-search"
-                  type="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Hledat člena"
-                  data-testid="admin-user-search-input"
-                />
-              </label>
-
-              <div className="admin-filter-row" role="tablist" aria-label="Filtrovat účty podle role" data-testid="admin-role-filters">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`admin-filter-chip ${roleFilter === option.value ? 'is-active' : ''}`}
-                    onClick={() => setRoleFilter(option.value)}
-                    data-testid="admin-role-filter-button"
-                    data-role-filter={option.value}
-                  >
-                    <span>{option.label}</span>
-                    <span className="admin-filter-chip-count">{option.count}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrovat účty podle role" data-testid="admin-role-filters">
+              {filterOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant={roleFilter === option.value ? 'primary' : 'secondary'}
+                  aria-pressed={roleFilter === option.value}
+                  onClick={() => setRoleFilter(option.value)}
+                  data-testid="admin-role-filter-button"
+                  data-role-filter={option.value}
+                >
+                  {option.label} <span className="tabular-nums">{option.count}</span>
+                </Button>
+              ))}
             </div>
 
             {usersLoading ? (
               <UserListSkeleton />
             ) : usersFailed ? (
               <FeatureErrorFallback
+                bare
                 error={usersError instanceof Error ? usersError : new Error('Nepodařilo se načíst uživatele')}
                 resetErrorBoundary={() => {
                   void refetchUsers()
@@ -1087,103 +1129,36 @@ export function AdminPage() {
                 title="Uživatele se nepodařilo načíst"
               />
             ) : filteredUsers.length === 0 ? (
-              <div className="admin-empty-state">
-                <h3>{users.length === 0 ? 'Zatím tu nikdo není' : 'Tomu filtru nic neodpovídá'}</h3>
-                <p>
-                  {users.length === 0
-                    ? 'Vytvoř první účet a správa uživatelů se začne plnit.'
-                    : 'Zkus změnit hledaný výraz nebo zrušit aktivní filtr role.'}
-                </p>
-                <div className="admin-empty-actions">
-                  {users.length === 0 ? (
-                    <button type="button" className="btn btn-primary" onClick={() => openWorkspace('members', 'admin-create-user')}>
-                      <UserPlus size={16} />
-                      Vytvořit první účet
-                    </button>
-                  ) : (
-                    <button type="button" className="btn btn-secondary" onClick={resetUserFilters}>
-                      Vyčistit filtr
-                    </button>
-                  )}
-                </div>
-              </div>
+              <EmptyState
+                icon={users.length === 0 ? Users : SearchX}
+                message={users.length === 0 ? 'Zatím tu nikdo není.' : 'Tomu filtru nikdo neodpovídá.'}
+                action={users.length === 0
+                  ? { label: 'Přidat člena', icon: UserPlus, onClick: () => openWorkspace('members', 'admin-create-user') }
+                  : { label: 'Vyčistit filtr', onClick: resetUserFilters }}
+              />
             ) : (
               <>
-                <div className="admin-list-meta">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-meta text-(--text-muted)">
                   <span>
                     {hasUserFilters
                       ? `Zobrazuji ${formatCount(filteredUsers.length, 'účet', 'účty', 'účtů')} podle aktuálního filtru.`
                       : 'Účty jsou seřazené podle role, aktivity a názvu.'}
                   </span>
                   {hasUserFilters ? (
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={resetUserFilters}>
+                    <Button variant="ghost" size="sm" onClick={resetUserFilters}>
                       Vyčistit filtr
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
 
-                <div id="users-list" className="admin-members-list" data-testid="admin-users-list">
-                  {filteredUsers.map((user) => {
-                    const statusMeta = getUserStatusMeta(user)
-
-                    return (
-                      <article
-                        key={user.id}
-                        className={`admin-user-card ${currentUser?.userId === user.id ? 'is-current-user' : ''}`}
-                        data-testid="admin-user-card"
-                        data-user-id={user.id}
-                      >
-                        <div className="admin-user-main">
-                          <AnimalAvatar
-                            icon={user.animalIcon}
-                            username={user.username}
-                            color={user.avatarColor ?? undefined}
-                            size={48}
-                            className="admin-user-avatar"
-                          />
-
-                          <div className="admin-user-identity">
-                            <div className="admin-user-title-row">
-                              <span className="admin-user-name">{user.username}</span>
-                              {currentUser?.userId === user.id ? (
-                                <span className="admin-user-self-badge">Tvůj účet</span>
-                              ) : null}
-                            </div>
-                            <div className="admin-user-subline">
-                              <span>{user.email || 'Bez e-mailu'}</span>
-                              <span>Vytvořen {formatDateLabel(user.createdAt)}</span>
-                            </div>
-                            <div className="admin-user-metrics">
-                              <span className="admin-user-metric">{formatCount(user.reservationCount, 'rezervace', 'rezervace', 'rezervací')}</span>
-                              <span className="admin-user-metric">{formatCount(user.photoCount, 'fotka', 'fotky', 'fotek')}</span>
-                              <span className="admin-user-metric">{formatCount(user.threadCount, 'vlákno', 'vlákna', 'vláken')}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="admin-user-tags">
-                          <span className={getRoleBadgeClass(user.role)}>{getRoleLabel(user.role)}</span>
-                          <span className={statusMeta.className}>{statusMeta.label}</span>
-                        </div>
-
-                        <div className="admin-user-actions">
-                          <button
-                            className="btn btn-secondary"
-                            data-uid={user.id}
-                            onClick={() => setEditUser(user)}
-                            title={`Upravit účet ${user.username}`}
-                            data-testid="admin-edit-user-button"
-                          >
-                            <Pencil size={14} /> Upravit účet
-                          </button>
-                        </div>
-                      </article>
-                    )
-                  })}
-                </div>
+                <ul id="users-list" className="-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6" data-testid="admin-users-list">
+                  {filteredUsers.map((user) => (
+                    <UserRow key={user.id} user={user} isSelf={currentUser?.userId === user.id} onEdit={() => setEditUser(user)} />
+                  ))}
+                </ul>
               </>
             )}
-          </section>
+          </Card>
 
           <aside className="admin-sidebar-stack">
             <section className="page-card admin-page-card admin-card" id="admin-create-user" data-testid="admin-create-user-section">
@@ -1205,12 +1180,14 @@ export function AdminPage() {
                 onSubmit={handleCreateUser}
                 onChange={() => {
                   if (createUserError) setCreateUserError(null)
+                  if (usernameError) setUsernameError(null)
                 }}
                 data-testid="admin-create-user-form"
               >
                 <div className="form-group">
                   <label htmlFor="new-username">Uživatelské jméno</label>
-                  <input id="new-username" name="username" type="text" required minLength={3} maxLength={50} data-testid="admin-create-username-input" />
+                  <Input id="new-username" name="username" type="text" required minLength={3} maxLength={50} invalid={Boolean(usernameError)} aria-describedby={usernameError ? 'new-username-error' : undefined} data-testid="admin-create-username-input" />
+                  {usernameError ? <p id="new-username-error" className="error-message show" role="alert">{usernameError}</p> : null}
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-password">Heslo</label>
