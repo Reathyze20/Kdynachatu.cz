@@ -85,7 +85,7 @@ describe('DesktopSidebar — desktop rám #1b (#171)', () => {
 
     await user.click(within(sidebar).getByRole('button', { name: 'Nápověda' }))
     expect(await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).toBeInTheDocument()
-    expect(screen.getByText(/Správa pobytů na chatě/)).toBeInTheDocument()
+    expect(screen.getByText(/Kdo kdy jede na chatu/)).toBeInTheDocument() // nápověda Kalendáře (#510)
   })
 })
 

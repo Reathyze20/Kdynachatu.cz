@@ -37,8 +37,9 @@ describe('HelpFab and OfflineBanner', () => {
     await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
 
     expect(await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).toBeInTheDocument()
-    expect(screen.getByText('Rezervace')).toBeInTheDocument()
-    expect(screen.getByText(/Správa pobytů na chatě/)).toBeInTheDocument()
+    // #510: nápověda se jmenuje podle položky navigace (Kalendář), ne „Rezervace“
+    expect(screen.getByText('Kalendář')).toBeInTheDocument()
+    expect(screen.getByText(/Kdo kdy jede na chatu/)).toBeInTheDocument()
   })
 
   it('shows dedicated help content for cabin settings', async () => {
