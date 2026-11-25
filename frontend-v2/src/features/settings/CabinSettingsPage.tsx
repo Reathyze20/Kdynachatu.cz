@@ -431,7 +431,7 @@ export function CabinSettingsPanel({
                         className="btn btn-secondary"
                         disabled={removeCoverPhoto.isPending}
                         aria-label="Odebrat titulní fotku"
-                        onClick={() => removeCoverPhoto.mutate(undefined, { onSuccess: () => showToast('Titulní fotka odebrána', 'success') })}
+                        onClick={() => removeCoverPhoto.mutate(undefined, { onSuccess: () => showToast('Titulní fotka odebrána.', 'success') })}
                         data-testid="cabin-settings-cover-photo-remove-button"
                       >
                         {removeCoverPhoto.isPending ? 'Odebírám…' : 'Odebrat'}

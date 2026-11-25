@@ -138,8 +138,15 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!from || !to) { setSubmitError("Vyplň datum příjezdu a odjezdu."); return; }
-    if (to < from) { setSubmitError("Datum odjezdu nesmí být před příjezdem."); return; }
+    const dateErrors: Record<string, string> = {};
+    if (!from) dateErrors.from = "Vyplň datum příjezdu.";
+    if (!to) dateErrors.to = "Vyplň datum odjezdu.";
+    else if (from && to < from) dateErrors.to = "Datum odjezdu nesmí být před příjezdem.";
+    if (Object.keys(dateErrors).length) {
+      setSubmitError(null);
+      showFieldErrors(dateErrors);
+      return;
+    }
     const purposeError = validatePurpose(purpose);
     if (purposeError) {
       setSubmitError(null);
@@ -276,8 +283,9 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                   setFrom(e.target.value);
                 }}
                 required
+                {...errorProps("from")}
               />
-              {fieldErrors.from && <span className="field-error-msg">{fieldErrors.from}</span>}
+              {fieldErrors.from && <span id="from-error" className="field-error-msg">{fieldErrors.from}</span>}
             </div>
 
             <div className="form-group">
@@ -292,8 +300,9 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
                   setTo(e.target.value);
                 }}
                 required
+                {...errorProps("to")}
               />
-              {fieldErrors.to && <span className="field-error-msg">{fieldErrors.to}</span>}
+              {fieldErrors.to && <span id="to-error" className="field-error-msg">{fieldErrors.to}</span>}
             </div>
           </div>
 

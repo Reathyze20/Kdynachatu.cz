@@ -90,8 +90,10 @@ describe('chyba formuláře je u formuláře, ne v toastu (#513)', () => {
     await user.type(screen.getByLabelText('Účel návštěvy'), 'Víkend')
     await user.click(screen.getByRole('button', { name: 'Vytvořit rezervaci' }))
 
-    const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Datum odjezdu nesmí být před příjezdem.')
+    // Chyba je pod polem, které ji způsobilo, a čtečka ji přečte s ním (DESIGN.md §7)
+    const to = screen.getByLabelText('Odjezd')
+    await waitFor(() => expect(to).toHaveAttribute('aria-invalid', 'true'))
+    expect(to).toHaveAccessibleDescription('Datum odjezdu nesmí být před příjezdem.')
     expect(showToast).not.toHaveBeenCalled()
     expect(post).not.toHaveBeenCalled()
   })
@@ -106,9 +108,6 @@ const SOURCES = import.meta.glob<string>(['../**/*.{ts,tsx}', '!../test/**', '!.
 /** `showToast('text', 'success' | 'info')` s textem v jednom řetězci (bez interpolace). */
 const CONFIRMATION_TOAST = /showToast\(\s*(["'])([^"'`$]+?)\1\s*,\s*["'](success|info)["']\s*\)/g
 
-/** Potvrzení, která zatím zbývá přepsat (follow-up); nová sem nepřidávat. */
-const COPY_DEBT = new Set(['Titulní fotka odebrána'])
-
 describe('texty potvrzujících toastů (#513, DESIGN.md §8)', () => {
   const toasts = Object.entries(SOURCES).flatMap(([file, src]) =>
     [...src.matchAll(CONFIRMATION_TOAST)].map((m) => ({ file, text: m[2] })),
@@ -120,7 +119,7 @@ describe('texty potvrzujících toastů (#513, DESIGN.md §8)', () => {
 
   it('každé potvrzení je věta s tečkou nebo výpustkou, bez vykřičníku a „úspěšně“', () => {
     const bad = toasts.filter(({ text }) =>
-      !COPY_DEBT.has(text) && (!/[.…]$/.test(text) || text.includes('!') || /úspěšn/i.test(text)),
+      !/[.…]$/.test(text) || text.includes('!') || /úspěšn/i.test(text),
     )
     expect(bad).toEqual([])
   })
@@ -128,9 +127,11 @@ describe('texty potvrzujících toastů (#513, DESIGN.md §8)', () => {
   it('UI neříká „dashboard“', () => {
     const tsx = Object.entries(SOURCES).filter(([file]) => file.endsWith('.tsx'))
     const visible = tsx.flatMap(([file, src]) =>
-      // Text mezi tagy a v atributech pro člověka (alt, title, aria-label, placeholder)
-      [...src.matchAll(/>([^<>{}]*dashboard[^<>{}]*)</gi), ...src.matchAll(/\b(?:alt|title|aria-label)="([^"]*dashboard[^"]*)"/gi)]
-        .map((m) => `${file}: ${m[1].trim()}`),
+      // Text mezi tagy a české věty v řetězcích (mezera + diakritika); cesta, třída ani komponenta UI text nejsou
+      [...src.matchAll(/>([^<>{}]+)</g), ...src.matchAll(/(["'`])((?:(?!\1)[^\n])*)\1/g)]
+        .map((m) => m[m.length - 1].trim())
+        .filter((text) => /\s/.test(text) && /[á-žÁ-Ž]/.test(text) && /(?<![/\w-])dashboard(?![\w-])/i.test(text))
+        .map((text) => `${file}: ${text}`),
     )
     expect(visible).toEqual([])
   })

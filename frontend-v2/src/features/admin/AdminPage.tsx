@@ -950,7 +950,7 @@ export function AdminPage() {
       role: String(fd.get('role') ?? 'user'),
     }
     if (!body.username || !body.password) {
-      showToast('Vyplň uživatelské jméno a heslo.', 'error')
+      setCreateUserError('Vyplň uživatelské jméno a heslo.')
       return
     }
     setCreateUserError(null)
