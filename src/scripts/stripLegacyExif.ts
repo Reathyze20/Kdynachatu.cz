@@ -18,7 +18,7 @@ function parseArgs(argv: string[]) {
   const dryRun = argv.includes("--dry-run");
   const dirFlag = argv.indexOf("--dir");
   const dirArg = dirFlag >= 0 ? argv[dirFlag + 1] : undefined;
-  if (dirFlag >= 0 && !dirArg) throw new Error("--dir potřebuje cestu");
+  if (dirFlag >= 0 && (!dirArg || dirArg.startsWith("--"))) throw new Error("--dir potřebuje cestu");
   const dir = path.resolve(dirArg || process.env.UPLOADS_PATH || path.join(process.cwd(), "data", "uploads"));
   return { dryRun, dir };
 }

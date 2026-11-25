@@ -83,8 +83,12 @@ export async function stripLegacyExif(root: string, options: StripOptions): Prom
   for await (const file of walkFiles(root)) {
     const relative = path.relative(root, file);
     try {
-      // Pozůstatek přerušeného běhu se nezpracovává.
-      if (path.basename(file).includes(TEMP_MARKER) || !(await isJpeg(file))) {
+      if (path.basename(file).includes(TEMP_MARKER)) {
+        report.skipped++;
+        log(`  ! ${relative}: pozůstatek přerušeného běhu, smaž ho ručně`);
+        continue;
+      }
+      if (!(await isJpeg(file))) {
         report.skipped++;
         continue;
       }
