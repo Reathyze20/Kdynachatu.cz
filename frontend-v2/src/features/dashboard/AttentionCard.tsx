@@ -1,7 +1,7 @@
 /**
  * AttentionCard — „Potřebuje pozornost“ na Přehledu (#275, návrh #6 díl 4 = A + C).
  * Nejvýš tři řádky se stavem slovem, u zásob „Koupím já“ = slib „Přivezu z domova“ s mým jménem
- * (#167), u víc věcí souhrn do Zásob. Nahoře „Zkopírovat pro WhatsApp“ zkopíruje celý seznam (#264).
+ * (#167) s toastem „Zpět“ (#511), u víc věcí souhrn do Zásob. Nahoře „Zkopírovat pro WhatsApp“ zkopíruje celý seznam (#264).
  * Když nic nepotřebuje pozornost, karta se nevykreslí.
  */
 import { useId } from "react";
@@ -9,46 +9,94 @@ import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import type { AttentionItem, DashboardShoppingData, HandoverFault } from "@/api/dashboard";
-import { inventoryApi, shoppingApi } from "@/api/shopping";
+import { inventoryApi, shoppingApi, type InventoryItem } from "@/api/shopping";
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { INVENTORY_KEY } from "@/features/shopping/hooks/useInventory";
 import { formatDayMonth } from "@/lib/dateUtils";
 import { handleMutationError } from "@/lib/mutationError";
 import { isNetworkError } from "@/lib/networkError";
 import { pluralize } from "@/lib/format";
+import { showToast } from "@/lib/toast";
 import { whatsAppMessage } from "@/lib/whatsapp";
 import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
 import { attentionKey, attentionWhatsApp, buildAttention, supplyStatus } from "./attention";
 
+/** Co potřebuje „Zpět“ (#511): položku nákupu, kterou slib změnil, jestli ji slib přidal, a stav zásoby před ním. */
+interface PledgeUndo {
+  itemId: string;
+  created: boolean;
+  supplyStatusBefore?: InventoryItem["status"];
+}
+
 /** Zásoba jde přes pledge (server položku případně přidá), samotná ★ položka přes stávající změnu stavu. */
+async function pledgeItem(item: AttentionItem): Promise<PledgeUndo> {
+  if (item.inventoryId) {
+    const result = await inventoryApi.pledge(item.inventoryId);
+    return { itemId: result.id, created: result.created, supplyStatusBefore: result.supplyStatusBefore };
+  }
+  if (!item.shoppingItemId) throw new Error("Věc nemá zásobu ani položku nákupu");
+  await shoppingApi.toggleItemStatus(item.shoppingItemId, "bring_from_home");
+  return { itemId: item.shoppingItemId, created: false };
+}
+
+/**
+ * Vezme slib zpět: přidanou položku smaže, jinak ji vrátí na Koupit. Návrat na Koupit dá zásobě Dochází
+ * (server stav před slibem nezná), proto se jí pak nastaví stav, který měla před slibem.
+ */
+async function undoPledge(item: AttentionItem, undo: PledgeUndo) {
+  if (undo.created) await shoppingApi.deleteItem(undo.itemId);
+  else await shoppingApi.toggleItemStatus(undo.itemId, "pending");
+  if (item.inventoryId && undo.supplyStatusBefore) await inventoryApi.setStatus(item.inventoryId, undo.supplyStatusBefore);
+}
+
 function usePledge() {
   const qc = useQueryClient();
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
+    void qc.invalidateQueries({ queryKey: SHOPPING_KEY });
+    void qc.invalidateQueries({ queryKey: INVENTORY_KEY });
+  };
+  // Řádek se vrátí hned na původní místo, další načtení Přehledu ho potvrdí
+  const restoreRow = (item: AttentionItem, index: number) => {
+    void qc.cancelQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
+    qc.setQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY, (old) => {
+      if (!old) return old;
+      const rest = (old.attention ?? []).filter((i) => attentionKey(i) !== attentionKey(item));
+      return { ...old, attention: [...rest.slice(0, index), item, ...rest.slice(index)] };
+    });
+  };
+
   return useMutation({
-    mutationFn: (item: AttentionItem) =>
-      item.inventoryId
-        ? inventoryApi.pledge(item.inventoryId)
-        : item.shoppingItemId
-          ? shoppingApi.toggleItemStatus(item.shoppingItemId, "bring_from_home")
-          : Promise.reject(new Error("Věc nemá zásobu ani položku nákupu")),
+    mutationFn: pledgeItem,
     // Optimisticky: slíbená věc z karty zmizí hned
     onMutate: async (item) => {
       await qc.cancelQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
       const previous = qc.getQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY);
+      const index = previous?.attention?.findIndex((i) => attentionKey(i) === attentionKey(item)) ?? -1;
       qc.setQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY, (old) =>
         old && { ...old, attention: old.attention?.filter((i) => attentionKey(i) !== attentionKey(item)) },
       );
-      return { previous };
+      return { previous, index: Math.max(index, 0) };
+    },
+    // Toast žije i po odchodu z Přehledu, proto „Zpět“ nestojí na stavu komponenty
+    onSuccess: (undo, item, ctx) => {
+      showToast({
+        title: `Přivezeš: ${item.name}.`,
+        action: {
+          label: "Zpět",
+          onClick: () => {
+            restoreRow(item, ctx?.index ?? 0);
+            undoPledge(item, undo).catch(handleMutationError("Slib se nepodařilo vzít zpět")).finally(invalidate);
+          },
+        },
+      }, "success");
     },
     onError: (err, _item, ctx) => {
       // Výpadek sítě: slib zůstane (offline fronta), chyba serveru vrátí řádek zpět
       if (!isNetworkError(err) && ctx?.previous) qc.setQueryData(DASHBOARD_SHOPPING_KEY, ctx.previous);
       handleMutationError("Slib se nepodařilo uložit")(err);
     },
-    onSettled: () => {
-      void qc.invalidateQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
-      void qc.invalidateQueries({ queryKey: SHOPPING_KEY });
-      void qc.invalidateQueries({ queryKey: INVENTORY_KEY });
-    },
+    onSettled: invalidate,
   });
 }
 

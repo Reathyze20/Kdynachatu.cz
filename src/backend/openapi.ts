@@ -1002,7 +1002,16 @@ const paths: Record<string, OpenApiObject> = {
       parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
       responses: {
         "200": jsonResponse(
-          { type: "object", properties: { id: { type: "string" }, status: { type: "string", enum: ["bring_from_home"] }, purchasedById: { type: "string" } } },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              status: { type: "string", enum: ["bring_from_home"] },
+              purchasedById: { type: "string" },
+              created: { type: "boolean", description: "Polozku pridal az slib (Zpet ji smaze, jinak ji vrati na Koupit)" },
+              supplyStatusBefore: { type: "string", enum: ["OK", "LOW", "EMPTY"], description: "Stav zasoby pred slibem, pro Zpet (#511)" },
+            },
+          },
           "Polozka nakupu je slibena a zasoba doplnena (OK)",
         ),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatne ID"),

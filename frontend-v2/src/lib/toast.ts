@@ -17,6 +17,13 @@ export interface ToastPayload {
   detail?: string
   /** Korelační kód chyby pro podporu */
   supportCode?: string
+  /** Akce v toastu, např. „Zpět“ (#511). Klepnutí ji spustí a toast zavře. */
+  action?: ToastAction
+}
+
+export interface ToastAction {
+  label: string
+  onClick: () => void
 }
 
 export type ToastInput = string | ToastPayload
@@ -55,6 +62,7 @@ export function showToast(input: ToastInput, type: ToastType = 'info'): void {
         title: enriched.title,
         detail: enriched.detail,
         supportCode: enriched.supportCode,
+        action: enriched.action,
         type,
       },
     }),

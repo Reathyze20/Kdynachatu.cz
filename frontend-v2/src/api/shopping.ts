@@ -119,9 +119,21 @@ export const inventoryApi = {
   addToCart: (id: string, payload: { listId: string } | { newListName: string }): Promise<unknown> =>
     apiClient.post(`/inventory/${id}/add-to-cart`, payload).then(r => r.data),
 
+  /** „Zpět“ po slibu (#511): vrátí zásobě stav, který měla před slibem */
+  setStatus: (id: string, status: InventoryItem['status']): Promise<InventoryItem> =>
+    apiClient.put<InventoryItem>(`/inventory/${id}`, { status }).then(r => r.data),
+
   /** „Koupím já“ (#275): slib „Přivezu z domova“; chybí-li položka na seznamu, server ji přidá */
-  pledge: (id: string): Promise<{ id: string; status: ItemStatus }> =>
-    apiClient.post<{ id: string; status: ItemStatus }>(`/inventory/${id}/pledge`).then(r => r.data),
+  pledge: (id: string): Promise<PledgeResult> =>
+    apiClient.post<PledgeResult>(`/inventory/${id}/pledge`).then(r => r.data),
+}
+
+/** Odpověď na „Koupím já“; `created` a `supplyStatusBefore` stačí, aby šel slib vzít zpět (#511) */
+export interface PledgeResult {
+  id: string
+  status: ItemStatus
+  created: boolean
+  supplyStatusBefore: InventoryItem['status']
 }
 
 // ─── Notes / Threads (pro Share dialog) ──────────────────────────────────────

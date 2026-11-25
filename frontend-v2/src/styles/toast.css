@@ -119,6 +119,13 @@
   background: rgba(0, 0, 0, 0.06);
 }
 
+/* ── Akce „Zpět“ (#511) je <Button variant="ghost" size="sm">; tady jen zarovnání v řádku ── */
+.toast-action {
+  flex-shrink: 0;
+  align-self: center;
+  margin: calc(-1 * var(--space-sm)) 0;
+}
+
 /* ── Close button ──────────────────────────────────────────────────────── */
 .toast-close {
   flex-shrink: 0;

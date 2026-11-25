@@ -263,7 +263,8 @@ router.post("/:id/pledge", protect, requireCabin, validate(inventoryIdParamsSche
 
     emitToCabin(cabinId, created ? "shopping:item:added" : "shopping:item:updated", { id: item.id, linkedInventoryId: supply.id, status: item.status });
     emitToCabin(cabinId, "inventory:updated", { id: supply.id });
-    res.json({ id: item.id, status: item.status, purchasedById: item.purchasedById });
+    // created + supplyStatusBefore stačí klientovi na „Zpět“ (#511): smazat přidanou položku nebo ji vrátit na Koupit, pak stav zásoby
+    res.json({ id: item.id, status: item.status, purchasedById: item.purchasedById, created, supplyStatusBefore: supply.status });
   } catch (error) {
     logger.error("INVENTORY", "Failed to pledge inventory item", { error: String(error) });
     res.status(500).json({ message: "Nepodařilo se uložit slib." });
