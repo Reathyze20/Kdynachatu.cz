@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { CabinToday } from '@/features/dashboard/CabinToday'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
+import { Toast } from '@/components/shared/Toast'
 import apiClient from '@/api/client'
 import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 
@@ -17,6 +18,7 @@ vi.mock('@/api/client', () => ({
     ),
     put: vi.fn(() => new Promise<never>(() => {})),
     post: vi.fn(() => new Promise<never>(() => {})),
+    delete: vi.fn(() => new Promise<never>(() => {})),
   },
 }))
 vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(weather.current)) }))
@@ -290,6 +292,85 @@ describe('Přehled: „Potřebuje pozornost“ (#275)', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Koupím já: Toaleťák' }))
     await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/inventory/inv-Toaleťák/pledge'))
     expect(await within(card).findByText('Toaleťák')).toBeInTheDocument()
+  })
+
+  // #511: omylem klepnutý slib jde vzít zpět z toastu. Odpověď API zároveň posune „server“: další načtení Přehledu vrátí `shopping`.
+  const serverReply = (data: unknown, shopping?: DashboardShoppingData) => () => {
+    if (shopping) responses.set('/dashboard/shopping', shopping)
+    return Promise.resolve({ data } as never)
+  }
+  const lastPuts = (n: number) => vi.mocked(apiClient.put).mock.calls.slice(-n)
+  const attentionCard = () => screen.queryByRole('region', { name: 'Potřebuje pozornost' })
+  const undoFromToast = async (title: string) => {
+    const toast = await screen.findByTestId('toast')
+    expect(toast).toHaveTextContent(title)
+    fireEvent.click(within(toast).getByRole('button', { name: 'Zpět' }))
+    await waitFor(() => expect(screen.queryByText(title)).not.toBeInTheDocument())
+  }
+
+  it('po „Koupím já“ je toast „Přivezeš: …“, Zpět vrátí položku na Koupit i stav zásoby a řádek se vrátí (#511)', async () => {
+    const before = withAttention({ ...supply('Toaleťák', true), shoppingItemId: 's-T' }, supply('Káva'))
+    vi.mocked(apiClient.post).mockImplementationOnce(serverReply({ id: 's-T', status: 'bring_from_home', created: false, supplyStatusBefore: 'EMPTY' }, withAttention(supply('Káva'))))
+    vi.mocked(apiClient.put).mockImplementationOnce(serverReply({})).mockImplementationOnce(serverReply({}, before))
+    render(<Toast />)
+    renderOverview(reservations(), before)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Koupím já: Toaleťák' }))
+    expect(await screen.findByTestId('toast')).toHaveTextContent('Přivezeš: Toaleťák.')
+    await waitFor(() => expect(attentionCard()).not.toHaveTextContent('Toaleťák'))
+    await undoFromToast('Přivezeš: Toaleťák.')
+
+    await waitFor(() => expect(lastPuts(2)).toEqual([
+      ['/shopping-list/s-T/purchase', { status: 'pending' }],
+      ['/inventory/inv-Toaleťák', { status: 'EMPTY' }],
+    ]))
+    await waitFor(() => expect(attentionCard()).toHaveTextContent('Toaleťák'))
+  })
+
+  it('Zpět u položky, kterou slib teprve přidal, ji smaže a vrátí zásobě původní stav (#511)', async () => {
+    const before = withAttention(supply('Káva'))
+    vi.mocked(apiClient.post).mockImplementationOnce(serverReply({ id: 's-new', status: 'bring_from_home', created: true, supplyStatusBefore: 'LOW' }, NO_SHOPPING))
+    vi.mocked(apiClient.delete).mockImplementationOnce(serverReply({ success: true }))
+    vi.mocked(apiClient.put).mockImplementationOnce(serverReply({}, before))
+    render(<Toast />)
+    renderOverview(reservations(), before)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Koupím já: Káva' }))
+    await undoFromToast('Přivezeš: Káva.')
+
+    await waitFor(() => expect(lastPuts(1)).toEqual([['/inventory/inv-Káva', { status: 'LOW' }]]))
+    expect(apiClient.delete).toHaveBeenCalledWith('/shopping-list/s-new')
+    await waitFor(() => expect(attentionCard()).toHaveTextContent('Káva'))
+  })
+
+  it('Zpět u ★ položky bez zásoby ji vrátí na Koupit (#511)', async () => {
+    const before = withAttention(starItem('Baterky'))
+    vi.mocked(apiClient.put)
+      .mockImplementationOnce(serverReply({ id: 's-Baterky', status: 'bring_from_home' }, NO_SHOPPING))
+      .mockImplementationOnce(serverReply({ id: 's-Baterky', status: 'pending' }, before))
+    render(<Toast />)
+    renderOverview(reservations(), before)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Koupím já: Baterky' }))
+    await undoFromToast('Přivezeš: Baterky.')
+
+    await waitFor(() => expect(lastPuts(1)).toEqual([['/shopping-list/s-Baterky/purchase', { status: 'pending' }]]))
+    expect(await screen.findByRole('button', { name: 'Koupím já: Baterky' })).toBeInTheDocument()
+  })
+
+  it('Zpět bez signálu zařadí do offline fronty všechny kroky, ne jen první (#511)', async () => {
+    const queued = () => Promise.reject(Object.assign(new Error('Network Error'), { queuedOffline: true }))
+    vi.mocked(apiClient.post).mockImplementationOnce(serverReply({ id: 's-off', status: 'bring_from_home', created: true, supplyStatusBefore: 'EMPTY' }, NO_SHOPPING))
+    vi.mocked(apiClient.delete).mockImplementationOnce(queued)
+    vi.mocked(apiClient.put).mockImplementationOnce(queued)
+    render(<Toast />)
+    renderOverview(reservations(), withAttention(supply('Sirky', true)))
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Koupím já: Sirky' }))
+    await undoFromToast('Přivezeš: Sirky.')
+
+    await waitFor(() => expect(lastPuts(1)).toEqual([['/inventory/inv-Sirky', { status: 'EMPTY' }]]))
+    expect(apiClient.delete).toHaveBeenCalledWith('/shopping-list/s-off')
   })
 
   it('„Zkopírovat pro WhatsApp“ zkopíruje všechny věci i za souhrnem', async () => {

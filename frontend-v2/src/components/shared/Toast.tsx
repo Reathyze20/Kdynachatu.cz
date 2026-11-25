@@ -4,18 +4,20 @@
  * Podporuje stacking (max 3), Framer Motion animace, a glassmorphism.
  *
  * Naslouchá custom window eventu 'toast:show' s payloadem:
- *   { title: string; detail?: string; supportCode?: string; type: ToastType }
+ *   { title: string; detail?: string; supportCode?: string; action?: ToastAction; type: ToastType }
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle, XCircle, Info, X, Copy, Check } from 'lucide-react'
-import type { ToastType } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import type { ToastAction, ToastType } from '@/lib/toast'
 
 interface ToastItem {
   id: number
   title: string
   detail?: string
   supportCode?: string
+  action?: ToastAction
   type: ToastType
 }
 
@@ -33,6 +35,8 @@ const DURATIONS: Record<ToastType, number> = {
   error: 8000,
   info: 3500,
 }
+/** Toast s akcí („Zpět“) zůstane déle, aby se na akci dalo v klidu klepnout. */
+const ACTION_DURATION = 8000
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -101,6 +105,21 @@ function ToastCard({
         )}
       </div>
 
+      {item.action && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="toast-action"
+          onClick={() => {
+            item.action?.onClick()
+            onDismiss(item.id)
+          }}
+        >
+          {item.action.label}
+        </Button>
+      )}
+
       <button
         className="toast-close"
         onClick={() => onDismiss(item.id)}
@@ -128,17 +147,18 @@ export function Toast() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const { title, detail, supportCode, type } = (
+      const { title, detail, supportCode, action, type } = (
         e as CustomEvent<{
           title: string
           detail?: string
           supportCode?: string
+          action?: ToastAction
           type: ToastType
         }>
       ).detail
 
       const id = nextId++
-      const newToast: ToastItem = { id, title, detail, supportCode, type }
+      const newToast: ToastItem = { id, title, detail, supportCode, action, type }
 
       setToasts((prev) => {
         // FIFO: pokud překročíme limit, odstraníme nejstarší
@@ -157,7 +177,7 @@ export function Toast() {
       })
 
       // Auto-dismiss
-      const duration = DURATIONS[type] ?? 3500
+      const duration = action ? ACTION_DURATION : (DURATIONS[type] ?? 3500)
       const timer = setTimeout(() => {
         dismiss(id)
       }, duration)

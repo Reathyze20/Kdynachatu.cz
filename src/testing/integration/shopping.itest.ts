@@ -444,6 +444,29 @@ describe("shopping: bring from home counts as resolved and restocks the linked i
     assert.deepEqual(["Sůl P", "Sirky P"].map((n) => rows.some((r) => r.name === n)), [false, false]);
   });
 
+  test("Zpět after Koupím já: the pledge response is enough to put the item and the supply back (#511)", async () => {
+    const onList = await createInventory(world.memberA, "Sůl Z", "EMPTY");
+    const listed = await createLinkedItem("Sůl Z", onList);
+    const offList = await createInventory(world.memberA, "Sirky Z", "LOW", false);
+
+    const first = await as(app, world.memberA).post(`/api/inventory/${onList}/pledge`);
+    assert.deepEqual([first.body.id, first.body.created, first.body.supplyStatusBefore], [listed, false, "EMPTY"]);
+    await as(app, world.memberA).put(`/api/shopping-list/${listed}/purchase`).send({ status: "pending" }).expect(200);
+    await as(app, world.memberA).put(`/api/inventory/${onList}`).send({ status: first.body.supplyStatusBefore }).expect(200);
+    assert.deepEqual(await resolvedBy(listed), { status: "pending", by: null, at: false, price: null, splits: 0 });
+
+    const second = await as(app, world.memberA).post(`/api/inventory/${offList}/pledge`);
+    assert.deepEqual([second.body.created, second.body.supplyStatusBefore], [true, "LOW"]);
+    await as(app, world.memberA).delete(`/api/shopping-list/${second.body.id}`).expect(200);
+    await as(app, world.memberA).put(`/api/inventory/${offList}`).send({ status: second.body.supplyStatusBefore }).expect(200);
+    assert.equal(await prisma.shoppingListItem.count({ where: { linkedInventoryId: offList } }), 0);
+
+    assert.deepEqual([await inventoryOf(onList), await inventoryOf(offList)], [{ status: "EMPTY", inCart: true }, { status: "LOW", inCart: false }]);
+    const rows = await attentionOf(world.memberA);
+    assert.equal(rows.find((r) => r.name === "Sůl Z")?.shoppingItemId, listed);
+    assert.ok(rows.some((r) => r.name === "Sirky Z"));
+  });
+
   test("Koupím já on another cabin's supply is 404, changes nothing and emits nothing", async () => {
     const foreign = await createInventory(world.memberB, "Cizí Q", "EMPTY", false);
     const { result, rooms } = await recorded(() => as(app, world.memberA).post(`/api/inventory/${foreign}/pledge`));
