@@ -99,12 +99,27 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     expect(img).toHaveAccessibleName(/dnes někdo odjíždí, u chaty stojí auto/i)
   })
 
-  it('po 14:00 v den odjezdu už odjíždějící na chatě není, auto tam stojí dál', async () => {
+  it('po 14:00 v den odjezdu bez příjezdu už odjíždějící na chatě není a auto odjelo (#579)', async () => {
     renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-07', TODAY)) }), { time: '14:00' })
 
     const img = await scene()
     expect(img).toHaveAccessibleName(/chata je prázdná/i)
-    expect(img).toHaveAccessibleName(/dnes někdo odjíždí, u chaty stojí auto/i)
+    expect(img).not.toHaveAccessibleName(/auto|mává/i)
+    expect(img).toHaveAccessibleName(/plch spí na zápraží/i)
+  })
+
+  it('v den odjezdu bez příjezdu plch do 14:00 u auta mává (#579)', async () => {
+    renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-07', TODAY)) }), { time: '13:59' })
+
+    expect(await scene()).toHaveAccessibleName(/u chaty stojí auto\. plch mává/i)
+  })
+
+  it('v den příjezdu stojí auto i po 14:00 (#579)', async () => {
+    renderOverview(reservations({ upcomingReservations: [stay('r-new', 'Svobodovi', TODAY, '2026-12-13')] }), { time: '18:00' })
+
+    const img = await scene()
+    expect(img).toHaveAccessibleName(/dnes někdo přijíždí, u chaty stojí auto/i)
+    expect(img).toHaveAccessibleName(/plch mává/i)
   })
 
   it('předávka ve stejný den: obsazeno i auto; po 14:00 jako karta „Chata je volná“, auto zůstává', async () => {

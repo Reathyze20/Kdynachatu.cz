@@ -1,6 +1,6 @@
 import type { DashboardReservationsData } from "@/api/dashboard";
 import { cabinSceneLabel, deriveCabinScene, mascotPose, type CabinSceneState } from "./cabinSceneState";
-import { AXE, CABIN, CAR, DORMOUSE, DORMOUSE_ASLEEP, EYELIDS, MOON, SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite } from "./cabinSceneSprites";
+import { AXE, CABIN, CABIN_PORCH_ROW, CAR, DORMOUSE, DORMOUSE_SLEEPING, MOON, PORCH, SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite } from "./cabinSceneSprites";
 
 /**
  * Scéna chaty nahoře v kartě „Na chatě teď“ (#563). Statický obrázek: stav z `cabinSceneState.ts`,
@@ -10,9 +10,12 @@ import { AXE, CABIN, CAR, DORMOUSE, DORMOUSE_ASLEEP, EYELIDS, MOON, SCENE_PALETT
 const W = 640;
 const H = 76;
 const GROUND = 68;
-/** Chata (60) a místo vpravo pro špalek nebo auto (70) uprostřed pruhu. */
-const CABIN_X = W / 2 - 65;
+/** Zápraží (35), chata (60) a místo vpravo pro špalek nebo auto (70) uprostřed pruhu. */
+const CABIN_X = W / 2 - 45;
 const CABIN_Y = GROUND - CABIN.length;
+const PORCH_X = CABIN_X - PORCH[0].length;
+/** Horní hrana podlahy zápraží: prodloužení vlevo navazuje na zápraží chaty. */
+const PORCH_TOP = CABIN_Y + CABIN_PORCH_ROW;
 
 /** Jedna vrstva = jeden sprite na místě: token → cesta. Pořadí vrstev je pořadí kreslení. */
 interface Layer { name: string; paths: Map<string, string>; opacity?: number }
@@ -61,7 +64,7 @@ function landscape(night: boolean): Layer[] {
   for (let n = 0; n < W / 2; n++) add(hills, "grass", box(Math.floor(rnd() * W), GROUND + 1 + Math.floor(rnd() * (H - GROUND - 1)), 1 + Math.floor(rnd() * 2), 1));
   const trees = layer("trees");
   for (let x = 2; x < W - TREE[0].length; x += 10 + Math.floor(rnd() * 12)) {
-    if (x + TREE[0].length > CABIN_X - 6 && x < CABIN_X + 136) continue;
+    if (x + TREE[0].length > PORCH_X - 6 && x < CABIN_X + 136) continue;
     drawSprite(trees, TREE, x, GROUND - TREE.length + 1 - Math.floor(rnd() * 3));
   }
   return [sky, hills, trees];
@@ -69,14 +72,16 @@ function landscape(night: boolean): Layer[] {
 
 function mascot(state: CabinSceneState): Layer[] {
   const pose = mascotPose(state);
+  // Spí a odpočívá na zápraží vedle chaty, nikdy přes stěnu, dveře nebo okno (#579).
+  const sprite = pose === "sleep" ? DORMOUSE_SLEEPING : DORMOUSE;
   const onPorch = pose === "sleep" || pose === "idle";
-  const x = onPorch ? CABIN_X + 8 : pose === "wave" ? CABIN_X + 62 : CABIN_X + 86;
-  const y = onPorch ? CABIN_Y + 36 - DORMOUSE.length : GROUND - DORMOUSE.length;
+  const x = onPorch ? PORCH_X + 1 : pose === "wave" ? CABIN_X + 62 : CABIN_X + 86;
+  const y = (onPorch ? PORCH_TOP : GROUND) - sprite.length;
   const props = layer("props");
   if (pose === "chop") drawSprite(props, STUMP, x - 15, GROUND - STUMP.length);
-  const body = drawSprite(layer("mascot"), DORMOUSE, x, y, pose === "sleep" ? DORMOUSE_ASLEEP : {});
+  const body = drawSprite(layer("mascot"), sprite, x, y);
   const extra = layer("mascot-extra");
-  if (pose === "sleep") drawSprite(drawSprite(extra, EYELIDS, x + 3, y + 7), ZZZ, x + 4, y - 17, state.night ? { o: "light" } : {});
+  if (pose === "sleep") drawSprite(extra, ZZZ, x + 7, y - 8, state.night ? { o: "light" } : {});
   if (pose === "chop") drawSprite(extra, AXE, x - 8, y + 5);
   if (pose === "wave") drawSprite(extra, WAVE, x - 3, y + 7);
   return [props, body, extra];
@@ -85,8 +90,8 @@ function mascot(state: CabinSceneState): Layer[] {
 function buildScene(state: CabinSceneState): Layer[] {
   const { occupied, winterized, night } = state;
   const glass = winterized ? WINDOW_LOOK.shut : occupied ? WINDOW_LOOK.lit : night ? WINDOW_LOOK.dark : WINDOW_LOOK.day;
-  const layers = [...landscape(night), drawSprite(layer("cabin"), CABIN, CABIN_X, CABIN_Y, glass)];
-  if (state.arriving || state.departing) layers.push(drawSprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
+  const layers = [...landscape(night), drawSprite(drawSprite(layer("cabin"), CABIN, CABIN_X, CABIN_Y, glass), PORCH, PORCH_X, PORCH_TOP)];
+  if (state.carParked) layers.push(drawSprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
   layers.push(...mascot(state));
   if (night) {
     const rnd = seededRandom(11);

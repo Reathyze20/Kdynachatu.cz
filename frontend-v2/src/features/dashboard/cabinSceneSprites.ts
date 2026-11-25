@@ -24,7 +24,8 @@ export const WINDOW_LOOK = {
   shut: { g: "roof", G: "roof-dark", Q: "roof", X: "roof", Y: "ink" },
 } satisfies Record<string, Record<string, string>>;
 
-/** Chata zboku 60 × 40. Zápraží (f/F) je řádek 36, komín nad sloupci 38–43. */
+/** Chata zboku 60 × 40. Zápraží (f/F) je řádek `CABIN_PORCH_ROW`, komín nad sloupci 38–43. */
+export const CABIN_PORCH_ROW = 36;
 export const CABIN: Sprite = [
   ".....................................oooooooo...............",
   ".....................................occcccco...............",
@@ -68,34 +69,57 @@ export const CABIN: Sprite = [
   "oFFoSssssssSssssssSssssssSssssssSssssssSssssssSssssssSssss..",
 ];
 
-/** Plch velký 24 × 20, sedí čelem: kulaté uši bez růžové (ne kočka), velké oči v tmavých kruzích, hlodavčí
- * zoubky, huňatý ocas vedle těla (ne přes záda jako veverka z avatarů). */
+/** Plch velký 24 × 20, sedí čelem (štípe, mává, odpočívá): teplá šedohnědá srst, kulaté uši bez růžové
+ * (ne kočka), velké tmavé oči jen s jemným stínem (ne mýval), huňatý ocas bez pruhů zvednutý vedle těla
+ * (ne přes záda jako veverka z avatarů). */
 export const DORMOUSE: Sprite = [
-  ".ooo........ooo.........",
-  "obddo......oddbo........",
-  "obddboooooobddbo........",
-  "obbbbbbbbbbbbbbo........",
-  "obbbbbbbbbbbbbbo........",
-  "obbdddbbbbdddbbo........",
-  "obdieedbbdieedbo........",
-  "obdeeedbbdeeedbo........",
-  "obdeeedbbdeeedbo...oooo.",
-  "obbdddbbbbdddbbo..obbbbo",
-  ".obbbllppllbbbo..obbdbbo",
-  "..obllllllllbo...obdbbdo",
-  "..obdddiidddbo...obbdbbo",
-  ".obbllllllllbbo..obdbbdo",
-  ".obblaallaalbbo..obbdbbo",
-  ".obbllllllllbbooobdbbdbo",
-  ".obbllllllllbbbbbdbbdbbo",
-  "..obbllllllbbbdbbdbbdbbo",
-  "..oaaabbbbaaaobbdbbdbbo.",
-  "...oooooooooo.oooooooo..",
+  "..oo........oo..........",
+  ".oddo......oddo...oooo..",
+  "oddddo....oddddo.obbbbo.",
+  "oddddooooooddddoobbbbbbo",
+  "obbbbbbbbbbbbbboobbdbbbo",
+  "obbbbbbbbbbbbbboobddbbbo",
+  "obbieebbbbieebbo.oddbbbo",
+  "obbeeebbbbeeebbo..obbbbo",
+  "obbeeebbbbeeebbo..obbbbo",
+  "obbbbbbllbbbbbbo.obbbbbo",
+  ".obbbllppllbbbo.obbbbbbo",
+  "..obllllllllbo..obbbbbbo",
+  "..obbllllllbbo..obbbbbbo",
+  ".obbllllllllbbo.obbbbbbo",
+  ".obblaallaalbbo.obbbbbbo",
+  ".obbllllllllbbo.obbbbbo.",
+  ".obbllllllllbbboobbbbbo.",
+  "..obbllllllbbbbbbbbbbo..",
+  "..oaaabbbbaaaobbbbbo....",
+  "...oooooooooo.ooooo.....",
 ];
 
-/** Spánek: oči se zavřou (přebarvení) a přes ně jde víčko. */
-export const DORMOUSE_ASLEEP = { e: "fur", i: "fur" };
-export const EYELIDS: Sprite = ["ooo....ooo"];
+/** Spící plch 32 × 13 leží na břiše: hlava vlevo na tlapkách se zavřeným okem, huňatý ocas zvednutý za tělem. */
+export const DORMOUSE_SLEEPING: Sprite = [
+  "......................oo.o......",
+  "....ooo.............oobboboo....",
+  "...obddo...........obbbbbbbbo...",
+  "...oddddoooooooo..obddbbbbbbbo..",
+  "...obbbbbbbbbbbbooobdbbbbbbbbbo.",
+  "..obbbbbbbbbbbbbbbodbbbbbbbbbdo.",
+  ".obbobbobbbbbbbbbbbodbbbbbbbbdo.",
+  "obbbboobbbbbbbbbbbbbodbbbbbbddoo",
+  "pbbbbbbbbbbbbbbbbbbbbodbbbbbddo.",
+  "obblllbbbbbbbbbbbbbbbbodbbbddo..",
+  ".olllllllbbbbbbbbbbbbbbodddddo..",
+  "..oaaoaaollllllllbbbbbbbooooo...",
+  "...oo.oo.ooooooooooooooo........",
+];
+
+/** Zápraží 35 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39 chaty): tam spí a odpočívá plch. */
+export const PORCH: Sprite = [
+  "fffFffffFffffFffffFffffFffffFffffFf",
+  "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+  ".oFFo...........oFFo...............",
+  ".oFFo...........oFFo...............",
+];
+
 export const ZZZ: Sprite = ["...oooo", ".....o.", "....o..", "...oooo", "ooo....", ".o.....", "ooo...."];
 
 /** Zvednutá sekera, dlaň vpravo dole patří plchovi. */
