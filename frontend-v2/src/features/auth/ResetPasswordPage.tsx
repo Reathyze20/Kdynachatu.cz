@@ -3,11 +3,33 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, CircleCheck, CircleX } from 'lucide-react'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 
-type ResetViewState = 'loading' | 'ready' | 'success' | 'error' | 'no-token'
+type ResetViewState = 'loading' | 'ready' | 'success' | 'expired' | 'error' | 'no-token'
 
 interface ResetPasswordResponse {
   message?: string
+}
+
+type ResetError = { response?: { status?: number; data?: ResetPasswordResponse } }
+
+/** Backend vrací 400, když token neexistuje, vypršel nebo už byl použitý (heslo se kontroluje dřív na klientu). */
+function isExpiredLink(err: unknown) {
+  return (err as ResetError).response?.status === 400
+}
+
+/** Cesta ven ze slepé uličky: nový odkaz přes zapomenuté heslo, vedle návrat na přihlášení (#514). */
+function NewLinkActions() {
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <Button asChild size="lg" className="w-full">
+        <Link to="/login?view=forgot" data-testid="reset-password-new-link">Poslat nový odkaz</Link>
+      </Button>
+      <Button asChild variant="ghost">
+        <Link to="/login" data-testid="reset-password-login-link">Zpět na přihlášení</Link>
+      </Button>
+    </div>
+  )
 }
 
 const cardStyle = {
@@ -48,7 +70,11 @@ export function ResetPasswordPage() {
         setMessage('')
       } catch (err) {
         if ((err as Error).name === 'AbortError') return
-        const data = (err as { response?: { data?: ResetPasswordResponse } }).response?.data
+        if (isExpiredLink(err)) {
+          setViewState('expired')
+          return
+        }
+        const data = (err as ResetError).response?.data
         setViewState('error')
         setMessage(data?.message || 'Resetovací odkaz se nepodařilo ověřit.')
       }
@@ -87,7 +113,11 @@ export function ResetPasswordPage() {
       setMessage(data.message || 'Heslo bylo změněno.')
       showToast('Heslo změněno.', 'success')
     } catch (err: unknown) {
-      const data = (err as { response?: { data?: ResetPasswordResponse } }).response?.data
+      if (isExpiredLink(err)) {
+        setViewState('expired')
+        return
+      }
+      const data = (err as ResetError).response?.data
       const text = data?.message || 'Nepodařilo se nastavit nové heslo.'
       setViewState('error')
       setMessage(text)
@@ -227,6 +257,19 @@ export function ResetPasswordPage() {
           </>
         )}
 
+        {viewState === 'expired' && (
+          <>
+            <CircleX size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-error)' }} />
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+              Odkaz vypršel nebo už byl použitý.
+            </h2>
+            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
+              Pošli si nový odkaz pro obnovu hesla na svůj e-mail.
+            </p>
+            <NewLinkActions />
+          </>
+        )}
+
         {viewState === 'error' && (
           <>
             <CircleX size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-error)' }} />
@@ -236,21 +279,7 @@ export function ResetPasswordPage() {
             <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
               {message}
             </p>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 2rem',
-                background: 'var(--color-primary, #2563eb)',
-                color: 'white',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-              data-testid="reset-password-login-link"
-            >
-              Zpět na přihlášení
-            </Link>
+            <NewLinkActions />
           </>
         )}
 
@@ -261,23 +290,9 @@ export function ResetPasswordPage() {
               Chybí resetovací odkaz
             </h2>
             <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Odkaz neobsahuje platný token. Vrať se na přihlášení a požádej o nový odkaz pro obnovu hesla.
+              Odkaz neobsahuje platný token. Pošli si nový odkaz pro obnovu hesla na svůj e-mail.
             </p>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 2rem',
-                background: 'var(--color-primary, #2563eb)',
-                color: 'white',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-              data-testid="reset-password-login-link"
-            >
-              Zpět na přihlášení
-            </Link>
+            <NewLinkActions />
           </>
         )}
       </div>

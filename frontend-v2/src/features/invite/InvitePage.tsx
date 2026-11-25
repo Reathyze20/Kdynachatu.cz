@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { AvatarPicker } from '@/components/shared/AvatarPicker';
 import { ColorPicker } from '@/components/shared/ColorPicker';
 import { MEMBER_PALETTE } from '@/lib/memberPalette';
+import { SignupConsent } from '@/features/auth/SignupConsent';
 import cabinBg from '@/img/olivier-guillard-FKJgBUDoVC0-unsplash.jpg';
 
 interface ValidateResponse {
@@ -37,6 +38,8 @@ export function InvitePage() {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Chyba odeslání registrace zůstává u formuláře, neplatnou pozvánku nesignalizuje (#514).
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [inviteInfo, setInviteInfo] = useState<ValidateResponse | null>(null);
   const [step, setStep] = useState<'welcome' | 'register'>('welcome');
 
@@ -81,6 +84,7 @@ export function InvitePage() {
     if (!inviteInfo) return;
     
     setSubmitting(true);
+    setRegisterError(null);
     try {
       const res = await apiClient.post<AcceptResponse>(`/invites/accept/${token}`, {
         username: formData.username,
@@ -96,7 +100,7 @@ export function InvitePage() {
       navigate('/dashboard');
     } catch (err: unknown) {
       const axiosMsg = (err as { response?: { data?: { message?: string } } }).response?.data?.message;
-      setError(axiosMsg || 'Chyba při registraci.');
+      setRegisterError(axiosMsg || 'Registraci se nepodařilo dokončit. Zkus to znovu.');
       setSubmitting(false);
     }
   };
@@ -117,8 +121,9 @@ export function InvitePage() {
       <div className="invite-page" style={bgStyle} data-testid="invite-page" data-invite-step="invalid">
         <div className="invite-card invite-card-narrow" data-testid="invite-invalid-card">
           <div className="invite-icon" aria-hidden="true" style={{ color: 'var(--status-error)' }}><CircleX size={48} style={{ display: 'block', margin: '0 auto' }} /></div>
-          <h2 className="invite-title">Neplatná pozvánka</h2>
+          <h1 className="invite-title">Neplatná pozvánka</h1>
           <p className="invite-text">{error}</p>
+          <p className="invite-text">Požádej toho, kdo tě zval, o nový odkaz.</p>
           <button className="invite-btn invite-btn-primary invite-btn-full" onClick={() => navigate('/login')} data-testid="invite-invalid-login-button">
             Přejít na přihlášení
           </button>
@@ -186,28 +191,35 @@ export function InvitePage() {
           </h2>
         </div>
 
-        {error && <div className="invite-error-msg" data-testid="invite-register-error">{error}</div>}
+        {registerError && <div className="invite-error-msg" role="alert" data-testid="invite-register-error">{registerError}</div>}
 
         <form onSubmit={handleSubmit} data-testid="invite-register-form">
+          <div className="invite-form-group">
+            <label htmlFor="invite-username">Uživatelské jméno <span className="invite-optional">(tím se budeš přihlašovat)</span></label>
+            <input 
+              type="text" 
+              id="invite-username"
+              name="username"
+              autoComplete="username" 
+              required 
+              minLength={3}
+              maxLength={50}
+              placeholder="Např. Tomáš"
+              value={formData.username}
+              onChange={e => setFormData({ ...formData, username: e.target.value })}
+              autoFocus
+              data-testid="invite-username-input"
+            />
+          </div>
+
           <div className="invite-form-row">
             <div className="invite-form-group">
-              <label>Přezdívka</label>
-              <input 
-                type="text" 
-                required 
-                minLength={3}
-                maxLength={50}
-                placeholder="Např. Tomáš"
-                value={formData.username}
-                onChange={e => setFormData({ ...formData, username: e.target.value })}
-                autoFocus
-                data-testid="invite-username-input"
-              />
-            </div>
-            <div className="invite-form-group">
-              <label>Heslo</label>
+              <label htmlFor="invite-password">Heslo</label>
               <input 
                 type="password" 
+                id="invite-password"
+                name="password"
+                autoComplete="new-password" 
                 required 
                 minLength={8}
                 maxLength={100}
@@ -217,30 +229,32 @@ export function InvitePage() {
                 data-testid="invite-password-input"
               />
             </div>
-          </div>
-
-          <div className="invite-form-group">
-            <label>E-mail <span className="invite-optional">(nepovinné)</span></label>
-            <input 
-              type="email" 
-              placeholder="vas@email.cz"
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
-              data-testid="invite-email-input"
-            />
+            <div className="invite-form-group">
+              <label htmlFor="invite-email">E-mail <span className="invite-optional">(nepovinné)</span></label>
+              <input 
+                type="email" 
+                id="invite-email"
+                name="email"
+                autoComplete="email"
+                placeholder="tvuj@email.cz"
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                data-testid="invite-email-input"
+              />
+            </div>
           </div>
 
           <div className="invite-form-row">
-            <div className="invite-form-group" style={{ flex: '1 1 60%' }}>
-              <label>Avatar</label>
+            <div className="invite-form-group" style={{ flex: '1 1 60%' }} role="group" aria-labelledby="invite-avatar-label">
+              <label id="invite-avatar-label">Avatar</label>
               <AvatarPicker 
                 value={formData.animalIcon}
                 onChange={val => setFormData({ ...formData, animalIcon: val })}
                 compact
               />
             </div>
-            <div className="invite-form-group" style={{ flex: '1 1 35%' }}>
-              <label>Barva</label>
+            <div className="invite-form-group" style={{ flex: '1 1 35%' }} role="group" aria-labelledby="invite-color-label">
+              <label id="invite-color-label">Barva</label>
               <ColorPicker 
                 value={formData.color}
                 onChange={val => setFormData({ ...formData, color: val })}
@@ -248,6 +262,8 @@ export function InvitePage() {
               />
             </div>
           </div>
+
+          <SignupConsent />
 
           <button 
             type="submit" 
