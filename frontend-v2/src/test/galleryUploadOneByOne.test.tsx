@@ -10,6 +10,7 @@ import { showToast } from '@/lib/toast'
 // Fiktivní API a soubory, žádná reálná data chaty.
 vi.mock('@/api/client', () => ({ default: { post: vi.fn() } }))
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
+vi.mock('@/lib/errorReporting', () => ({ reportError: vi.fn() }))
 
 type UploadConfig = { onUploadProgress?: (event: { loaded: number; total?: number }) => void }
 interface PendingUpload {
@@ -23,8 +24,8 @@ const post = vi.mocked(apiClient.post)
 let pending: PendingUpload[] = []
 
 /** Server odpověděl chybou (ne výpadek spojení). */
-function serverError() {
-  return new AxiosError('Request failed', 'ERR_BAD_RESPONSE', undefined, undefined, { status: 500, data: {} } as never)
+function serverError(data: { message?: string } = {}) {
+  return new AxiosError('Request failed', 'ERR_BAD_RESPONSE', undefined, undefined, { status: 500, data } as never)
 }
 
 function photo(name: string) {
@@ -34,12 +35,12 @@ function photo(name: string) {
 function renderModal(onClose = vi.fn()) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <UploadModal folderId="f-leto" onClose={onClose} />
     </QueryClientProvider>,
   )
-  return { onClose, invalidate }
+  return { onClose, invalidate, unmount: view.unmount }
 }
 
 function pickAndSubmit(files: File[]) {
@@ -154,5 +155,30 @@ describe('UploadModal – nahrávání po jedné fotce (#515)', () => {
     expect(screen.getAllByTestId('gallery-upload-preview-item')).toHaveLength(2)
     expect(showToast).not.toHaveBeenCalledWith(expect.stringMatching(/^Nahrán/), 'success')
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('po zavření modálu uprostřed dávky se další fotky neposílají a toast řekne, že nahrávání skončilo', async () => {
+    const { onClose, unmount, invalidate } = renderModal()
+    pickAndSubmit([photo('a.jpg'), photo('b.jpg'), photo('c.jpg')])
+
+    await waitFor(() => expect(pending).toHaveLength(1))
+    unmount()
+    await act(async () => pending[0].resolve())
+
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Nahrávání zastaveno, zbývající fotky se nenahrály.', 'info'))
+    expect(post).toHaveBeenCalledTimes(1)
+    expect(showToast).toHaveBeenCalledWith('Nahrána 1 fotka.', 'success')
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['gallery-photos', 'f-leto'] })
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('souhrn převezme důvod, který poslal server (např. příliš velká fotka)', async () => {
+    renderModal()
+    pickAndSubmit([photo('velka.jpg')])
+
+    await waitFor(() => expect(pending).toHaveLength(1))
+    await act(async () => pending[0].reject(serverError({ message: 'Soubor je příliš velký.' })))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('1 fotku se nepodařilo nahrát. Soubor je příliš velký.')
   })
 })

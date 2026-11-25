@@ -15,11 +15,10 @@ interface Props {
 }
 
 /** Souhrn po dávce, ve které se některé fotky nenahrály. */
-function failureMessage({ failed, networkFailure }: PhotoUploadOutcome): string {
+function failureMessage({ failed, networkFailure, serverReason }: PhotoUploadOutcome): string {
   const what = `${formatCount(failed.length, 'fotku', 'fotky', 'fotek')} se nepodařilo nahrát.`
-  return networkFailure
-    ? `${what} Spojení vypadlo, zkus to znovu po obnovení připojení.`
-    : `${what} Zkus to znovu.`
+  if (networkFailure) return `${what} Spojení vypadlo, zkus to znovu po obnovení připojení.`
+  return serverReason ? `${what} ${serverReason}` : `${what} Zkus to znovu.`
 }
 
 function formatSize(bytes: number): string {
@@ -82,6 +81,10 @@ export function UploadModal({ folderId, onClose }: Props) {
     if (outcome.uploaded > 0) {
       const verb = pluralize(outcome.uploaded, 'Nahrána', 'Nahrány', 'Nahráno')
       showToast(`${verb} ${formatCount(outcome.uploaded, 'fotka', 'fotky', 'fotek')}.`, 'success')
+    }
+    if (outcome.stopped) {
+      showToast('Nahrávání zastaveno, zbývající fotky se nenahrály.', 'info')
+      return
     }
     if (outcome.failed.length === 0) {
       onClose()
@@ -176,8 +179,8 @@ export function UploadModal({ folderId, onClose }: Props) {
         {/* Upload progress */}
         {progress && (
           <div className="mt-3 grid gap-1" data-testid="gallery-upload-progress">
-            <div className="flex justify-between gap-3 text-meta text-(--text-muted)" aria-live="polite">
-              <span>Nahrávám {progress.current} z {progress.total}…</span>
+            <div className="flex justify-between gap-3 text-meta text-(--text-muted)">
+              <span aria-live="polite">Nahrávám {progress.current} z {progress.total}…</span>
               <span>{formatPercent(progress.percent)}</span>
             </div>
             <progress

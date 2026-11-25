@@ -4,6 +4,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
 import { galleryApi } from '@/api/gallery'
 import { handleMutationError } from '@/lib/mutationError'
 import { isNetworkError } from '@/lib/networkError'
@@ -91,7 +92,13 @@ export interface PhotoUploadOutcome {
   failed: File[]
   /** Aspoň jedna selhala na výpadku spojení (bez odpovědi serveru). */
   networkFailure: boolean
+  /** Modál se zavřel uprostřed dávky; zbytek fotek se už neposlal a je ve `failed`. */
+  stopped: boolean
+  /** Důvod poslední chyby od serveru (např. příliš velký soubor), když ho server poslal. */
+  serverReason?: string
 }
+
+const reportUploadError = handleMutationError('Fotku se nepodařilo nahrát', { component: 'GalleryUpload', silent: true })
 
 /**
  * Nahrávání fotek po jedné (#515): každá fotka je samostatný požadavek, takže výpadek signálu
@@ -114,8 +121,11 @@ export function useUploadPhotosOneByOne(folderId: string) {
       const failed: File[] = []
       let uploaded = 0
       let networkFailure = false
+      let serverReason: string | undefined
+      let stopped = false
       for (const [index, file] of files.entries()) {
         if (!mounted.current) {
+          stopped = true
           failed.push(...files.slice(index))
           break
         }
@@ -128,7 +138,12 @@ export function useUploadPhotosOneByOne(folderId: string) {
           uploaded++
         } catch (error) {
           failed.push(file)
-          if (isNetworkError(error)) networkFailure = true
+          if (isNetworkError(error)) {
+            networkFailure = true
+          } else {
+            reportUploadError(error as Error)
+            if (axios.isAxiosError<{ message?: string }>(error)) serverReason = error.response?.data?.message ?? serverReason
+          }
         }
       }
       if (mounted.current) setProgress(null)
@@ -136,7 +151,7 @@ export function useUploadPhotosOneByOne(folderId: string) {
         void qc.invalidateQueries({ queryKey: photosKey(folderId) })
         void qc.invalidateQueries({ queryKey: GALLERY_FOLDERS_KEY })
       }
-      return { uploaded, failed, networkFailure }
+      return { uploaded, failed, networkFailure, stopped, serverReason }
     },
     [folderId, qc],
   )

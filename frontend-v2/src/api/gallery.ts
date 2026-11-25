@@ -58,7 +58,7 @@ export const galleryApi = {
    * Nahraje jednu fotku (#515). Endpoint bere i víc fotek naráz, ale jeden výpadek signálu by shodil celou dávku.
    * `onProgress` dostává podíl odeslaných bajtů 0–1.
    */
-  uploadPhoto: (folderId: string, file: File, onProgress?: (fraction: number) => void): Promise<GalleryPhoto> => {
+  uploadPhoto: (folderId: string, file: File, onProgress?: (fraction: number) => void): Promise<GalleryPhoto | undefined> => {
     const fd = new FormData()
     fd.append('folderId', folderId)
     fd.append('photos', file)
