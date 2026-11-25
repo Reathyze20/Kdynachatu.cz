@@ -54,15 +54,22 @@ export const galleryApi = {
   getPhotosByIds: (ids: string[]): Promise<GalleryPhoto[]> =>
     apiClient.get<GalleryPhoto[]>(`/gallery/photos?ids=${ids.join(',')}`).then(r => r.data),
 
-  uploadPhotos: (folderId: string, files: File[]): Promise<GalleryPhoto[]> => {
+  /**
+   * Nahraje jednu fotku (#515). Endpoint bere i víc fotek naráz, ale jeden výpadek signálu by shodil celou dávku.
+   * `onProgress` dostává podíl odeslaných bajtů 0–1.
+   */
+  uploadPhoto: (folderId: string, file: File, onProgress?: (fraction: number) => void): Promise<GalleryPhoto> => {
     const fd = new FormData()
     fd.append('folderId', folderId)
-    for (const f of files) fd.append('photos', f)
+    fd.append('photos', file)
     return apiClient
       .post<GalleryPhoto[]>('/gallery/photos', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (event) => {
+          if (onProgress && event.total) onProgress(Math.min(event.loaded / event.total, 1))
+        },
       })
-      .then(r => r.data)
+      .then(r => r.data[0])
   },
 
   updatePhoto: (id: string, description: string): Promise<GalleryPhoto> =>

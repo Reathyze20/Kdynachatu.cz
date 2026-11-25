@@ -1,10 +1,12 @@
 /**
  * useGallery.ts — TanStack Query hooks pro Gallery module
- * Upload fotek přes multipart/form-data mutation.
+ * Upload fotek po jedné přes multipart/form-data (#515).
  */
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { galleryApi } from '@/api/gallery'
 import { handleMutationError } from '@/lib/mutationError'
+import { isNetworkError } from '@/lib/networkError'
 
 export const GALLERY_FOLDERS_KEY = ['gallery-folders'] as const
 
@@ -75,16 +77,71 @@ export function useDeleteFolder() {
 
 // ─── Photo mutations ──────────────────────────────────────────────────────────
 
-export function useUploadPhotos(folderId: string) {
+export interface PhotoUploadProgress {
+  /** Pořadí právě nahrávané fotky od 1. */
+  current: number
+  total: number
+  /** Procenta odeslaných bajtů aktuální fotky, 0–100. */
+  percent: number
+}
+
+export interface PhotoUploadOutcome {
+  uploaded: number
+  /** Fotky, které se nenahrály, v původním pořadí – jdou poslat znovu. */
+  failed: File[]
+  /** Aspoň jedna selhala na výpadku spojení (bez odpovědi serveru). */
+  networkFailure: boolean
+}
+
+/**
+ * Nahrávání fotek po jedné (#515): každá fotka je samostatný požadavek, takže výpadek signálu
+ * shodí jen tu, která se zrovna posílá. Po zavření modálu se další fotky už neposílají.
+ */
+export function useUploadPhotosOneByOne(folderId: string) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (files: File[]) => galleryApi.uploadPhotos(folderId, files),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: photosKey(folderId) })
-      void qc.invalidateQueries({ queryKey: GALLERY_FOLDERS_KEY })
+  const [progress, setProgress] = useState<PhotoUploadProgress | null>(null)
+  const mounted = useRef(true)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
+  const upload = useCallback(
+    async (files: File[]): Promise<PhotoUploadOutcome> => {
+      const failed: File[] = []
+      let uploaded = 0
+      let networkFailure = false
+      for (const [index, file] of files.entries()) {
+        if (!mounted.current) {
+          failed.push(...files.slice(index))
+          break
+        }
+        const step = { current: index + 1, total: files.length }
+        setProgress({ ...step, percent: 0 })
+        try {
+          await galleryApi.uploadPhoto(folderId, file, (fraction) => {
+            if (mounted.current) setProgress({ ...step, percent: Math.round(fraction * 100) })
+          })
+          uploaded++
+        } catch (error) {
+          failed.push(file)
+          if (isNetworkError(error)) networkFailure = true
+        }
+      }
+      if (mounted.current) setProgress(null)
+      if (uploaded > 0) {
+        void qc.invalidateQueries({ queryKey: photosKey(folderId) })
+        void qc.invalidateQueries({ queryKey: GALLERY_FOLDERS_KEY })
+      }
+      return { uploaded, failed, networkFailure }
     },
-    onError: handleMutationError('Chyba při nahrávání fotek'),
-  })
+    [folderId, qc],
+  )
+
+  return { upload, progress, isUploading: progress !== null }
 }
 
 export function useUpdatePhoto(folderId: string) {
