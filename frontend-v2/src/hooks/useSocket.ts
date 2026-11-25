@@ -5,8 +5,15 @@
  */
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
+import apiClient from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { markDataReceived } from '@/lib/dataFreshness'
+
+/**
+ * Prodleva před ověřením relace po odpojení serverem. Změna vlastního hesla odpojí i tohle zařízení
+ * a nový token z odpovědi musí stihnout dorazit (pak se efekt spustí znovu a ověření zruší).
+ */
+const SESSION_CHECK_DELAY_MS = 1500
 
 /**
  * Connect to the Socket.io server, authenticated via JWT.
@@ -30,12 +37,30 @@ export function useSocket() {
       reconnectionDelay: 2000,
     })
 
+    // Server spojení ukončil nebo handshake odmítl (zneplatněné přihlášení, ban, #486). Socket.IO se pak
+    // samo nepřipojuje; o odhlášení rozhodne REST – 401/403 zpracuje interceptor apiClient a pošle
+    // uživatele na přihlášení. Výpadek sítě (`socket.active`) sem nepatří, ten řeší reconnect.
+    let sessionCheck: ReturnType<typeof setTimeout> | undefined
+    const verifySessionSoon = () => {
+      clearTimeout(sessionCheck)
+      sessionCheck = setTimeout(() => {
+        apiClient.get('/users/me').catch(() => undefined)
+      }, SESSION_CHECK_DELAY_MS)
+    }
+    socket.on('disconnect', (reason) => {
+      if (reason === 'io server disconnect') verifySessionSoon()
+    })
+    socket.on('connect_error', () => {
+      if (!socket.active) verifySessionSoon()
+    })
+
     // Heartbeat realtime spojení: změny chodí socketem, data jsou čerstvá i bez GET (E4, #276)
     socket.io.on('ping', () => markDataReceived())
     socketRef.current = socket
     setSocketGeneration((g) => g + 1)
 
     return () => {
+      clearTimeout(sessionCheck)
       socket.disconnect()
       socketRef.current = null
     }

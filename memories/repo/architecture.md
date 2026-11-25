@@ -12,7 +12,7 @@ Uživatelské texty, chybové hlášky a většina komentářů jsou **česky** 
 - Vzor rout (`src/backend/routes/*.ts`): `router.use(protect, requireCabin)` → `validate(zodSchema)` (`src/validators/validate.ts`, schémata v `src/validators/schemas.ts`) → Prisma dotaz filtrovaný `cabinId` → `emitToCabin(cabinId, event, data)` (`src/utils/socket.ts`). Čisté helpery s unit testy vedle routy (např. `reservationHelpers.ts`).
 - Logování: `logger.info("SCOPE", "zpráva", { meta })` ze `src/utils/logger.ts` (pino), kontext requestu se doplní sám; DB chyby přes `logger.prismaError`.
 - Konfigurace jen v `src/config/config.ts` (JWT, DB, CORS allowlist z `FRONTEND_URL` + `CORS_ORIGINS`). Uploady do `UPLOADS_PATH` (default `data/uploads`, náhledy přes sharp). Hesla přes `src/utils/password.ts`.
-- Realtime: Socket.IO na cestě `/ws`, JWT v `auth.token`, socket je v roomu `cabin:<cabinId>`.
+- Realtime: Socket.IO na cestě `/ws`, JWT v `auth.token`. Handshake načte uživatele z DB jako `protect` (smazaný, zabanovaný a stará `tokenVersion` neprojdou), `cabinId` a roli bere z DB. Socket je v roomu `user:<id>` a jen admin/člen i v `cabin:<cabinId>` (host ne). Zneplatnění relací (`src/utils/sessionRevocation.ts`) po commitu odpojí sockety v `user:<id>`; frontend pak ověří relaci přes `GET /api/users/me` a při 401/403 přejde na přihlášení.
 
 **Frontend (`frontend-v2/`)** – React 19, TS strict, Vite 7, React Router 7 (lazy routy přes `lazyRetry`), TanStack Query 5 + Axios, Tailwind 4 + shadcn/ui + legacy CSS v `src/styles/`, Framer Motion, PWA (`vite-plugin-pwa`). Alias `@/` → `src/`.
 - `src/App.tsx`: routy a guardy (`PrivateRoute` → `CabinGuard` → `AppShell`; `AdminRoute`, `SuperAdminRoute`). Uživatel s `cabinId === null` jde na `/onboarding` (nebo `/superadmin`).

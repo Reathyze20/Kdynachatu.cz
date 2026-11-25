@@ -6,6 +6,7 @@
 import "./env"; // musí zůstat první import
 import request from "supertest";
 import type { Express } from "express";
+import type { Server } from "http";
 import prisma from "../../utils/prisma";
 import { hashPassword } from "../../utils/password";
 import { signAuthToken } from "../../utils/authToken";
@@ -135,12 +136,15 @@ export function recordRealtimeEmits() {
   return { emits, restore: () => { io.to = originalTo; } };
 }
 
-/** Před každým testovým souborem: čistá DB, dvě chaty, aplikace bez portu, cronu a rate limitů. */
-export async function setupIntegrationFile(): Promise<{ app: Express; world: TestWorld }> {
+/**
+ * Před každým testovým souborem: čistá DB, dvě chaty, aplikace bez portu, cronu a rate limitů.
+ * `server` (HTTP + Socket.IO) neposlouchá; socketové testy ho samy pustí na náhodném portu.
+ */
+export async function setupIntegrationFile(): Promise<{ app: Express; server: Server; world: TestWorld }> {
   await resetDatabase();
   const world = await seedTwoCabins();
-  const { app } = createApp({ enableRateLimits: false });
-  return { app, world };
+  const { app, server } = createApp({ enableRateLimits: false });
+  return { app, server, world };
 }
 
 export async function teardownIntegrationFile(): Promise<void> {
