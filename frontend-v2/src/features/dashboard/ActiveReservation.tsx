@@ -8,11 +8,13 @@ import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";
 import { gasLine } from "@/lib/gasLevel";
 import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
+import { CabinScene } from "./CabinScene";
 import { ArrowRight, CalendarPlus, CircleCheck, DoorOpen, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
   cabinDepartureChecklist: string[];
+  isWinterized?: boolean;
 }
 
 interface BriefingRow { icon: LucideIcon; text: string; label?: string; warn?: boolean }
@@ -136,7 +138,7 @@ function emptySinceLabel(lastStay: LastStay): React.ReactNode {
  * dalších pobytů. Uzly počítá `buildTurnusChain` (jen pevné pobyty, střídací den); „pak“ ukáže první
  * a počet dalších pevných za ním. Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
  */
-export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
+export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized = false }: Props) {
   const navigate = useNavigate();
   const headingId = useId();
   const { user } = useAuth();
@@ -191,6 +193,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
     return (
       <section className="glass-card status-card status-header" id="dashboard-active-reservation" aria-labelledby={headingId}>
         <div className="card-body-full status-content">
+          <CabinScene data={data} winterized={isWinterized} />
           <h2 id={headingId} className="status-header__label">Na chatě teď</h2>
           <div className="status-header__row">
             <div role="group" aria-label="Teď" className="status-header__side">
@@ -251,6 +254,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist }: Props) {
   return (
     <section className="glass-card status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
       <div className="card-body-full status-content">
+        <CabinScene data={data} winterized={isWinterized} />
         <div className="overview-invite__media" data-testid="overview-invite-media" aria-hidden="true">
           {OVERVIEW_INVITE_ILLUSTRATION ? <img src={OVERVIEW_INVITE_ILLUSTRATION} alt="" /> : <DoorOpen className="w-5 h-5" />}
         </div>
