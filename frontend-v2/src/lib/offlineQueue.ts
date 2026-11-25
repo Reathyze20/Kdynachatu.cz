@@ -174,16 +174,20 @@ let flushing = false
  * se zastaví a čeká na další `online` event; při serverové chybě (4xx/5xx)
  * položku zahodí, aby neblokovala zbytek fronty. Položky jiného uživatele
  * nebo chaty zahodí, je-li někdo přihlášený; po vypršení session čekají na autora (#478).
+ *
+ * Vrací počet změn uživatele, pro kterého se flush spustil, které ve frontě zůstaly. Počítá se
+ * podle vlastníka z doby spuštění: odpověď 401 mezitím smaže uloženou identitu (#537).
  */
-export async function flushQueue(): Promise<void> {
-  if (flushing) return
+export async function flushQueue(): Promise<number> {
   const owner = currentOwner()
+  const remainingFor = () => readQueue().filter((entry) => isOwnedBy(entry, owner)).length
+  if (flushing) return remainingFor()
   if (owner.userId !== null) {
     const queue = readQueue()
     const own = queue.filter((entry) => isOwnedBy(entry, owner))
     if (own.length !== queue.length) writeQueue(own)
   }
-  if (readOwnQueue().length === 0) return
+  if (remainingFor() === 0) return 0
 
   flushing = true
   // Lazy import — vyhne se cyklické závislosti client.ts ↔ offlineQueue.ts
@@ -194,7 +198,7 @@ export async function flushQueue(): Promise<void> {
 
   try {
     while (true) {
-      const entry = readOwnQueue()[0]
+      const entry = readQueue().find((q) => isOwnedBy(q, owner))
       if (!entry) break
 
       try {
@@ -242,6 +246,7 @@ export async function flushQueue(): Promise<void> {
       'error',
     )
   }
+  return remainingFor()
 }
 
 /**

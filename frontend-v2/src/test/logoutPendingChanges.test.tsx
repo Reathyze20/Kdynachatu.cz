@@ -3,12 +3,13 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { authApi } from '@/api/auth'
 import { AuthProvider } from '@/context/AuthContext'
 import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 import { SidebarProfileMenu } from '@/components/layout/SidebarProfileMenu'
 import { enqueueMutation, getQueueLength } from '@/lib/offlineQueue'
+import { showToast } from '@/lib/toast'
 import type { ReactElement } from 'react'
 
 // #537: odhlášení s neodeslanými offline změnami se nejdřív zeptá, co s nimi.
@@ -66,6 +67,7 @@ describe('Odhlášení s neodeslanými offline změnami (#537)', () => {
   beforeEach(() => {
     localStorage.clear()
     sessionStorage.clear()
+    vi.mocked(showToast).mockClear()
     api.request.mockReset().mockResolvedValue({ data: {} })
     api.get.mockReset().mockResolvedValue({ data: { email: 'jana@example.test', color: '#5d9b62', animalIcon: null } })
     vi.spyOn(authApi, 'syncUploadsCookie').mockResolvedValue()
@@ -154,6 +156,24 @@ describe('Odhlášení s neodeslanými offline změnami (#537)', () => {
     expect(authApi.logout).not.toHaveBeenCalled()
   })
 
+  it('„Odeslat a odhlásit“ při vypršené session netvrdí, že je odesláno, a změny nechá autorovi', async () => {
+    queueChanges(2)
+    // Interceptor klienta při 401 smaže uloženou identitu; fronta tím nesmí vypadat prázdná
+    api.request.mockImplementation(async () => {
+      localStorage.removeItem('userId')
+      localStorage.removeItem('cabinId')
+      throw new AxiosError('Unauthorized', 'ERR_BAD_REQUEST', undefined, null, { status: 401 } as AxiosResponse)
+    })
+    const user = await clickSidebarLogout()
+
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Odeslat a odhlásit' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Změny se nepodařilo odeslat')
+    expect(showToast).not.toHaveBeenCalledWith('Odhlášeno.', 'info')
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toHaveLength(2)
+  })
+
   it('šuplík profilu se ptá taky a nezavře se dřív, než padne volba', async () => {
     queueChanges(1)
     const onClose = vi.fn()
@@ -166,6 +186,12 @@ describe('Odhlášení s neodeslanými offline změnami (#537)', () => {
     expect(await screen.findByRole('dialog')).toHaveTextContent('1 změna se ještě neodeslala')
     expect(onClose).not.toHaveBeenCalled()
 
+    // Escape zavře jen dotaz, šuplík zůstane
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(onClose).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Odhlásit' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Zahodit a odhlásit' }))
 
     expect(await screen.findByRole('heading', { name: 'Přihlašovací stránka' })).toBeInTheDocument()

@@ -38,6 +38,7 @@ const SEND_FAILED = 'Změny se nepodařilo odeslat. Zkontroluj připojení a zku
 export function useLogout(beforeLogout?: () => void): UseLogoutResult {
   const { logout } = useAuth()
   const navigate = useNavigate()
+  // Text dialogu sleduje frontu živě; rozhodnutí v akcích čtou stav fronty v okamžiku kliknutí
   const pendingCount = useQueueLength()
   const [isOpen, setIsOpen] = useState(false)
   const [sending, setSending] = useState(false)
@@ -63,12 +64,15 @@ export function useLogout(beforeLogout?: () => void): UseLogoutResult {
   const onSend = useCallback(async () => {
     setSending(true)
     setError('')
+    let remaining = 1
     try {
-      await flushQueue()
+      remaining = await flushQueue()
+    } catch {
+      // Neočekávaná chyba: chovat se jako nepovedené odeslání, změny zůstanou ve frontě
     } finally {
       setSending(false)
     }
-    if (getQueueLength() > 0) {
+    if (remaining > 0) {
       setError(SEND_FAILED)
       return
     }

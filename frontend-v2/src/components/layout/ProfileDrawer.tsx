@@ -75,11 +75,13 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [leaveCabinError, setLeaveCabinError] = useState('')
 
   // ─── Zavřít klávesou Escape ─────────────────────────────────────────────────
+  // Otevřený dotaz na neodeslané změny si Escape vyřídí sám; šuplík by s sebou zavřel i dotaz (#537)
+  const pendingLogoutOpen = pendingDialog.isOpen
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !pendingLogoutOpen) onClose() }
     if (isOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, pendingLogoutOpen])
 
   // ─── Načíst profil ──────────────────────────────────────────────────────────
   const { data: profileData } = useQuery<ProfileData>({

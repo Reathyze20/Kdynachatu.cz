@@ -35,7 +35,7 @@ export function LogoutPendingChangesDialog({
       persistent={sending}
       footer={
         <div className="modal-dialog-actions">
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={sending} data-testid="logout-pending-cancel-button">
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={sending} data-testid="logout-pending-cancel-button">
             Zrušit
           </Button>
           <Button type="button" variant="danger" onClick={onDiscard} disabled={sending} data-testid="logout-pending-discard-button">
@@ -47,11 +47,11 @@ export function LogoutPendingChangesDialog({
         </div>
       }
     >
-      <p className="text-(--text-main)" data-testid="logout-pending-message">
+      <p className="text-body text-(--text-main)" data-testid="logout-pending-message">
         {unsent}. Odešli je, nebo je zahoď. Zahozené změny se už neuloží.
       </p>
       {error ? (
-        <p role="alert" className="mt-3 text-destructive" data-testid="logout-pending-error">
+        <p role="alert" className="mt-3 text-label text-(--status-error)" data-testid="logout-pending-error">
           {error}
         </p>
       ) : null}
