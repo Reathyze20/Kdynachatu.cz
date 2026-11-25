@@ -182,7 +182,7 @@ export function ReconstructionPage() {
   if (isError) {
     return (
       <div className="main-content-reconstruction" data-testid="reconstruction-page" data-reconstruction-state="error">
-        <Card flush className="reconstruction-card">
+        <Card flush className="reconstruction-card flex min-h-0 flex-1 flex-col">
           <div className="border-b border-rule-soft p-4 md:p-6">{header}</div>
           <div className="p-4 md:p-6">
             <FeatureErrorFallback
@@ -198,13 +198,13 @@ export function ReconstructionPage() {
 
   return (
     <div className="main-content-reconstruction" data-testid="reconstruction-page" data-reconstruction-state="ready">
-      {/* .reconstruction-card keeps the fixed-height desktop layout, the paper surface comes from Card. */}
-      <Card flush className="reconstruction-card">
-        <div className="grid gap-4 border-b border-rule-soft p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-6">
+      {/* .reconstruction-card: fixed height on desktop, natural flow under 900 px; its surface duplicates Card, pinned by lightSurfaces.test. */}
+      <Card flush className="reconstruction-card flex min-h-0 flex-1 flex-col">
+        <div className="grid gap-4 border-b border-rule-soft p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           {header}
-          <dl className="grid grid-cols-3 gap-2 md:gap-3" data-testid="reconstruction-summary">
+          <dl className="grid grid-cols-3 gap-2 md:gap-3" aria-label="Souhrn rekonstrukcí" data-testid="reconstruction-summary">
             {summary.map(({ label, value, icon: Icon }) => (
-              <div key={label} className="grid gap-1 rounded-xl bg-inset p-3 md:min-w-28">
+              <div key={label} className="flex flex-col-reverse gap-1 rounded-xl bg-inset p-3 lg:min-w-28">
                 <dt className="flex items-center gap-2 text-label text-(--text-muted)">
                   <Icon aria-hidden="true" className="size-4 shrink-0" />
                   {label}
@@ -215,9 +215,9 @@ export function ReconstructionPage() {
           </dl>
 
           {hasBudget && (
-            <section aria-labelledby="reconstruction-budget-title" className="grid gap-2 rounded-xl bg-inset p-3 md:col-span-2 md:p-4">
+            <section aria-labelledby="reconstruction-budget-title" className="grid gap-2 rounded-xl bg-inset p-3 md:p-4 lg:col-span-2">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-                <h2 id="reconstruction-budget-title" className="text-label text-(--text-muted)">Celkový rozpočet</h2>
+                <h2 id="reconstruction-budget-title" className="text-card-title text-(--text-main)">Celkový rozpočet</h2>
                 <span className="text-card-title text-(--text-main)">{formatAmount(totalBudget)}</span>
               </div>
               <progress
