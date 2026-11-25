@@ -9,7 +9,7 @@
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
-      "components/shared/GlobalFallback.tsx", "features/auth/RegisterForm.tsx", "features/auth/ResetPasswordPage.tsx",
+      "components/shared/GlobalFallback.tsx", "features/auth/ResetPasswordPage.tsx",
       "features/auth/VerifyEmailPage.tsx", "features/gallery/FolderGrid.tsx", "features/invite/InvitePage.tsx",
       "features/landing/LandingPage.tsx", "features/reservations/ui/CheckoutSection.tsx", "features/settings/CabinSettingsPage.tsx"
     ],
@@ -32,7 +32,6 @@
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
       "components/layout/ProfileDrawer.tsx", "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
-      "features/auth/ForgotPasswordForm.tsx", "features/auth/RegisterForm.tsx",
       "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
       "features/reservations/ui/CheckoutSection.tsx", "features/reservations/ui/ReservationDetail.tsx",
@@ -79,8 +78,7 @@
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/FeatureErrorFallback.tsx", "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
       "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx",
-      "features/admin/components/StagingFeedbackSection.tsx", "features/auth/ForgotPasswordForm.tsx", "features/auth/LoginForm.tsx",
-      "features/auth/RegisterForm.tsx", "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
+      "features/admin/components/StagingFeedbackSection.tsx", "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
       "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/onboarding/OnboardingPage.tsx",
@@ -130,14 +128,14 @@
   },
   "iconSize": {
     "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [
-      "components/shared/Modal.tsx", "components/shared/Toast.tsx", "features/admin/AdminPage.tsx", "features/auth/LoginForm.tsx",
+      "components/shared/Modal.tsx", "components/shared/Toast.tsx", "features/admin/AdminPage.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
       "features/notes/MessageBubble.tsx", "features/reconstruction/KanbanColumn.tsx", "features/reconstruction/ReconstructionPage.tsx",
       "features/reconstruction/TaskFormModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/ReservationList.tsx", "features/superadmin/SuperAdminPage.tsx", "features/weather/StayWeatherCard.tsx"
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
-      "features/auth/RegisterForm.tsx", "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
+      "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
       "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx",
       "features/invite/InvitePage.tsx", "features/shopping/PantryView.tsx"
     ]
