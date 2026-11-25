@@ -1,9 +1,9 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
-import { ownReservationsForGuest, requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
+import { requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
-import { calendarTodayIso, departureGate, handoverFault, nextFreeWeekend } from "./reservationHelpers";
+import { calendarTodayIso, departureGate, guestStayScope, handoverFault, isGuest, nextFreeWeekend } from "./reservationHelpers";
 import { attentionItems } from "./dashboardAttention";
 
 const router = Router();
@@ -32,8 +32,7 @@ router.get("/reservations", protect, requireCabinAllowGuest, async (req: Request
     const todayStr = calendarTodayIso(now);
     const cabinId = req.user!.cabinId!;
     // Host vidí jen vlastní pobyt (#484): žádné rezervace, předávky ani volné víkendy ostatních.
-    const own = ownReservationsForGuest(req);
-    const isGuest = req.user.role === "guest";
+    const own = guestStayScope(req.user);
 
     const [upcomingReservations, activeReservation, departingTodayReservation, myNextReservation, nextFreeWeekend, lastStayReservation, myStaysThisYear, totalStaysThisMonth, lastHandover] = await Promise.all([
       prisma.reservation.findMany({
@@ -62,7 +61,7 @@ router.get("/reservations", protect, requireCabinAllowGuest, async (req: Request
         where: { cabinId, userId: req.user.userId, dateFrom: { gte: new Date(todayStr) } },
         orderBy: { dateFrom: "asc" },
       }),
-      isGuest ? null : findNextFreeWeekend(cabinId, todayStr),
+      isGuest(req.user) ? null : findNextFreeWeekend(cabinId, todayStr),
       // Last completed stay (ended before today)
       prisma.reservation.findFirst({
         where: { cabinId, ...own, dateTo: { lt: new Date(todayStr) }, status: "primary" },

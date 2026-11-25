@@ -6,6 +6,7 @@ import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
 import { protect } from "../../middleware/authMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
+import { GUEST_FORBIDDEN_MESSAGE } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { UPLOADS_PATH } from "../../config/config";
@@ -31,7 +32,7 @@ const upload = multer({
 router.get(
   "/",
   protect,
-  requireRole(["admin", "user"], "Host do této části chaty nemá přístup."), // #484
+  requireRole(["admin", "user"], GUEST_FORBIDDEN_MESSAGE), // #484: host je zakázaný ve výchozím stavu
   expressAsyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.cabinId) {
       res.status(400).json({ message: "Uživatel nemá přiřazenou chatu" });

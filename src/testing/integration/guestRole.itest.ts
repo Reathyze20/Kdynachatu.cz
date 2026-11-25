@@ -88,11 +88,22 @@ describe("guest role: deny by default", () => {
     const cancelled = await as(app, world.guestA).delete(`/api/reservations/${created.body.id}`);
     assert.equal(cancelled.status, 200);
     assert.equal(await prisma.reservation.count({ where: { id: created.body.id } }), 0);
+    const legacy = await as(app, world.guestA).post("/api/reservations").send({ from: isoDay(54), to: isoDay(55), purpose: "Druhý víkend" });
+    assert.equal((await as(app, world.guestA).post("/api/reservations/delete").send({ id: legacy.body.id })).status, 200);
   });
 
-  test("a guest cannot edit or cancel a reservation of a member", async () => {
-    assert.equal((await as(app, world.guestA).put(`/api/reservations/${memberUpcoming}`).send({ purpose: "Cizí" })).status, 403);
-    assert.equal((await as(app, world.guestA).delete(`/api/reservations/${memberUpcoming}`)).status, 403);
+  test("a guest cannot add members as co-occupants", async () => {
+    const before = await prisma.reservation.count();
+    const res = await as(app, world.guestA).post("/api/reservations").send({ from: isoDay(56), to: isoDay(57), purpose: "S členem", participantIds: [world.memberA.id] });
+    assert.equal(res.status, 403);
+    assert.equal(await prisma.reservation.count(), before);
+    const put = await as(app, world.guestA).put(`/api/reservations/${guestStay}`).send({ participantIds: [world.memberA.id] });
+    assert.equal(put.status, 403);
+  });
+
+  test("a reservation of a member is not found for a guest", async () => {
+    assert.equal((await as(app, world.guestA).put(`/api/reservations/${memberUpcoming}`).send({ purpose: "Cizí" })).status, 404);
+    assert.equal((await as(app, world.guestA).delete(`/api/reservations/${memberUpcoming}`)).status, 404);
     assert.equal((await prisma.reservation.findUnique({ where: { id: memberUpcoming } }))?.purpose, `Pobyt ${world.memberA.username}`);
   });
 
@@ -103,6 +114,15 @@ describe("guest role: deny by default", () => {
     assert.equal((await as(app, world.guestA).get(`/api/reservations/${memberActive}/checkout`)).status, 404);
     assert.equal((await as(app, world.guestA).patch(`/api/reservations/${memberActive}/checkout`).send({})).status, 404);
     assert.equal((await prisma.reservation.findUnique({ where: { id: memberActive } }))?.isCheckoutCompleted, false);
+  });
+
+  test("a stay a member lends to the guest as a co-occupant is the guest's own stay", async () => {
+    const lent = await createReservation(world.memberA, 60, 62);
+    await prisma.reservationParticipant.create({ data: { reservationId: lent, userId: world.guestA.id } });
+    const list = await as(app, world.guestA).get("/api/reservations");
+    assert.ok(list.body.reservations.some((r: { id: string }) => r.id === lent));
+    assert.equal((await as(app, world.guestA).patch(`/api/reservations/${lent}/checkout`).send({})).status, 200);
+    assert.equal((await as(app, world.guestA).put(`/api/reservations/${lent}`).send({ purpose: "Můj" })).status, 403); // upravuje jen organizátor
   });
 
   test("a guest reads the cabin and their own profile", async () => {

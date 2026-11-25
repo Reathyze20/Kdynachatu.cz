@@ -124,3 +124,15 @@ export function handoverFault(state: unknown, reportedBy: string, reportedAt: Da
   const text = sanitizeCheckoutState(state)?.broken?.trim();
   return text ? { text, reportedBy, reportedAt: reportedAt.toISOString() } : null;
 }
+
+/** Host (`guest`) smí jen svůj pobyt (#484). */
+export const isGuest = (user?: { role: string }): boolean => user?.role === "guest";
+
+/**
+ * Filtr rezervací pro Prisma `where`: host vidí jen pobyty, které založil nebo na kterých je
+ * spolucestující (#484); člen a správce celou chatu (prázdný filtr).
+ */
+export function guestStayScope(user?: { role: string; userId: string }) {
+  if (!user || !isGuest(user)) return {};
+  return { OR: [{ userId: user.userId }, { participants: { some: { userId: user.userId } } }] };
+}

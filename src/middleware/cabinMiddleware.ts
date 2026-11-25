@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 
 const NO_CABIN = { message: "Nemáš přiřazenou žádnou chatu. Kontaktuj administrátora." };
+export const GUEST_FORBIDDEN_MESSAGE = "Host do této části chaty nemá přístup.";
 
 /**
  * Pustí dál jen člena chaty (`admin`, `user`). Host (`guest`) je zakázaný ve výchozím stavu (#484)
@@ -10,7 +11,7 @@ const NO_CABIN = { message: "Nemáš přiřazenou žádnou chatu. Kontaktuj admi
  */
 export const requireCabin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.user?.cabinId) return res.status(403).json(NO_CABIN);
-  if (req.user.role === "guest") return res.status(403).json({ message: "Host do této části chaty nemá přístup." });
+  if (req.user.role === "guest") return res.status(403).json({ message: GUEST_FORBIDDEN_MESSAGE });
   next();
 };
 
@@ -22,10 +23,6 @@ export const requireCabinAllowGuest = (req: Request, res: Response, next: NextFu
   if (!req.user?.cabinId) return res.status(403).json(NO_CABIN);
   next();
 };
-
-/** Filtr Prisma dotazu na rezervace: host vidí jen své (#484), ostatní celou chatu. */
-export const ownReservationsForGuest = (req: Request): { userId?: string } =>
-  req.user?.role === "guest" ? { userId: req.user.userId } : {};
 
 /**
  * Helper to extract cabinId from the authenticated user.
