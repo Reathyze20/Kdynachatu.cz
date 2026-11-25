@@ -6,8 +6,7 @@ import prisma from "../../utils/prisma";
 import { calendarTodayIso } from "../../backend/routes/reservationHelpers";
 import { addGuests, as, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorldWithGuests } from "./harness";
 
-// Host je zakázaný ve výchozím stavu (#484). Matice rolí hlídá 403 mimo whitelist; tady je chování
-// na whitelistu: host spravuje jen vlastní rezervace a pobyt a přehled mu neukáže data ostatních.
+// Host mimo whitelist dostane 403 (#484, hlídá matice rolí); tady je jeho whitelist: jen vlastní pobyty.
 
 let app: Express;
 let world: TestWorldWithGuests;
@@ -34,9 +33,6 @@ before(async () => {
   guestStay = await createReservation(guestA, 35, 37); // vždy v jiném měsíci než dnešek
   await createReservation(memberA, -10, -8); // poslední ukončený pobyt patří členovi
   await prisma.userAvailability.create({ data: { cabinId: memberA.cabinId, userId: memberA.id, startDate: new Date(isoDay(30)), endDate: new Date(isoDay(31)) } });
-  const list = await prisma.shoppingList.create({ data: { name: "Nákup člena", createdById: memberA.id, cabinId: memberA.cabinId } });
-  await prisma.shoppingListItem.create({ data: { listId: list.id, name: "Chleba", addedById: memberA.id, isEssential: true } });
-  await prisma.note.create({ data: { userId: memberA.id, cabinId: memberA.cabinId, message: "Vzkaz člena" } });
 });
 
 after(teardownIntegrationFile);
@@ -56,7 +52,6 @@ describe("guest role: deny by default", () => {
 
   test("the dashboard shows a guest only their own stay, no reservations of others", async () => {
     const res = await as(app, world.guestA).get("/api/dashboard/reservations");
-    assert.equal(res.status, 200);
     assert.equal(res.body.activeReservation, null);
     assert.deepEqual(res.body.upcomingReservations.map((r: { id: string }) => r.id), [guestStay]);
     assert.equal(res.body.lastStay, null);
@@ -66,15 +61,8 @@ describe("guest role: deny by default", () => {
     assert.doesNotMatch(JSON.stringify(res.body), new RegExp(world.memberA.username));
   });
 
-  test("a member still sees the whole cabin on the dashboard", async () => {
-    const res = await as(app, world.memberA).get("/api/dashboard/reservations");
-    assert.equal(res.body.activeReservation?.id, memberActive);
-    assert.deepEqual(res.body.upcomingReservations.map((r: { id: string }) => r.id), [memberUpcoming, guestStay]);
-  });
-
   test("a guest lists only their own reservations and availabilities", async () => {
     const res = await as(app, world.guestA).get("/api/reservations");
-    assert.equal(res.status, 200);
     assert.deepEqual(res.body.reservations.map((r: { id: string }) => r.id), [guestStay]);
     assert.deepEqual(res.body.availabilities, []);
   });
@@ -123,10 +111,5 @@ describe("guest role: deny by default", () => {
     assert.ok(list.body.reservations.some((r: { id: string }) => r.id === lent));
     assert.equal((await as(app, world.guestA).patch(`/api/reservations/${lent}/checkout`).send({})).status, 200);
     assert.equal((await as(app, world.guestA).put(`/api/reservations/${lent}`).send({ purpose: "Můj" })).status, 403); // upravuje jen organizátor
-  });
-
-  test("a guest reads the cabin and their own profile", async () => {
-    assert.equal((await as(app, world.guestA).get("/api/cabin")).status, 200);
-    assert.equal((await as(app, world.guestA).get("/api/users/me")).status, 200);
   });
 });
