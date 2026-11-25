@@ -24,7 +24,7 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
     if (!list) return res.status(404).json({ message: "Seznam nenalezen." });
     // The source message must belong to the caller's cabin; a foreign one is 404 (#483)
     if (sourceMessageId) {
-      const source = await prisma.note.findFirst({ where: { id: sourceMessageId, cabinId: req.user!.cabinId }, select: { id: true } });
+      const source = await prisma.note.findFirst({ where: { id: sourceMessageId, cabinId: req.user!.cabinId! }, select: { id: true } });
       if (!source) return res.status(404).json({ message: "Zpráva nenalezena." });
     }
 

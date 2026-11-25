@@ -110,9 +110,12 @@ describe("reconstruction: a source message from cabin B is rejected (#483)", () 
     const res = await as(app, world.memberA)
       .post("/api/reconstruction")
       .send({ category: "idea", title: "Z vlastní zprávy", sourceMessageId: noteA.id });
-    assert.equal(res.status, 201);
-    assert.equal((await prisma.reconstructionItem.findUnique({ where: { id: res.body.id } }))?.sourceMessageId, noteA.id);
-    await prisma.reconstructionItem.delete({ where: { id: res.body.id } });
+    try {
+      assert.equal(res.status, 201);
+      assert.equal((await prisma.reconstructionItem.findUnique({ where: { id: res.body.id } }))?.sourceMessageId, noteA.id);
+    } finally {
+      await prisma.reconstructionItem.deleteMany({ where: { id: res.body.id } });
+    }
   });
 });
 

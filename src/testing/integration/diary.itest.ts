@@ -121,25 +121,31 @@ describe("diary entries: gallery photos from cabin B are rejected (#483)", () =>
 
   test("PUT /diary/entries/:id with a cabin B galleryPhotoId → 404, entry unchanged", async () => {
     await prisma.diaryEntryPhoto.create({ data: { entryId: entryA, photoId: photoA } });
-    const [entryBefore, photosBefore] = [await entrySnapshot(entryA), await entryPhotos(entryA)];
-    const res = await as(app, world.memberA)
-      .put(`/api/diary/entries/${entryA}`)
-      .send({ content: "Přepsáno s cizí fotkou", galleryPhotoIds: [photoB] });
-    assert.equal(res.status, 404);
-    assert.deepEqual([await entrySnapshot(entryA), await entryPhotos(entryA)], [entryBefore, photosBefore]);
-    await prisma.diaryEntryPhoto.deleteMany({ where: { entryId: entryA } });
+    try {
+      const [entryBefore, photosBefore] = [await entrySnapshot(entryA), await entryPhotos(entryA)];
+      const res = await as(app, world.memberA)
+        .put(`/api/diary/entries/${entryA}`)
+        .send({ content: "Přepsáno s cizí fotkou", galleryPhotoIds: [photoB] });
+      assert.equal(res.status, 404);
+      assert.deepEqual([await entrySnapshot(entryA), await entryPhotos(entryA)], [entryBefore, photosBefore]);
+    } finally {
+      await prisma.diaryEntryPhoto.deleteMany({ where: { entryId: entryA } });
+    }
   });
 
   test("own cabin photos still attach on create and update (positive control)", async () => {
     const created = await as(app, world.memberA)
       .post("/api/diary/entries")
       .send({ folderId: folderA, date: "2027-01-11", content: "S vlastní fotkou", galleryPhotoIds: [photoA] });
-    assert.equal(created.status, 201);
-    assert.deepEqual(created.body.galleryPhotoIds, [photoA]);
-    const updated = await as(app, world.memberA).put(`/api/diary/entries/${created.body.id}`).send({ content: "Bez fotky", galleryPhotoIds: [] });
-    assert.equal(updated.status, 200);
-    assert.deepEqual(updated.body.galleryPhotoIds, []);
-    await prisma.diaryEntry.delete({ where: { id: created.body.id } });
+    try {
+      assert.equal(created.status, 201);
+      assert.deepEqual(created.body.galleryPhotoIds, [photoA]);
+      const updated = await as(app, world.memberA).put(`/api/diary/entries/${created.body.id}`).send({ content: "Bez fotky", galleryPhotoIds: [] });
+      assert.equal(updated.status, 200);
+      assert.deepEqual(updated.body.galleryPhotoIds, []);
+    } finally {
+      await prisma.diaryEntry.deleteMany({ where: { id: created.body.id } });
+    }
   });
 });
 

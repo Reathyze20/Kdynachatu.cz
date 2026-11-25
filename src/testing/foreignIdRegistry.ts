@@ -5,7 +5,9 @@
  * ID načítá s filtrem `cabinId` přihlášeného uživatele, cizí ID vrací 404 a nic nezapíše.
  * Meta-test `foreignIdRegistry.test.ts` (bez DB) pole čte ze schémat introspekcí Zodu, takže nové
  * pole bez záznamu shodí test a jmenuje ho. Odkaz se ověřuje: soubor existuje a obsahuje `test`
- * (úryvek názvu testu nebo jeho `describe`). Vzor: `CABIN_MODEL_COVERAGE` v `integration/cabinTenantCoverage.ts`.
+ * (úryvek názvu testu nebo jeho `describe`). Guard vidí jen pole na nejvyšší úrovni exportovaných
+ * `z.object` v `schemas.ts`; ID čtené ze syrového `req.body` nebo z lokálního schématu v routě nevidí –
+ * nové ID proto patří do `schemas.ts`. Vzor: `CABIN_MODEL_COVERAGE` v `integration/cabinTenantCoverage.ts`.
  */
 import fs from "node:fs";
 import path from "node:path";

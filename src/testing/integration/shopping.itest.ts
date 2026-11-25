@@ -131,9 +131,12 @@ describe("shopping: a source message from cabin B is rejected (#483)", () => {
   test("a cabin A source message is stored (positive control)", async () => {
     const noteA = await prisma.note.create({ data: { userId: world.memberA.id, cabinId: world.cabinA.id, message: "Zpráva A" } });
     const res = await as(app, world.memberA).post(`/api/shopping-list/${listA}/items`).send({ name: "Z vlastní zprávy", sourceMessageId: noteA.id });
-    assert.equal(res.status, 201);
-    assert.equal((await prisma.shoppingListItem.findUnique({ where: { id: res.body.id } }))?.sourceMessageId, noteA.id);
-    await prisma.shoppingListItem.delete({ where: { id: res.body.id } });
+    try {
+      assert.equal(res.status, 201);
+      assert.equal((await prisma.shoppingListItem.findUnique({ where: { id: res.body.id } }))?.sourceMessageId, noteA.id);
+    } finally {
+      await prisma.shoppingListItem.deleteMany({ where: { id: res.body.id } });
+    }
   });
 });
 
