@@ -36,6 +36,7 @@
     "backup:smoke": "tsx src/scripts/backupRestoreSmoke.ts",
     "migration:rehearsal": "tsx src/scripts/migrationRehearsalSmoke.ts",
     "migration:remove-admin": "tsx src/scripts/removeWeakAdmin.ts",
+    "uploads:strip-exif": "tsx src/scripts/stripLegacyExif.ts",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f app",
