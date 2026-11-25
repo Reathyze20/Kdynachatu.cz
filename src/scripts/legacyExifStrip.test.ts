@@ -21,7 +21,7 @@ const RED = { r: 220, g: 20, b: 20 };
 const BLUE = { r: 20, g: 20, b: 220 };
 
 /** 40×20 JPEG: levá polovina červená, pravá modrá. */
-async function twoToneJpeg(): Promise<sharp.Sharp> {
+async function twoToneJpeg(): Promise<ReturnType<typeof sharp>> {
   const left = await sharp({ create: { width: 20, height: 20, channels: 3, background: RED } }).png().toBuffer();
   return sharp({ create: { width: 40, height: 20, channels: 3, background: BLUE } }).composite([
     { input: left, left: 0, top: 0 },
