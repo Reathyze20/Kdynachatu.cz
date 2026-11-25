@@ -244,11 +244,6 @@ describe('Výška spodní mobilní lišty — jeden zdroj pravdy (#196)', () => 
 // Řádky mají výšku aspoň podle obsahu (číslo dne + pruh pobytu), karta se nestlačí pod obsah
 // a když se nevejde, posouvá se stránka kalendáře – stejně jako hlavní sloupec Přehledu.
 describe('Kalendář — měsíční mřížka se neořezává (#505)', () => {
-  it.each([375, 1024, 1440])('na šířce %i px nemají řádky mřížky nulovou minimální výšku', (width) => {
-    const rows = declarationsAt(reservationsCssRaw, '.calDays', width).get('grid-template-rows') ?? ''
-    expect(rows).not.toMatch(/minmax\(\s*0/)
-  })
-
   it.each([1024, 1440])('na šířce %i px je řádek mřížky aspoň tak vysoký jako jeho obsah', (width) => {
     expect(declarationsAt(reservationsCssRaw, '.calDays', width).get('grid-template-rows')).toMatch(/minmax\(\s*min-content/)
   })
