@@ -122,6 +122,28 @@ export const DESIGN_RULES: DesignRule[] = [
     match: /(?<!\b(?:id|htmlFor|name|data-testid)=["'`])(?<=["'`\s{.])btn(?:-[\w-]*)?(?=["'`\s}$:.,])/g,
   },
   {
+    name: 'legacyCard',
+    hint: 'legacy karty page-card, glass-card, admin-card a .card jsou zmrazené (#454), karta je <Card> z components/shared/Card',
+    scope: (file) => /\.tsx?$/.test(file),
+    match: new RegExp(
+      [
+        // `page-card` / `glass-card` / `admin-card` jako celé slovo v řetězci, ne hodnota `id`/`data-testid` ani `admin-page-card`.
+        String.raw`(?<!\b(?:id|htmlFor|name|data-testid)=["'\`])(?<=["'\`\s{.])(?:page|glass|admin)-card(?=["'\`\s}$:.,])`,
+        // Holé `card` jen v className, cn()/clsx() nebo selektoru: `variant="card"` a `css.card` (CSS modul) nejsou legacy třída.
+        String.raw`(?<=(?:className=\{?|\b(?:cn|clsx)\([^)]*?)["'\`][^"'\`]*?)(?<![\w-]|[\w$)\]]\.)card(?![\w-])`,
+        String.raw`(?<=\b(?:querySelector(?:All)?|closest)\(\s*["'\`][^"'\`]*?\.)card(?![\w-])`,
+      ].join('|'),
+      'g',
+    ),
+  },
+  {
+    name: 'legacyEmptyState',
+    hint: 'jednorázové třídy *-empty-* jsou zmrazené (#454), prázdná sekce je <EmptyState> z components/shared/EmptyState',
+    scope: (file) => /\.tsx?$/.test(file),
+    // Třída `<něco>-empty-<něco>` jako slovo v řetězci, ne hodnota `id`/`data-testid`; `badge-empty` (štítek Došlo) pravidlo nechytá.
+    match: /(?<!\b(?:id|htmlFor|name|data-testid)=["'`])(?<=["'`\s{.])[\w-]*?\w-empty-[\w-]+(?=["'`\s}$:.,])/g,
+  },
+  {
     name: 'newCssFile',
     hint: 'nový .css soubor nevzniká, nový vzhled se píše utilitami Tailwindu nad tokeny',
     scope: (file) => file.endsWith('.css') && !PERMANENT_CSS.includes(file),

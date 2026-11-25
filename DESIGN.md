@@ -114,16 +114,16 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | `Dialog` | `ui/` | Jen základ pro `Modal`. Obrazovky ho přímo nepoužívají. | existuje |
 | `Modal` | `shared/` | Každý dialog a krátký formulář. API `isOpen`, `onClose`, `title`, `children`, `footer`, `maxWidth`, `persistent`. Do 640 px bottom sheet. | API existuje, postavení na `ui/dialog` **Cíl** #453 |
 | `ConfirmDialog`, `PromptDialog` | `shared/` | Potvrzení mazání, opsání slova. Nikdy `window.confirm()` / `window.prompt()`. | existují, staví na `Modal` |
-| `PageHeader` | `shared/` | Hlavička každé stránky (viz vzor Hlavička). | **Cíl** #454 |
-| `EmptyState` | `shared/` | Prázdná sekce: ikona lucide 24 px, jedna věta, volitelná akce. | **Cíl** #454 |
-| `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`. | **Cíl** #454 |
-| `ListRow` | `shared/` | Řádek seznamu, výška 48 px, slot pro obsah a akci. | **Cíl** #454 |
+| `PageHeader` | `shared/` | Hlavička každé stránky (viz vzor Hlavička). `title` (vždy jediné `h1`), `subtitle`, `backTo` (cesta pro odkaz „Zpět“ nad titulkem), `primaryAction` (jedna akce: `label`, `icon`, a `onClick` nebo `to`), `secondaryActions` (`label`, `icon`, `onSelect`, `variant="danger"`) v kebab menu „Další akce“. Smazat patří na konec, menu ho oddělí od předchozích akcí. | existuje (#454) |
+| `EmptyState` | `shared/` | Prázdná sekce: `icon` (lucide, vykreslí se 24 px), `message` (jedna věta), volitelná `action` (stejný tvar jako `primaryAction`, primární tlačítko). | existuje (#454) |
+| `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`, `rounded-2xl`, uvnitř `p-4 md:p-6`. `as` (`div`, `section`, `article`, `li`), `flush` bez vnitřního odsazení pro kartu se seznamem `ListRow`. | existuje (#454) |
+| `ListRow` | `shared/` | Řádek seznamu, výška aspoň 48 px, `children` = obsah, `action` = slot vpravo (kebab menu nebo jedna ikona lehké položky). `as="li"` uvnitř `<ul>`. Odsazení `px-4 md:px-6` sedí s `Card`, oddělovače dá rodič (`divide-y divide-rule-soft`). | existuje (#454) |
 | `FeatureErrorFallback` | `shared/` | Selhání načtení sekce, s tlačítkem znovu. | existuje |
 | `TwoColumnLayout` | `layout/` | Hlavní sloupec + boční panel na desktopu. Master-detail seznamy jsou výjimka. | existuje |
 | Skeletony | `RouteTransitionSkeleton`, `*Skeleton` ve featurách, třídy `.skeleton-*` | Načítání obsahu ve tvaru výsledného rozvržení. | existují |
 | Toast | `lib/toast.ts` (`showToast`) | Výsledek akce. Chyby mutací přes `lib/mutationError.ts`. | existuje |
 
-- **Zmrazené legacy třídy:** `.btn` a `.btn-*` (guard `legacyButton`, #452), `page-card`, `glass-card`, `admin-card`, `.card` a `*-empty-*` (#454). Nové použití selže v guardu, stávající jsou v allowlistu.
+- **Zmrazené legacy třídy:** `.btn` a `.btn-*` (guard `legacyButton`, #452), `page-card`, `glass-card`, `admin-card` a `.card` (guard `legacyCard`, #454), `*-empty-*` (guard `legacyEmptyState`, #454). Nové použití selže v guardu, stávající jsou v allowlistu.
 - **Primitiva v `ui/`** jsou jen `Button`, `Input`, `DropdownMenu`, `Dialog` a `Badge` (zatím bez použití, drží ho `themeBridge.test.tsx`). Ostatní nepoužitá shadcn primitiva #452 smazal. Nové primitivum se přidá až s prvním použitím, rovnou na tokenech.
 - Surové `<button className=…>` pro akci a surové `<input>` se po #452 nepíšou, místo nich `Button` a `Input`.
 
@@ -239,15 +239,12 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `inlineSvg` | inline `<svg>` v TSX |
 | `iconSize` | ikona lucide jinak než 16/20/24 px (`size={…}`, `h-*`/`w-*`/`size-*`) |
 | `legacyButton` | třída `btn` nebo `btn-*` v TS/TSX (zmrazený legacy systém tlačítek, místo něj `Button`) |
+| `legacyCard` | třída `page-card`, `glass-card`, `admin-card` v TS/TSX, holé `card` v `className`, `cn()`/`clsx()` nebo selektoru (místo nich `Card`) |
+| `legacyEmptyState` | třída `<něco>-empty-<něco>` v TS/TSX (místo ní `EmptyState`) |
 
 ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 
-**Přibudou:**
-
-| Pravidlo | Ticket |
-|---|---|
-| zmrazené `page-card`, `glass-card`, `admin-card`, `.card`, `*-empty-*` | #454 |
-| vykání v hláškách backendu (node:test) | #457 |
+**Přibude:** vykání v hláškách backendu (node:test, #457).
 
 Pravidla allowlistu (pomocník `designGuard.ts`, stávající guardy na něj převede #459):
 
