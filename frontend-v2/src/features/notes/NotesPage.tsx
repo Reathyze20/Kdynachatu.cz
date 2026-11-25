@@ -22,10 +22,9 @@ import apiClient from "@/api/client";
 import { PromptDialog } from "@/components/shared/PromptDialog";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
-import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { getNetworkAwareActionMessage, isForbiddenError } from "@/lib/networkError";
 import { useAuth } from "@/context/AuthContext";
 import { isAuthorOrAdmin } from "@/lib/permissions";
-import axios from "axios";
 
 interface Users {
   username: string;
@@ -175,7 +174,7 @@ export function NotesPage() {
       showToast("Téma bylo smazáno.", "success");
     } catch (error) {
       setDeleteThreadError(
-        axios.isAxiosError(error) && error.response?.status === 403
+        isForbiddenError(error)
           ? "Téma může smazat jen ten, kdo ho založil, nebo správce."
           : getNetworkAwareActionMessage(
               error,

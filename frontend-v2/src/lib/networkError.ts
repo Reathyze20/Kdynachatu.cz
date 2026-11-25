@@ -45,5 +45,10 @@ export function getNetworkAwareActionMessage(
   return isNetworkError(err) ? offlineFallback : fallback
 }
 
+/** Server akci odmítl kvůli oprávnění (403). */
+export function isForbiddenError(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.status === 403
+}
+
 /** Zpráva zobrazená při výpadku připojení místo červeného erroru */
 export const OFFLINE_TOAST_MSG = 'Není připojení k internetu. Změnu po obnovení spojení zkontroluj a případně ji zopakuj.'

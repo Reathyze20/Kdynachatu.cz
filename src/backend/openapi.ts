@@ -1132,7 +1132,7 @@ const paths: Record<string, OpenApiObject> = {
     },
     delete: {
       tags: ["Gallery"],
-      summary: "Hromadne smaz fotky; clen smaze jen vlastni, cizi se preskoci",
+      summary: "Hromadne smaze fotky; clen smaze jen vlastni, cizi se preskoci",
       security: bearerSecurity,
       requestBody: jsonRequestBody({ type: "object", required: ["photoIds"], properties: { photoIds: { type: "array", minItems: 1, maxItems: 100, items: { type: "string", format: "uuid" } } } }),
       responses: {

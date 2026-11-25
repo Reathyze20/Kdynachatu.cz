@@ -16,7 +16,7 @@ export interface GalleryFolder {
 }
 
 /** Odpověď hromadného mazání: server smaže jen fotky, které uživatel smí (#507). */
-export interface BulkDeletePhotosResult {
+export interface BulkDeletePhotosResponse {
   message: string
   deleted: number
 }
@@ -71,6 +71,6 @@ export const galleryApi = {
   deletePhoto: (id: string): Promise<void> =>
     apiClient.delete(`/gallery/photos/${id}`).then(() => undefined),
 
-  deletePhotos: (photoIds: string[]): Promise<BulkDeletePhotosResult> =>
-    apiClient.delete<BulkDeletePhotosResult>('/gallery/photos', { data: { photoIds } }).then(r => r.data),
+  deletePhotos: (photoIds: string[]): Promise<BulkDeletePhotosResponse> =>
+    apiClient.delete<BulkDeletePhotosResponse>('/gallery/photos', { data: { photoIds } }).then(r => r.data),
 }

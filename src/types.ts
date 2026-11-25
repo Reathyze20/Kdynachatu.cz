@@ -77,6 +77,12 @@ export interface GalleryFolder {
   createdBy?: string;
 }
 
+// DELETE /api/gallery/photos – server smaže jen fotky, které uživatel smí; `deleted` je skutečný počet (#507)
+export interface BulkDeletePhotosResponse {
+  message: string;
+  deleted: number;
+}
+
 export interface GalleryPhoto {
   id: string;
   folderId: string;

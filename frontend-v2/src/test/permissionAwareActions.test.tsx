@@ -90,10 +90,9 @@ describe('Chat: smazání tématu (#507)', () => {
     }
   })
 
-  it('odmítnuté smazání tyká a mluví o tématu, ne o záložce ani kanálu', async () => {
-    auth.role = 'admin'
+  it('odmítnuté smazání (třeba zastaralá data) tyká a mluví o tématu, ne o záložce ani kanálu', async () => {
     api.delete.mockRejectedValue(Object.assign(new Error('Forbidden'), { isAxiosError: true, response: { status: 403, data: {} } }))
-    await openThread('t-other')
+    await openThread('t-mine')
     fireEvent.click(screen.getByRole('button', { name: 'Akce tématu' }))
     fireEvent.click(screen.getByRole('button', { name: 'Smazat téma' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Smazat' }))
