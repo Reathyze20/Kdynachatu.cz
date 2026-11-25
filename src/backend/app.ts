@@ -59,8 +59,11 @@ export interface CreateAppOptions {
 const passThrough: RequestHandler = (_req, _res, next) => next();
 
 export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
-  const limiter = (options: Partial<RateLimitOptions>): RequestHandler =>
-    enableRateLimits ? rateLimit(options) : passThrough;
+  // 429 má vždy tvar `{ message }` a `Retry-After`: holý řetězec v těle frontend nenašel a ukázal „Chyba sítě“ (#499).
+  const limiter = ({ message, ...options }: Omit<Partial<RateLimitOptions>, "message"> & { message: string }): RequestHandler =>
+    enableRateLimits
+      ? rateLimit({ standardHeaders: true, legacyHeaders: false, ...options, message: { message } })
+      : passThrough;
 
   const app = express();
   const server = http.createServer(app);
@@ -108,8 +111,6 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
     windowMs: 15 * 60 * 1000,
     max: 500,
     message: "Příliš mnoho požadavků. Zkus to za chvíli.",
-    standardHeaders: true,
-    legacyHeaders: false,
     skip: (req) => req.path === "/api/health",
   });
 
@@ -117,9 +118,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const authLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 30,
-    message: "Příliš mnoho pokusů o přihlášení. Zkus to později.",
-    standardHeaders: true,
-    legacyHeaders: false,
+    message: "Příliš mnoho pokusů. Zkus to znovu za 15 minut.",
   });
 
   // Brute-force protection for login: failed attempts per IP + username.
@@ -127,9 +126,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const loginLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 10,
-    message: { message: "Příliš mnoho neúspěšných pokusů o přihlášení. Zkus to za 15 minut." },
-    standardHeaders: true,
-    legacyHeaders: false,
+    message: "Příliš mnoho neúspěšných pokusů o přihlášení. Zkus to za 15 minut.",
     skipSuccessfulRequests: true,
     keyGenerator: (req) => {
       const username = typeof req.body?.username === "string" ? req.body.username.trim().toLowerCase() : "";

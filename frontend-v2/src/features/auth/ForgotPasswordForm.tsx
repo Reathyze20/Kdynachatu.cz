@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
+import { tooManyAttemptsMessage } from './tooManyAttempts'
 
 interface ForgotPasswordFormProps {
   onShowLogin: () => void
@@ -40,7 +41,8 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
       showToast('Pokud účet existuje, poslali jsme e-mail pro obnovu hesla.', 'success')
     } catch (err: unknown) {
       const data = (err as { response?: { data?: ForgotPasswordResponse } }).response?.data
-      const text = data?.message || 'Nepodařilo se odeslat žádost. Zkus to znovu.'
+      const text = tooManyAttemptsMessage(err, 'Moc pokusů za sebou.')
+        || data?.message || 'Nepodařilo se odeslat žádost. Zkus to znovu.'
       setMessage({ text, type: 'error' })
     } finally {
       setLoading(false)
