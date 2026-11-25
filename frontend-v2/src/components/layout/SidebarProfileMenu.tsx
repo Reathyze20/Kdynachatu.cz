@@ -11,6 +11,7 @@ import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useLogout } from '@/hooks/useLogout'
+import { LogoutPendingChangesDialog } from '@/components/layout/LogoutPendingChangesDialog'
 import { ChevronUp, LogOut, ScrollText, Settings, Shield, User, UserPlus } from 'lucide-react'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 
@@ -22,7 +23,7 @@ const MENU_GAP_PX = 8
 
 export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuProps) {
   const { user, isAdmin, isSuperAdmin } = useAuth()
-  const logoutThisDevice = useLogout()
+  const { requestLogout, pendingDialog } = useLogout()
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -96,7 +97,7 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
 
   function handleLogout() {
     closeMenu()
-    logoutThisDevice()
+    requestLogout()
   }
 
   const username = user?.username ?? 'Uživatel'
@@ -171,6 +172,7 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
         </div>,
         document.body,
       )}
+      <LogoutPendingChangesDialog {...pendingDialog} />
     </div>
   )
 }

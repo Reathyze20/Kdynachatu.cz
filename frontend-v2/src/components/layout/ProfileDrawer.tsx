@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/AuthContext'
 import { useLogout } from '@/hooks/useLogout'
+import { LogoutPendingChangesDialog } from '@/components/layout/LogoutPendingChangesDialog'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
 import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
@@ -33,7 +34,8 @@ interface ProfileDrawerProps {
 
 export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, user, token, login } = useAuth()
-  const logoutThisDevice = useLogout()
+  // Šuplík se zavře až při odhlášení, jinak by s ním zmizel i dotaz na neodeslané změny (#537)
+  const { requestLogout, pendingDialog } = useLogout(onClose)
   const logoutHintId = useId()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -73,11 +75,13 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [leaveCabinError, setLeaveCabinError] = useState('')
 
   // ─── Zavřít klávesou Escape ─────────────────────────────────────────────────
+  // Otevřený dotaz na neodeslané změny si Escape vyřídí sám; šuplík by s sebou zavřel i dotaz (#537)
+  const pendingLogoutOpen = pendingDialog.isOpen
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !pendingLogoutOpen) onClose() }
     if (isOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, pendingLogoutOpen])
 
   // ─── Načíst profil ──────────────────────────────────────────────────────────
   const { data: profileData } = useQuery<ProfileData>({
@@ -566,15 +570,14 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 variant="secondary"
                 className="w-full"
                 aria-describedby={logoutHintId}
-                onClick={() => {
-                  onClose()
-                  logoutThisDevice()
-                }}
+                onClick={requestLogout}
                 data-testid="profile-logout-button"
               >
                 <LogOut aria-hidden="true" />
                 Odhlásit
               </Button>
+
+              <LogoutPendingChangesDialog {...pendingDialog} />
 
               <p className="mt-6 mb-4 text-label text-(--text-muted)">
                 Ztracený telefon nebo cizí počítač? Odhlas se všude najednou, i na tomhle zařízení.
