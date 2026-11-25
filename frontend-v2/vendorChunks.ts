@@ -128,7 +128,7 @@ export function chunkCycleGuard(): Plugin {
       if (cycle) {
         this.error(
           `Kruh statických importů mezi chunky: ${cycle.join(' → ')}. ` +
-            'Uprav rozdělení v frontend-v2/vendorChunks.ts.',
+            'Uprav rozdělení ve frontend-v2/vendorChunks.ts.',
         )
       }
     },

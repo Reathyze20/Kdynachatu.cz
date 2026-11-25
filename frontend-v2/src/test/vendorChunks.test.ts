@@ -13,6 +13,7 @@ describe('vendorChunkFor', () => {
     expect(vendorChunkFor(nm('react/cjs/react-jsx-runtime.production.js'))).toBe('vendor-react')
     expect(vendorChunkFor(nm('react-dom/client.js'))).toBe('vendor-react')
     expect(vendorChunkFor(nm('scheduler/index.js'))).toBe('vendor-react')
+    expect(vendorChunkFor(nm('react-error-boundary/dist/react-error-boundary.js'))).toBe('vendor-react')
     expect(vendorChunkFor(nm('react-router/dist/index.mjs'))).toBe('vendor-react')
     expect(vendorChunkFor(nm('react-router-dom/dist/index.mjs'))).toBe('vendor-react')
   })
@@ -66,6 +67,10 @@ describe('findChunkCycle', () => {
         { fileName: 'vendor-misc.js', imports: ['vendor-react.js'] },
       ]),
     ).toEqual(['vendor-react.js', 'vendor-misc.js', 'vendor-react.js'])
+  })
+
+  it('najde chunk, který importuje sám sebe', () => {
+    expect(findChunkCycle([{ fileName: 'a.js', imports: ['a.js'] }])).toEqual(['a.js', 'a.js'])
   })
 
   it('ignoruje importy mimo bundle', () => {
