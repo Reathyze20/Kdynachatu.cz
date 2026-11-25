@@ -46,6 +46,8 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "POST /api/reset-password": PUBLIC,
   "GET /api/verify-token": PUBLIC,
   "GET /api/refresh-token": AUTHENTICATED,
+  "POST /api/session-cookie": AUTHENTICATED, // cookie pro fotky (#487)
+  "POST /api/logout": PUBLIC, // jen smaže cookie pro fotky
   // admin.ts
   "GET /api/admin/system": ADMIN,
   // cabin.ts
@@ -220,8 +222,8 @@ export function findRouteDefinitions(source: string, mountPrefix: string, object
 
 /**
  * Všechny API routy aplikace: přímo v `app.ts` (jen `/api/…`) a v namountovaných souborech rout.
- * Routy mimo `/api` (statika `/uploads`, SPA fallback) guard nevidí; chráněný handler uploadů (#470,
- * Média) sem bude potřeba doplnit.
+ * Routy mimo `/api` (`/uploads` přes `app.use`, SPA fallback) guard nevidí; přístup k uploadům
+ * hlídá `uploadsAccess.itest.ts` (#487).
  */
 export function findAppRoutes(): { routes: string[]; unmountedFiles: string[] } {
   const appSource = fs.readFileSync(path.join(PROJECT_ROOT, "src/backend/app.ts"), "utf8");

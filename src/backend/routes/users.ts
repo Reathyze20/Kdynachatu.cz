@@ -9,6 +9,7 @@ import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
 import { signAuthToken } from "../../utils/authToken";
+import { setUploadsCookie } from "../../utils/uploadsCookie";
 import { sendEmailChangedNotice } from "../../utils/email";
 import { deleteUserAndRevokeSessions, revokeUserSessions, updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import type { JwtPayload } from "../../types";
@@ -198,6 +199,7 @@ router.patch("/me/password", protect, validate(changeMyPasswordSchema), async (r
     const tokenVersion = await updateUserAndRevokeSessions(user.id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
 
     const token = signAuthToken({ ...user, tokenVersion });
+    setUploadsCookie(res, token);
     res.json({ message: "Heslo úspěšně změněno.", token });
   } catch (error) {
     logger.error("USERS", "Change my password error", { error: String(error) });

@@ -42,6 +42,7 @@ export const DATABASE_URL = process.env.DATABASE_URL || "";
 
 // Server Configuration
 export const PORT = parseInt(process.env.PORT || "3000", 10);
+export const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 function readBooleanEnv(name: string, fallback: boolean): boolean {
   const rawValue = process.env[name];

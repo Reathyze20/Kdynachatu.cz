@@ -5,6 +5,7 @@ import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import path from "path";
 import { signAuthToken } from "../../utils/authToken";
+import { setUploadsCookie } from "../../utils/uploadsCookie";
 import { protect } from "../../middleware/authMiddleware";
 import { requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
@@ -388,6 +389,7 @@ router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, va
 
     // Issue a new JWT with the updated cabinId embedded
     const newToken = signAuthToken(updatedUser);
+    setUploadsCookie(res, newToken);
 
     res.status(201).json({
       token: newToken,

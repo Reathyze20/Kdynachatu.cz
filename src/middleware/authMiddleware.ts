@@ -168,3 +168,20 @@ export const protectWithTokenFallback = async (req: Request, res: Response, next
 
   next();
 };
+
+/**
+ * Ověří JWT, který nepřišel v hlavičce (cookie fotek, #487), stejně jako `protect`: podpis, formát,
+ * verze tokenu a ban. Vrací uživatele načteného z DB, jinak null.
+ */
+export async function verifyAuthToken(token: string): Promise<JwtPayload | null> {
+  let decoded: JwtPayload;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+  } catch {
+    return null;
+  }
+  if (!isValidJwtPayload(decoded)) return null;
+
+  const hydrated = await hydrateAuthenticatedUser(decoded);
+  return hydrated.status === "ok" ? hydrated.user : null;
+}
