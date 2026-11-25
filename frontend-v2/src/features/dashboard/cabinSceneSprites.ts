@@ -68,12 +68,12 @@ export const CABIN: Sprite = [
   "oFFoSssssssSssssssSssssssSssssssSssssssSssssssSssssssSssss..",
 ];
 
-/** Plch velký 24 × 20, sedí čelem: kulaté uši, velké oči v tmavých kruzích, hlodavčí
+/** Plch velký 24 × 20, sedí čelem: kulaté uši bez růžové (ne kočka), velké oči v tmavých kruzích, hlodavčí
  * zoubky, huňatý ocas vedle těla (ne přes záda jako veverka z avatarů). */
-export const PLCH: Sprite = [
+export const DORMOUSE: Sprite = [
   ".ooo........ooo.........",
-  "obppo......oppbo........",
-  "obppboooooobppbo........",
+  "obddo......oddbo........",
+  "obddboooooobddbo........",
   "obbbbbbbbbbbbbbo........",
   "obbbbbbbbbbbbbbo........",
   "obbdddbbbbdddbbo........",
@@ -94,7 +94,7 @@ export const PLCH: Sprite = [
 ];
 
 /** Spánek: oči se zavřou (přebarvení) a přes ně jde víčko. */
-export const PLCH_ASLEEP = { e: "fur", i: "fur" };
+export const DORMOUSE_ASLEEP = { e: "fur", i: "fur" };
 export const EYELIDS: Sprite = ["ooo....ooo"];
 export const ZZZ: Sprite = ["...oooo", ".....o.", "....o..", "...oooo", "ooo....", ".o.....", "ooo...."];
 

@@ -1,6 +1,6 @@
 import type { DashboardReservationsData } from "@/api/dashboard";
 import { cabinSceneLabel, deriveCabinScene, mascotPose, type CabinSceneState } from "./cabinSceneState";
-import { AXE, CABIN, CAR, EYELIDS, MOON, PLCH, PLCH_ASLEEP, SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite } from "./cabinSceneSprites";
+import { AXE, CABIN, CAR, DORMOUSE, DORMOUSE_ASLEEP, EYELIDS, MOON, SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite } from "./cabinSceneSprites";
 
 /**
  * Scéna chaty nahoře v kartě „Na chatě teď“ (#563). Statický obrázek: stav z `cabinSceneState.ts`,
@@ -28,7 +28,7 @@ function add(l: Layer, token: string, d: string) {
 const box = (x: number, y: number, w: number, h: number) => `M${x} ${y}h${w}v${h}h${-w}z`;
 
 /** Řádky mřížky po úsecích stejného znaku; `only` omezí kreslení na vybrané znaky. */
-function sprite(l: Layer, grid: Sprite, x: number, y: number, remap: Record<string, string> = {}, only?: string) {
+function drawSprite(l: Layer, grid: Sprite, x: number, y: number, remap: Record<string, string> = {}, only?: string) {
   grid.forEach((row, j) => {
     for (let i = 0; i < row.length;) {
       let k = i;
@@ -42,12 +42,12 @@ function sprite(l: Layer, grid: Sprite, x: number, y: number, remap: Record<stri
 }
 
 /** Stejná scéna při každém vykreslení: pevné semínko. */
-function random(seed: number) {
+function seededRandom(seed: number) {
   return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 }
 
 function landscape(night: boolean): Layer[] {
-  const rnd = random(7);
+  const rnd = seededRandom(7);
   const sky = layer("sky");
   add(sky, night ? "ink" : "sky", box(0, 0, W, H));
   const hills = layer("hills");
@@ -62,7 +62,7 @@ function landscape(night: boolean): Layer[] {
   const trees = layer("trees");
   for (let x = 2; x < W - TREE[0].length; x += 10 + Math.floor(rnd() * 12)) {
     if (x + TREE[0].length > CABIN_X - 6 && x < CABIN_X + 136) continue;
-    sprite(trees, TREE, x, GROUND - TREE.length + 1 - Math.floor(rnd() * 3));
+    drawSprite(trees, TREE, x, GROUND - TREE.length + 1 - Math.floor(rnd() * 3));
   }
   return [sky, hills, trees];
 }
@@ -71,34 +71,34 @@ function mascot(state: CabinSceneState): Layer[] {
   const pose = mascotPose(state);
   const onPorch = pose === "sleep" || pose === "idle";
   const x = onPorch ? CABIN_X + 8 : pose === "wave" ? CABIN_X + 62 : CABIN_X + 86;
-  const y = onPorch ? CABIN_Y + 36 - PLCH.length : GROUND - PLCH.length;
+  const y = onPorch ? CABIN_Y + 36 - DORMOUSE.length : GROUND - DORMOUSE.length;
   const props = layer("props");
-  if (pose === "chop") sprite(props, STUMP, x - 15, GROUND - STUMP.length);
-  const plch = sprite(layer("mascot"), PLCH, x, y, pose === "sleep" ? PLCH_ASLEEP : {});
+  if (pose === "chop") drawSprite(props, STUMP, x - 15, GROUND - STUMP.length);
+  const body = drawSprite(layer("mascot"), DORMOUSE, x, y, pose === "sleep" ? DORMOUSE_ASLEEP : {});
   const extra = layer("mascot-extra");
-  if (pose === "sleep") sprite(sprite(extra, EYELIDS, x + 3, y + 7), ZZZ, x + 4, y - 17, state.night ? { o: "light" } : {});
-  if (pose === "chop") sprite(extra, AXE, x - 8, y + 5);
-  if (pose === "wave") sprite(extra, WAVE, x - 3, y + 7);
-  return [props, plch, extra];
+  if (pose === "sleep") drawSprite(drawSprite(extra, EYELIDS, x + 3, y + 7), ZZZ, x + 4, y - 17, state.night ? { o: "light" } : {});
+  if (pose === "chop") drawSprite(extra, AXE, x - 8, y + 5);
+  if (pose === "wave") drawSprite(extra, WAVE, x - 3, y + 7);
+  return [props, body, extra];
 }
 
 function buildScene(state: CabinSceneState): Layer[] {
   const { occupied, winterized, night } = state;
   const glass = winterized ? WINDOW_LOOK.shut : occupied ? WINDOW_LOOK.lit : night ? WINDOW_LOOK.dark : WINDOW_LOOK.day;
-  const layers = [...landscape(night), sprite(layer("cabin"), CABIN, CABIN_X, CABIN_Y, glass)];
-  if (state.arriving || state.departing) layers.push(sprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
+  const layers = [...landscape(night), drawSprite(layer("cabin"), CABIN, CABIN_X, CABIN_Y, glass)];
+  if (state.arriving || state.departing) layers.push(drawSprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
   layers.push(...mascot(state));
   if (night) {
-    const rnd = random(11);
+    const rnd = seededRandom(11);
     const veil = layer("night");
     veil.opacity = 0.5;
     add(veil, "night-veil", box(0, 0, W, H));
-    const sky = sprite(layer("stars"), MOON, W / 2 + 64, 4);
+    const sky = drawSprite(layer("stars"), MOON, W / 2 + 64, 4);
     for (let n = 0; n < W / 5; n++) add(sky, "light", box(Math.floor(rnd() * W), Math.floor(rnd() * 34), 1, 1));
     layers.push(veil, sky);
-    if (occupied) layers.push(sprite(layer("window-glow"), CABIN, CABIN_X, CABIN_Y, glass, "gGQ"));
+    if (occupied) layers.push(drawSprite(layer("window-glow"), CABIN, CABIN_X, CABIN_Y, glass, "gGQ"));
   }
-  if (occupied) layers.push(sprite(layer("smoke"), SMOKE, CABIN_X + 34, CABIN_Y - SMOKE.length - 1));
+  if (occupied) layers.push(drawSprite(layer("smoke"), SMOKE, CABIN_X + 34, CABIN_Y - SMOKE.length - 1));
   return layers;
 }
 

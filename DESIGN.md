@@ -25,6 +25,7 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 | Sémantické tokeny | `--text-*`, `--bg-*`, `--brand-*`, `--status-*`, `--border-*`, `--space-*`, `--radius-*`, `--shadow-*`, `--font-*`, `--transition-*`, `--z-*`, `--touch-target-*` | všechny komponenty |
 | Povrchy redesignu | `--page`, `--sheet`, `--sheet-alt`, `--inset`, `--rule`, `--rule-soft`, `--glow`, `--lift`, `--ok`/`--low`/`--empty` a jejich `-bg` | všechny komponenty. Jsou to RGB trojice, s alfou `rgb(var(--sheet) / .96)` |
 | Most shadcn | `--primary`, `--muted-foreground`, `--border`, `--input`, `--ring` … (`shadcn-tokens.css`) | primitiva `ui/` a utility z `@theme` |
+| Scéna chaty | `--scene-*` (sépiová paleta pixel artu, #563) | jen `features/dashboard/CabinScene.tsx` |
 | Legacy aliasy | `--color-*` | **deprecated**. Nový kód je nepoužívá, stávající výskyty jsou v allowlistu (#450) |
 
 ### Jak token použít
@@ -92,7 +93,7 @@ Vybírá se role, ne velikost v pixelech. Utilita `text-<role>` nastaví velikos
 
 - Jen `lucide-react`. Jinou ikonovou sadu zakazuje ESLint `no-restricted-imports`. Emoji ani unicode dingbaty nejsou ikony (`uiIconography.test.ts`).
 - Velikosti jen **16, 20 a 24 px**: 16 v textu a v tlačítku s textem, 20 jako samostatná ikona (ikonové tlačítko, navigace), 24 v `EmptyState`. Stávající 14, 18, 28, 48 px a další odchylky jsou v allowlistu (guard `iconSize`).
-- Inline `<svg>` jen z allowlistu: logo, ilustrace landing page, prázdné stavy (guard `inlineSvg`). Trvalou výjimkou je `GlobalFallback`, který nesmí záviset na lucide.
+- Inline `<svg>` jen z allowlistu: logo, ilustrace landing page, prázdné stavy, pixel art scény chaty (guard `inlineSvg`). Trvalou výjimkou je `GlobalFallback`, který nesmí záviset na lucide.
 - Každá ikona něco sděluje, dekorace to není. Ikona vedle textu má `aria-hidden`, ikonové tlačítko má `aria-label` a cíl 48 × 48 px.
 
 ## 5. Pohyb

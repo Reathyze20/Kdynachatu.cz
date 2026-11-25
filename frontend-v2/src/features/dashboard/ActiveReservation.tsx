@@ -9,6 +9,7 @@ import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/tu
 import { gasLine } from "@/lib/gasLevel";
 import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
 import { CabinScene } from "./CabinScene";
+import { DEPARTURE_HOUR } from "./cabinSceneState";
 import { ArrowRight, CalendarPlus, CircleCheck, DoorOpen, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
 
 interface Props {
@@ -174,7 +175,7 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     const fromLabel = (s: HeaderStay) => (s.from === todayStr ? "od dneška" : `od ${formatShortDayDate(s.from)}`);
     const nextNights = next ? nightsBetween(next.from, next.to) : 0;
     const departingToday = !!now && now.to === todayStr;
-    const departed = departingToday && currentHour >= 14;
+    const departed = departingToday && currentHour >= DEPARTURE_HOUR;
     const checkoutDone = !!now && "isCheckoutCompleted" in now && now.isCheckoutCompleted;
 
     let checkoutReminderNode: React.ReactNode = null;

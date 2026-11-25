@@ -7,7 +7,7 @@ import type { DashboardReservationsData } from "@/api/dashboard";
 import { toIsoDate } from "@/lib/dateUtils";
 
 /** V den odjezdu je odjíždějící po této hodině pryč, stejně jako v kartě „Na chatě teď“. */
-const DEPARTURE_HOUR = 14;
+export const DEPARTURE_HOUR = 14;
 /** Den a noc podle místního času zařízení, než přijde východ a západ slunce z počasí (#564). */
 const NIGHT_FROM_HOUR = 20;
 const NIGHT_UNTIL_HOUR = 6;
@@ -40,6 +40,7 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
   };
 }
 
+/** Auto má přednost před štípáním: při příjezdu nebo odjezdu plch mává, i když je někdo na chatě. */
 export function mascotPose(s: CabinSceneState): MascotPose {
   if (s.winterized) return "idle";
   if (s.arriving || s.departing) return "wave";
