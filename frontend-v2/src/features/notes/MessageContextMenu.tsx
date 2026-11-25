@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Hammer } from "lucide-react";
 import type { Note } from "@/api/notes";
 
 const REACTION_EMOJI = ["👍", "❤️", "😂", "✅"] as const;
@@ -147,7 +148,7 @@ export function MessageContextMenu({
               <span>Do nákupu</span>
             </button>
             <button className="context-menu-item" onClick={() => { onCreateRepair(); onClose(); }}>
-              <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M12 8v4l3 3" /></svg>
+              <Hammer className="menu-icon" aria-hidden="true" />
               <span>Nový úkol</span>
             </button>
           </>
@@ -179,7 +180,7 @@ function PositionedMenu({
   isMine: boolean;
   children: React.ReactNode;
 }) {
-  const [pos, setPos] = useState<{ top: number; left: number; origin: string } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; origin: string; maxHeight?: number } | null>(null);
 
   const measure = useCallback(() => {
     const el = menuRef.current;
@@ -213,16 +214,19 @@ function PositionedMenu({
         : anchorRect.bottom + gap;
     }
 
-    let left = isMine
-      ? Math.max(gap, anchorRect.right - menuW)
-      : Math.min(anchorRect.left, vw - menuW - gap);
-    left = Math.max(gap, left);
+    // Celé menu ve viewportu (#508): bublina může přesahovat okraj obrazovky
+    // a menu vyšší než obrazovka dostane omezenou výšku s posuvníkem.
+    const maxHeight = menuH > vh - 2 * gap ? vh - 2 * gap : undefined;
+    top = Math.min(Math.max(gap, top), vh - gap - (maxHeight ?? menuH));
+
+    let left = isMine ? anchorRect.right - menuW : anchorRect.left;
+    left = Math.max(gap, Math.min(left, vw - menuW - gap));
 
     const origin = above
       ? (isMine ? "bottom right" : "bottom left")
       : (isMine ? "top right" : "top left");
 
-    setPos({ top, left, origin });
+    setPos({ top, left, origin, maxHeight });
   }, [anchorRect, isMine, menuRef]);
 
   // Measure after first paint
@@ -240,6 +244,7 @@ function PositionedMenu({
         left: pos?.left ?? -9999,
         visibility: pos ? "visible" : "hidden",
         transformOrigin: pos?.origin ?? "top left",
+        ...(pos?.maxHeight !== undefined ? { maxHeight: pos.maxHeight, overflowY: "auto" as const } : {}),
       }}
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}

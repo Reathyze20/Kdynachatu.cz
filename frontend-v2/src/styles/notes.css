@@ -242,18 +242,9 @@
   z-index: 1;
 }
 
+/* „Zpět“ z vlákna (mobil, #508) je <Button variant="ghost">; tady jen, aby se v řádku nesmrštil */
 .mobile-chat-back {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0.5rem 1rem;
-  margin: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: var(--radius-md, 8px);
-  background: var(--bg-surface, #fff);
-  border: 1px solid var(--border-primary, #d0d5d1);
-  color: var(--text-primary, #1a2e1a);
-  cursor: pointer;
+  align-self: flex-start;
   flex-shrink: 0;
 }
 
@@ -503,6 +494,12 @@
   font-style: italic;
   max-width: 260px;
   line-height: 1.5;
+}
+
+/* Obal zprávy s oddělovačem data: sloupcový flex, aby align-self zprávy platil (#508) */
+.chat-message-row {
+  display: flex;
+  flex-direction: column;
 }
 
 .message-wrapper {
@@ -1147,6 +1144,27 @@
     max-width: 88%;
   }
 
+  /* Kompaktní hlavička vlákna: Zpět, název a akce na jednom řádku (#508) */
+  .chat-header {
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+  }
+
+  .chat-header-info {
+    min-width: 0;
+  }
+
+  .chat-header-info h3 {
+    font-size: var(--font-size-lg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-avatar-group {
+    display: none;
+  }
+
   /* Mobile: always show action buttons (no hover) */
   .message-meta {
     opacity: 1;
@@ -1282,8 +1300,8 @@
 }
 
 .context-menu-item .menu-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #666;
   flex-shrink: 0;
   transition: color 0.12s;
@@ -1393,8 +1411,7 @@
 .reaction-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
+  gap: var(--touch-target-gap);
   padding: 0 4px;
 }
 
@@ -1402,7 +1419,23 @@
   justify-content: flex-end;
 }
 
+/* Dotyková plocha reakce 48 px (#508); viditelná je jen kapsle .reaction-pill */
 .reaction-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.1s;
+  user-select: none;
+}
+
+.reaction-pill {
   display: flex;
   align-items: center;
   gap: 3px;
@@ -1410,20 +1443,20 @@
   border-radius: 12px;
   border: 1px solid var(--color-border-light, #e5e7eb);
   background: var(--color-bg, #fff);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, transform 0.1s;
-  user-select: none;
+  transition: background 0.12s, border-color 0.12s;
 }
 
 .reaction-badge:hover {
-  background: var(--color-bg-hover, #f3f4f6);
   transform: scale(1.05);
 }
 
-.reaction-badge-mine {
-  border-color: rgba(93, 155, 98, 0.4);
-  background: rgba(93, 155, 98, 0.08);
+.reaction-badge:hover .reaction-pill {
+  background: var(--bg-hover);
+}
+
+.reaction-badge-mine .reaction-pill {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
 }
 
 .reaction-emoji {

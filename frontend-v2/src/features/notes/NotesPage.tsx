@@ -12,7 +12,7 @@ import { useThreads, useCreateThread, useDeleteThread, useMarkThreadRead } from 
 import { useThreadNotes } from "./hooks/useNotes";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { ThreadList } from "./ThreadList";
-import { ChatView } from "./ChatView";
+import { ChatView, ChatBackButton } from "./ChatView";
 import { MessageInput } from "./MessageInput";
 import { AddToShoppingDialog } from "./AddToShoppingDialog";
 import { CreateRepairDialog } from "./CreateRepairDialog";
@@ -238,15 +238,9 @@ export function NotesPage() {
           {/* ── Right: Chat area ── */}
           {showChat && (
             <div className="notes-chat-area-wrapper">
-              {/* Mobile back button */}
-              {isMobile && mobileShowChat && (
-                <button
-                  className="button-icon mobile-chat-back"
-                  aria-label="Zpět na seznam"
-                  onClick={handleBackToList}
-                >
-                  ← Zpět
-                </button>
+              {/* Mobil: když se vlákno načítá nebo selhalo, ChatView (a jeho hlavička se Zpět) chybí */}
+              {isMobile && mobileShowChat && (notesLoading || notesFailed) && (
+                <ChatBackButton onClick={handleBackToList} />
               )}
               {notesLoading ? (
                 <div className="notes-messages" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -287,6 +281,7 @@ export function NotesPage() {
                   onCreateRepair={setRepairNote}
                   onReply={setReplyToNote}
                   onDeleteThread={canDeleteActiveThread ? handleDeleteThread : undefined}
+                  onBack={isMobile ? handleBackToList : undefined}
                 />
               )}
               <MessageInput
