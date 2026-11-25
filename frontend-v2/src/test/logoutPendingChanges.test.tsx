@@ -16,12 +16,7 @@ import type { ReactElement } from 'react'
 // Na sdíleném zařízení by jinak zůstaly v LocalStorage a další účet by je bez upozornění zahodil.
 // Fiktivní data, žádná reálná chata.
 
-const { api } = vi.hoisted(() => ({
-  api: {
-    request: vi.fn(),
-    get: vi.fn(),
-  },
-}))
+const { api } = vi.hoisted(() => ({ api: { request: vi.fn(), get: vi.fn() } }))
 vi.mock('@/api/client', () => ({ default: api }))
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 

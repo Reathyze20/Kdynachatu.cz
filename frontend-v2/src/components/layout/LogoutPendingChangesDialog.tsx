@@ -17,12 +17,8 @@ export function LogoutPendingChangesDialog({
   onDiscard,
   onCancel,
 }: LogoutPendingChangesDialogProps) {
-  const unsent = `${formatCount(pendingCount, 'změna', 'změny', 'změn')} ${pluralize(
-    pendingCount,
-    'se ještě neodeslala',
-    'se ještě neodeslaly',
-    'se ještě neodeslalo',
-  )}`
+  const verb = pluralize(pendingCount, 'se ještě neodeslala', 'se ještě neodeslaly', 'se ještě neodeslalo')
+  const unsent = `${formatCount(pendingCount, 'změna', 'změny', 'změn')} ${verb}`
 
   return (
     <Modal

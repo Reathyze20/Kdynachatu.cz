@@ -26,11 +26,8 @@ export interface LogoutPendingChangesDialogProps {
   onCancel: () => void
 }
 
-interface UseLogoutResult {
-  /** Odhlásí hned, nebo se nejdřív zeptá, když čekají neodeslané změny. */
-  requestLogout: () => void
-  pendingDialog: LogoutPendingChangesDialogProps
-}
+/** `requestLogout` odhlásí hned, nebo se nejdřív zeptá, když čekají neodeslané změny. */
+interface UseLogoutResult { requestLogout: () => void; pendingDialog: LogoutPendingChangesDialogProps }
 
 const SEND_FAILED = 'Změny se nepodařilo odeslat. Zkontroluj připojení a zkus to znovu, nebo je zahoď.'
 
