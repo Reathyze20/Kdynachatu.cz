@@ -64,7 +64,7 @@
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/ConfirmDialog.tsx", "components/shared/CopyForWhatsAppButton.tsx",
-      "components/shared/LogsPanel.tsx", "components/shared/PromptDialog.tsx", "features/admin/AdminDiagnosticsPage.tsx",
+      "components/shared/LogsPanel.tsx", "components/shared/PromptDialog.tsx",
       "features/admin/AdminPage.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx", "features/not-found/NotFoundPage.tsx",
       "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx", "features/notes/ThreadList.tsx",
@@ -78,7 +78,7 @@
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/FeatureErrorFallback.tsx", "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
-      "components/shared/LogsPanel.tsx", "features/admin/AdminDiagnosticsPage.tsx", "features/admin/AdminPage.tsx",
+      "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx",
       "features/admin/components/StagingFeedbackSection.tsx", "features/auth/ForgotPasswordForm.tsx", "features/auth/LoginForm.tsx",
       "features/auth/RegisterForm.tsx", "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
