@@ -146,7 +146,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   async function handleChangeEmail() {
     const emailVal = email.trim()
     if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
-      setEmailMessage('Nesprávný formát e-mailu.')
+      // Text chyby formátu nese #profile-email-error, emailMessage je jen pro selhání serveru.
+      setEmailMessage('')
       setEmailError(true)
       return
     }
@@ -418,6 +419,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={handleEmailBlur}
+                    aria-invalid={emailError || undefined}
+                    aria-describedby={emailError ? 'profile-email-error' : emailMessage ? 'profile-email-message' : undefined}
                     style={emailError ? { borderColor: 'var(--color-danger)' } : undefined}
                     data-testid="profile-email-input"
                   />
@@ -433,12 +436,12 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   </button>
                 </div>
                 {emailError && (
-                  <div id="profile-email-error" className="error-message" style={{ marginTop: '5px', textAlign: 'left' }}>
+                  <div id="profile-email-error" className="error-message show" role="alert" style={{ marginTop: '5px', textAlign: 'left' }}>
                     Zadej e-mail ve správném formátu.
                   </div>
                 )}
                 {emailMessage && !emailError && (
-                  <p id="profile-email-message" className="message" style={{ marginTop: '5px', textAlign: 'left' }}>
+                  <p id="profile-email-message" className="error-message show" role="alert" style={{ marginTop: '5px', textAlign: 'left' }}>
                     {emailMessage}
                   </p>
                 )}
@@ -457,7 +460,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                       data-testid="profile-email-password-input"
                     />
                     <p id="profile-email-password-hint" className="mt-1 text-label text-(--text-muted)">Na původní adresu pošleme upozornění o změně.</p>
-                    {emailPasswordError && <p id="profile-email-password-error" className="mt-1 text-label text-(--status-error)">{emailPasswordError}</p>}
+                    {emailPasswordError && <p id="profile-email-password-error" className="mt-1 text-label text-(--status-error)" role="alert">{emailPasswordError}</p>}
                   </div>
                 )}
               </div>
