@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Settings, TicketPlus, UserPlus } from 'lucide-react'
+import { Settings, TicketPlus, UserPlus } from 'lucide-react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/shared/Card'
 import { LogsPanel } from '@/components/shared/LogsPanel'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { adminApi } from '@/api/admin'
+import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 
@@ -13,104 +17,87 @@ const supportSteps = [
   'Detail logu pak spojí request, modul, cestu i support stopu do jednoho místa.',
 ]
 
+const summaryCards = [
+  { title: 'Rychlý postup', text: 'Vezmi support kód, filtruj logy a dohledej request bez SSH skákání po serveru.' },
+  { title: 'Frontend i backend', text: 'Panel umí míchat klientské chyby, warningy i HTTP provoz podle jedné společné stopy.' },
+  {
+    title: 'Navazující akce',
+    text: 'Ze supportu se hned vrátíš na členy, pozvánky nebo nastavení, když problém souvisí s oprávněním nebo konfigurací.',
+  },
+]
+
+const quickLinks = [
+  { to: '/admin', label: 'Členové a role', icon: UserPlus },
+  { to: '/admin/invites', label: 'Pozvánky', icon: TicketPlus },
+  { to: '/admin/cabin', label: 'Nastavení chaty', icon: Settings },
+]
+
 export function AdminDiagnosticsPage() {
   useDocumentTitle('Diagnostika')
 
   return (
-    <div className="main-content-admin" data-testid="admin-diagnostics-page">
-      <section className="page-card admin-page-card admin-overview-card admin-diagnostics-hero" data-testid="admin-diagnostics-hero">
-        <div className="admin-overview-header">
-          <div className="admin-overview-copy admin-overview-copy--wide">
-            <span className="admin-kicker">Diagnostika</span>
-            <h1 className="admin-page-title admin-page-title--wide">Velká stránka pro incidenty, logy a support kódy</h1>
-            <p className="admin-page-lead">
-              Když rodina nahlásí problém, nemusíš hledat ve více panelech. Tady máš systémové logy, request ID, support workflow i rychlý stav aplikace na jednom místě.
-            </p>
-          </div>
-
-          <div className="admin-hero-actions">
-            <Link to="/admin" className="btn btn-secondary">
-              <ArrowLeft size={16} />
-              Zpět do správy
-            </Link>
-            <Link to="/admin/cabin" className="btn btn-secondary">
-              <Settings size={16} />
-              Nastavení chaty
-            </Link>
-          </div>
-        </div>
+    <div
+      className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-3 md:gap-6 md:p-6"
+      data-testid="admin-diagnostics-page"
+    >
+      <Card as="section" className="grid gap-4 md:gap-6" data-testid="admin-diagnostics-hero">
+        <PageHeader
+          backTo="/admin"
+          title="Velká stránka pro incidenty, logy a support kódy"
+          subtitle="Když rodina nahlásí problém, nemusíš hledat ve více panelech. Tady máš systémové logy, request ID, support workflow i rychlý stav aplikace na jednom místě."
+        />
 
         <AdminSectionMenu active="diagnostics" />
 
-        <div className="admin-diagnostics-summary">
-          <article className="admin-diagnostics-summary-card admin-diagnostics-summary-card--forest">
-            <strong>Rychlý postup</strong>
-            <span>Vezmi support kód, filtruj logy a dohledej request bez SSH skákání po serveru.</span>
-          </article>
-          <article className="admin-diagnostics-summary-card admin-diagnostics-summary-card--mist">
-            <strong>Frontend i backend</strong>
-            <span>Panel umí míchat klientské chyby, warningy i HTTP provoz podle jedné společné stopy.</span>
-          </article>
-          <article className="admin-diagnostics-summary-card admin-diagnostics-summary-card--sand">
-            <strong>Navazující akce</strong>
-            <span>Ze supportu se hned vrátíš na členy, pozvánky nebo nastavení, když problém souvisí s oprávněním nebo konfigurací.</span>
-          </article>
+        <div className="grid gap-3 md:grid-cols-3">
+          {summaryCards.map(({ title, text }) => (
+            <article key={title} className="grid content-start gap-1 rounded-xl bg-inset p-3 md:p-4">
+              <strong className="text-card-title text-(--text-main)">{title}</strong>
+              <span className="text-label text-(--text-muted)">{text}</span>
+            </article>
+          ))}
         </div>
-      </section>
+      </Card>
 
-      <div className="admin-diagnostics-layout">
-        <section className="page-card admin-page-card admin-card admin-diagnostics-primary" id="diagnostics-guide" data-testid="admin-diagnostics-guide">
-          <div className="admin-card-header">
-            <div>
-              <div className="admin-card-eyebrow">Support workflow</div>
-              <div className="admin-card-title-row">
-                <h2 className="admin-card-title">Jak incident dohledat bez zdržení</h2>
-              </div>
-              <p className="admin-card-description">
-                Místo dlouhého popisu od rodiny potřebuješ jen přibližný čas, obrazovku nebo support kód. Zbytek si dohledáš tady.
-              </p>
-            </div>
-          </div>
+      <div className="grid items-start gap-4 md:gap-6 lg:grid-cols-2">
+        <Card as="section" id="diagnostics-guide" data-testid="admin-diagnostics-guide">
+          <AdminCardHeading
+            eyebrow="Support workflow"
+            title="Jak incident dohledat bez zdržení"
+            description="Místo dlouhého popisu od rodiny potřebuješ jen přibližný čas, obrazovku nebo support kód. Zbytek si dohledáš tady."
+          />
 
-          <ol className="admin-support-steps">
+          <ol className="grid gap-3">
             {supportSteps.map((step, index) => (
-              <li key={step}>
-                <strong>{index + 1}.</strong>
-                <span>{step}</span>
+              <li key={step} className="flex items-start gap-3 rounded-xl bg-inset p-3">
+                <strong className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-label text-primary">
+                  {index + 1}.
+                </strong>
+                <span className="text-body text-(--text-muted)">{step}</span>
               </li>
             ))}
           </ol>
 
-          <div className="admin-diagnostics-quicklinks">
-            <Link to="/admin" className="btn btn-secondary">
-              <UserPlus size={16} />
-              Členové a role
-            </Link>
-            <Link to="/admin/invites" className="btn btn-secondary">
-              <TicketPlus size={16} />
-              Pozvánky
-            </Link>
-            <Link to="/admin/cabin" className="btn btn-secondary">
-              <Settings size={16} />
-              Nastavení chaty
-            </Link>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {quickLinks.map(({ to, label, icon: Icon }) => (
+              <Button key={to} asChild variant="secondary">
+                <Link to={to}>
+                  <Icon aria-hidden="true" />
+                  {label}
+                </Link>
+              </Button>
+            ))}
           </div>
-        </section>
+        </Card>
 
-        <section className="page-card admin-page-card admin-card admin-diagnostics-secondary" id="system-info" data-testid="admin-diagnostics-system-info">
-          <div className="admin-card-header">
-            <div>
-              <div className="admin-card-eyebrow">Snapshot systému</div>
-              <div className="admin-card-title-row">
-                <h2 className="admin-card-title">Stav aplikace</h2>
-              </div>
-              <p className="admin-card-description">
-                Než půjdeš do detailu logů, rychle si ověř, jestli je problém izolovaný nebo systémový.
-              </p>
-            </div>
-          </div>
+        <Card as="section" id="system-info" data-testid="admin-diagnostics-system-info">
+          <AdminCardHeading
+            eyebrow="Snapshot systému"
+            title="Stav aplikace"
+            description="Než půjdeš do detailu logů, rychle si ověř, jestli je problém izolovaný nebo systémový."
+          />
           <SystemStatsPanel />
-        </section>
+        </Card>
       </div>
 
       <LogsPanel

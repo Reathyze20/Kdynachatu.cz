@@ -6,9 +6,9 @@ export function SystemStatsPanel() {
 
   if (isLoading) {
     return (
-      <div className="system-skeleton-grid" data-testid="system-stats-panel" data-system-stats-state="loading">
+      <div className="grid gap-3 md:grid-cols-2" data-testid="system-stats-panel" data-system-stats-state="loading">
         {[0, 1, 2, 3].map((index) => (
-          <div key={index} className="skeleton system-skeleton-card" />
+          <div key={index} className="skeleton h-28 rounded-xl" />
         ))}
       </div>
     )
@@ -36,12 +36,12 @@ export function SystemStatsPanel() {
   ]
 
   return (
-    <div id="sys-info-content" className="system-stats-grid" data-testid="system-stats-panel" data-system-stats-state="ready">
+    <div id="sys-info-content" className="grid gap-3 md:grid-cols-2" data-testid="system-stats-panel" data-system-stats-state="ready">
       {stats.map((stat) => (
-        <div key={stat.label} className={`system-stat system-stat--${stat.tone}`} data-testid="system-stat-card" data-stat-tone={stat.tone}>
-          <div className="stat-label">{stat.label}</div>
-          <div className="stat-value">{stat.value}</div>
-          <div className="stat-meta">{stat.meta}</div>
+        <div key={stat.label} className="grid content-start gap-1 rounded-xl bg-inset p-3 md:p-4" data-testid="system-stat-card" data-stat-tone={stat.tone}>
+          <div className="text-eyebrow uppercase text-(--text-muted)">{stat.label}</div>
+          <div className="text-page-title text-(--text-main)">{stat.value}</div>
+          <div className="text-label text-(--text-muted)">{stat.meta}</div>
         </div>
       ))}
     </div>
