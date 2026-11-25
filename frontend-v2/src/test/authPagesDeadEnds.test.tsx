@@ -16,7 +16,6 @@ vi.mock('@/context/AuthContext', () => ({
 }))
 
 type GetResult = ReturnType<typeof apiClient.get>
-type PostResult = ReturnType<typeof apiClient.post>
 
 function badRequest(message: string) {
   return Object.assign(new Error('Request failed with status code 400'), { response: { status: 400, data: { message } } })
@@ -118,7 +117,7 @@ describe('InvitePage', () => {
   it('a failed sign-up stays on the form instead of calling the invite invalid', async () => {
     const user = userEvent.setup()
     vi.spyOn(apiClient, 'get').mockResolvedValue({ data: validInvite } as Awaited<GetResult>)
-    vi.spyOn(apiClient, 'post').mockRejectedValue(badRequest('Uživatelské jméno už někdo používá.') as unknown as Awaited<PostResult>)
+    vi.spyOn(apiClient, 'post').mockRejectedValue(badRequest('Uživatelské jméno už někdo používá.'))
     renderAt('/invite/abc', '/invite/:token', <InvitePage />)
 
     await user.click(await screen.findByRole('button', { name: /Pokračovat/ }))

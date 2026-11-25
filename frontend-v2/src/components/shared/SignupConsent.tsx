@@ -1,5 +1,5 @@
 /**
- * features/auth/SignupConsent.tsx
+ * components/shared/SignupConsent.tsx
  * Věta o souhlasu s podmínkami u registrace (založení chaty i pozvánka, #514).
  * Odkazy se otevírají v nové kartě, aby se rozepsaný formulář neztratil.
  */

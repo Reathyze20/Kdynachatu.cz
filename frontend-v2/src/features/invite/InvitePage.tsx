@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { AvatarPicker } from '@/components/shared/AvatarPicker';
 import { ColorPicker } from '@/components/shared/ColorPicker';
 import { MEMBER_PALETTE } from '@/lib/memberPalette';
-import { SignupConsent } from '@/features/auth/SignupConsent';
+import { SignupConsent } from '@/components/shared/SignupConsent';
 import cabinBg from '@/img/olivier-guillard-FKJgBUDoVC0-unsplash.jpg';
 
 interface ValidateResponse {
@@ -195,7 +195,7 @@ export function InvitePage() {
 
         <form onSubmit={handleSubmit} data-testid="invite-register-form">
           <div className="invite-form-group">
-            <label htmlFor="invite-username">Uživatelské jméno <span className="invite-optional">(tím se budeš přihlašovat)</span></label>
+            <label htmlFor="invite-username">Uživatelské jméno (tím se budeš přihlašovat)</label>
             <input 
               type="text" 
               id="invite-username"
@@ -245,16 +245,16 @@ export function InvitePage() {
           </div>
 
           <div className="invite-form-row">
-            <div className="invite-form-group" style={{ flex: '1 1 60%' }} role="group" aria-labelledby="invite-avatar-label">
-              <label id="invite-avatar-label">Avatar</label>
+            <div className="invite-form-group" style={{ flex: '1 1 60%' }}>
+              <label>Avatar</label>
               <AvatarPicker 
                 value={formData.animalIcon}
                 onChange={val => setFormData({ ...formData, animalIcon: val })}
                 compact
               />
             </div>
-            <div className="invite-form-group" style={{ flex: '1 1 35%' }} role="group" aria-labelledby="invite-color-label">
-              <label id="invite-color-label">Barva</label>
+            <div className="invite-form-group" style={{ flex: '1 1 35%' }}>
+              <label>Barva</label>
               <ColorPicker 
                 value={formData.color}
                 onChange={val => setFormData({ ...formData, color: val })}

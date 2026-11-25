@@ -13,15 +13,18 @@ interface ResetPasswordResponse {
 
 type ResetError = { response?: { status?: number; data?: ResetPasswordResponse } }
 
-/** Backend vrací 400, když token neexistuje, vypršel nebo už byl použitý (heslo se kontroluje dřív na klientu). */
+/** Backend vrací 400, když token neexistuje, vypršel nebo už byl použitý. Délku hesla (8–100) hlídá formulář dřív, než se odešle. */
 function isExpiredLink(err: unknown) {
   return (err as ResetError).response?.status === 400
 }
 
-/** Cesta ven ze slepé uličky: nový odkaz přes zapomenuté heslo, vedle návrat na přihlášení (#514). */
-function NewLinkActions() {
+/** Odkaz nejde použít: řekne proč a nabídne nový odkaz přes zapomenuté heslo, vedle návrat na přihlášení (#514). */
+function DeadEnd({ title, text }: { title: string; text: string }) {
   return (
     <div className="flex flex-col items-center gap-3">
+      <CircleX size={24} aria-hidden="true" className="text-(--status-error)" />
+      <h2 className="text-card-title text-(--text-main)">{title}</h2>
+      <p className="mb-3 text-body text-(--text-muted)">{text}</p>
       <Button asChild size="lg" className="w-full">
         <Link to="/login?view=forgot" data-testid="reset-password-new-link">Poslat nový odkaz</Link>
       </Button>
@@ -258,42 +261,16 @@ export function ResetPasswordPage() {
         )}
 
         {viewState === 'expired' && (
-          <>
-            <CircleX size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-error)' }} />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Odkaz vypršel nebo už byl použitý.
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Pošli si nový odkaz pro obnovu hesla na svůj e-mail.
-            </p>
-            <NewLinkActions />
-          </>
+          <DeadEnd title="Odkaz vypršel nebo už byl použitý." text="Pošli si nový odkaz pro obnovu hesla na svůj e-mail." />
         )}
 
-        {viewState === 'error' && (
-          <>
-            <CircleX size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-error)' }} />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-danger, #dc2626)' }}>
-              Reset hesla selhal
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              {message}
-            </p>
-            <NewLinkActions />
-          </>
-        )}
+        {viewState === 'error' && <DeadEnd title="Reset hesla selhal" text={message} />}
 
         {viewState === 'no-token' && (
-          <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>?</div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Chybí resetovací odkaz
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Odkaz neobsahuje platný token. Pošli si nový odkaz pro obnovu hesla na svůj e-mail.
-            </p>
-            <NewLinkActions />
-          </>
+          <DeadEnd
+            title="Chybí resetovací odkaz"
+            text="Odkaz neobsahuje platný token. Pošli si nový odkaz pro obnovu hesla na svůj e-mail."
+          />
         )}
       </div>
     </div>

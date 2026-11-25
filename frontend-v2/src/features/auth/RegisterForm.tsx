@@ -12,7 +12,7 @@ import { MEMBER_PALETTE } from '@/lib/memberPalette'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
 import { tooManyAttemptsMessage } from './tooManyAttempts'
-import { SignupConsent } from './SignupConsent'
+import { SignupConsent } from '@/components/shared/SignupConsent'
 
 interface RegisterFormProps {
   onShowLogin: () => void
