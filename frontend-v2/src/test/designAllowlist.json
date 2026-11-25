@@ -27,7 +27,7 @@
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
       "styles/cabin-settings.css", "styles/calendar.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css",
-      "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css", "styles/reservations.css",
+      "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reservations.css",
       "styles/shopping.css", "styles/skeleton.css", "styles/status-header.css"
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
@@ -81,7 +81,6 @@
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
       "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/onboarding/OnboardingPage.tsx",
-      "features/reconstruction/ReconstructionSkeleton.tsx",
       "features/settings/CabinSettingsPage.tsx", "features/superadmin/SuperAdminPage.tsx"
     ]
   },

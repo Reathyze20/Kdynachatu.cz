@@ -198,7 +198,7 @@ export function ReconstructionPage() {
 
   return (
     <div className="main-content-reconstruction" data-testid="reconstruction-page" data-reconstruction-state="ready">
-      {/* .reconstruction-card: fixed height on desktop, natural flow under 900 px; its surface duplicates Card, pinned by lightSurfaces.test. */}
+      {/* .reconstruction-card: fixed height in the desktop frame, natural flow on mobile (768 px, layout.css); its surface duplicates Card, pinned by lightSurfaces.test. */}
       <Card flush className="reconstruction-card flex min-h-0 flex-1 flex-col">
         <div className="grid gap-4 border-b border-rule-soft p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           {header}

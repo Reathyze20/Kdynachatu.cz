@@ -24,46 +24,6 @@
   box-shadow: var(--lift);
 }
 
-/* �� Header ������������������������������������������������������������������ */
-.reconstruction-header {
-  padding: var(--space-lg) var(--space-xl);
-  border-bottom: 1px solid var(--border-light, #f1f5f9);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-  min-height: 64px;
-}
-
-.reconstruction-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-/* �� Budget bar �������������������������������������������������������������� */
-.budget-container {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: var(--space-md) var(--space-xl) var(--space-lg);
-  border-bottom: 1px solid var(--border-light, #f1f5f9);
-}
-
-.budget-labels {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: var(--font-size-sm);
-}
-
-.budget-details {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-}
-
 /* �� Kanban board ������������������������������������������������������������ */
 .kanban-board {
   display: flex;
@@ -639,7 +599,9 @@
 }
 
 /* �� Responsive �������������������������������������������������������������� */
-@media (max-width: 900px) {
+/* Stejná hranice jako desktopový rám v layout.css (768/769 px): mobilní tabule v rámu
+   s pevnou výškou zmáčkla kartu na 2 px. */
+@media (max-width: 768px) {
   /* Na mobilu scrolluje celá stránka — karta nesmí mít fixní výšku
      s overflow:hidden, jinak se sloupce zmáčknou na nulovou výšku */
   .main-content-reconstruction,
@@ -670,32 +632,12 @@
     max-height: 400px;
     overflow-y: auto;
   }
-
-  .reconstruction-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-md);
-    padding: var(--space-md) var(--space-lg);
-  }
-
-  .budget-container {
-    width: 100%;
-    padding: var(--space-md) var(--space-lg);
-  }
 }
 
 @media (max-width: 480px) {
-  .reconstruction-header {
-    padding: var(--space-md);
-  }
-
   .kanban-board {
     padding: var(--space-sm);
     gap: var(--space-md);
-  }
-
-  .budget-container {
-    padding: var(--space-sm) var(--space-md);
   }
 }
 
@@ -780,25 +722,6 @@ select.form-input {
    Reconstruction overrides � Sprint 2A polish
    ============================================================================ */
 
-.reconstruction-summary {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.reconstruction-summary-pill {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 116px;
-  padding: 10px 12px;
-  border-radius: var(--radius-lg);
-  background: rgba(248, 250, 252, 0.88);
-  border: 1px solid var(--border-strong, #e5e7eb);
-  box-shadow: var(--shadow-xs);
-}
-
 .card-action-edit,
 .card-action-del,
 .card-action-link {
@@ -865,165 +788,6 @@ select.form-input {
   width: 100%;
 }
 
-.reconstruction-board-skeleton {
-  align-items: stretch;
-}
-
-.reconstruction-summary-pill--skeleton {
-  min-width: 138px;
-}
-
-.reconstruction-skeleton-title {
-  width: 220px;
-  height: 32px;
-  border-radius: 12px;
-}
-
-.reconstruction-skeleton-subtitle {
-  width: 180px;
-  height: 14px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-pill-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-pill-text {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.reconstruction-skeleton-pill-label {
-  width: 56px;
-  height: 10px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-pill-value {
-  width: 22px;
-  height: 16px;
-  border-radius: 999px;
-}
-
-.reconstruction-budget-skeleton {
-  gap: 10px;
-}
-
-.reconstruction-skeleton-budget-label,
-.reconstruction-skeleton-budget-amount,
-.reconstruction-skeleton-detail,
-.reconstruction-skeleton-progress,
-.reconstruction-skeleton-icon,
-.reconstruction-skeleton-column-title,
-.reconstruction-skeleton-count,
-.reconstruction-skeleton-badge {
-  background: var(--color-bg-hover);
-}
-
-.reconstruction-skeleton-budget-label {
-  width: 120px;
-  height: 12px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-budget-amount {
-  width: 88px;
-  height: 16px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-progress {
-  width: 100%;
-  height: 8px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-detail {
-  width: 120px;
-  height: 10px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-detail--short {
-  width: 96px;
-}
-
-.reconstruction-column-skeleton {
-  min-width: 300px;
-  max-width: 420px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.46) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.62);
-}
-
-.reconstruction-column-header-skeleton {
-  gap: 10px;
-}
-
-.reconstruction-column-body-skeleton {
-  gap: 12px;
-}
-
-.reconstruction-skeleton-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-column-title {
-  flex: 1;
-  height: 14px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-count {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-}
-
-.reconstruction-item-skeleton {
-  min-height: 144px;
-}
-
-.reconstruction-item-skeleton-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 14px;
-}
-
-.reconstruction-skeleton-badge {
-  width: 72px;
-  height: 24px;
-  border-radius: 999px;
-}
-
-.reconstruction-skeleton-badge--small {
-  width: 52px;
-}
-
-@media (max-width: 900px) {
-  /* Grid místo flex-wrap: tři dlaždice vždy v jedné řadě.
-     Flex basis 128px dával na telefonu 2+1 s osamoceným Úkoly přes celou šířku. */
-  .reconstruction-summary {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-
-  .reconstruction-summary-pill {
-    min-width: 0;
-    padding: 10px 8px;
-    justify-content: center;
-  }
-}
-
 @media (max-width: 600px) {
   .kanban-column-body {
     max-height: none;
@@ -1043,9 +807,5 @@ select.form-input {
   .reconstruction-empty-action,
   .vote-btn {
     min-height: 44px;
-  }
-
-  .reconstruction-column-skeleton {
-    min-width: 0;
   }
 }
