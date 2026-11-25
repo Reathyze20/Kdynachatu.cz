@@ -74,16 +74,15 @@ export function ReservationsPage() {
   // Detail view
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 
-  // Pod 1024 px je panel pod kalendářem (#209) – po otevření detailu k němu stránku posuneme,
-  // jinak se detail vykreslí mimo obrazovku a klepnutí vypadá, že nefunguje (#504).
+  // Pod 1024 px je panel pod kalendářem (#209) – při každém otevření detailu k němu stránku
+  // posuneme, jinak se detail vykreslí mimo obrazovku a klepnutí vypadá, že nefunguje (#504).
+  // Bez animace: poloha scrollu se neanimuje (DESIGN.md §5). `?.` kvůli jsdom bez scrollIntoView.
   const isWideDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const selectedId = selectedReservation?.id;
-  useEffect(() => {
-    if (!selectedId || isWideDesktop) return;
-    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    sidebarRef.current?.scrollIntoView?.({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-  }, [selectedId, isWideDesktop]);
+  const showDetail = (r: Reservation) => {
+    setSelectedReservation(r);
+    if (!isWideDesktop) sidebarRef.current?.scrollIntoView?.({ block: "start" });
+  };
 
   // Day filter — set when a calendar day is clicked
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -266,7 +265,7 @@ export function ReservationsPage() {
                   month={cal.month}
                   year={cal.year}
                   onMonthChange={(m, y) => { cal.goToMonth(m, y); setSelectedDay(null); }}
-                  onShowDetail={setSelectedReservation}
+                  onShowDetail={showDetail}
                   selectedDay={selectedDay}
                   onClearDayFilter={() => setSelectedDay(null)}
                   hideMonthlyNote={isGuest}
@@ -296,7 +295,7 @@ export function ReservationsPage() {
             onShowMonthList={handleAvailabilityClick}
             onRangeClear={cal.clearRange}
             onRangeStartSet={cal.setRangeStart}
-            onShowDetail={setSelectedReservation}
+            onShowDetail={showDetail}
             onDaySelect={handleDaySelect}
             onDayClear={() => setSelectedDay(null)}
             onNewReservation={handleNewReservation}

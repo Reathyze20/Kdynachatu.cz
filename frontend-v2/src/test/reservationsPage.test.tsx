@@ -137,8 +137,12 @@ describe('reservations page: detail is reachable from the grid', () => {
     await user.click(barsOf(stay)[0])
 
     await waitFor(() => expect(within(panel).getByTestId('reservation-detail-card')).toBeInTheDocument())
-    expect(scrollIntoView).toHaveBeenCalled()
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
     expect(panel).toContainElement(scrollIntoView.mock.contexts.at(-1) as HTMLElement)
+
+    // Scrolled back up, the same stay tapped again: the page has to move again.
+    await user.click(barsOf(stay)[1])
+    expect(scrollIntoView).toHaveBeenCalledTimes(2)
   })
 
   it('on a wide desktop the detail is already beside the calendar, so the page does not jump', async () => {
