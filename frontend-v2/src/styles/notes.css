@@ -242,30 +242,10 @@
   z-index: 1;
 }
 
-/* „Zpět“ z vlákna (mobil, #508): šířka podle obsahu, text se nezalomí */
+/* „Zpět“ z vlákna (mobil, #508) je <Button variant="ghost">; tady jen, aby se v řádku nesmrštil */
 .mobile-chat-back {
-  display: inline-flex;
-  align-items: center;
   align-self: flex-start;
-  gap: var(--space-xs);
-  width: auto;
-  min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
-  padding: 0 var(--space-sm);
-  margin: 0;
-  white-space: nowrap;
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  background: none;
-  border: none;
-  color: var(--text-main);
-  cursor: pointer;
   flex-shrink: 0;
-}
-
-.mobile-chat-back:hover {
-  background-color: var(--bg-hover);
 }
 
 /* Forest texture (#247) at 7 % on the paper card: decoration, not the cover photo */
@@ -1320,8 +1300,8 @@
 }
 
 .context-menu-item .menu-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #666;
   flex-shrink: 0;
   transition: color 0.12s;
@@ -1471,12 +1451,12 @@
 }
 
 .reaction-badge:hover .reaction-pill {
-  background: var(--color-bg-hover, #f3f4f6);
+  background: var(--bg-hover);
 }
 
 .reaction-badge-mine .reaction-pill {
-  border-color: rgba(93, 155, 98, 0.4);
-  background: rgba(93, 155, 98, 0.08);
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
 }
 
 .reaction-emoji {

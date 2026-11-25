@@ -120,10 +120,11 @@ describe('hlavička vlákna na mobilu', () => {
     expect(screen.queryByRole('button', { name: 'Zpět na seznam' })).toBeNull()
   })
 
-  it('„Zpět“ se neláme: šířka podle obsahu, text na jednom řádku, cíl 48 px', () => {
-    expect(base('.mobile-chat-back', 'width')).toBe('auto')
-    expect(base('.mobile-chat-back', 'white-space')).toBe('nowrap')
-    expect(base('.mobile-chat-back', 'min-height')).toBe('var(--touch-target-min)')
+  it('„Zpět“ je kanonický Button: text na jednom řádku, cíl 48 px, legacy CSS mu nepřepisuje rozměry', () => {
+    renderChat({ onBack: noop })
+    const back = screen.getByRole('button', { name: 'Zpět na seznam' })
+    expect(back).toHaveClass('whitespace-nowrap', 'min-h-(--touch-target-min)')
+    for (const prop of ['width', 'min-height', 'white-space', 'padding']) expect(base('.mobile-chat-back', prop)).toBeUndefined()
   })
 
   it('na mobilu má hlavička menší odsazení a dlouhý název se zkrátí místo zalomení', () => {

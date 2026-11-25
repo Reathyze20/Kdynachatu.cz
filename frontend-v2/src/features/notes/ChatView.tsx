@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Note } from "@/api/notes";
 import { MessageBubble } from "./MessageBubble";
 import { MessageContextMenu } from "./MessageContextMenu";
@@ -585,9 +586,9 @@ export function ChatView({
 /** „Zpět“ z vlákna na seznam témat (mobil); NotesPage ho ukáže i při načítání a chybě. */
 export function ChatBackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" className="mobile-chat-back" aria-label="Zpět na seznam" onClick={onClick}>
-      <ChevronLeft aria-hidden="true" className="size-4" />
-      <span>Zpět</span>
-    </button>
+    <Button type="button" variant="ghost" size="sm" className="mobile-chat-back" aria-label="Zpět na seznam" onClick={onClick}>
+      <ChevronLeft aria-hidden="true" />
+      Zpět
+    </Button>
   );
 }
