@@ -1,8 +1,4 @@
-/**
- * CookieConsent.tsx — jednovětá informace o cookies (#516).
- * Používáme jen technicky nezbytné cookies, takže souhlas nesbíráme, jen informujeme.
- * Podrobnosti jsou v sekci cookies v Ochraně soukromí.
- */
+/** Jednovětá informace o cookies (#516). Jen technicky nezbytné cookies, takže jen informujeme, souhlas nesbíráme. */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -37,9 +33,7 @@ export function CookieConsent() {
       <div className="mx-auto flex max-w-3xl items-center gap-3">
         <p className="m-0 flex-1 text-body text-(--text-main)" data-testid="cookie-consent-text">
           Používáme jen technicky nezbytné cookies, podrobnosti najdeš v{' '}
-          <Link to="/privacy#cookies" className="font-semibold text-primary underline underline-offset-2">
-            Ochraně soukromí
-          </Link>
+          <Link to="/privacy#cookies" className="font-semibold text-primary underline underline-offset-2">Ochraně soukromí</Link>
           .
         </p>
         <Button size="sm" onClick={handleAccept} data-testid="cookie-consent-accept-button">

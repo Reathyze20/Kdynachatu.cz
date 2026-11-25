@@ -5,7 +5,6 @@ import { CookieConsent } from '@/components/shared/CookieConsent'
 import { PrivacyPage } from '@/features/legal/PrivacyPage'
 
 /** Lišta o cookies (#516): jedna věta, odkaz do Ochrany soukromí, nezakrývá spodní navigaci. */
-
 const renderBanner = () => render(<MemoryRouter><CookieConsent /></MemoryRouter>)
 const findBanner = () => screen.findByTestId('cookie-consent-banner', {}, { timeout: 2000 })
 
@@ -15,11 +14,7 @@ describe('Lišta o cookies (#516)', () => {
   it('text je jedna věta s odkazem na sekci cookies v Ochraně soukromí', async () => {
     renderBanner()
     const text = await screen.findByTestId('cookie-consent-text', {}, { timeout: 2000 })
-
-    const sentence = text.textContent?.trim() ?? ''
-    expect(sentence.match(/[.!?…]/g)).toEqual(['.'])
-    expect(sentence.endsWith('.')).toBe(true)
-
+    expect(text.textContent?.trim()).toMatch(/^[^.!?…]+\.$/)
     const link = screen.getByRole('link', { name: 'Ochraně soukromí' })
     expect(text).toContainElement(link)
     expect(link).toHaveAttribute('href', '/privacy#cookies')
@@ -51,14 +46,9 @@ describe('Lišta o cookies (#516)', () => {
     const original = Element.prototype.scrollIntoView
     Element.prototype.scrollIntoView = function (this: Element) { scrolled.push(this.id) }
     onTestFinished(() => { Element.prototype.scrollIntoView = original })
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route path="/" element={<CookieConsent />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-        </Routes>
-      </MemoryRouter>,
-    )
+    render(<MemoryRouter><Routes>
+      <Route path="/" element={<CookieConsent />} /><Route path="/privacy" element={<PrivacyPage />} />
+    </Routes></MemoryRouter>)
     fireEvent.click(await screen.findByRole('link', { name: 'Ochraně soukromí' }, { timeout: 2000 }))
     expect(await screen.findByTestId('privacy-page')).toBeInTheDocument()
     expect(scrolled).toEqual(['cookies'])
@@ -70,8 +60,6 @@ describe('Lišta o cookies (#516)', () => {
     renderBanner()
     const banner = await findBanner()
     expect(banner).toHaveClass('fixed', 'bottom-0')
-    expect(banner.className).toContain(
-      'in-[body:has(.mobile-nav)]:bottom-[calc(var(--mobile-nav-height,0px)+env(safe-area-inset-bottom,0px))]',
-    )
+    expect(banner.className).toContain('in-[body:has(.mobile-nav)]:bottom-[calc(var(--mobile-nav-height,0px)+env(safe-area-inset-bottom,0px))]')
   })
 })
