@@ -192,6 +192,10 @@ export interface WeatherData {
   hourlyWind: HourlyWindPoint[];
   hourlyTemp: HourlyTempPoint[];
   forecast: WeatherForecastDay[];
+  /** Syrový WMO kód aktuálního počasí (scéna chaty pozná sněžení, #564). */
+  weatherCode: number;
+  /** Aktuální výška sněhové pokrývky v metrech (scéna chaty: bílá střecha, #564). */
+  snowDepth: number;
 }
 
 export type WeatherResult = WeatherData | null | "EMPTY_LOCATION" | "LOCATION_NOT_FOUND";
@@ -260,13 +264,13 @@ export async function fetchWeather(place: WeatherPlace | null | undefined): Prom
     // Step 2: Forecast
     const fxRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,uv_index` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,uv_index,snow_depth` +
       `&hourly=precipitation_probability,wind_speed_10m,temperature_2m` +
       `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,precipitation_sum` +
       `&timezone=auto&forecast_days=6`,
     );
     const fx = await fxRes.json() as {
-      current: { temperature_2m: number; relative_humidity_2m: number; apparent_temperature: number; weather_code: number; wind_speed_10m: number; uv_index: number };
+      current: { temperature_2m: number; relative_humidity_2m: number; apparent_temperature: number; weather_code: number; wind_speed_10m: number; uv_index: number; snow_depth?: number | null };
       hourly: { time: string[]; precipitation_probability: number[]; wind_speed_10m: number[]; temperature_2m: number[] };
       daily: { time: string[]; weather_code: number[]; temperature_2m_max: number[]; temperature_2m_min: number[]; sunrise: string[]; sunset: string[]; precipitation_probability_max: number[]; precipitation_sum: number[] };
     };
@@ -399,6 +403,8 @@ export async function fetchWeather(place: WeatherPlace | null | undefined): Prom
       hourlyWind,
       hourlyTemp,
       forecast,
+      weatherCode: current.weather_code,
+      snowDepth: current.snow_depth ?? 0,
     };
   } catch {
     return null;

@@ -16,6 +16,7 @@ import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
 import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
+import { useTodayWeather } from "@/features/weather/hooks/useTodayWeather";
 import { InstallCard } from "@/components/shared/InstallCard";
 import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useReservations";
 import { DASHBOARD_SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
@@ -128,6 +129,8 @@ export function DashboardPage() {
     queryFn: () => apiClient.get<CabinSettings>("/cabin").then((r) => r.data),
     staleTime: 60_000,
   });
+  // Dnešní počasí pro scénu chaty (#564): stejný dotaz jako karta dneška a menu, nic dalšího se nestahuje
+  const { data: todayWeather } = useTodayWeather(cabinQuery.data ?? undefined);
 
   // Independent queries for each domain
   const reservationsQuery = useQuery<DashboardReservationsData>({
@@ -264,7 +267,7 @@ export function DashboardPage() {
               <FeatureErrorFallback title="Rezervace se nepodařilo načíst" error={reservationsQuery.error as Error} resetErrorBoundary={() => reservationsQuery.refetch()} />
             </ErrorBoundary>
           ) : reservationsQuery.data ? (
-            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} />
+            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} weather={todayWeather} />
           ) : null}
         </motion.div>
 
