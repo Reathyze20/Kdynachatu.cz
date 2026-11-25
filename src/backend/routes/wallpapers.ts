@@ -1,6 +1,4 @@
 import { Router, Request, Response } from "express";
-import multer from "multer";
-import sharp from "sharp";
 import path from "path";
 import fs from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
@@ -12,22 +10,9 @@ import logger from "../../utils/logger";
 import { UPLOADS_PATH } from "../../config/config";
 import { z } from "zod";
 import expressAsyncHandler from "express-async-handler";
+import { acceptImages, encodeUploadedImage, RejectedImageError } from "./imageUpload";
 
 const router = Router();
-
-// Multer in-memory storage for sharp processing
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB max
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Pouze obrázky jsou povoleny"));
-    }
-  },
-});
 
 router.get(
   "/",
@@ -53,7 +38,7 @@ router.post(
   protect,
   // Před uploadem: soubor od hosta se ani nenačte do paměti.
   requireRole(["admin", "user"], "Host nemůže nahrávat tapety"),
-  upload.single("image"),
+  acceptImages("image", 1, 20 * 1024 * 1024),
   expressAsyncHandler(async (req: Request, res: Response) => {
     if (!req.user?.cabinId) {
       res.status(400).json({ message: "Uživatel nemá přiřazenou chatu" });
@@ -64,18 +49,22 @@ router.post(
       return;
     }
 
+    // Resize na max 1920 px šířky, WebP 80 % bez metadat; podvržený soubor → 400, nic se nezapíše
+    let webp: Buffer;
+    try {
+      webp = await encodeUploadedImage(req.file.buffer, { width: 1920, withoutEnlargement: true }, 80);
+    } catch (error) {
+      if (!(error instanceof RejectedImageError)) throw error;
+      res.status(400).json({ message: error.message });
+      return;
+    }
+
     // Ensure uploads directory exists
     const wpDir = path.join(UPLOADS_PATH, "wallpapers");
     await fs.mkdir(wpDir, { recursive: true });
 
     const filename = `${uuidv4()}.webp`;
-    const filepath = path.join(wpDir, filename);
-
-    // Process image with sharp: resize max 1920px width, convert to webp 80% quality
-    await sharp(req.file.buffer)
-      .resize({ width: 1920, withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toFile(filepath);
+    await fs.writeFile(path.join(wpDir, filename), webp);
 
     const fileUrl = `/uploads/wallpapers/${filename}`;
 

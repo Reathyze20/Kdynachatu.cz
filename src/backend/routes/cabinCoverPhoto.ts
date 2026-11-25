@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
+import { MAX_INPUT_PIXELS } from "./imageUpload";
 
 export const COVER_PHOTO_URL_PREFIX = "/uploads/covers/";
 export const COVER_PHOTO_NARROW_SUFFIX = "-sm";
@@ -65,7 +66,7 @@ export async function createCoverPhotoVariants(sourcePath: string, coversDir: st
  * Používá ho i staging seed (`seedStagingFiles.ts`), aby demo titulní fotka měla stejné varianty.
  */
 export async function encodeWithinBudget(source: Buffer, { width, height, maxBytes }: CoverPhotoVariantSize): Promise<Buffer> {
-  const { data, info } = await sharp(source)
+  const { data, info } = await sharp(source, { limitInputPixels: MAX_INPUT_PIXELS })
     .resize(width, height, { fit: "cover", position: "centre" })
     .raw()
     .toBuffer({ resolveWithObject: true });

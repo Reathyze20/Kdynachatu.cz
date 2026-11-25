@@ -1124,9 +1124,10 @@ const paths: Record<string, OpenApiObject> = {
       ),
       responses: {
         "200": jsonResponse(ref("GalleryUploadResponse"), "Fotky byly uspesne nahrane"),
-        "400": jsonResponse(ref("ErrorResponse"), "Chybi folderId nebo soubory"),
+        "400": jsonResponse(ref("ErrorResponse"), "Chybi folderId nebo soubory, nebo soubor neni podporovany obrazek (SVG, podvrh, pixel bomb nad 100 MP); davka se pak neulozi cela"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
         "404": jsonResponse(ref("ErrorResponse"), "Slozka nebyla nalezena"),
+        "413": jsonResponse(ref("ErrorResponse"), "Soubor je vetsi nez 15 MB"),
       },
     },
   },

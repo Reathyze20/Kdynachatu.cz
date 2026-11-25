@@ -10,8 +10,7 @@ import { UPLOADS_PATH, THUMBS_PATH } from "../../config/config";
 import fs from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import multer from "multer";
-import sharp from "sharp";
+import { acceptImages, encodeUploadedImage, RejectedImageError } from "./imageUpload";
 
 const router = Router();
 const uploadsPath = UPLOADS_PATH;
@@ -23,19 +22,6 @@ for (const dir of [uploadsPath, thumbsPath]) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }
-
-// Multer config — store in memory, then process with sharp
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB per file
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Pouze obrázky jsou povoleny."));
-    }
-  },
-});
 
 // ============================================================================
 //                         GET ALL FOLDERS
@@ -311,7 +297,7 @@ router.get("/photos", protect, requireCabin, async (req: Request, res: Response)
 // ============================================================================
 //                          UPLOAD PHOTO(S)
 // ============================================================================
-router.post("/photos", protect, requireCabin, upload.array("photos", 20), async (req: Request, res: Response) => {
+router.post("/photos", protect, requireCabin, acceptImages("photos", 20, 15 * 1024 * 1024), async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ message: "Neautorizováno" });
   }
@@ -336,23 +322,30 @@ router.post("/photos", protect, requireCabin, upload.array("photos", 20), async 
   }
 
   try {
-    // Process all images in parallel (sharp + DB insert)
-    const results = await Promise.all(
-      files.map(async (file) => {
-        const fileName = `${uuidv4()}.webp`;
-        const filePath = path.join(uploadsPath, fileName);
-        const thumbFilePath = path.join(thumbsPath, fileName);
+    // Nejdřív ověřit a překódovat všechny soubory (#480): jeden podvržený odmítne celou dávku dřív,
+    // než se cokoli zapíše na disk nebo do DB.
+    let encoded: { original: Buffer; thumb: Buffer }[];
+    try {
+      encoded = await Promise.all(
+        files.map(async (file) => {
+          const [original, thumb] = await Promise.all([
+            encodeUploadedImage(file.buffer, { width: 1920, height: 1920, fit: "inside", withoutEnlargement: true }, 82),
+            encodeUploadedImage(file.buffer, { width: 400, height: 400, fit: "inside", withoutEnlargement: true }, 70),
+          ]);
+          return { original, thumb };
+        })
+      );
+    } catch (error) {
+      if (error instanceof RejectedImageError) return res.status(400).json({ message: error.message });
+      throw error;
+    }
 
-        // Optimize original + generate thumbnail in parallel
+    const results = await Promise.all(
+      encoded.map(async ({ original, thumb }) => {
+        const fileName = `${uuidv4()}.webp`;
         await Promise.all([
-          sharp(file.buffer)
-            .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
-            .webp({ quality: 82 })
-            .toFile(filePath),
-          sharp(file.buffer)
-            .resize(400, 400, { fit: "inside", withoutEnlargement: true })
-            .webp({ quality: 70 })
-            .toFile(thumbFilePath),
+          fs.promises.writeFile(path.join(uploadsPath, fileName), original),
+          fs.promises.writeFile(path.join(thumbsPath, fileName), thumb),
         ]);
 
         const newPhoto = await prisma.galleryPhoto.create({
