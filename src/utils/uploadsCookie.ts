@@ -8,21 +8,18 @@ import jwt from "jsonwebtoken";
 
 export const UPLOADS_COOKIE = "kdynachatu_uploads";
 
-function cookieOptions(): CookieOptions {
-  return {
-    httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV === "production",
-    path: "/uploads",
-  };
-}
+const cookieOptions = (): CookieOptions => ({
+  httpOnly: true,
+  sameSite: "strict",
+  secure: process.env.NODE_ENV === "production",
+  path: "/uploads",
+});
 
 /** Nastaví cookie se stejným tokenem a stejnou platností (do `exp` tokenu). */
 export function setUploadsCookie(res: Response, token: string): void {
-  const decoded = jwt.decode(token) as { exp?: number } | null;
-  const maxAge = decoded?.exp ? decoded.exp * 1000 - Date.now() : 0;
-  if (maxAge <= 0) return;
-  res.cookie(UPLOADS_COOKIE, token, { ...cookieOptions(), maxAge });
+  const exp = (jwt.decode(token) as { exp?: number } | null)?.exp;
+  const maxAge = exp ? exp * 1000 - Date.now() : 0;
+  if (maxAge > 0) res.cookie(UPLOADS_COOKIE, token, { ...cookieOptions(), maxAge });
 }
 
 export function clearUploadsCookie(res: Response): void {
@@ -31,9 +28,7 @@ export function clearUploadsCookie(res: Response): void {
 
 /** Hodnota cookie z hlavičky Cookie (bez cookie-parseru; JWT obsahuje jen znaky base64url a tečky). */
 export function readUploadsCookie(req: Request): string | null {
-  for (const part of (req.headers.cookie ?? "").split(";")) {
-    const [name, ...rest] = part.trim().split("=");
-    if (name === UPLOADS_COOKIE) return rest.join("=") || null;
-  }
-  return null;
+  const prefix = `${UPLOADS_COOKIE}=`;
+  const part = (req.headers.cookie ?? "").split(";").map((p) => p.trim()).find((p) => p.startsWith(prefix));
+  return part ? part.slice(prefix.length) || null : null;
 }

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { InternalAxiosRequestConfig } from 'axios'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { authApi } from '@/api/auth'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { isQueueableRequest } from '@/lib/offlineQueue'
@@ -15,50 +15,27 @@ function LogoutButton() {
   return <button type="button" onClick={logout}>Odhlásit</button>
 }
 
-function renderAuth() {
-  render(
-    <MemoryRouter>
-      <AuthProvider>
-        <LogoutButton />
-      </AuthProvider>
-    </MemoryRouter>,
-  )
-}
-
-function storeSession() {
-  const items = { authToken: 'token-jana', userId: 'u-jana', username: 'jana', role: 'user', cabinId: 'cabin-1' }
-  Object.entries(items).forEach(([key, value]) => localStorage.setItem(key, value))
-}
-
-let sync: ReturnType<typeof vi.spyOn>
-let logout: ReturnType<typeof vi.spyOn>
-
-beforeEach(() => {
+function renderAuth({ loggedIn }: { loggedIn: boolean }) {
   localStorage.clear()
   sessionStorage.clear()
-  sync = vi.spyOn(authApi, 'syncUploadsCookie').mockResolvedValue()
-  logout = vi.spyOn(authApi, 'logout').mockResolvedValue()
-})
+  if (loggedIn) Object.entries({ authToken: 't-jana', userId: 'u-jana', username: 'jana', role: 'user' }).forEach(([k, v]) => localStorage.setItem(k, v))
+  const sync = vi.spyOn(authApi, 'syncUploadsCookie').mockResolvedValue()
+  const logout = vi.spyOn(authApi, 'logout').mockResolvedValue()
+  render(<MemoryRouter><AuthProvider><LogoutButton /></AuthProvider></MemoryRouter>)
+  return { sync, logout }
+}
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
+afterEach(() => vi.restoreAllMocks())
 
 describe('cookie pro fotky (#487)', () => {
-  it('přihlášená relace si při startu appky vyžádá cookie', () => {
-    storeSession()
-    renderAuth()
-    expect(sync).toHaveBeenCalledTimes(1)
-  })
-
-  it('bez přihlášení se cookie nevyžaduje', () => {
-    renderAuth()
-    expect(sync).not.toHaveBeenCalled()
+  it('přihlášená relace si při startu appky vyžádá cookie, nepřihlášená ne', () => {
+    expect(renderAuth({ loggedIn: true }).sync).toHaveBeenCalledTimes(1)
+    vi.restoreAllMocks()
+    expect(renderAuth({ loggedIn: false }).sync).not.toHaveBeenCalled()
   })
 
   it('odhlášení nechá cookie smazat', async () => {
-    storeSession()
-    renderAuth()
+    const { logout } = renderAuth({ loggedIn: true })
     await userEvent.click(screen.getByRole('button', { name: 'Odhlásit' }))
     expect(logout).toHaveBeenCalledTimes(1)
   })
