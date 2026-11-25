@@ -242,7 +242,7 @@ button.newReservationButton {
   border-right: none;
 }
 
-.calDay:hover {
+.calDay:not(.pastDate):hover {
   background: rgb(var(--inset));
 }
 
@@ -279,9 +279,10 @@ button.newReservationButton {
   opacity: 0.55;
 }
 
+/* Minulý den nejde vybrat jako nový termín (hlídá CalendarGrid), ale pruh pobytu
+   v něm se dál otevře (#504) – proto žádné pointer-events: none na celé buňce. */
 .pastDate {
   opacity: 0.62;
-  pointer-events: none;
   cursor: default;
 }
 

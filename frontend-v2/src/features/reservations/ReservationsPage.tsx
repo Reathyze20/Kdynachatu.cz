@@ -5,8 +5,9 @@
  *   Main  — CalendarGrid + QuickStats + „Nová rezervace"
  *   Aside — ReservationList | ReservationDetail (landmark „Rezervace")
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Umbrella, Home } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -72,6 +73,16 @@ export function ReservationsPage() {
 
   // Detail view
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+
+  // Pod 1024 px je panel pod kalendářem (#209) – při každém otevření detailu k němu stránku
+  // posuneme, jinak se detail vykreslí mimo obrazovku a klepnutí vypadá, že nefunguje (#504).
+  // Bez animace: poloha scrollu se neanimuje (DESIGN.md §5). `?.` kvůli jsdom bez scrollIntoView.
+  const isWideDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const showDetail = (r: Reservation) => {
+    setSelectedReservation(r);
+    if (!isWideDesktop) sidebarRef.current?.scrollIntoView?.({ block: "start" });
+  };
 
   // Day filter — set when a calendar day is clicked
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -236,7 +247,7 @@ export function ReservationsPage() {
       <TwoColumnLayout
         asideLabel="Rezervace"
         aside={
-          <div className={styles.listContainer} data-testid="reservations-sidebar">
+          <div ref={sidebarRef} className={styles.listContainer} data-testid="reservations-sidebar">
             <div className={styles.listScroll}>
               {selectedReservation ? (
                 <ReservationDetail
@@ -254,7 +265,7 @@ export function ReservationsPage() {
                   month={cal.month}
                   year={cal.year}
                   onMonthChange={(m, y) => { cal.goToMonth(m, y); setSelectedDay(null); }}
-                  onShowDetail={setSelectedReservation}
+                  onShowDetail={showDetail}
                   selectedDay={selectedDay}
                   onClearDayFilter={() => setSelectedDay(null)}
                   hideMonthlyNote={isGuest}
@@ -284,7 +295,7 @@ export function ReservationsPage() {
             onShowMonthList={handleAvailabilityClick}
             onRangeClear={cal.clearRange}
             onRangeStartSet={cal.setRangeStart}
-            onShowDetail={setSelectedReservation}
+            onShowDetail={showDetail}
             onDaySelect={handleDaySelect}
             onDayClear={() => setSelectedDay(null)}
             onNewReservation={handleNewReservation}

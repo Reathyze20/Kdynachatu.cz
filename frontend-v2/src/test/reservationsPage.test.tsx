@@ -116,3 +116,61 @@ describe('reservations page: detail in the side panel', () => {
     expect(calendarHeading()).toBeInTheDocument()
   })
 })
+
+// #504: a tapped bar must always lead to a visible detail.
+describe('reservations page: detail is reachable from the grid', () => {
+  const scrollIntoView = vi.fn()
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = scrollIntoView
+  })
+  afterEach(() => {
+    scrollIntoView.mockReset()
+    // @ts-expect-error jsdom has no scrollIntoView; restore its absence
+    delete Element.prototype.scrollIntoView
+    vi.unstubAllGlobals()
+  })
+
+  it('on mobile a bar tap scrolls the page to the detail panel', async () => {
+    const user = renderPage()
+    const panel = await findPanel()
+
+    await user.click(barsOf(stay)[0])
+
+    await waitFor(() => expect(within(panel).getByTestId('reservation-detail-card')).toBeInTheDocument())
+    expect(scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(panel).toContainElement(scrollIntoView.mock.contexts.at(-1) as HTMLElement)
+
+    // Scrolled back up, the same stay tapped again: the page has to move again.
+    await user.click(barsOf(stay)[1])
+    expect(scrollIntoView).toHaveBeenCalledTimes(2)
+  })
+
+  it('on a wide desktop the detail is already beside the calendar, so the page does not jump', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(min-width: 1024px)',
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    const user = renderPage()
+    const panel = await findPanel()
+
+    await user.click(barsOf(stay)[0])
+
+    await waitFor(() => expect(within(panel).getByTestId('reservation-detail-card')).toBeInTheDocument())
+    expect(scrollIntoView).not.toHaveBeenCalled()
+  })
+
+  it('a bar of a stay that already ended opens its detail; the past day itself does not start a selection', async () => {
+    vi.setSystemTime(new Date(2030, 5, 20))
+    const user = renderPage()
+    const panel = await findPanel()
+
+    await user.click(document.querySelector(`[data-date="${ym}-15"]`) as HTMLElement)
+    expect(screen.queryByTestId('calendar-selection-chip')).toBeNull()
+
+    await user.click(barsOf(stay)[0])
+
+    await waitFor(() => expect(within(panel).getByTestId('reservation-detail-card')).toBeInTheDocument())
+  })
+})
