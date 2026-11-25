@@ -7,7 +7,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Building2, Lightbulb, ListTodo } from 'lucide-react'
 import { DndContext, type DragEndEvent } from '@dnd-kit/core'
+import { Card } from '@/components/shared/Card'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useReconstruction, useCreateRecItem, useUpdateRecItem } from './hooks/useReconstruction'
@@ -18,8 +20,7 @@ import { TaskFormModal } from './TaskFormModal'
 import { showToast } from '@/lib/toast'
 import type { RecCategory, RecItem, RecItemCreate } from '@/api/reconstruction'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
-
-const MOTION_EASE = [0.22, 1, 0.36, 1] as const
+import { formatAmount, formatPercent } from '@/lib/format'
 
 const BOARD_VARIANTS = {
   hidden: { opacity: 0 },
@@ -61,7 +62,7 @@ export function ReconstructionPage() {
     .reduce((s, t) => s + (t.cost ?? 0), 0)
   const budgetPercent = totalBudget > 0 ? Math.min((spentBudget / totalBudget) * 100, 100) : 0
   const hasBudget = totalBudget > 0
-  const summaryCards = [
+  const summary = [
     { label: 'Nápady', value: ideaItems.length, icon: Lightbulb },
     { label: 'Firmy', value: companyItems.length, icon: Building2 },
     { label: 'Úkoly', value: taskItems.length, icon: ListTodo },
@@ -176,79 +177,62 @@ export function ReconstructionPage() {
     )
   }
 
+  const header = <PageHeader title="Rekonstrukce a plány" subtitle="Nápady, firmy a úkoly na jedno místo" />
+
   if (isError) {
     return (
       <div className="main-content-reconstruction" data-testid="reconstruction-page" data-reconstruction-state="error">
-        <div className="page-card reconstruction-card">
-          <div className="reconstruction-header">
-            <div className="reconstruction-header-left">
-              <h1>Rekonstrukce a plány</h1>
-              <p>Nápady, firmy a úkoly na jedno místo</p>
-            </div>
-          </div>
-          <div className="reconstruction-state-wrap">
+        <Card flush className="reconstruction-card flex min-h-0 flex-1 flex-col">
+          <div className="border-b border-rule-soft p-4 md:p-6">{header}</div>
+          <div className="p-4 md:p-6">
             <FeatureErrorFallback
               error={error instanceof Error ? error : new Error('Nepodařilo se načíst rekonstrukce')}
               resetErrorBoundary={() => queryClient.invalidateQueries({ queryKey: ['reconstruction'] })}
               title="Rekonstrukce se nepodařilo načíst"
             />
           </div>
-        </div>
+        </Card>
       </div>
     )
   }
 
   return (
     <div className="main-content-reconstruction" data-testid="reconstruction-page" data-reconstruction-state="ready">
-      <div className="page-card reconstruction-card">
-        <div className="reconstruction-header">
-          <div className="reconstruction-header-left">
-            <h1>Rekonstrukce a plány</h1>
-            <p>Nápady, firmy a úkoly na jedno místo</p>
-          </div>
-          <div className="reconstruction-summary" aria-label="Souhrn rekonstrukcí" data-testid="reconstruction-summary">
-            {summaryCards.map(({ label, value, icon: Icon }, index) => (
-              <motion.div
-                key={label}
-                className="reconstruction-summary-pill"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.22, ease: MOTION_EASE, delay: 0.04 * index }}
-              >
-                <Icon size={18} strokeWidth={2.2} aria-hidden="true" />
-                <div>
-                  <span className="reconstruction-summary-label">{label}</span>
-                  <span className="reconstruction-summary-value">{value}</span>
-                </div>
-              </motion.div>
+      {/* .reconstruction-card: fixed height on desktop, natural flow under 900 px; its surface duplicates Card, pinned by lightSurfaces.test. */}
+      <Card flush className="reconstruction-card flex min-h-0 flex-1 flex-col">
+        <div className="grid gap-4 border-b border-rule-soft p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          {header}
+          <dl className="grid grid-cols-3 gap-2 md:gap-3" aria-label="Souhrn rekonstrukcí" data-testid="reconstruction-summary">
+            {summary.map(({ label, value, icon: Icon }) => (
+              <div key={label} className="flex flex-col-reverse gap-1 rounded-xl bg-inset p-3 lg:min-w-28">
+                <dt className="flex items-center gap-2 text-label text-(--text-muted)">
+                  <Icon aria-hidden="true" className="size-4 shrink-0" />
+                  {label}
+                </dt>
+                <dd className="text-card-title text-(--text-main)">{value}</dd>
+              </div>
             ))}
-          </div>
-        </div>
+          </dl>
 
-        {/* Budget bar */}
-        {hasBudget && (
-          <motion.div
-            className="budget-container"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24, ease: MOTION_EASE, delay: 0.08 }}
-          >
-            <div className="budget-labels">
-              <span className="budget-title">Celkový rozpočet</span>
-              <span className="budget-amount">{totalBudget.toLocaleString('cs-CZ')} Kč</span>
-            </div>
-            <div className="budget-progress-bar">
-              <div
-                className="budget-progress-fill"
-                style={{ width: `${budgetPercent}%` }}
+          {hasBudget && (
+            <section aria-labelledby="reconstruction-budget-title" className="grid gap-2 rounded-xl bg-inset p-3 md:p-4 lg:col-span-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <h2 id="reconstruction-budget-title" className="text-card-title text-(--text-main)">Celkový rozpočet</h2>
+                <span className="text-card-title text-(--text-main)">{formatAmount(totalBudget)}</span>
+              </div>
+              <progress
+                value={spentBudget}
+                max={totalBudget}
+                aria-label="Hotovo z rozpočtu"
+                className="h-2 w-full appearance-none overflow-hidden rounded-full border-0 bg-sheet [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-sheet [&::-webkit-progress-value]:bg-primary"
               />
-            </div>
-            <div className="budget-details">
-              <span>Hotovo: {spentBudget.toLocaleString('cs-CZ')} Kč ({Math.round(budgetPercent)} %)</span>
-              <span>Zbývá: {(totalBudget - spentBudget).toLocaleString('cs-CZ')} Kč</span>
-            </div>
-          </motion.div>
-        )}
+              <div className="flex flex-wrap justify-between gap-x-3 text-meta text-(--text-muted)">
+                <span>Hotovo: {formatAmount(spentBudget)} ({formatPercent(budgetPercent)})</span>
+                <span>Zbývá: {formatAmount(totalBudget - spentBudget)}</span>
+              </div>
+            </section>
+          )}
+        </div>
 
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <motion.div className="kanban-board" variants={BOARD_VARIANTS} initial="hidden" animate="visible" data-testid="reconstruction-board">
@@ -278,7 +262,7 @@ export function ReconstructionPage() {
             />
           </motion.div>
         </DndContext>
-      </div>
+      </Card>
 
       {showModal && (
         <TaskFormModal
