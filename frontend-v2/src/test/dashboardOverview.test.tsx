@@ -383,12 +383,14 @@ describe('Přehled: kompaktní karta chaty a pozvánka (#172, #338)', () => {
     expect(within(today).queryByRole('link', { name: /Akce v kraji/ })).not.toBeInTheDocument()
   })
 
-  it('když se nic neděje, je místo karty stavu pozvánka se slotem na ilustraci a tlačítkem „Zabrat termín“', async () => {
+  it('když se nic neděje, je místo karty stavu pozvánka se scénou chaty místo ilustrace a tlačítkem „Zabrat termín“', async () => {
     renderOverview(reservations())
 
     const invite = await screen.findByRole('region', { name: 'Chata zatím čeká' })
     expect(within(invite).getByText('Zaber termín a rozjeď to.')).toBeInTheDocument()
-    expect(within(invite).getByTestId('overview-invite-media')).toBeInTheDocument()
+    // #579: scéna chaty nahradila starý obrázek dveří (změnu chování schválil uživatel 2026-11-25).
+    expect(within(invite).getByRole('img', { name: /^Scéna chaty/ })).toBeInTheDocument()
+    expect(within(invite).queryByTestId('overview-invite-media')).not.toBeInTheDocument()
     expect(within(invite).getByRole('button', { name: 'Zabrat termín' })).toBeInTheDocument()
   })
 

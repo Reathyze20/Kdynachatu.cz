@@ -18,6 +18,8 @@ export interface CabinSceneState {
   occupied: boolean;
   arriving: boolean;
   departing: boolean;
+  /** Auto u chaty: celý den příjezdu, v den odjezdu bez příjezdu jen do 14:00 (#579). */
+  car: boolean;
   winterized: boolean;
   night: boolean;
 }
@@ -30,20 +32,23 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
   // „Teď“ jako v kartě (buildTurnusChain): ve střídací den ten, kdo přijel dřív, po 14:00 už pryč.
   const current = [...todays].sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to))[0];
   const present = !!current && !(current.to === today && hour >= DEPARTURE_HOUR);
+  // Zazimování přebíjí obsazenost i auto (souhlasí s bannerem „Chata je zazimovaná“).
+  const arriving = !winterized && todays.some((s) => s.from === today);
+  const departing = !winterized && todays.some((s) => s.to === today);
   return {
-    // Zazimování přebíjí obsazenost i auto (souhlasí s bannerem „Chata je zazimovaná“).
     occupied: !winterized && present,
-    arriving: !winterized && todays.some((s) => s.from === today),
-    departing: !winterized && todays.some((s) => s.to === today),
+    arriving,
+    departing,
+    car: arriving || (departing && hour < DEPARTURE_HOUR),
     winterized,
     night: hour >= NIGHT_FROM_HOUR || hour < NIGHT_UNTIL_HOUR,
   };
 }
 
-/** Auto má přednost před štípáním: při příjezdu nebo odjezdu plch mává, i když je někdo na chatě. */
+/** Auto má přednost před štípáním: když u chaty stojí auto, plch mává, i když je někdo na chatě. */
 export function mascotPose(s: CabinSceneState): MascotPose {
   if (s.winterized) return "idle";
-  if (s.arriving || s.departing) return "wave";
+  if (s.car) return "wave";
   return s.occupied ? "chop" : "sleep";
 }
 
@@ -59,9 +64,9 @@ export function cabinSceneLabel(s: CabinSceneState): string {
   const parts = [
     s.winterized ? "Chata je zazimovaná, okenice jsou zavřené." : "",
     s.occupied ? "Někdo je na chatě, z komína jde kouř a svítí okno." : s.winterized ? "" : "Chata je prázdná.",
-    s.arriving && s.departing ? "Dnes se na chatě střídají, u chaty stojí auto." :
-      s.arriving ? "Dnes někdo přijíždí, u chaty stojí auto." :
-      s.departing ? "Dnes někdo odjíždí, u chaty stojí auto." : "",
+    !s.car ? "" :
+      s.arriving && s.departing ? "Dnes se na chatě střídají, u chaty stojí auto." :
+      s.arriving ? "Dnes někdo přijíždí, u chaty stojí auto." : "Dnes někdo odjíždí, u chaty stojí auto.",
     POSE_TEXT[mascotPose(s)],
     s.night ? "Je noc, na nebi svítí hvězdy." : "",
   ];

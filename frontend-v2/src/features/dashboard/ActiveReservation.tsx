@@ -7,10 +7,9 @@ import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";
 import { gasLine } from "@/lib/gasLevel";
-import { OVERVIEW_INVITE_ILLUSTRATION } from "./overviewAssets";
 import { CabinScene } from "./CabinScene";
 import { DEPARTURE_HOUR } from "./cabinSceneState";
-import { ArrowRight, CalendarPlus, CircleCheck, DoorOpen, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowRight, CalendarPlus, CircleCheck, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
@@ -256,9 +255,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     <section className="glass-card status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
       <div className="card-body-full status-content">
         <CabinScene data={data} winterized={isWinterized} />
-        <div className="overview-invite__media" data-testid="overview-invite-media" aria-hidden="true">
-          {OVERVIEW_INVITE_ILLUSTRATION ? <img src={OVERVIEW_INVITE_ILLUSTRATION} alt="" /> : <DoorOpen className="w-5 h-5" />}
-        </div>
         <h2 id="overview-invite-title" className="overview-invite__title">Chata zatím čeká</h2>
         <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
         {buildLastStayBlock(data.lastStay)}
