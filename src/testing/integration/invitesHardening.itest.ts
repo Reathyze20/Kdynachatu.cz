@@ -87,12 +87,27 @@ describe("invites: maxUses holds under concurrent accepts", () => {
     assert.equal((await prisma.inviteLink.findUniqueOrThrow({ where: { id: invite.id } })).usedCount, 2);
   });
 
-  test("a failed account creation does not consume the invite", async () => {
+  test("a rejected accept (taken username) does not consume the invite", async () => {
     const invite = await createInvite(1);
     const taken = await request(app)
       .post(`/api/invites/accept/${invite.token}`)
       .send({ username: world.memberA.username, password: TEST_PASSWORD });
     assert.equal(taken.status, 409);
     assert.equal((await prisma.inviteLink.findUniqueOrThrow({ where: { id: invite.id } })).usedCount, 0);
+  });
+
+  test("concurrent accepts with the same new username use the invite only for the one created account", async () => {
+    // Souběžné požadavky projdou kontrolou jména dřív, než kdokoli zapíše; založení účtu pak selže
+    // na unikátním jménu uvnitř transakce a použití pozvánky se musí vrátit.
+    const invite = await createInvite(5);
+    const responses = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(app).post(`/api/invites/accept/${invite.token}`).send({ username: "stejne-jmeno", password: TEST_PASSWORD }),
+      ),
+    );
+
+    assert.equal(responses.filter((r) => r.status === 201).length, 1);
+    assert.equal(await prisma.user.count({ where: { username: "stejne-jmeno" } }), 1);
+    assert.equal((await prisma.inviteLink.findUniqueOrThrow({ where: { id: invite.id } })).usedCount, 1);
   });
 });

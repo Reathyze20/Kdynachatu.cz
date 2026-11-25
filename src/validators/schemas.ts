@@ -176,9 +176,10 @@ const reconstructionStatusSchema = z.enum([
 ]);
 
 // Odkaz a náhled rekonstrukce frontend vykreslí jako href/src (#482): jen http(s), `javascript:` ani `data:` neprojdou.
-const reconstructionUrlSchema = z
-  .url({ protocol: /^https?$/, error: "Odkaz musí začínat http:// nebo https://" })
-  .max(1000, "Maximální délka je 1000 znaků");
+const reconstructionUrlSchema = (error: string) =>
+  z.url({ protocol: /^https?$/, error }).max(1000, "Maximální délka je 1000 znaků");
+const reconstructionLinkSchema = reconstructionUrlSchema("Odkaz musí začínat http:// nebo https://");
+const reconstructionThumbnailSchema = reconstructionUrlSchema("Náhledový obrázek musí začínat http:// nebo https://");
 
 export const createReconstructionItemSchema = z.object({
   category: z.enum(["idea", "company", "task"], {
@@ -186,8 +187,8 @@ export const createReconstructionItemSchema = z.object({
   }),
   title: z.string().min(1, "Název je povinný").max(100, "Maximální délka je 100 znaků"),
   description: z.string().max(2000, "Maximální délka je 2000 znaků").optional(),
-  link: reconstructionUrlSchema.optional().or(z.literal("")),
-  thumbnail: reconstructionUrlSchema.optional().or(z.literal("")),
+  link: reconstructionLinkSchema.optional().or(z.literal("")),
+  thumbnail: reconstructionThumbnailSchema.optional().or(z.literal("")),
   cost: z.number().positive().max(999999999, "Maximální hodnota je 999 999 999").optional(),
   status: reconstructionStatusSchema.optional(),
   // Company and task fields, same rules as updateReconstructionItemSchema.
@@ -284,8 +285,8 @@ export const updateReconstructionItemSchema = z.object({
   category: z.enum(["idea", "company", "task"]),
   title: z.string().min(1, "Název je povinný").max(100, "Maximální délka je 100 znaků"),
   description: z.string().max(2000, "Maximální délka je 2000 znaků").optional(),
-  link: reconstructionUrlSchema.optional().or(z.literal("")).or(z.literal(null)),
-  thumbnail: reconstructionUrlSchema.optional().or(z.literal("")).or(z.literal(null)),
+  link: reconstructionLinkSchema.optional().or(z.literal("")).or(z.literal(null)),
+  thumbnail: reconstructionThumbnailSchema.optional().or(z.literal("")).or(z.literal(null)),
   cost: z.coerce.number().positive().max(999999999).optional().nullable(),
   status: reconstructionStatusSchema.optional(),
   tag: z.string().max(50).optional().nullable(),
