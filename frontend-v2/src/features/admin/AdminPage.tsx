@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Card } from '@/components/shared/Card'
 import { ListRow } from '@/components/shared/ListRow'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
@@ -96,6 +97,11 @@ function isInviteExhausted(invite: Pick<Invite, 'maxUses' | 'usedCount'>): boole
   return invite.maxUses !== null && invite.usedCount >= invite.maxUses
 }
 
+/** Vypršelá nebo vyčerpaná pozvánka patří do archivu, její odkaz už nefunguje. */
+function isInviteArchived(invite: Pick<Invite, 'expiresAt' | 'maxUses' | 'usedCount'>): boolean {
+  return isInviteExpired(invite.expiresAt) || isInviteExhausted(invite)
+}
+
 function isInviteAccepted(invite: Pick<Invite, 'maxUses' | 'usedCount'>): boolean {
   return invite.usedCount > 0 && invite.maxUses !== null && invite.usedCount >= invite.maxUses
 }
@@ -141,6 +147,9 @@ function buildInviteShareText(invite: Invite): string {
 
 function buildRevokeConfirmMessage(invite: Invite): string {
   const roleLabel = getRoleLabel(invite.role).toLocaleLowerCase('cs-CZ')
+  if (isInviteArchived(invite)) {
+    return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ zmizí z archivu. Odkaz už nefunguje, vrátit to nejde.`
+  }
   const author = invite.createdBy?.username ? `, autor: ${invite.createdBy.username}` : ''
   return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ (platí do ${formatDate(invite.expiresAt)}${author}). Odkaz přestane fungovat a kdo ho už dostal, se přes něj nepřipojí.`
 }
@@ -593,20 +602,21 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     )
   }
 
-  function handleRevoke(id: string, onError: (message: string) => void = setActionError, onSuccess?: () => void) {
+  function handleRevoke(invite: Invite) {
+    const verb = isInviteArchived(invite) ? 'odstranit' : 'zrušit'
     setActionError(null)
-    revokeInvite.mutate(id, {
+    setRevokeError(null)
+    revokeInvite.mutate(invite.id, {
       onSuccess: () => {
-        setActionError(null)
-        showToast('Pozvánka zrušena.', 'success')
-        onSuccess?.()
+        showToast(isInviteArchived(invite) ? 'Pozvánka odstraněna.' : 'Pozvánka zrušena.', 'success')
+        setRevokeTarget(null)
       },
       onError: (error) => {
-        onError(
+        setRevokeError(
           getNetworkAwareActionMessage(
             error,
-            'Pozvánku se nepodařilo zrušit. Zkus to znovu.',
-            'Spojení vypadlo dřív, než se pozvánka stihla zrušit. Zkus to znovu po obnovení připojení.',
+            `Pozvánku se nepodařilo ${verb}. Zkus to znovu.`,
+            `Spojení vypadlo dřív, než se pozvánka stihla ${verb}. Zkus to znovu po obnovení připojení.`,
           ),
         )
       },
@@ -660,8 +670,9 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     )
   }
 
-  const activeInvites = invites.filter((invite) => !isInviteExpired(invite.expiresAt) && !isInviteExhausted(invite))
-  const inactiveInvites = invites.filter((invite) => isInviteExpired(invite.expiresAt) || isInviteExhausted(invite))
+  const activeInvites = invites.filter((invite) => !isInviteArchived(invite))
+  const inactiveInvites = invites.filter(isInviteArchived)
+  const revokeArchived = revokeTarget !== null && isInviteArchived(revokeTarget)
 
   return (
     <Card as="section" className="space-y-4" id="admin-invites" data-testid="admin-invites-section">
@@ -779,7 +790,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 as="li"
                 key={inv.id}
                 action={
-                  <Button variant="secondary" size="sm" className="text-destructive" onClick={() => handleRevoke(inv.id)} disabled={revokeInvite.isPending}>
+                  <Button variant="secondary" size="sm" className="text-destructive" onClick={() => setRevokeTarget(inv)} disabled={revokeInvite.isPending} data-testid="invite-archive-delete-button">
                     Odstranit
                   </Button>
                 }
@@ -800,17 +811,15 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
 
       <ConfirmDialog
         isOpen={revokeTarget !== null}
-        title="Zrušit pozvánku?"
+        title={revokeArchived ? 'Odstranit pozvánku z archivu?' : 'Zrušit pozvánku?'}
         message={revokeTarget ? buildRevokeConfirmMessage(revokeTarget) : ''}
-        confirmLabel="Zrušit pozvánku"
-        cancelLabel="Nechat platit"
+        confirmLabel={revokeArchived ? 'Odstranit' : 'Zrušit pozvánku'}
+        cancelLabel={revokeArchived ? 'Nechat' : 'Nechat platit'}
         danger
         loading={revokeInvite.isPending}
         errorMessage={revokeError}
         onConfirm={() => {
-          if (!revokeTarget) return
-          setRevokeError(null)
-          handleRevoke(revokeTarget.id, setRevokeError, () => setRevokeTarget(null))
+          if (revokeTarget) handleRevoke(revokeTarget)
         }}
         onCancel={() => {
           setRevokeTarget(null)
@@ -917,7 +926,7 @@ export function AdminPage() {
   const adminCount = users.filter((user) => user.role === 'admin').length
   const memberCount = users.filter((user) => user.role === 'user').length
   const guestCount = users.filter((user) => user.role === 'guest').length
-  const activeInvitesCount = invites.filter((invite) => !isInviteExpired(invite.expiresAt) && !isInviteExhausted(invite)).length
+  const activeInvitesCount = invites.filter((invite) => !isInviteArchived(invite)).length
   const archivedInvitesCount = invites.length - activeInvitesCount
   const localAccountCount = users.filter((user) => !user.email).length
   const hasUserFilters = normalizedSearchTerm.length > 0 || roleFilter !== 'all'
@@ -954,6 +963,10 @@ export function AdminPage() {
     navigate(`${getAdminWorkspacePath(workspace)}${sectionId ? `#${sectionId}` : ''}`)
   }
 
+  function openDiagnostics() {
+    navigate('/admin/diagnostics#system-logs')
+  }
+
   useEffect(() => {
     const legacyPanel = new URLSearchParams(location.search).get('panel')
     if (!legacyPanel) return
@@ -983,11 +996,9 @@ export function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="main-content-admin" data-testid="admin-page" data-admin-state="denied">
-        <div className="page-card admin-page-card admin-denied-card">
-          <span className="admin-kicker">Administrace</span>
-          <h1 className="admin-page-title">Přístup odepřen</h1>
-          <p className="admin-page-lead">Nemáš administrátorská oprávnění pro správu účtů, pozvánek ani systémového přehledu.</p>
-        </div>
+        <Card>
+          <PageHeader title="Přístup odepřen" subtitle="Nemáš administrátorská oprávnění pro správu účtů, pozvánek ani systémového přehledu." />
+        </Card>
       </div>
     )
   }
@@ -1031,30 +1042,15 @@ export function AdminPage() {
 
   return (
     <div className="main-content-admin" data-testid="admin-page" data-admin-state="ready" data-admin-workspace={activeWorkspace}>
-      <section className="page-card admin-page-card admin-shell-card">
-        <div className="admin-shell-topbar">
-          <div className="admin-shell-copy">
-            <span className="admin-kicker">Administrativa</span>
-            <h1 className="admin-page-title admin-page-title--compact">{workspaceSummary[activeWorkspace].title}</h1>
-            <p className="admin-page-lead admin-page-lead--compact">
-              {workspaceSummary[activeWorkspace].lead}
-            </p>
-          </div>
-
-          <div className="admin-hero-actions">
-            <button type="button" className="btn btn-primary" onClick={() => openWorkspace('members', 'admin-create-user')} data-testid="admin-add-user-button">
-              <UserPlus size={16} />
-              Přidat člena
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => navigate('/admin/diagnostics#system-logs')} data-testid="admin-open-diagnostics-button">
-              <ScrollText size={16} />
-              Otevřít diagnostiku
-            </button>
-          </div>
-        </div>
-
+      <Card as="section" className="grid gap-4 md:gap-6">
+        <PageHeader
+          title={workspaceSummary[activeWorkspace].title}
+          subtitle={workspaceSummary[activeWorkspace].lead}
+          primaryAction={{ label: 'Přidat člena', icon: UserPlus, onClick: () => openWorkspace('members', 'admin-create-user') }}
+          secondaryActions={[{ label: 'Otevřít diagnostiku', icon: ScrollText, onSelect: openDiagnostics }]}
+        />
         <AdminSectionMenu active={activeWorkspace} />
-      </section>
+      </Card>
 
       {/* Jen staging (#390); na stagingu je Správa hlavně kvůli ní, proto nahoře ve výchozím panelu */}
       {activeWorkspace === 'members' ? <StagingFeedbackSection /> : null}
@@ -1142,18 +1138,12 @@ export function AdminPage() {
           </Card>
 
           <aside className="admin-sidebar-stack">
-            <section className="page-card admin-page-card admin-card" id="admin-create-user" data-testid="admin-create-user-section">
-              <div className="admin-card-header">
-                <div>
-                  <div className="admin-card-eyebrow">Nový přístup</div>
-                  <div className="admin-card-title-row">
-                    <h2 className="admin-card-title">Přidat člena bez e-mailu</h2>
-                  </div>
-                  <p className="admin-card-description">
-                    Použij pro členy rodiny, kteří se přihlašují přímo jménem a heslem bez pozvánky e-mailem.
-                  </p>
-                </div>
-              </div>
+            <Card as="section" className="space-y-4" id="admin-create-user" data-testid="admin-create-user-section">
+              <AdminCardHeading
+                eyebrow="Nový přístup"
+                title="Přidat člena bez e-mailu"
+                description="Použij pro členy rodiny, kteří se přihlašují přímo jménem a heslem bez pozvánky e-mailem."
+              />
 
               <form
                 id="add-user-form"
@@ -1172,41 +1162,35 @@ export function AdminPage() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-password">Heslo</label>
-                  <input id="new-password" name="password" type="password" required minLength={8} maxLength={100} autoComplete="new-password" data-testid="admin-create-password-input" />
+                  <Input id="new-password" name="password" type="password" required minLength={8} maxLength={100} autoComplete="new-password" data-testid="admin-create-password-input" />
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-role">Role</label>
                   <RoleSelect id="new-role" name="role" data-testid="admin-create-role-select" />
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={createUser.isPending} data-testid="admin-create-submit-button">
-                  <UserPlus size={16} />
+                <Button type="submit" pending={createUser.isPending} data-testid="admin-create-submit-button">
+                  {createUser.isPending ? null : <UserPlus aria-hidden="true" />}
                   {createUser.isPending ? 'Přidávám…' : 'Přidat uživatele'}
-                </button>
+                </Button>
               </form>
 
-              <p className="admin-form-note">
+              <p className="text-label text-(--text-muted)">
                 Admin má plný přístup. Host uvidí obsah, ale bez běžného vytváření a mazání. Účet můžeš později upravit v detailu uživatele.
               </p>
 
               {createUserError ? (
                 <div className="error-message show admin-section-error" role="alert" data-testid="admin-create-user-error">{createUserError}</div>
               ) : null}
-            </section>
+            </Card>
 
-            <section className="page-card admin-page-card admin-card" id="system-info" data-testid="admin-system-stats-section">
-              <div className="admin-card-header">
-                <div>
-                  <div className="admin-card-eyebrow">Přehled aplikace</div>
-                  <div className="admin-card-title-row">
-                    <h2 className="admin-card-title">Statistiky systému</h2>
-                  </div>
-                  <p className="admin-card-description">
-                    Kolik je v aplikaci lidí, rezervací, fotek a zpráv. Hodí se při kontrole aktivity nebo před větší údržbou.
-                  </p>
-                </div>
-              </div>
+            <Card as="section" id="system-info" data-testid="admin-system-stats-section">
+              <AdminCardHeading
+                eyebrow="Přehled aplikace"
+                title="Statistiky systému"
+                description="Kolik je v aplikaci lidí, rezervací, fotek a zpráv. Hodí se při kontrole aktivity nebo před větší údržbou."
+              />
               <SystemStatsPanel />
-            </section>
+            </Card>
           </aside>
         </div>
       ) : null}
@@ -1226,70 +1210,50 @@ export function AdminPage() {
           </div>
 
           <aside className="admin-sidebar-stack">
-            <section className="page-card admin-page-card admin-card admin-focus-card" data-testid="admin-invite-guidance-section">
-              <div className="admin-card-header">
-                <div>
-                  <div className="admin-card-eyebrow">Rychlé rozhodnutí</div>
-                  <div className="admin-card-title-row">
-                    <h2 className="admin-card-title">Jak člena přidat</h2>
+            <Card as="section" className="space-y-4" data-testid="admin-invite-guidance-section">
+              <AdminCardHeading
+                eyebrow="Rychlé rozhodnutí"
+                title="Jak člena přidat"
+                description="Pozvánka je nejlepší pro většinu rodiny. Účet bez e-mailu použij jen tam, kde se člověk nechce registrovat přes odkaz."
+              />
+
+              <div className="grid gap-2">
+                <Button variant="secondary" onClick={() => openWorkspace('members', 'admin-create-user')}>
+                  <UserPlus aria-hidden="true" />Přidat člena bez e-mailu
+                </Button>
+                <Button variant="secondary" onClick={() => openWorkspace('cabin')}>
+                  <SlidersHorizontal aria-hidden="true" />Zkontrolovat moduly chaty
+                </Button>
+                <Button variant="secondary" onClick={openDiagnostics}>
+                  <ScrollText aria-hidden="true" />Otevřít diagnostiku
+                </Button>
+              </div>
+
+              <dl className="grid gap-2">
+                {[
+                  ['Aktivní pozvánky', invitesLoading || invitesFailed ? '—' : activeInvitesCount],
+                  ['Archiv', invitesLoading || invitesFailed ? '—' : archivedInvitesCount],
+                  ['Členové bez e-mailu', usersLoading || usersFailed ? '—' : localAccountCount],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-baseline justify-between gap-3 rounded-xl bg-inset px-3 py-2">
+                    <dt className="text-label text-(--text-muted)">{label}</dt>
+                    <dd className="text-card-title tabular-nums text-(--text-main)">{value}</dd>
                   </div>
-                  <p className="admin-card-description">
-                    Pozvánka je nejlepší pro většinu rodiny. Účet bez e-mailu použij jen tam, kde se člověk nechce registrovat přes odkaz.
-                  </p>
-                </div>
-              </div>
+                ))}
+              </dl>
+            </Card>
 
-              <div className="admin-task-list">
-                <button type="button" className="btn btn-secondary" onClick={() => openWorkspace('members', 'admin-create-user')}>
-                  <UserPlus size={16} />
-                  Přidat člena bez e-mailu
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={() => openWorkspace('cabin')}>
-                  <SlidersHorizontal size={16} />
-                  Zkontrolovat moduly chaty
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={() => navigate('/admin/diagnostics#system-logs')}>
-                  <ScrollText size={16} />
-                  Otevřít diagnostiku
-                </button>
-              </div>
-
-              <div className="admin-focus-metrics">
-                <div className="admin-focus-metric">
-                  <span>Aktivní pozvánky</span>
-                  <strong>{invitesLoading || invitesFailed ? '—' : activeInvitesCount}</strong>
-                </div>
-                <div className="admin-focus-metric">
-                  <span>Archiv</span>
-                  <strong>{invitesLoading || invitesFailed ? '—' : archivedInvitesCount}</strong>
-                </div>
-                <div className="admin-focus-metric">
-                  <span>Členové bez e-mailu</span>
-                  <strong>{usersLoading || usersFailed ? '—' : localAccountCount}</strong>
-                </div>
-              </div>
-            </section>
-
-            <section className="page-card admin-page-card admin-card" id="system-info" data-testid="admin-invite-system-stats-section">
-              <div className="admin-card-header">
-                <div>
-                  <div className="admin-card-eyebrow">Přehled aplikace</div>
-                  <div className="admin-card-title-row">
-                    <h2 className="admin-card-title">Statistiky systému</h2>
-                  </div>
-                  <p className="admin-card-description">
-                    Kolik je v aplikaci lidí a jak se opravdu používá.
-                  </p>
-                </div>
-              </div>
+            <Card as="section" id="system-info" data-testid="admin-invite-system-stats-section">
+              <AdminCardHeading eyebrow="Přehled aplikace" title="Statistiky systému" description="Kolik je v aplikaci lidí a jak se opravdu používá." />
               <SystemStatsPanel />
-            </section>
+            </Card>
           </aside>
         </div>
       ) : null}
 
       {activeWorkspace === 'cabin' ? (
-        <section className="page-card settings-page-card admin-page-card admin-card admin-settings-shell" id="admin-cabin-settings" data-testid="admin-cabin-settings-section">
+        // Bez vlastní karty: CabinSettingsPanel je karta sám, karta v kartě by byla navíc (DESIGN.md §6)
+        <section className="admin-settings-shell" id="admin-cabin-settings" data-testid="admin-cabin-settings-section">
           <CabinSettingsPanel
             title="Společné nastavení chaty"
             subtitle="Všechno sdílené na jednom místě: údaje chaty, pravidla, odjezdový checklist i zapnuté moduly."

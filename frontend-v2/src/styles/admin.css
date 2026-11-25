@@ -719,12 +719,6 @@
   line-height: 1.6;
 }
 
-.admin-focus-card,
-.admin-support-card,
-.admin-settings-shell {
-  overflow: hidden;
-}
-
 .admin-task-list {
   display: grid;
   gap: 0.7rem;
