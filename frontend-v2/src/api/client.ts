@@ -7,6 +7,7 @@ import { showToast } from '@/lib/toast'
 import { rememberApiCorrelation } from '@/lib/observability'
 import { enqueueMutation, flushQueue, getQueueLength, isQueueableRequest } from '@/lib/offlineQueue'
 import { markDataReceived } from '@/lib/dataFreshness'
+import { getActiveCabinId } from '@/lib/authStorage'
 
 interface AuthErrorPayload {
   code?: string
@@ -25,17 +26,6 @@ type CorrelatableError = Error & {
 // ─── Helper: reads token from sessionStorage first, then localStorage ──────────
 function getToken(): string | null {
   return sessionStorage.getItem('authToken') ?? localStorage.getItem('authToken')
-}
-
-// ─── Helper: reads active cabin ID (set by AuthContext on login/cabin switch) ──
-function getActiveCabinId(): string | null {
-  return (
-    localStorage.getItem('activeCabinId') ??
-    sessionStorage.getItem('activeCabinId') ??
-    localStorage.getItem('cabinId') ??
-    sessionStorage.getItem('cabinId') ??
-    null
-  )
 }
 
 function shouldIgnoreAuthExpiry(url?: string): boolean {

@@ -6,7 +6,10 @@
  * pořadí přehraje přes apiClient. Fronta přežije i reload stránky.
  *
  * Neukládají se: GET požadavky, uploady souborů (FormData), auth
- * endpointy a klientské error reporty.
+ * endpointy, nic s heslem nebo změnou účtu (#478) a klientské error reporty.
+ *
+ * Sdílené zařízení (#478): položka nese `userId` a `cabinId` autora. Přehrají se
+ * jen položky přihlášeného uživatele v aktivní chatě, cizí se zahodí.
  *
  * Eventy na window:
  *   'offline-queue:changed' — změnil se počet čekajících mutací
@@ -16,8 +19,15 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 import { isNetworkError } from '@/lib/networkError'
 import { showToast } from '@/lib/toast'
+import { getActiveCabinId, getStoredUserId } from '@/lib/authStorage'
+import { SESSION_RESET_EVENT } from '@/lib/sessionReset'
 
-export interface QueuedMutation {
+interface QueueOwner {
+  userId: string | null
+  cabinId: string | null
+}
+
+export interface QueuedMutation extends QueueOwner {
   id: string
   method: string
   url: string
@@ -39,7 +49,37 @@ const EXCLUDED_URL_PARTS = [
   '/reset-password',
   '/logs/client',
   '/staging-feedback', // tester má hned vidět, že se neuložilo, a text mu zůstane v poli
+  '/users/me/password',
+  '/users/me/logout-all',
 ]
+/** Klíč těla s heslem: heslo nesmí skončit v plaintextu v LocalStorage (#478). */
+const PASSWORD_KEY = /password/i
+
+function currentOwner(): QueueOwner {
+  return { userId: getStoredUserId(), cabinId: getActiveCabinId() }
+}
+
+function isOwnedBy(entry: QueuedMutation, owner: QueueOwner): boolean {
+  return entry.userId === owner.userId && entry.cabinId === owner.cabinId
+}
+
+/** Axios v chybě vrací tělo už jako JSON řetězec. */
+function parseBody(data: unknown): unknown {
+  if (typeof data !== 'string') return data
+  try {
+    return JSON.parse(data)
+  } catch {
+    return data
+  }
+}
+
+/** Heslo, změna e-mailu nebo smazání účtu: bez připojení má request selhat, ne čekat. */
+function isAccountSensitive(method: string, url: string, body: unknown): boolean {
+  const keys = body && typeof body === 'object' ? Object.keys(body) : []
+  if (keys.some((key) => PASSWORD_KEY.test(key))) return true
+  const path = url.split('?')[0]
+  return path === '/users/me' && (method === 'delete' || keys.includes('email'))
+}
 
 function readQueue(): QueuedMutation[] {
   try {
@@ -65,14 +105,20 @@ function writeQueue(queue: QueuedMutation[]): void {
   window.dispatchEvent(new CustomEvent('offline-queue:changed'))
 }
 
+function readOwnQueue(): QueuedMutation[] {
+  const owner = currentOwner()
+  return readQueue().filter((entry) => isOwnedBy(entry, owner))
+}
+
+/** Počet změn přihlášeného uživatele v aktivní chatě, které čekají na odeslání. */
 export function getQueueLength(): number {
-  return readQueue().length
+  return readOwnQueue().length
 }
 
 /** Čeká ve frontě request s touto metodou a URL? (štítek „Čeká na odeslání“, #276) */
 export function isMutationQueued(method: string, url: string): boolean {
   const m = method.toLowerCase()
-  return readQueue().some((q) => q.method === m && q.url === url)
+  return readOwnQueue().some((q) => q.method === m && q.url === url)
 }
 
 export function subscribeQueue(callback: () => void): () => void {
@@ -92,6 +138,7 @@ export function isQueueableRequest(config: InternalAxiosRequestConfig | undefine
   if (config.headers?.[REPLAY_HEADER]) return false
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) return false
   if (EXCLUDED_URL_PARTS.some((part) => config.url!.includes(part))) return false
+  if (isAccountSensitive(config.method.toLowerCase(), config.url, parseBody(config.data))) return false
   return true
 }
 
@@ -100,23 +147,13 @@ export function enqueueMutation(config: InternalAxiosRequestConfig): boolean {
   const queue = readQueue()
   if (queue.length >= MAX_QUEUE_LENGTH) return false
 
-  let data: unknown
-  if (typeof config.data === 'string') {
-    try {
-      data = JSON.parse(config.data)
-    } catch {
-      data = config.data
-    }
-  } else {
-    data = config.data
-  }
-
   queue.push({
     id: crypto.randomUUID(),
     method: config.method!.toLowerCase(),
     url: config.url!,
-    data,
+    data: parseBody(config.data),
     queuedAt: new Date().toISOString(),
+    ...currentOwner(),
   })
   writeQueue(queue)
   return true
@@ -125,14 +162,20 @@ export function enqueueMutation(config: InternalAxiosRequestConfig): boolean {
 let flushing = false
 
 /**
- * Přehraje frontu v pořadí vzniku. Při síťové chybě se zastaví a čeká
- * na další `online` event; při serverové chybě (4xx/5xx) položku zahodí,
- * aby neblokovala zbytek fronty.
+ * Přehraje frontu přihlášeného uživatele v pořadí vzniku. Při síťové chybě
+ * se zastaví a čeká na další `online` event; při serverové chybě (4xx/5xx)
+ * položku zahodí, aby neblokovala zbytek fronty. Položky jiného uživatele
+ * nebo chaty zahodí, je-li někdo přihlášený; po vypršení session čekají na autora (#478).
  */
 export async function flushQueue(): Promise<void> {
   if (flushing) return
-  const queue = readQueue()
-  if (queue.length === 0) return
+  const owner = currentOwner()
+  if (owner.userId !== null) {
+    const queue = readQueue()
+    const own = queue.filter((entry) => isOwnedBy(entry, owner))
+    if (own.length !== queue.length) writeQueue(own)
+  }
+  if (readOwnQueue().length === 0) return
 
   flushing = true
   // Lazy import — vyhne se cyklické závislosti client.ts ↔ offlineQueue.ts
@@ -143,8 +186,7 @@ export async function flushQueue(): Promise<void> {
 
   try {
     while (true) {
-      const current = readQueue()
-      const entry = current[0]
+      const entry = readOwnQueue()[0]
       if (!entry) break
 
       try {
@@ -157,8 +199,9 @@ export async function flushQueue(): Promise<void> {
         sent += 1
         writeQueue(readQueue().filter((q) => q.id !== entry.id))
       } catch (err) {
-        if (isNetworkError(err)) {
-          // Spojení zase vypadlo — zbytek fronty počká na další pokus
+        const status = (err as { response?: { status?: number } }).response?.status
+        if (isNetworkError(err) || status === 401) {
+          // Spojení vypadlo, nebo vypršela session (#478) — položka počká na další pokus
           break
         }
         // Server request odmítl (např. konflikt, validace) — zahodit, jinak blokuje frontu
@@ -193,11 +236,18 @@ export async function flushQueue(): Promise<void> {
   }
 }
 
-/** Zaregistruje flush na obnovení připojení + zkusí flush při startu aplikace. */
+/**
+ * Zaregistruje flush na obnovení připojení a na začátek nové session,
+ * zahodí položky z doby před vazbou na uživatele (bez `userId`, #478)
+ * a zkusí flush při startu aplikace.
+ */
 export function initOfflineQueue(): void {
-  window.addEventListener('online', () => {
-    void flushQueue()
-  })
+  const queue = readQueue()
+  const owned = queue.filter((entry) => entry?.userId !== undefined)
+  if (owned.length !== queue.length) writeQueue(owned)
+
+  window.addEventListener('online', () => void flushQueue())
+  window.addEventListener(SESSION_RESET_EVENT, () => void flushQueue())
   if (navigator.onLine) {
     void flushQueue()
   }

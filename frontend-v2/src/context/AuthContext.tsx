@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { SESSION_RESET_EVENT } from '@/lib/sessionReset'
+import { getActiveCabinId, getStoredUserId } from '@/lib/authStorage'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -125,6 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [navigate])
 
   const login = useCallback((payload: SetAuthPayload) => {
+    // Jiný účet nebo chata = nová session (#478); obnova tokenu téhož účtu (změna hesla) cache nechá
+    const isNewSession =
+      getStoredUserId() !== payload.userId || getActiveCabinId() !== (payload.cabinId ?? null)
     const store = payload.remember ? localStorage : sessionStorage
     const otherStore = payload.remember ? sessionStorage : localStorage
     ;['authToken', 'username', 'userId', 'role', 'animalIcon', 'cabinId', 'activeCabinId', 'isSuperAdmin'].forEach((k) =>
@@ -158,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cabinId: payload.cabinId ?? null,
       isSuperAdmin: payload.isSuperAdmin === true,
     })
+    if (isNewSession) window.dispatchEvent(new CustomEvent(SESSION_RESET_EVENT))
   }, [])
 
   const logout = useCallback(() => {
@@ -174,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setToken(null)
     setActiveCabinId(null)
+    // Úklid cache dat účtu na sdíleném zařízení (#478, lib/sessionReset.ts)
+    window.dispatchEvent(new CustomEvent(SESSION_RESET_EVENT))
     navigate('/', { replace: true })
   }, [navigate])
 
