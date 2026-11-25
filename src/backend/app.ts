@@ -118,7 +118,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   const authLimiter = limiter({
     windowMs: 15 * 60 * 1000,
     max: 30,
-    message: "Příliš mnoho pokusů. Zkus to znovu za 15 minut.",
+    message: "Příliš mnoho pokusů. Zkus to později.",
   });
 
   // Brute-force protection for login: failed attempts per IP + username.
