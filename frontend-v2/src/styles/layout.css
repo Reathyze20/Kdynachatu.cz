@@ -388,10 +388,9 @@
 
 /* ── Chybová hlášení uvnitř auth karet ─────────────────────────── */
 
+/* Bez display: none – React hlášku vykreslí, jen když je chyba; skrytou ji dělal neviditelnou (#498). */
 #login-error,
 .error-message {
-  display: none;
-  /* skryto dokud nemá obsah — JS nastaví display: block */
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;

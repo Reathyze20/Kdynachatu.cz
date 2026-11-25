@@ -37,6 +37,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [nameInvalid, setNameInvalid] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
   const { signupEnabled, isLoading: signupLoading } = useCabinSignup()
 
@@ -76,10 +77,12 @@ export default function OnboardingPage() {
     e.preventDefault()
     const name = nameRef.current?.value.trim() ?? ''
     if (name.length < 2) {
-      setError('Nazev chaty musi mit alespon 2 znaky.')
+      setError('Název chaty musí mít alespoň 2 znaky.')
+      setNameInvalid(true)
       return
     }
     setError(null)
+    setNameInvalid(false)
     setLoading(true)
     try {
       const res = await apiClient.post<CreateCabinResponse>('/cabin/create', { name })
@@ -97,7 +100,7 @@ export default function OnboardingPage() {
       showToast('Chatu jsme vytvořili!', 'success')
       navigate('/dashboard', { replace: true })
     } catch (err: unknown) {
-      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Nepodarilo se vytvorit chatu.'
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Chatu se nepodařilo vytvořit. Zkus to znovu.'
       setError(message)
     } finally {
       setLoading(false)
@@ -141,9 +144,9 @@ export default function OnboardingPage() {
             <form onSubmit={handleSubmit} noValidate data-testid="onboarding-form">
               <div className="form-group">
                 <label htmlFor="cabin-name">Název chaty</label>
-                <input ref={nameRef} id="cabin-name" type="text" placeholder="např. Chata U Lesa" maxLength={100} autoFocus autoComplete="off" required data-testid="onboarding-cabin-name-input" />
+                <input ref={nameRef} id="cabin-name" type="text" placeholder="např. Chata U Lesa" maxLength={100} autoFocus autoComplete="off" required aria-invalid={nameInvalid || undefined} aria-describedby={error ? 'onboarding-error' : undefined} data-testid="onboarding-cabin-name-input" />
               </div>
-              {error && <p className="error-message" data-testid="onboarding-error-message">{error}</p>}
+              {error && <p id="onboarding-error" className="error-message show" role="alert" data-testid="onboarding-error-message">{error}</p>}
               <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading} data-testid="onboarding-submit-button">
                 {loading ? 'Vytváří se...' : 'Vytvořit chatu'}
               </button>

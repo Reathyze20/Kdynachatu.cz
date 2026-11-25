@@ -39,6 +39,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
   const { login } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState<{ text: string } | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
@@ -50,6 +51,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
     usernameRef.current!.value = account.username
     passwordRef.current!.value = account.password
     setError(null)
+    setFieldErrors({})
     passwordRef.current!.focus()
   }
 
@@ -57,7 +59,17 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
     e.preventDefault()
     const username = usernameRef.current!.value.trim()
     const password = passwordRef.current!.value
-    if (!username || !password) return
+    const missing = {
+      username: username ? undefined : 'Vyplň uživatelské jméno.',
+      password: password ? undefined : 'Vyplň heslo.',
+    }
+    setFieldErrors(missing)
+    if (missing.username || missing.password) {
+      setError(null)
+      const firstEmpty = missing.username ? usernameRef : passwordRef
+      firstEmpty.current!.focus()
+      return
+    }
 
     setError(null)
     setLoading(true)
@@ -138,8 +150,17 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
             autoComplete="username"
             required
             ref={usernameRef}
+            aria-invalid={fieldErrors.username ? true : undefined}
+            aria-describedby={fieldErrors.username ? 'login-username-error' : undefined}
+            className={fieldErrors.username ? 'is-invalid' : undefined}
+            onInput={() => fieldErrors.username && setFieldErrors((f) => ({ ...f, username: undefined }))}
             data-testid="login-username-input"
           />
+          {fieldErrors.username && (
+            <p id="login-username-error" className="error-message show" role="alert" data-testid="login-username-error">
+              {fieldErrors.username}
+            </p>
+          )}
         </div>
 
         <div className="form-group">
@@ -153,6 +174,10 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
               autoComplete="current-password"
               required
               ref={passwordRef}
+              aria-invalid={fieldErrors.password ? true : undefined}
+              aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
+              className={fieldErrors.password ? 'is-invalid' : undefined}
+              onInput={() => fieldErrors.password && setFieldErrors((f) => ({ ...f, password: undefined }))}
               data-testid="login-password-input"
             />
             <button
@@ -166,6 +191,11 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          {fieldErrors.password && (
+            <p id="login-password-error" className="error-message show" role="alert" data-testid="login-password-error">
+              {fieldErrors.password}
+            </p>
+          )}
         </div>
 
         <div className="form-group remember-me-group">
@@ -202,12 +232,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
         </p>
 
         {error && (
-          <p
-            id="login-error"
-            className="error-message"
-            style={{ display: 'block' }}
-            data-testid="login-error-message"
-          >
+          <p id="login-error" className="error-message show" role="alert" data-testid="login-error-message">
             {error.text}
           </p>
         )}

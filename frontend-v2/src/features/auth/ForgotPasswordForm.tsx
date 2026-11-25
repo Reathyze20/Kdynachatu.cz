@@ -15,6 +15,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [requestSent, setRequestSent] = useState(false)
+  const [identifierInvalid, setIdentifierInvalid] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,11 +23,14 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
 
     if (identifier.length < 2) {
       setMessage({ text: 'Zadej e-mail nebo uživatelské jméno.', type: 'error' })
+      setIdentifierInvalid(true)
+      identifierRef.current?.focus()
       return
     }
 
     setLoading(true)
     setMessage(null)
+    setIdentifierInvalid(false)
 
     try {
       const { data } = await apiClient.post<ForgotPasswordResponse>('/forgot-password', { identifier })
@@ -64,6 +68,8 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
             placeholder="např. jan@domena.cz nebo Honza"
             ref={identifierRef}
             disabled={loading || requestSent}
+            aria-invalid={identifierInvalid || undefined}
+            aria-describedby={message?.type === 'error' ? 'forgot-password-error' : undefined}
             data-testid="forgot-password-identifier-input"
           />
         </div>
@@ -76,14 +82,16 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
           {loading ? 'Odesílám odkaz…' : requestSent ? 'Odkaz jsme poslali' : 'Poslat odkaz pro obnovu'}
         </button>
 
-        {message && (
+        {message?.type === 'error' && (
+          <p id="forgot-password-error" className="error-message show" role="alert" data-testid="forgot-password-message">
+            {message.text}
+          </p>
+        )}
+        {message?.type === 'success' && (
           <p
-            className={message.type === 'error' ? 'error-message' : 'message'}
-            style={{
-              display: 'block',
-              marginTop: '.75rem',
-              color: message.type === 'error' ? 'var(--color-danger)' : 'var(--color-success)',
-            }}
+            className="message"
+            role="status"
+            style={{ marginTop: '.75rem', color: 'var(--color-success)' }}
             data-testid="forgot-password-message"
           >
             {message.text}
