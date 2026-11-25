@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { useLogout } from '@/hooks/useLogout'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { useCabinSignup } from '@/features/auth/hooks/useCabinSignup'
@@ -38,7 +39,8 @@ export default function OnboardingPage() {
 }
 
 function CreateCabinOnboarding() {
-  const { login, logout, user } = useAuth()
+  const { login, user } = useAuth()
+  const logout = useLogout()
   const navigate = useNavigate()
   const nameRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -131,11 +133,6 @@ function CreateCabinOnboarding() {
     setRetryCount((c) => c + 1)
   }
 
-  function handleLogout() {
-    logout()
-    navigate('/', { replace: true })
-  }
-
   return (
     <div className="onboarding-page" data-testid="onboarding-page" data-onboarding-state="ready">
       <div className="onboarding-card card">
@@ -187,7 +184,7 @@ function CreateCabinOnboarding() {
             </button>
             <button 
               type="button" 
-              onClick={handleLogout}
+              onClick={logout}
               className="button-secondary"
               style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
               data-testid="onboarding-logout-button"

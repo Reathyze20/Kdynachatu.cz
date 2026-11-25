@@ -10,7 +10,7 @@ import type { KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { showToast } from '@/lib/toast'
+import { useLogout } from '@/hooks/useLogout'
 import { ChevronUp, LogOut, ScrollText, Settings, Shield, User, UserPlus } from 'lucide-react'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 
@@ -21,7 +21,8 @@ interface SidebarProfileMenuProps {
 const MENU_GAP_PX = 8
 
 export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuProps) {
-  const { user, isAdmin, isSuperAdmin, logout } = useAuth()
+  const { user, isAdmin, isSuperAdmin } = useAuth()
+  const logout = useLogout()
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -96,7 +97,6 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
   function handleLogout() {
     closeMenu()
     logout()
-    showToast('Odhlášení úspěšné', 'info')
   }
 
   const username = user?.username ?? 'Uživatel'

@@ -12,12 +12,13 @@ import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/AuthContext'
+import { useLogout } from '@/hooks/useLogout'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
 import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { useNavigate } from 'react-router-dom'
-import { ScrollText, Settings, Shield } from 'lucide-react'
+import { LogOut, ScrollText, Settings, Shield } from 'lucide-react'
 
 interface ProfileData {
   email: string
@@ -32,6 +33,7 @@ interface ProfileDrawerProps {
 
 export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, user, token, login } = useAuth()
+  const logoutThisDevice = useLogout()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
@@ -554,14 +556,33 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
             <div className="drawer-section mt-8">
               <h3>Přihlášená zařízení</h3>
-              <p className="mt-2 mb-4 text-label text-(--text-muted)">
-                Ztracený telefon nebo cizí počítač? Odhlas se všude najednou, i na tomhle zařízení.
+              <p id="profile-logout-hint" className="mt-2 mb-4 text-label text-(--text-muted)">
+                Odhlásí tě jen na tomhle zařízení. Hodí se, když telefon nebo tablet předáváš dalšímu z rodiny.
               </p>
 
               <Button
                 type="button"
                 variant="secondary"
                 className="w-full"
+                aria-describedby="profile-logout-hint"
+                onClick={() => {
+                  onClose()
+                  logoutThisDevice()
+                }}
+                data-testid="profile-logout-button"
+              >
+                <LogOut aria-hidden="true" />
+                Odhlásit
+              </Button>
+
+              <p className="mt-6 mb-4 text-label text-(--text-muted)">
+                Ztracený telefon nebo cizí počítač? Odhlas se všude najednou, i na tomhle zařízení.
+              </p>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-destructive"
                 onClick={() => {
                   setLogoutEverywhereError('')
                   setShowLogoutEverywhereConfirm(true)
