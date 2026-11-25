@@ -42,7 +42,6 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
       const data = (err as { response?: { data?: ForgotPasswordResponse } }).response?.data
       const text = data?.message || 'Nepodařilo se odeslat žádost. Zkus to znovu.'
       setMessage({ text, type: 'error' })
-      showToast(text, 'error')
     } finally {
       setLoading(false)
     }

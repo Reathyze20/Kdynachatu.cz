@@ -386,7 +386,7 @@
   }
 }
 
-/* ── Chybová hlášení uvnitř auth karet ─────────────────────────── */
+/* ── Chybová hlášení formulářů (auth karty i dialogy) ─────────── */
 
 /* Bez display: none – React hlášku vykreslí, jen když je chyba; skrytou ji dělal neviditelnou (#498). */
 #login-error,

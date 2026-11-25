@@ -64,14 +64,13 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
       password: password ? undefined : 'Vyplň heslo.',
     }
     setFieldErrors(missing)
+    setError(null)
     if (missing.username || missing.password) {
-      setError(null)
       const firstEmpty = missing.username ? usernameRef : passwordRef
       firstEmpty.current!.focus()
       return
     }
 
-    setError(null)
     setLoading(true)
 
     try {
@@ -95,13 +94,12 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
       if (data?.needsVerification) {
         const msg = data.message || 'Nejprve ověř svůj e-mail.'
         setError({ text: msg })
-        showToast(msg, 'info')
         return
       }
 
       const msg = data?.message || data?.error || 'Chyba sítě – zkus to znovu'
+      // Chyba je vidět ve formuláři (role="alert"), toast by ji jen zopakoval (DESIGN.md §7).
       setError({ text: msg })
-      if (data) showToast(msg, 'error')
     } finally {
       setLoading(false)
     }
