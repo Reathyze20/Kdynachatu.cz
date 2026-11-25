@@ -58,19 +58,7 @@ async function assertEventRevokesToken(revoke: (victim: TestUser) => Promise<{ s
 
 before(async () => {
   ({ app, world } = await setupIntegrationFile());
-  const user = await prisma.user.create({
-    data: {
-      username: "superadmin-485",
-      passwordHash: await hashPassword(TEST_PASSWORD),
-      color: "#123456",
-      email: "superadmin-485@example.test",
-      isEmailVerified: true,
-      isVerified: true,
-      isSuperAdmin: true,
-      role: "admin",
-    },
-  });
-  superadmin = { id: user.id, username: user.username, role: user.role, cabinId: "", tokenVersion: user.tokenVersion };
+  superadmin = await createVictim({ isSuperAdmin: true });
 });
 
 after(teardownIntegrationFile);

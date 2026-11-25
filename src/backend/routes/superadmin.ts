@@ -11,7 +11,7 @@ import { superadminCreateUserSchema } from "../../validators/schemas";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { hashPassword } from "../../utils/password";
-import { revokeUserSessions } from "../../utils/sessionRevocation";
+import { updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import crypto from "crypto";
 import { sendSuperadminOnboardingEmail } from "../../utils/email";
 
@@ -192,10 +192,9 @@ router.patch("/users/:id/ban", protect, requireSuperAdmin, async (req: Request, 
 
     const newBanStatus = !user.isBanned;
 
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id }, data: { isBanned: newBanStatus } });
-      if (newBanStatus) await revokeUserSessions(id, tx);
-    });
+    // Ban zneplatní všechna přihlášení (#485), zrušení banu ne.
+    if (newBanStatus) await updateUserAndRevokeSessions(id, { isBanned: true });
+    else await prisma.user.update({ where: { id }, data: { isBanned: false } });
 
     logger.info("SUPERADMIN", `User ${user.username} ban status changed`, {
       userId: id,

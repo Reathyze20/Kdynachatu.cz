@@ -17,3 +17,22 @@ export async function revokeUserSessions(userId: string, db: Prisma.TransactionC
   });
   return tokenVersion;
 }
+
+/** Změna účtu, která ruší relace (heslo, role, ban, odebrání z chaty), v jedné transakci se zneplatněním. */
+export function updateUserAndRevokeSessions(userId: string, data: Prisma.UserUncheckedUpdateInput): Promise<number> {
+  return prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data });
+    return revokeUserSessions(userId, tx);
+  });
+}
+
+/**
+ * Smazání účtu. Smazaný uživatel by 401 dostal i bez nové verze, ticket #485 ale chce zneplatnění
+ * i tady, aby se na něj ve stejném místě navázalo odpojení socketů (#486).
+ */
+export function deleteUserAndRevokeSessions(userId: string): Promise<void> {
+  return prisma.$transaction(async (tx) => {
+    await revokeUserSessions(userId, tx);
+    await tx.user.delete({ where: { id: userId } });
+  });
+}

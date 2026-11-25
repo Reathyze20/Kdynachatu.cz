@@ -513,9 +513,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               </form>
             </div>
 
-            <div className="drawer-section" style={{ marginTop: '2rem' }}>
+            <div className="drawer-section mt-8">
               <h3>Přihlášená zařízení</h3>
-              <p className="mt-2 mb-4 text-sm text-muted-foreground">
+              <p className="mt-2 mb-4 text-label text-(--text-muted)">
                 Ztracený telefon nebo cizí počítač? Odhlas se všude najednou, i na tomhle zařízení.
               </p>
 

@@ -9,7 +9,7 @@ import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
 import { signAuthToken } from "../../utils/authToken";
-import { revokeUserSessions } from "../../utils/sessionRevocation";
+import { deleteUserAndRevokeSessions, revokeUserSessions, updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import type { JwtPayload } from "../../types";
 
 const router = Router();
@@ -25,13 +25,6 @@ const hideSuperAdminFrom = (caller: JwtPayload): Prisma.UserWhereInput =>
 /** Cíl adminské operace: uživatel z chaty volajícího, kterého volající smí vidět, jinak null (→ 404). */
 const findCabinTarget = (id: string, caller: JwtPayload) =>
   prisma.user.findFirst({ where: { id, cabinId: caller.cabinId, ...hideSuperAdminFrom(caller) } });
-
-/** Smazání účtu (#485): relace se zneplatní ve stejné transakci, aby se na ně dalo navázat i odpojení socketů (#486). */
-const deleteUserAndRevokeSessions = (id: string) =>
-  prisma.$transaction(async (tx) => {
-    await revokeUserSessions(id, tx);
-    await tx.user.delete({ where: { id } });
-  });
 
 // ============================================================================
 //                          GET ALL USERS (safe)
@@ -176,13 +169,7 @@ router.patch("/me/password", protect, validate(changeMyPasswordSchema), async (r
 
     // Ostatní zařízení se odhlásí, aktuální dostane token s novou verzí (#485).
     const passwordHash = await hashPassword(newPassword);
-    const tokenVersion = await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: user.id },
-        data: { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null },
-      });
-      return revokeUserSessions(user.id, tx);
-    });
+    const tokenVersion = await updateUserAndRevokeSessions(user.id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
 
     const token = signAuthToken({ ...user, tokenVersion });
     res.json({ message: "Heslo úspěšně změněno.", token });
@@ -292,10 +279,7 @@ router.put("/:id/role", protect, requireCabin, validate(changeRoleSchema), admin
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id }, data: { role } });
-      await revokeUserSessions(id, tx);
-    });
+    await updateUserAndRevokeSessions(id, { role });
     res.status(200).json({ message: "Role změněna." });
   } catch (error) {
     logger.error("USERS", "Change role error", { error: String(error), userId: id });
@@ -320,13 +304,7 @@ router.put("/:id/password", protect, requireCabin, validate(changePasswordSchema
     }
 
     const passwordHash = await hashPassword(password);
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id },
-        data: { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null },
-      });
-      await revokeUserSessions(id, tx);
-    });
+    await updateUserAndRevokeSessions(id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
     res.status(200).json({ message: "Heslo změněno." });
   } catch (error) {
     logger.error("USERS", "Change password error", { error: String(error), userId: id });
@@ -358,11 +336,9 @@ router.patch("/:id", protect, requireCabin, validate(adminUpdateUserSchema), adm
       data.passwordResetExpiresAt = null;
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id }, data });
-      // Změna role nebo hesla zneplatní stará přihlášení (#485).
-      if (data.role || data.passwordHash) await revokeUserSessions(id, tx);
-    });
+    // Změna role nebo hesla zneplatní stará přihlášení (#485).
+    if (data.role || data.passwordHash) await updateUserAndRevokeSessions(id, data);
+    else await prisma.user.update({ where: { id }, data });
     res.status(200).json({ message: "Uživatel upraven." });
   } catch (error) {
     logger.error("USERS", "Update user error", { error: String(error), userId: id });
@@ -426,10 +402,7 @@ router.patch("/:id/remove-from-cabin", protect, requireCabin, adminOnly, async (
       res.json({ message: "Uživatel a jeho data byly smazány." });
     } else {
       // Soft remove — keep user but unlink from cabin
-      await prisma.$transaction(async (tx) => {
-        await tx.user.update({ where: { id }, data: { cabinId: null, role: "user" } });
-        await revokeUserSessions(id, tx);
-      });
+      await updateUserAndRevokeSessions(id, { cabinId: null, role: "user" });
       logger.info("USERS", "User soft-removed from cabin (data preserved)", {
         userId: id,
         username: targetUser.username,

@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import { signAuthToken } from "../../utils/authToken";
-import { revokeUserSessions } from "../../utils/sessionRevocation";
+import { updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { sendPasswordResetEmail, sendVerificationEmailWithPIN, sendVerificationEmailWithToken } from "../../utils/email";
@@ -453,13 +453,7 @@ router.post("/reset-password", validate(resetPasswordSchema), async (req: Reques
     }
 
     const passwordHash = await hashPassword(password);
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: user.id },
-        data: { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null },
-      });
-      await revokeUserSessions(user.id, tx);
-    });
+    await updateUserAndRevokeSessions(user.id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
 
     logger.info("AUTH", "Password reset completed", { userId: user.id, username: user.username });
 
