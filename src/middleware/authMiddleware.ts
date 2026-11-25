@@ -25,7 +25,7 @@ function readBearerToken(req: Request): string | null {
   return authHeader.split(" ")[1] ?? null;
 }
 
-function isValidJwtPayload(decoded: JwtPayload | null | undefined): decoded is JwtPayload {
+export function isValidJwtPayload(decoded: JwtPayload | null | undefined): decoded is JwtPayload {
   return Boolean(decoded?.userId && decoded?.username && decoded?.role);
 }
 
@@ -39,7 +39,8 @@ function buildUserFromToken(decoded: JwtPayload): JwtPayload {
   };
 }
 
-async function hydrateAuthenticatedUser(decoded: JwtPayload): Promise<
+/** Načte uživatele tokenu z DB: chybějící, zneplatněný (stará `tokenVersion`) a zabanovaný neprojde. Sdílí ho HTTP i socket (#486). */
+export async function hydrateAuthenticatedUser(decoded: JwtPayload): Promise<
   | { status: "ok"; user: JwtPayload }
   | { status: "missing" }
   | { status: "revoked" }
