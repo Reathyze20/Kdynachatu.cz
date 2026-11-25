@@ -6,41 +6,35 @@ import { MemoryRouter } from 'react-router-dom'
 import { authApi } from '@/api/auth'
 import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 
-// #475: změna e-mailu v profilu chce současné heslo. Pole pro heslo se ukáže, až když se e-mail liší
-// od uloženého; barva a avatar heslo nechtějí. Chyba se ukáže česky pod polem s heslem.
+// #475: změna e-mailu chce současné heslo. Pole pro heslo se ukáže, až když se e-mail liší od uloženého;
+// barva heslo nechce. Chyba se ukáže česky pod polem s heslem.
 
-const api = vi.hoisted(() => ({
-  get: vi.fn(),
-  patch: vi.fn(),
-}))
+const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({
-    logout: vi.fn(),
-    login: vi.fn(),
-    updateAnimalIcon: vi.fn(),
-    isAdmin: false,
-    isSuperAdmin: false,
-    token: 'token',
+    logout: vi.fn(), login: vi.fn(), updateAnimalIcon: vi.fn(), isAdmin: false, isSuperAdmin: false, token: 'token',
     user: { userId: 'u-1', username: 'Jana', role: 'user', animalIcon: null, cabinId: 'cabin-1', isSuperAdmin: false },
   }),
 }))
 vi.mock('@/api/client', () => ({ default: api }))
 
-function renderDrawer() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <ProfileDrawer isOpen onClose={vi.fn()} />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  )
-}
+const emailInput = () => screen.getByTestId('profile-email-input')
+const passwordInput = () => screen.queryByTestId('profile-email-password-input')
 
-async function renderWithLoadedEmail() {
-  renderDrawer()
-  await waitFor(() => expect(screen.getByTestId('profile-email-input')).toHaveValue('jana@example.test'))
+async function setup() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  render(<QueryClientProvider client={queryClient}><MemoryRouter><ProfileDrawer isOpen onClose={vi.fn()} /></MemoryRouter></QueryClientProvider>)
+  await waitFor(() => expect(emailInput()).toHaveValue('jana@example.test'))
+  const user = userEvent.setup()
+  /** Přepíše e-mail, volitelně vyplní heslo a klikne na „Změnit“. */
+  const changeEmail = async (password?: string) => {
+    await user.clear(emailInput())
+    await user.type(emailInput(), 'nova@example.test')
+    if (password) await user.type(passwordInput()!, password)
+    await user.click(screen.getByTestId('profile-change-email-button'))
+  }
+  return { user, changeEmail }
 }
 
 describe('změna e-mailu v profilu (#475)', () => {
@@ -51,77 +45,45 @@ describe('změna e-mailu v profilu (#475)', () => {
   })
 
   it('heslo nechce, dokud se e-mail nezmění', async () => {
-    const user = userEvent.setup()
-    await renderWithLoadedEmail()
-
-    expect(screen.queryByTestId('profile-email-password-input')).not.toBeInTheDocument()
-
-    await user.type(screen.getByTestId('profile-email-input'), 'x')
+    const { user } = await setup()
+    expect(passwordInput()).not.toBeInTheDocument()
+    await user.type(emailInput(), 'x')
     expect(screen.getByLabelText('Současné heslo')).toBeInTheDocument()
-
-    await user.type(screen.getByTestId('profile-email-input'), '{backspace}')
-    expect(screen.queryByTestId('profile-email-password-input')).not.toBeInTheDocument()
+    await user.type(emailInput(), '{backspace}')
+    expect(passwordInput()).not.toBeInTheDocument()
   })
 
   it('bez hesla e-mail neodešle a česky řekne proč', async () => {
     const changeMyEmail = vi.spyOn(authApi, 'changeMyEmail')
-    const user = userEvent.setup()
-    await renderWithLoadedEmail()
-
-    await user.clear(screen.getByTestId('profile-email-input'))
-    await user.type(screen.getByTestId('profile-email-input'), 'nova@example.test')
-    await user.click(screen.getByTestId('profile-change-email-button'))
-
+    const { changeEmail } = await setup()
+    await changeEmail()
     expect(await screen.findByText('Pro změnu e-mailu zadej své současné heslo.')).toBeInTheDocument()
-    expect(screen.getByTestId('profile-email-password-input')).toHaveAttribute('aria-invalid', 'true')
+    expect(passwordInput()).toHaveAttribute('aria-invalid', 'true')
     expect(changeMyEmail).not.toHaveBeenCalled()
   })
 
   it('s heslem pošle nový e-mail i heslo a pole s heslem vyprázdní', async () => {
-    const changeMyEmail = vi.spyOn(authApi, 'changeMyEmail').mockResolvedValue({
-      message: 'ok',
-      user: { email: 'nova@example.test', color: '#5d9b62', animalIcon: null },
-    })
-    const user = userEvent.setup()
-    await renderWithLoadedEmail()
-
-    await user.clear(screen.getByTestId('profile-email-input'))
-    await user.type(screen.getByTestId('profile-email-input'), 'nova@example.test')
-    await user.type(screen.getByTestId('profile-email-password-input'), 'moje-heslo-123')
-    await user.click(screen.getByTestId('profile-change-email-button'))
-
+    const changeMyEmail = vi.spyOn(authApi, 'changeMyEmail').mockResolvedValue({ message: 'ok', user: { email: 'nova@example.test', color: '#5d9b62', animalIcon: null } })
+    const { changeEmail } = await setup()
+    await changeEmail('moje-heslo-123')
     await waitFor(() => expect(changeMyEmail).toHaveBeenCalledWith('nova@example.test', 'moje-heslo-123'))
     await waitFor(() => expect(screen.queryByDisplayValue('moje-heslo-123')).not.toBeInTheDocument())
   })
 
   it('špatné heslo (403) ukáže českou hlášku serveru pod polem s heslem', async () => {
-    vi.spyOn(authApi, 'changeMyEmail').mockRejectedValue({
-      response: { status: 403, data: { message: 'Nesprávné heslo. Zkus to znovu.' } },
-    })
-    const user = userEvent.setup()
-    await renderWithLoadedEmail()
-
-    await user.clear(screen.getByTestId('profile-email-input'))
-    await user.type(screen.getByTestId('profile-email-input'), 'nova@example.test')
-    await user.type(screen.getByTestId('profile-email-password-input'), 'spatne-heslo')
-    await user.click(screen.getByTestId('profile-change-email-button'))
-
+    vi.spyOn(authApi, 'changeMyEmail').mockRejectedValue({ response: { status: 403, data: { message: 'Nesprávné heslo. Zkus to znovu.' } } })
+    const { changeEmail } = await setup()
+    await changeEmail('spatne-heslo')
     const error = await screen.findByText('Nesprávné heslo. Zkus to znovu.')
-    const password = screen.getByTestId('profile-email-password-input')
-    expect(password).toHaveAttribute('aria-invalid', 'true')
-    expect(password.getAttribute('aria-describedby')).toContain(error.id)
+    expect(passwordInput()).toHaveAttribute('aria-invalid', 'true')
+    expect(passwordInput()!.getAttribute('aria-describedby')).toContain(error.id)
   })
 
   it('barva se uloží bez hesla', async () => {
-    const user = userEvent.setup()
-    await renderWithLoadedEmail()
-
-    const swatch = screen.getAllByRole('button', { pressed: false })[0]
-    await user.click(swatch)
-
+    const { user } = await setup()
+    await user.click(screen.getByRole('button', { name: 'modrá' }))
     await waitFor(() => expect(api.patch).toHaveBeenCalledOnce())
-    expect(api.patch.mock.calls[0][0]).toBe('/users/me')
-    expect(api.patch.mock.calls[0][1]).not.toHaveProperty('currentPassword')
-    expect(screen.queryByTestId('profile-email-password-input')).not.toBeInTheDocument()
+    expect(api.patch).toHaveBeenCalledWith('/users/me', { color: '#1D5FA8' })
+    expect(passwordInput()).not.toBeInTheDocument()
   })
 })

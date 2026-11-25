@@ -47,34 +47,31 @@ describe("e-mails use the app name „Kdy na chatu“", () => {
 });
 
 describe("e-mail change notice to the old address (#475)", () => {
-  test("goes to the old address, names the new one and the app", async () => {
+  const notify = (username: string, newEmail: string | null) => {
     sent.length = 0;
-    await email.sendEmailChangedNotice("stara@example.test", { username: "jana", newEmail: "nova@example.test" });
+    return email.sendEmailChangedNotice("stara@example.test", { username, newEmail });
+  };
+
+  test("goes to the old address and names the account and the new address", async () => {
+    await notify("jana", "nova@example.test");
     assert.equal(sent.length, 1);
     assert.equal(sent[0].to, "stara@example.test");
-    assert.match(sent[0].subject, /— Kdy na chatu$/);
     for (const body of [sent[0].html, sent[0].text]) {
-      assert.ok(body.includes("nova@example.test"));
-      assert.ok(body.includes("jana"));
+      assert.ok(body.includes("nova@example.test") && body.includes("jana"));
       assert.match(body, /Pokud o změně nevíš/);
     }
-    assert.ok(sent[0].html.includes("Kdy na chatu — Rodinná aplikace pro správu chaty"));
   });
 
   test("escapes interpolated values in the HTML", async () => {
-    sent.length = 0;
-    await email.sendEmailChangedNotice("stara@example.test", { username: "<img src=x onerror=alert(1)>", newEmail: "a\"<b>@example.test" });
-    const { html } = sent[0];
-    assert.ok(!html.includes("<img"), "jméno se nevloží jako HTML");
-    assert.ok(!html.includes("<b>"), "adresa se nevloží jako HTML");
-    assert.ok(html.includes("&lt;img src=x onerror=alert(1)&gt;"));
-    assert.ok(html.includes("a&quot;&lt;b&gt;@example.test"));
+    await notify("<img src=x onerror=alert(1)>", "a\"<b>@example.test");
+    assert.ok(!sent[0].html.includes("<img") && !sent[0].html.includes("<b>"), "nic se nevloží jako HTML");
+    assert.ok(sent[0].html.includes("&lt;img src=x onerror=alert(1)&gt;"));
+    assert.ok(sent[0].html.includes("a&quot;&lt;b&gt;@example.test"));
   });
 
-  test("a removed e-mail says the account has no address now", async () => {
-    sent.length = 0;
-    await email.sendEmailChangedNotice("stara@example.test", { username: "jana", newEmail: null });
-    assert.match(sent[0].text, /odebr/);
+  test("a removed e-mail says the address was removed", async () => {
+    await notify("jana", null);
+    assert.match(sent[0].text, /odebrán/);
     assert.ok(!sent[0].text.includes("null"));
   });
 });

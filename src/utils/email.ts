@@ -393,63 +393,38 @@ export const sendEmailChangedNotice = async (
     return;
   }
 
-  const changeText = change.newEmail
-    ? `E-mail u tvého účtu ${change.username} v aplikaci ${EMAIL_APP_NAME} se právě změnil na ${change.newEmail}.`
-    : `E-mail u tvého účtu ${change.username} v aplikaci ${EMAIL_APP_NAME} byl právě odebrán.`;
-  const changeHtml = change.newEmail
-    ? `E-mail u tvého účtu <strong style="color: #111827;">${escapeHtml(change.username)}</strong> v aplikaci ${EMAIL_APP_NAME} se právě změnil na <strong style="color: #111827;">${escapeHtml(change.newEmail)}</strong>.`
-    : `E-mail u tvého účtu <strong style="color: #111827;">${escapeHtml(change.username)}</strong> v aplikaci ${EMAIL_APP_NAME} byl právě odebrán.`;
+  // Jedna věta pro text i HTML; `wrap` v HTML hodnoty escapuje a zvýrazní.
+  const sentence = (wrap: (value: string) => string) =>
+    `E-mail u tvého účtu ${wrap(change.username)} v aplikaci ${EMAIL_APP_NAME} ` +
+    (change.newEmail ? `se právě změnil na ${wrap(change.newEmail)}.` : "byl právě odebrán.");
   const warning =
     "Pokud o změně nevíš, někdo se mohl dostat k tvému účtu. Hned se ozvi správci své chaty, ať ti nastaví nové heslo a e-mail vrátí.";
+  const outro = "Jestli je změna od tebe, nemusíš nic dělat.";
+  const p = (text: string) => `<p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">${text}</p>`;
 
-  const htmlContent = `
-<!DOCTYPE html>
+  const htmlContent = `<!DOCTYPE html>
 <html lang="cs">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', Arial, sans-serif;">
-  <div style="background-color: #f3f4f6; padding: 40px 20px;">
-    <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-      <div style="text-align: center; padding: 32px 32px 16px 32px;">
-        <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 600;">${EMAIL_APP_NAME}</h1>
-      </div>
-
-      <div style="padding: 0 32px 32px 32px;">
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Ahoj,
-        </p>
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          ${changeHtml}
-        </p>
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0;">
-          ${warning}
-        </p>
-        <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Jestli je změna od tebe, nemusíš nic dělat.
-        </p>
-      </div>
-    </div>
-
-    <div style="text-align: center; font-size: 12px; color: #9ca3af; margin-top: 16px; padding: 0 20px;">
-      <p style="margin: 0;">${EMAIL_APP_FOOTER}</p>
-    </div>
+<head><meta charset="UTF-8" /></head>
+<body style="margin: 0; padding: 40px 20px; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', Arial, sans-serif;">
+  <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; padding: 32px;">
+    <h1 style="margin: 0 0 24px 0; color: #111827; font-size: 24px; font-weight: 600; text-align: center;">${EMAIL_APP_NAME}</h1>
+    ${p("Ahoj,")}
+    ${p(sentence((value) => `<strong style="color: #111827;">${escapeHtml(value)}</strong>`))}
+    ${p(warning)}
+    <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 0;">${outro}</p>
   </div>
+  <p style="text-align: center; font-size: 12px; color: #9ca3af; margin: 16px 0 0 0;">${EMAIL_APP_FOOTER}</p>
 </body>
 </html>`;
-
-  const textContent = `Ahoj,\n\n${changeText}\n\n${warning}\n\nJestli je změna od tebe, nemusíš nic dělat.\n\n— ${EMAIL_APP_NAME}`;
 
   try {
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
       to: oldEmail,
       subject: `E-mail u účtu byl změněn — ${EMAIL_APP_NAME}`,
-      text: textContent,
+      text: `Ahoj,\n\n${sentence((value) => value)}\n\n${warning}\n\n${outro}\n\n— ${EMAIL_APP_NAME}`,
       html: htmlContent,
     });
-
     logger.info("EMAIL", "E-mail changed notice sent to the old address", { messageId: info.messageId });
   } catch (error) {
     logger.error("EMAIL", "Failed to send e-mail changed notice", { error: String(error) });

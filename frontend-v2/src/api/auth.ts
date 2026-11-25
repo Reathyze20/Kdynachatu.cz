@@ -1,5 +1,5 @@
 /**
- * api/auth.ts — veřejné auth endpointy a přihlášení vlastního účtu (heslo, e-mail, „Odhlásit všude“)
+ * api/auth.ts — veřejné auth endpointy a přihlášení vlastního účtu (heslo, „Odhlásit všude“)
  */
 import apiClient from './client'
 
@@ -30,7 +30,7 @@ export interface LogoutEverywhereResponse {
   message: string
 }
 
-// Zrcadlí src/types.ts UpdateProfileRequest (#475): změna e-mailu chce současné heslo
+// PATCH /users/me (#475): změna e-mailu chce současné heslo
 export interface UpdateProfileRequest {
   email?: string | null
   color?: string
