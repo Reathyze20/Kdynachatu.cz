@@ -77,6 +77,27 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
       'className={css.btnReset}', 'const submitBtn = ref', 'className="button-primary"',
     ],
   },
+  legacyCard: {
+    bad: [
+      'className="page-card"', 'className="admin-page-card page-card"', "className='glass-card p-4'", 'className={`admin-card ${x}`}',
+      'className="login-container card"', "className={cn('card', a)}", 'className={`${a} card`}', "querySelector('.glass-card')",
+      "closest('.card')",
+    ],
+    good: [
+      '<Card>', 'className="admin-page-card onboarding-card card-footer"', 'className={`${css.card} ${css.cardPast}`}', '<CabinToday variant="card" />',
+      'variant: "sidebar" | "card"', 'id="page-card"', 'data-testid="glass-card"', 'className="bg-sheet border-rule-soft shadow-lift"',
+    ],
+  },
+  legacyEmptyState: {
+    bad: [
+      'className="gallery-empty-state"', "className='detail-empty-state-title'", 'className={`kanban-empty-icon ${x}`}',
+      "querySelector('.admin-empty-actions')",
+    ],
+    good: [
+      '<EmptyState icon={Images} message="Zatím tu nejsou žádná alba." />', 'data-testid="gallery-empty-create-folder-button"',
+      'className="badge-empty"', 'className="master-empty"', "id: `empty-${n}`", 'const isEmpty = list.length === 0',
+    ],
+  },
 }
 
 describe('pravidla DESIGN.md rozpoznají porušení', () => {

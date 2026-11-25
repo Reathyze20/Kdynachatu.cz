@@ -75,6 +75,35 @@
       "features/superadmin/SuperAdminPage.tsx"
     ]
   },
+  "legacyCard": {
+    "Karty page-card/admin-card administrace a nastavení, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
+      "components/shared/LogsPanel.tsx", "features/admin/AdminDiagnosticsPage.tsx", "features/admin/AdminPage.tsx",
+      "features/admin/components/StagingFeedbackSection.tsx", "features/settings/CabinSettingsPage.tsx",
+      "features/superadmin/SuperAdminPage.tsx"
+    ],
+    "Karty glass-card na Přehledu a ve sdílených komponentách, nahradí je <Card> při převodu (DESIGN.md §11)": [
+      "components/shared/FeatureErrorFallback.tsx", "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
+      "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
+      "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
+      "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
+    ],
+    "Karty page-card obrazovek deníku, galerie a rekonstrukce, převod obrazovky": [
+      "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/reconstruction/ReconstructionPage.tsx",
+      "features/reconstruction/ReconstructionSkeleton.tsx"
+    ],
+    "Karta .card přihlášení, registrace a onboardingu, převod obrazovky": [
+      "features/auth/ForgotPasswordForm.tsx", "features/auth/LoginForm.tsx", "features/auth/RegisterForm.tsx",
+      "features/onboarding/OnboardingPage.tsx"
+    ]
+  },
+  "legacyEmptyState": {
+    "Jednorázový prázdný stav *-empty-*, nahradí ho <EmptyState> při převodu obrazovky (DESIGN.md §11)": [
+      "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx", "features/admin/components/StagingFeedbackSection.tsx",
+      "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx", "features/reconstruction/KanbanColumn.tsx",
+      "features/shopping/ListDetail.tsx", "features/shopping/ListMaster.tsx", "features/shopping/PantryView.tsx",
+      "features/superadmin/SuperAdminPage.tsx"
+    ]
+  },
   "newCssFile": {
     "Stávající legacy CSS, zmizí, až se jeho obrazovky převedou na utility (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
