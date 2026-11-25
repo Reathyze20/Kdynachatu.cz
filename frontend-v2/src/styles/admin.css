@@ -513,7 +513,8 @@
 
 .admin-user-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  /* Štítky pod jménem, akce vpravo: ve třech sloupcích se jméno lámalo po písmenech. */
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.9rem;
   align-items: center;
   padding: 1rem 1.05rem;
@@ -576,15 +577,16 @@
 }
 
 .admin-user-tags {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 0.5rem;
 }
 
-/* Štítky role a stavu (DESIGN.md §2 role barev), písmo 14 px. Kontrast textu na podbarvení ≥ 4,5 : 1.
-   Stav nese barvu z --ok / --low / --empty, role je tichá na --inset, vlastní účet a superadmin zvýrazňuje Jedle.
-   Větná velikost písmen, ne kapitálky: štítky stojí v řadě vedle jména a kapitálky by je rozšířily o třetinu. */
+/* Štítky role a stavu: typografie stavového štítku (DESIGN.md §3 Eyebrow), barvy z rolí §2.
+   Kontrast textu na podbarvení ≥ 4,5 : 1. Stav nese barvu z --ok / --low / --empty, role je tichá
+   na --inset, vlastní účet a superadmin jsou zvýrazněná plocha (--brand-primary-light). */
 .admin-user-self-badge,
 .admin-role-badge,
 .admin-status-badge,
@@ -597,23 +599,21 @@
   background: rgb(var(--inset));
   color: var(--text-muted);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.admin-user-self-badge {
+.admin-user-self-badge,
+.admin-role-badge--superadmin {
   background: var(--brand-primary-light);
   color: var(--brand-primary);
 }
 
 .admin-role-badge--admin {
   color: var(--text-main);
-}
-
-.admin-role-badge--superadmin {
-  background: var(--brand-primary);
-  color: var(--text-on-primary);
 }
 
 .admin-status-badge--active,
@@ -634,6 +634,8 @@
 }
 
 .admin-user-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   display: flex;
   justify-content: flex-end;
 }
@@ -834,10 +836,6 @@
   color: var(--text-muted, #6b7280);
   font-size: 0.82rem;
   line-height: 1.55;
-}
-
-.admin-user-card--skeleton {
-  grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
 .admin-user-avatar-skeleton {
@@ -1170,6 +1168,8 @@
 
   .admin-user-tags,
   .admin-user-actions {
+    grid-column: auto;
+    grid-row: auto;
     justify-content: flex-start;
   }
 
