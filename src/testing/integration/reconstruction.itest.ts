@@ -133,3 +133,62 @@ describe("reconstruction: same-cabin flows still work (positive control)", () =>
     assert.equal(await itemSnapshot(own), null);
   });
 });
+
+// Odkaz a náhled rekonstrukce jen http(s) (#482): `javascript:` nebo `data:` v href/src by spustil skript
+// nebo vložil obsah u každého, kdo kartu otevře.
+describe("reconstruction: link and thumbnail accept only http(s) URLs", () => {
+  const unsafe = ["javascript:alert(1)", "JavaScript:alert(1)", "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==", "vbscript:msgbox(1)", "file:///etc/passwd"];
+
+  for (const field of ["link", "thumbnail"] as const) {
+    for (const value of unsafe) {
+      test(`POST with ${field} = ${value.slice(0, 20)}… → 400 and nothing is created`, async () => {
+        const countBefore = await prisma.reconstructionItem.count();
+        const res = await as(app, world.memberA)
+          .post("/api/reconstruction")
+          .send({ category: "idea", title: "Zlý odkaz", [field]: value });
+        assert.equal(res.status, 400);
+        assert.equal(await prisma.reconstructionItem.count(), countBefore);
+      });
+
+      test(`PUT with ${field} = ${value.slice(0, 20)}… → 400 and the item is unchanged`, async () => {
+        const own = await createItem(world.memberA, "Nápad k úpravě");
+        const before = await itemSnapshot(own);
+        const res = await as(app, world.memberA)
+          .put(`/api/reconstruction/${own}`)
+          .send({ category: "idea", title: "Zlý odkaz", [field]: value });
+        assert.equal(res.status, 400);
+        assert.deepEqual(await itemSnapshot(own), before);
+      });
+    }
+  }
+
+  test("POST and PUT with https link and thumbnail pass", async () => {
+    const link = "https://example.com/kamna";
+    const thumbnail = "http://example.com/kamna.jpg";
+    const created = await as(app, world.memberA)
+      .post("/api/reconstruction")
+      .send({ category: "idea", title: "Kamna", link, thumbnail });
+    assert.equal(created.status, 201);
+    const stored = await itemSnapshot(created.body.id);
+    assert.equal(stored?.link, link);
+    assert.equal(stored?.thumbnail, thumbnail);
+
+    const edited = await as(app, world.memberA)
+      .put(`/api/reconstruction/${created.body.id}`)
+      .send({ category: "idea", title: "Kamna", link: "https://example.com/jina", thumbnail: "https://example.com/jina.jpg" });
+    assert.equal(edited.status, 200);
+    assert.equal((await itemSnapshot(created.body.id))?.thumbnail, "https://example.com/jina.jpg");
+  });
+
+  test("empty link and thumbnail (cleared form fields) still pass", async () => {
+    const created = await as(app, world.memberA)
+      .post("/api/reconstruction")
+      .send({ category: "idea", title: "Bez odkazu", link: "", thumbnail: "" });
+    assert.equal(created.status, 201);
+
+    const edited = await as(app, world.memberA)
+      .put(`/api/reconstruction/${created.body.id}`)
+      .send({ category: "idea", title: "Bez odkazu", link: null, thumbnail: null });
+    assert.equal(edited.status, 200);
+  });
+});

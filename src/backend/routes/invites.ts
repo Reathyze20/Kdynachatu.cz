@@ -12,7 +12,7 @@ import { requireCabin } from "../../middleware/cabinMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createInviteSchema, acceptInviteSchema, sendInviteEmailSchema } from "../../validators/schemas";
-import { sendEmail } from "../../utils/email";
+import { escapeHtml, sendEmail } from "../../utils/email";
 
 const router = Router();
 
@@ -258,15 +258,26 @@ router.post("/accept/:token", validate(acceptInviteSchema), async (req: Request,
       }
     }
 
-    // Create user + increment usedCount atomically
     const passwordHash = await hashPassword(password);
 
     // Use provided color/icon or random fallback
     const userColor = (color && typeof color === "string" && /^#[0-9a-fA-F]{6}$/.test(color)) ? color : randomColor();
     const userIcon = (animalIcon && typeof animalIcon === "string") ? animalIcon : randomAnimal();
 
-    const [newUser] = await prisma.$transaction([
-      prisma.user.create({
+    // Použití pozvánky a založení účtu v jedné transakci (#482). Podmíněný UPDATE drží zámek řádku, takže souběžné
+    // požadavky se seřadí a každý znovu ověří `usedCount < maxUses`; limit nepřekročí. Selže-li založení účtu, použití se vrátí.
+    const newUser = await prisma.$transaction(async (tx) => {
+      const claimed = await tx.inviteLink.updateMany({
+        where: {
+          id: invite.id,
+          expiresAt: { gt: new Date() },
+          OR: [{ maxUses: null }, { usedCount: { lt: tx.inviteLink.fields.maxUses } }],
+        },
+        data: { usedCount: { increment: 1 } },
+      });
+      if (claimed.count === 0) return null;
+
+      return tx.user.create({
         data: {
           username: username.trim(),
           passwordHash,
@@ -278,12 +289,12 @@ router.post("/accept/:token", validate(acceptInviteSchema), async (req: Request,
           isVerified: true,      // Invited users are pre-verified
           isEmailVerified: !!email, // If email provided at invite, consider it verified
         },
-      }),
-      prisma.inviteLink.update({
-        where: { id: invite.id },
-        data: { usedCount: { increment: 1 } },
-      }),
-    ]);
+      });
+    });
+
+    if (!newUser) {
+      return res.status(410).json({ message: "Pozvánka byla již plně využita." });
+    }
 
     // Generate JWT — user is immediately logged in
     const jwtToken = signAuthToken(newUser);
@@ -354,15 +365,15 @@ router.post("/:id/send-email", protect, requireCabin, validate(sendInviteEmailSc
         <div style="font-family: 'Segoe UI', sans-serif; max-width: 500px; margin: 0 auto; padding: 32px; background: #f8faf9; border-radius: 16px;">
           <h2 style="color: #1a2721; margin-bottom: 8px;">Pozvánka na chatu</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            <strong>${invite.createdBy.username}</strong> tě zve na chatu <strong>„${invite.cabin.name}"</strong>.
+            <strong>${escapeHtml(invite.createdBy.username)}</strong> tě zve na chatu <strong>„${escapeHtml(invite.cabin.name)}"</strong>.
           </p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="${inviteUrl}" style="display: inline-block; padding: 14px 32px; background: #3f7b63; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px;">
+            <a href="${escapeHtml(inviteUrl)}" style="display: inline-block; padding: 14px 32px; background: #3f7b63; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px;">
               Připojit se k chatě →
             </a>
           </div>
           <p style="color: #9ca3af; font-size: 13px; text-align: center;">
-            Odkaz je platný do ${new Date(invite.expiresAt).toLocaleDateString("cs-CZ")}.
+            Odkaz je platný do ${escapeHtml(new Date(invite.expiresAt).toLocaleDateString("cs-CZ"))}.
           </p>
         </div>
       `,
