@@ -15,11 +15,14 @@ import { INVENTORY_KEY } from "@/features/shopping/hooks/useInventory";
 import { formatDayMonth } from "@/lib/dateUtils";
 import { handleMutationError } from "@/lib/mutationError";
 import { isNetworkError } from "@/lib/networkError";
+import { isQueuedOffline } from "@/lib/offlineQueue";
 import { pluralize } from "@/lib/format";
 import { showToast } from "@/lib/toast";
 import { whatsAppMessage } from "@/lib/whatsapp";
 import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
 import { attentionKey, attentionWhatsApp, buildAttention, supplyStatus } from "./attention";
+
+const sameRow = (a: AttentionItem, b: AttentionItem) => attentionKey(a) === attentionKey(b);
 
 /** Co potřebuje „Zpět“ (#511): položku nákupu, kterou slib změnil, jestli ji slib přidal, a stav zásoby před ním. */
 interface PledgeUndo {
@@ -42,11 +45,25 @@ async function pledgeItem(item: AttentionItem): Promise<PledgeUndo> {
 /**
  * Vezme slib zpět: přidanou položku smaže, jinak ji vrátí na Koupit. Návrat na Koupit dá zásobě Dochází
  * (server stav před slibem nezná), proto se jí pak nastaví stav, který měla před slibem.
+ * Bez signálu jdou do offline fronty oba kroky v pořadí, ne jen první.
  */
 async function undoPledge(item: AttentionItem, undo: PledgeUndo) {
-  if (undo.created) await shoppingApi.deleteItem(undo.itemId);
-  else await shoppingApi.toggleItemStatus(undo.itemId, "pending");
-  if (item.inventoryId && undo.supplyStatusBefore) await inventoryApi.setStatus(item.inventoryId, undo.supplyStatusBefore);
+  const { inventoryId } = item;
+  const { supplyStatusBefore } = undo;
+  const steps = [
+    () => (undo.created ? shoppingApi.deleteItem(undo.itemId) : shoppingApi.toggleItemStatus(undo.itemId, "pending")),
+    ...(inventoryId && supplyStatusBefore ? [() => inventoryApi.setStatus(inventoryId, supplyStatusBefore)] : []),
+  ];
+  let queued: unknown = null;
+  for (const step of steps) {
+    try {
+      await step();
+    } catch (err) {
+      if (!isQueuedOffline(err)) throw err;
+      queued = err;
+    }
+  }
+  if (queued) throw queued;
 }
 
 function usePledge() {
@@ -61,7 +78,7 @@ function usePledge() {
     void qc.cancelQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
     qc.setQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY, (old) => {
       if (!old) return old;
-      const rest = (old.attention ?? []).filter((i) => attentionKey(i) !== attentionKey(item));
+      const rest = (old.attention ?? []).filter((i) => !sameRow(i, item));
       return { ...old, attention: [...rest.slice(0, index), item, ...rest.slice(index)] };
     });
   };
@@ -72,9 +89,9 @@ function usePledge() {
     onMutate: async (item) => {
       await qc.cancelQueries({ queryKey: DASHBOARD_SHOPPING_KEY });
       const previous = qc.getQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY);
-      const index = previous?.attention?.findIndex((i) => attentionKey(i) === attentionKey(item)) ?? -1;
+      const index = previous?.attention?.findIndex((i) => sameRow(i, item)) ?? -1;
       qc.setQueryData<DashboardShoppingData>(DASHBOARD_SHOPPING_KEY, (old) =>
-        old && { ...old, attention: old.attention?.filter((i) => attentionKey(i) !== attentionKey(item)) },
+        old && { ...old, attention: old.attention?.filter((i) => !sameRow(i, item)) },
       );
       return { previous, index: Math.max(index, 0) };
     },

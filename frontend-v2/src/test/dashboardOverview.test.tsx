@@ -358,6 +358,21 @@ describe('Přehled: „Potřebuje pozornost“ (#275)', () => {
     expect(await screen.findByRole('button', { name: 'Koupím já: Baterky' })).toBeInTheDocument()
   })
 
+  it('Zpět bez signálu zařadí do offline fronty všechny kroky, ne jen první (#511)', async () => {
+    const queued = () => Promise.reject(Object.assign(new Error('Network Error'), { queuedOffline: true }))
+    vi.mocked(apiClient.post).mockImplementationOnce(serverReply({ id: 's-off', status: 'bring_from_home', created: true, supplyStatusBefore: 'EMPTY' }, NO_SHOPPING))
+    vi.mocked(apiClient.delete).mockImplementationOnce(queued)
+    vi.mocked(apiClient.put).mockImplementationOnce(queued)
+    render(<Toast />)
+    renderOverview(reservations(), withAttention(supply('Sirky', true)))
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Koupím já: Sirky' }))
+    await undoFromToast('Přivezeš: Sirky.')
+
+    await waitFor(() => expect(lastPuts(1)).toEqual([['/inventory/inv-Sirky', { status: 'EMPTY' }]]))
+    expect(apiClient.delete).toHaveBeenCalledWith('/shopping-list/s-off')
+  })
+
   it('„Zkopírovat pro WhatsApp“ zkopíruje všechny věci i za souhrnem', async () => {
     const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
