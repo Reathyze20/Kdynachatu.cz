@@ -32,12 +32,12 @@ function ownerUrlFor(relativePath: string): string | null {
  */
 async function mayAccess(url: string, user: { cabinId: string; role: string }): Promise<boolean> {
   const { cabinId } = user;
-  const cover = prisma.cabin.findFirst({ where: { id: cabinId, coverPhotoUrl: url }, select: { id: true } });
-  if (user.role === "guest") return Boolean(await cover);
+  const coverQuery = prisma.cabin.findFirst({ where: { id: cabinId, coverPhotoUrl: url }, select: { id: true } });
+  if (user.role === "guest") return Boolean(await coverQuery);
   const [photo, wallpaper, cabin] = await Promise.all([
     prisma.galleryPhoto.findFirst({ where: { src: url, folder: { cabinId } }, select: { id: true } }),
     prisma.wallpaper.findFirst({ where: { url, cabinId }, select: { id: true } }),
-    cover,
+    coverQuery,
   ]);
   return Boolean(photo || wallpaper || cabin);
 }

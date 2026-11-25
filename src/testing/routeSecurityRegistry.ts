@@ -54,7 +54,7 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   // admin.ts
   "GET /api/admin/system": ADMIN,
   // cabin.ts
-  "GET /api/cabin": MEMBERS, // host: i soubor `coverPhotoUrl` z /uploads, nic jiného odtud (#546)
+  "GET /api/cabin": MEMBERS,
   "PATCH /api/cabin": ADMIN,
   "PUT /api/cabin/cover-photo": ADMIN,
   "DELETE /api/cabin/cover-photo": ADMIN,
