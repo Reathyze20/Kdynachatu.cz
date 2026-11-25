@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect, beforeEach, onTestFinished, vi } from 'vitest'
+import { act, render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { CookieConsent } from '@/components/shared/CookieConsent'
+import { PrivacyPage } from '@/features/legal/PrivacyPage'
 
 /** Lišta o cookies (#516): jedna věta, odkaz do Ochrany soukromí, nezakrývá spodní navigaci. */
 
@@ -38,9 +39,29 @@ describe('Lišta o cookies (#516)', () => {
     expect(screen.queryByTestId('cookie-consent-banner')).not.toBeInTheDocument()
     unmount()
 
+    vi.useFakeTimers()
+    onTestFinished(() => { vi.useRealTimers() })
     renderBanner()
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    act(() => { vi.advanceTimersByTime(1000) })
     expect(screen.queryByTestId('cookie-consent-banner')).not.toBeInTheDocument()
+  })
+
+  it('odkaz z lišty otevře Ochranu soukromí rovnou na sekci cookies', async () => {
+    const scrolled: string[] = []
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = function (this: Element) { scrolled.push(this.id) }
+    onTestFinished(() => { Element.prototype.scrollIntoView = original })
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<CookieConsent />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('link', { name: 'Ochraně soukromí' }, { timeout: 2000 }))
+    expect(await screen.findByTestId('privacy-page')).toBeInTheDocument()
+    expect(scrolled).toEqual(['cookies'])
   })
 
   // jsdom neumí layout ani Tailwind, proto hlídáme kontrakt třídy: když je na stránce spodní

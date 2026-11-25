@@ -35,7 +35,7 @@ export function CookieConsent() {
       className="fixed inset-x-0 bottom-0 z-(--z-toast) border-t border-rule-soft bg-sheet px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-lift in-[body:has(.mobile-nav)]:bottom-[calc(var(--mobile-nav-height,0px)+env(safe-area-inset-bottom,0px))] in-[body:has(.mobile-nav)]:pb-2"
     >
       <div className="mx-auto flex max-w-3xl items-center gap-3">
-        <p className="m-0 flex-1 text-sm text-(--text-main)" data-testid="cookie-consent-text">
+        <p className="m-0 flex-1 text-body text-(--text-main)" data-testid="cookie-consent-text">
           Používáme jen technicky nezbytné cookies, podrobnosti najdeš v{' '}
           <Link to="/privacy#cookies" className="font-semibold text-primary underline underline-offset-2">
             Ochraně soukromí
