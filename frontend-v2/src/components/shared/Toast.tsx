@@ -89,8 +89,8 @@ function ToastCard({
       className={`toast toast-${item.type}`}
       data-testid="toast"
       data-toast-type={item.type}
-      role="alert"
-      aria-live="assertive"
+      role={item.type === 'error' ? 'alert' : 'status'}
+      aria-live={item.type === 'error' ? 'assertive' : 'polite'}
     >
       <Icon className="toast-icon" />
 

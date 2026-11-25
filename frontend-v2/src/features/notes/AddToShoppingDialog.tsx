@@ -83,7 +83,7 @@ export function AddToShoppingDialog({ open, noteId, messageText, onClose }: Prop
       void resolve.mutateAsync(noteId).catch(() => {
         showToast("Položka byla přidána, ale zprávu se nepodařilo označit jako vyřešenou.", "info");
       });
-      showToast("Položka přidána do nákupního seznamu", "success");
+      showToast("Položka přidána do nákupního seznamu.", "success");
       onClose();
     } catch (error) {
       setSubmitError(

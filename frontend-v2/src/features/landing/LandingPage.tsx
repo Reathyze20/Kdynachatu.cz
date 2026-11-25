@@ -186,10 +186,10 @@ export function LandingPage() {
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                kdynachatu.cz/dashboard
+                kdynachatu.cz
               </span>
             </div>
-            <img src="/dashboard-mockup.jpg" alt="Náhled aplikace Kdy na chatu — dashboard s rezervacemi, počasím a nákupy" className="mockup-image" loading="eager" />
+            <img src="/dashboard-mockup.jpg" alt="Náhled aplikace Kdy na chatu — přehled s rezervacemi, počasím a nákupy" className="mockup-image" loading="eager" />
           </div>
         </div>
 
@@ -355,7 +355,7 @@ export function LandingPage() {
                 <p className="pricing-plan-desc">Pro běžný chod jedné chalupy.</p>
               </div>
               <ul className="pricing-list">
-                <li><CheckIcon /><span>Sdílený Dashboard</span></li>
+                <li><CheckIcon /><span>Sdílený přehled</span></li>
                 <li><CheckIcon /><span>Nákupy a Zásoby</span></li>
                 <li><CheckIcon /><span>Až pro 3 členy</span></li>
               </ul>

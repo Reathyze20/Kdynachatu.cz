@@ -293,7 +293,7 @@ export function CabinSettingsPanel({
       {
         onSuccess: () => {
           setSaveError(null)
-          showToast('Nastavení uloženo', 'success')
+          showToast('Nastavení uloženo.', 'success')
           setSaveSuccess(true)
           if (successTimerRef.current) clearTimeout(successTimerRef.current)
           successTimerRef.current = setTimeout(() => setSaveSuccess(false), 2500)
@@ -524,7 +524,7 @@ export function CabinSettingsPanel({
                       placeholder="např. U nás je vždy příjemně — ať prší nebo svítí"
                       data-testid="cabin-settings-welcome-message-input"
                     />
-                    <span className="cs-hint">Zobrazí se novým členům v pozvánce a na dashboardu</span>
+                    <span className="cs-hint">Zobrazí se novým členům v pozvánce a na přehledu</span>
                   </div>
 
                   <div className="cs-field">

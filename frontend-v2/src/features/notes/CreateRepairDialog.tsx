@@ -66,7 +66,7 @@ export function CreateRepairDialog({ open, noteId, messageText, onClose }: Props
       void resolve.mutateAsync(noteId).catch(() => {
         showToast("Úkol byl vytvořen, ale zprávu se nepodařilo označit jako vyřešenou.", "info");
       });
-      showToast("Úkol vytvořen v rekonstrukcích", "success");
+      showToast("Úkol vytvořen v rekonstrukcích.", "success");
       onClose();
     } catch (error) {
       setSubmitError(

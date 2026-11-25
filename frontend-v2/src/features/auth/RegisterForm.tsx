@@ -85,7 +85,7 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
         }
         // Standardní flow — e-mail odeslán
         setEmailSent(email)
-        showToast('Registrace úspěšná — zkontroluj e-mail', 'success')
+        showToast('Registrace dokončena. Zkontroluj e-mail.', 'success')
         return
       }
 

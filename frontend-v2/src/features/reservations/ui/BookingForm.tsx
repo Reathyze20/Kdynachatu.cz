@@ -3,7 +3,6 @@ import type { Reservation } from "@/api/reservations";
 import { useCreateReservation, useUpdateReservation, useDeleteReservation, useUsers, type BookingType } from "../hooks/useReservations";
 import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
-import { showToast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
@@ -139,8 +138,8 @@ export function BookingForm({ open, onClose, fromDate, toDate, existing, allRese
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!from || !to) { showToast("Vyplň datum příjezdu a odjezdu.", "error"); return; }
-    if (to < from) { showToast("Datum odjezdu nesmí být před příjezdem.", "error"); return; }
+    if (!from || !to) { setSubmitError("Vyplň datum příjezdu a odjezdu."); return; }
+    if (to < from) { setSubmitError("Datum odjezdu nesmí být před příjezdem."); return; }
     const purposeError = validatePurpose(purpose);
     if (purposeError) {
       setSubmitError(null);

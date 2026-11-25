@@ -100,7 +100,7 @@ export function ReconstructionPage() {
             setSubmitError(null)
             setShowModal(false)
             setEditItem(null)
-            showToast('Položka upravena', 'success')
+            showToast('Položka upravena.', 'success')
           },
           onError: (error) => {
             setSubmitError(
@@ -118,7 +118,7 @@ export function ReconstructionPage() {
         onSuccess: () => {
           setSubmitError(null)
           setShowModal(false)
-          showToast('Položka přidána', 'success')
+          showToast('Položka přidána.', 'success')
         },
         onError: (error) => {
           setSubmitError(

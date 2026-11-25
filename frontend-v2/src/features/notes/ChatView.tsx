@@ -168,7 +168,7 @@ export function ChatView({
   const handleCopy = useCallback(() => {
     if (contextNote) {
       navigator.clipboard.writeText(contextNote.message).then(() => {
-        showToast("Zkopírováno", "success");
+        showToast("Zkopírováno.", "success");
       });
     }
   }, [contextNote]);

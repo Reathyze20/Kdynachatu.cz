@@ -129,10 +129,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       if (variables.animalIcon !== undefined) {
         updateAnimalIcon(variables.animalIcon)
       }
-      showToast('Změny uloženy', 'success')
+      showToast('Změny uloženy.', 'success')
       queryClient.invalidateQueries({ queryKey: ['profile'] })
     },
-    onError: () => showToast('Nepodařilo se uložit, zkus to prosím znovu.', 'error'),
+    onError: () => showToast('Změny se nepodařilo uložit. Zkus to znovu.', 'error'),
   })
 
   function handleColorSelect(color: string) {
@@ -221,12 +221,11 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       setSecurityMessage('')
       setSecurityError(false)
       form.reset()
-      showToast('Heslo úspěšně změněno', 'success')
+      showToast('Heslo změněno.', 'success')
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
       setSecurityMessage(data?.message || 'Chyba.')
       setSecurityError(true)
-      showToast('Nepodařilo se změnit heslo', 'error')
     }
   }
 
@@ -242,9 +241,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      showToast('Data exportována', 'success')
+      showToast('Data exportována.', 'success')
     } catch {
-      showToast('Chyba při exportu dat', 'error')
+      showToast('Data se nepodařilo exportovat. Zkus to znovu.', 'error')
     }
   }
 
@@ -255,12 +254,12 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setDeleteLoading(true)
     try {
       await apiClient.delete('/users/me', { data: { password } })
-      showToast('Účet jsme smazali', 'success')
+      showToast('Účet smazán.', 'success')
       logout()
       navigate('/')
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
-      showToast(data?.message || 'Chyba při mazání účtu', 'error')
+      showToast(data?.message || 'Účet se nepodařilo smazat. Zkus to znovu.', 'error')
     } finally {
       setDeleteLoading(false)
     }

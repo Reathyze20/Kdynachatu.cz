@@ -172,11 +172,11 @@ export function ReservationsPage() {
 
   // After successful reservation create → check inventory
   const handleReservationCreated = async (_: string) => {
-    if (isGuest) return showToast("Rezervace uložena!", "success"); // zásoby chaty host nevidí
-    showToast("Rezervace uložena! Kontroluji zásoby…", "info");
+    if (isGuest) return showToast("Rezervace uložena.", "success"); // zásoby chaty host nevidí
+    showToast("Rezervace uložena. Kontroluji zásoby…", "info");
     const summary = await fetchMissingSummary();
     if (!summary || (summary.count === 0 && !summary.hasShoppingItems)) {
-      showToast("Rezervace uložena! Zásoby jsou v pořádku.", "success");
+      showToast("Rezervace uložena. Zásoby jsou v pořádku.", "success");
       return;
     }
     setInvSummary(summary);

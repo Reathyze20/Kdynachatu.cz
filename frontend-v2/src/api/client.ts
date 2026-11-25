@@ -176,7 +176,7 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !shouldIgnoreAuthError) {
       clearStoredAuthState()
-      showToast('Relace vypršela, přihlas se znovu', 'error')
+      showToast('Relace vypršela. Přihlas se znovu.', 'error')
       window.dispatchEvent(new CustomEvent('auth:expired'))
     }
     return Promise.reject(error)
