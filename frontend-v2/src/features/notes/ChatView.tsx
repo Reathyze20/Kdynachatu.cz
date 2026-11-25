@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { ChevronLeft } from "lucide-react";
 import type { Note } from "@/api/notes";
 import { MessageBubble } from "./MessageBubble";
 import { MessageContextMenu } from "./MessageContextMenu";
@@ -26,6 +27,8 @@ interface Props {
   onReply: (note: Note) => void;
   /** Jen když smí uživatel téma smazat; bez něj se menu tématu nezobrazí (#507). */
   onDeleteThread?: () => void;
+  /** Mobil: návrat na seznam témat, tlačítko „Zpět“ v hlavičce vlákna (#508). */
+  onBack?: () => void;
 }
 
 export function ChatView({
@@ -40,6 +43,7 @@ export function ChatView({
   onCreateRepair,
   onReply,
   onDeleteThread,
+  onBack,
 }: Props) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -312,6 +316,7 @@ export function ChatView({
     <div className="notes-chat-area" id="notes-chat-area">
       {/* Header */}
       <div className="chat-header">
+        {onBack && <ChatBackButton onClick={onBack} />}
         <div className="chat-header-info">
           <h3 id="active-thread-name">{activeThreadName}</h3>
           {participantNames && (
@@ -471,7 +476,7 @@ export function ChatView({
                 ].join(" ");
 
                 return (
-                  <div key={note.id}>
+                  <div key={note.id} className="chat-message-row">
                     {showDateSep && (
                       <div className="date-separator">
                         <span className="date-separator-label">{formatDateSeparator(note.createdAt)}</span>
@@ -515,7 +520,7 @@ export function ChatView({
               }
 
               return (
-                <div key={note.id}>
+                <div key={note.id} className="chat-message-row">
                   {showDateSep && (
                     <div className="date-separator">
                       <span className="date-separator-label">{formatDateSeparator(note.createdAt)}</span>
@@ -574,5 +579,15 @@ export function ChatView({
         }}
       />
     </div>
+  );
+}
+
+/** „Zpět“ z vlákna na seznam témat (mobil); NotesPage ho ukáže i při načítání a chybě. */
+export function ChatBackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" className="mobile-chat-back" aria-label="Zpět na seznam" onClick={onClick}>
+      <ChevronLeft aria-hidden="true" className="size-4" />
+      <span>Zpět</span>
+    </button>
   );
 }

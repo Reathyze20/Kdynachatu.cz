@@ -23,8 +23,11 @@ export function ReactionBar({ reactions, onToggle }: Props) {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 500, damping: 25 }}
           >
-            <span className="reaction-emoji">{r.emoji}</span>
-            <span className="reaction-count">{r.count}</span>
+            {/* Tlačítko má dotykovou plochu 48 px, viditelná je jen kapsle uvnitř (#508) */}
+            <span className="reaction-pill">
+              <span className="reaction-emoji">{r.emoji}</span>
+              <span className="reaction-count">{r.count}</span>
+            </span>
           </motion.button>
         ))}
       </AnimatePresence>
