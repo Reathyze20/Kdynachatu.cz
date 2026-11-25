@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.13.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.12.0...v1.13.0) (2026-11-25)
+
+
+### Features
+
+* **auth:** revoke tokens via tokenVersion, log out everywhere ([#496](https://github.com/Reathyze20/Kdynachatu.cz/issues/496)) ([47926a0](https://github.com/Reathyze20/Kdynachatu.cz/commit/47926a019a97908dc607a7b5fc1d7b4b77bcb4dd))
+* **security:** one-off script to strip EXIF from legacy JPEG uploads ([#535](https://github.com/Reathyze20/Kdynachatu.cz/issues/535)) ([5a2cde6](https://github.com/Reathyze20/Kdynachatu.cz/commit/5a2cde6e286a0b68732567adc151ae76e8471717))
+
+
+### Bug Fixes
+
+* **security:** bind offline queue to user and clear caches on session end ([#538](https://github.com/Reathyze20/Kdynachatu.cz/issues/538)) ([89ec2d7](https://github.com/Reathyze20/Kdynachatu.cz/commit/89ec2d7e6b7f933c9d9f2a9e22e8752eabf74891))
+* **security:** changing e-mail requires the current password and notifies the old address ([#497](https://github.com/Reathyze20/Kdynachatu.cz/issues/497)) ([8edf1ac](https://github.com/Reathyze20/Kdynachatu.cz/commit/8edf1ac3b45f2ebd9774190635ef3447267e6702))
+* **security:** check referenced ids against the cabin, foreign-id registry meta-test ([#540](https://github.com/Reathyze20/Kdynachatu.cz/issues/540)) ([9b42544](https://github.com/Reathyze20/Kdynachatu.cz/commit/9b42544b75df6c44b41341c5be47ad1c33069909))
+* **security:** escape invite e-mail, atomic invite maxUses, http(s)-only reconstruction links ([#539](https://github.com/Reathyze20/Kdynachatu.cz/issues/539)) ([564223d](https://github.com/Reathyze20/Kdynachatu.cz/commit/564223d45c07a7043cac8360a3c430cad48ed8eb))
+* **security:** remove legacy PIN verification, require verified e-mail for admins ([#534](https://github.com/Reathyze20/Kdynachatu.cz/issues/534)) ([f8eec8b](https://github.com/Reathyze20/Kdynachatu.cz/commit/f8eec8be11316e5609b6591b78a08ea2bb93ea51))
+* **security:** superadmin is invisible (404) to cabin admin endpoints ([#494](https://github.com/Reathyze20/Kdynachatu.cz/issues/494)) ([472f6a6](https://github.com/Reathyze20/Kdynachatu.cz/commit/472f6a6e61042fc99eac0bf66e1344df156a6e2a))
+
 ## [1.12.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.11.0...v1.12.0) (2026-11-24)
 
 
