@@ -78,19 +78,6 @@
   min-width: 0;
 }
 
-.kanban-column-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-  width: 28px;
-  height: 28px;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
 .kanban-count {
   font-size: var(--font-size-xs);
   font-weight: 700;
@@ -103,21 +90,10 @@
   flex-shrink: 0;
 }
 
-.kanban-empty-icon {
-  display: block;
-  margin: 0 auto 8px;
-  opacity: 0.45;
-  filter: grayscale(0.3);
-}
-
 /* �� Column variants ��������������������������������������������������������� */
 .kanban-column.col-navrzeno .kanban-column-header {
   border-bottom-color: rgb(var(--rule));
   color: rgb(var(--ok));
-}
-
-.kanban-column.col-navrzeno .kanban-column-icon {
-  background: rgba(59, 130, 246, 0.12);
 }
 
 .kanban-column.col-navrzeno .kanban-count {
@@ -131,10 +107,6 @@
   color: rgb(var(--ok));
 }
 
-.kanban-column.col-schvaleno .kanban-column-icon {
-  background: rgba(34, 197, 94, 0.12);
-}
-
 .kanban-column.col-schvaleno .kanban-count {
   background: var(--ok-bg);
   color: rgb(var(--ok));
@@ -143,10 +115,6 @@
 .kanban-column.col-probehlo .kanban-column-header {
   border-bottom-color: rgb(var(--rule));
   color: rgb(var(--ok));
-}
-
-.kanban-column.col-probehlo .kanban-column-icon {
-  background: rgba(16, 185, 129, 0.12);
 }
 
 .kanban-column.col-probehlo .kanban-count {
@@ -225,81 +193,6 @@
   flex: 1;
 }
 
-/* �� Card actions (edit + delete) �������������������������������������������� */
-.card-actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.kanban-item:hover .card-actions,
-.kanban-item:focus-within .card-actions {
-  opacity: 1;
-}
-
-/* On touch devices, always show actions */
-@media (hover: none) {
-  .card-actions {
-    opacity: 1;
-  }
-}
-
-.card-action-edit,
-.card-action-del {
-  background: transparent;
-  border: none;
-  color: var(--text-disabled, #9ca3af);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  line-height: 1;
-  transition:
-    color var(--transition-fast),
-    background var(--transition-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
-}
-
-.card-action-edit:hover {
-  color: var(--brand-primary);
-  background: var(--brand-primary-light);
-}
-
-.card-action-del:hover {
-  color: var(--status-error);
-  background: var(--status-error-light);
-}
-
-.card-action-link {
-  background: transparent;
-  border: none;
-  color: var(--text-disabled, #9ca3af);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  line-height: 1;
-  transition:
-    color var(--transition-fast),
-    background var(--transition-fast);
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  min-width: 28px;
-  min-height: 28px;
-}
-
-.card-action-link:hover {
-  color: var(--brand-primary);
-  background: var(--brand-primary-light);
-}
-
 /* �� Card footer ������������������������������������������������������������� */
 .card-footer {
   display: flex;
@@ -360,60 +253,6 @@
   padding: var(--space-md);
 }
 
-.company-status-badge {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 6px;
-  margin-bottom: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.company-status-badge.status-pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.company-status-badge.status-contacted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.company-status-badge.status-approved {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.company-status-badge.status-rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Legacy status classes */
-.status-pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-contacted {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-approved {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
 .company-actions {
   display: flex;
   gap: 8px;
@@ -455,56 +294,6 @@
   min-width: 0;
 }
 
-.task-checkbox-wrapper {
-  position: relative;
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.task-checkbox {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.checkmark {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 18px;
-  width: 18px;
-  background-color: #fff;
-  border: 2px solid var(--border-strong, #d1d5db);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.task-checkbox:checked ~ .checkmark {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-}
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-  left: 5px;
-  top: 1px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.task-checkbox:checked ~ .checkmark:after {
-  display: block;
-}
-
 .task-done .kanban-item-title {
   text-decoration: line-through;
   color: var(--text-muted);
@@ -527,75 +316,6 @@
 .deadline-near {
   color: var(--status-error);
   font-weight: 600;
-}
-
-/* �� Empty states ������������������������������������������������������������ */
-.kanban-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-2xl) var(--space-lg);
-  text-align: center;
-  color: var(--text-muted);
-  background-color: rgba(255, 255, 255, 0.3);
-  border: 2px dashed var(--border-strong, #e5e7eb);
-  border-radius: var(--radius-lg);
-  gap: 8px;
-}
-
-.kanban-empty-state p {
-  font-size: var(--font-size-sm);
-  margin: 0;
-  color: var(--text-muted);
-}
-
-.vote-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-xs);
-  transition: all var(--transition-fast);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.vote-btn:hover {
-  background: var(--bg-hover, #e8ece9);
-}
-
-.vote-btn.voted-up {
-  color: var(--status-error);
-  font-weight: 700;
-}
-
-/* �� Add column button ������������������������������������������������������� */
-.add-col-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.add-col-btn:hover {
-  background: var(--brand-primary-light);
-  color: var(--brand-primary);
-  border-color: var(--brand-primary);
 }
 
 /* �� Responsive �������������������������������������������������������������� */
@@ -722,68 +442,6 @@ select.form-input {
    Reconstruction overrides � Sprint 2A polish
    ============================================================================ */
 
-.card-action-edit,
-.card-action-del,
-.card-action-link {
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0;
-}
-
-.rec-action-icon {
-  width: 15px;
-  height: 15px;
-  stroke-width: 2.2;
-}
-
-.vote-btn {
-  gap: 6px;
-}
-
-.add-col-btn {
-  font-size: 0;
-}
-
-.kanban-empty-title {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.kanban-empty-hint {
-  max-width: 28ch;
-  font-size: var(--font-size-xs);
-  line-height: 1.5;
-}
-
-.reconstruction-empty-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 8px 12px;
-  border: 1px solid var(--brand-primary);
-  border-radius: var(--radius-full);
-  background: var(--brand-primary-light);
-  color: var(--brand-primary);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.reconstruction-empty-action:hover {
-  background: var(--brand-primary);
-  color: var(--text-on-primary);
-  transform: translateY(-1px);
-}
-
 #rec-task-form .form-input {
   width: 100%;
 }
@@ -792,20 +450,5 @@ select.form-input {
   .kanban-column-body {
     max-height: none;
     overflow: visible;
-  }
-
-  .card-action-edit,
-  .card-action-del,
-  .card-action-link,
-  .add-col-btn {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  .reconstruction-empty-action,
-  .vote-btn {
-    min-height: 44px;
   }
 }
