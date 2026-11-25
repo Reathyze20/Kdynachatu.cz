@@ -11,7 +11,7 @@ process.env.SMTP_USER = "test";
 process.env.SMTP_PASS = "test";
 process.env.EMAIL_FROM = "";
 
-type SentMail = { subject: string; text: string; html: string };
+type SentMail = { to: string; subject: string; text: string; html: string };
 const sent: SentMail[] = [];
 
 let email: typeof import("./email");
@@ -44,4 +44,37 @@ describe("e-mails use the app name „Kdy na chatu“", () => {
       assert.ok(sent[0].text.includes("Kdy na chatu"));
     });
   }
+});
+
+describe("e-mail change notice to the old address (#475)", () => {
+  test("goes to the old address, names the new one and the app", async () => {
+    sent.length = 0;
+    await email.sendEmailChangedNotice("stara@example.test", { username: "jana", newEmail: "nova@example.test" });
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].to, "stara@example.test");
+    assert.match(sent[0].subject, /— Kdy na chatu$/);
+    for (const body of [sent[0].html, sent[0].text]) {
+      assert.ok(body.includes("nova@example.test"));
+      assert.ok(body.includes("jana"));
+      assert.match(body, /Pokud o změně nevíš/);
+    }
+    assert.ok(sent[0].html.includes("Kdy na chatu — Rodinná aplikace pro správu chaty"));
+  });
+
+  test("escapes interpolated values in the HTML", async () => {
+    sent.length = 0;
+    await email.sendEmailChangedNotice("stara@example.test", { username: "<img src=x onerror=alert(1)>", newEmail: "a\"<b>@example.test" });
+    const { html } = sent[0];
+    assert.ok(!html.includes("<img"), "jméno se nevloží jako HTML");
+    assert.ok(!html.includes("<b>"), "adresa se nevloží jako HTML");
+    assert.ok(html.includes("&lt;img src=x onerror=alert(1)&gt;"));
+    assert.ok(html.includes("a&quot;&lt;b&gt;@example.test"));
+  });
+
+  test("a removed e-mail says the account has no address now", async () => {
+    sent.length = 0;
+    await email.sendEmailChangedNotice("stara@example.test", { username: "jana", newEmail: null });
+    assert.match(sent[0].text, /odebr/);
+    assert.ok(!sent[0].text.includes("null"));
+  });
 });

@@ -161,6 +161,7 @@ const schemas: Record<string, JsonSchema> = {
       email: { type: "string", format: "email", nullable: true, example: "admin@example.cz" },
       color: { type: "string", nullable: true, example: "#22C55E" },
       animalIcon: { type: "string", nullable: true, example: "fox" },
+      currentPassword: { type: "string", maxLength: 100, description: "Soucasne heslo. Povinne jen pri zmene e-mailu (#475)." },
     },
   },
   UpdateProfileResponse: {
@@ -738,12 +739,14 @@ const paths: Record<string, OpenApiObject> = {
     patch: {
       tags: ["Users"],
       summary: "Uprav profil prihlaseneho uzivatele",
+      description: "Zmena e-mailu (i jeho odebrani) vyzaduje currentPassword; na puvodni adresu pak odejde upozorneni. Barva a ikona heslo nechteji.",
       security: bearerSecurity,
       requestBody: jsonRequestBody(ref("UpdateProfileRequest")),
       responses: {
         "200": jsonResponse(ref("UpdateProfileResponse"), "Profil byl aktualizovan"),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Zmena e-mailu bez hesla nebo se spatnym heslem, nic se neulozilo"),
       },
     },
   },

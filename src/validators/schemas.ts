@@ -352,6 +352,8 @@ export const updateProfileSchema = z.object({
   email: z.string().email("Neplatný e-mail").optional().nullable(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Neplatná barva").optional(),
   animalIcon: z.string().max(50).optional(),
+  // Povinné jen při změně e-mailu (#475), ověří ho routa
+  currentPassword: z.string().max(100).optional(),
 });
 
 // Users — change own password

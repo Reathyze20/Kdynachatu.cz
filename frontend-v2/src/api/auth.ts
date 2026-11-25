@@ -1,5 +1,5 @@
 /**
- * api/auth.ts — veřejné auth endpointy a přihlášení vlastního účtu (heslo, „Odhlásit všude“)
+ * api/auth.ts — veřejné auth endpointy a přihlášení vlastního účtu (heslo, e-mail, „Odhlásit všude“)
  */
 import apiClient from './client'
 
@@ -30,6 +30,19 @@ export interface LogoutEverywhereResponse {
   message: string
 }
 
+// Zrcadlí src/types.ts UpdateProfileRequest (#475): změna e-mailu chce současné heslo
+export interface UpdateProfileRequest {
+  email?: string | null
+  color?: string
+  animalIcon?: string
+  currentPassword?: string
+}
+
+export interface UpdateProfileResponse {
+  message: string
+  user: { email: string | null; color: string; animalIcon: string | null }
+}
+
 export const authApi = {
   getSignupStatus: async (): Promise<SignupStatusResponse> => {
     const { data } = await apiClient.get<SignupStatusResponse>('/signup-status')
@@ -42,6 +55,12 @@ export const authApi = {
   },
   changeMyPassword: async (oldPassword: string, newPassword: string): Promise<ChangeMyPasswordResponse> => {
     const { data } = await apiClient.patch<ChangeMyPasswordResponse>('/users/me/password', { oldPassword, newPassword })
+    return data
+  },
+  /** Změní e-mail účtu; server ověří současné heslo a na starou adresu pošle upozornění. */
+  changeMyEmail: async (email: string, currentPassword: string): Promise<UpdateProfileResponse> => {
+    const body: UpdateProfileRequest = { email, currentPassword }
+    const { data } = await apiClient.patch<UpdateProfileResponse>('/users/me', body)
     return data
   },
   /** Zneplatní všechna přihlášení účtu, i to aktuální. */

@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { membersApi } from '@/api/members'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
@@ -39,6 +40,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
   const [emailMessage, setEmailMessage] = useState('')
+  // Změna e-mailu chce současné heslo (#475)
+  const [emailPassword, setEmailPassword] = useState('')
+  const [emailPasswordError, setEmailPasswordError] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
 
   // ─── Color / Avatar state ───────────────────────────────────────────────────
   const [selectedColor, setSelectedColor] = useState(FALLBACK_MEMBER_COLOR)
@@ -94,6 +99,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setEmail(profileData?.email ?? '')
     setEmailError(false)
     setEmailMessage('')
+    setEmailPassword('')
+    setEmailPasswordError('')
     setSelectedColor(profileData?.color ?? FALLBACK_MEMBER_COLOR)
     setSelectedAnimal(profileData?.animalIcon ?? '')
     setSecurityMessage('')
@@ -135,21 +142,39 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   }
 
   // ─── Změnit e-mail ──────────────────────────────────────────────────────────
-  async function handleChangeEmail() {
+  const emailChanged = email.trim() !== (profileData?.email ?? '')
+
+  async function handleChangeEmail(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     const emailVal = email.trim()
     if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
       setEmailMessage('Nesprávný formát e-mailu.')
       setEmailError(true)
       return
     }
+    if (!emailChanged) return
+    if (!emailPassword) {
+      setEmailPasswordError('Pro změnu e-mailu zadej své současné heslo.')
+      return
+    }
+    setEmailSaving(true)
     try {
-      await apiClient.patch('/users/me', { email: emailVal })
+      await authApi.changeMyEmail(emailVal, emailPassword)
       setEmailMessage('')
       setEmailError(false)
-      showToast('E-mail změněn', 'success')
-    } catch {
-      setEmailMessage('Chyba.')
-      setEmailError(true)
+      setEmailPassword('')
+      setEmailPasswordError('')
+      showToast('E-mail změněn.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+    } catch (err: unknown) {
+      const response = (err as { response?: { status?: number; data?: { message?: string } } })?.response
+      if (response?.status === 403) {
+        setEmailPasswordError(response.data?.message ?? 'Nesprávné heslo. Zkus to znovu.')
+      } else {
+        setEmailMessage('E-mail se nepodařilo změnit. Zkus to znovu.')
+      }
+    } finally {
+      setEmailSaving(false)
     }
   }
 
@@ -387,44 +412,75 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           >
             <div className="drawer-section">
               <h3>Kontaktní údaje</h3>
-              <div className="form-group">
-                <label htmlFor="profile-email">E-mailová adresa:</label>
-                <div className="drawer-email-row" style={{ display: 'flex', gap: '10px' }}>
-                  <input
+              <form className="form-group" onSubmit={handleChangeEmail} noValidate data-testid="profile-email-form">
+                <label htmlFor="profile-email">E-mailová adresa</label>
+                <div className="drawer-email-row flex gap-2">
+                  <Input
                     type="email"
                     id="profile-email"
                     name="email"
-                    className="form-control"
                     maxLength={255}
                     placeholder="neco@neco.cz"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      setEmailMessage('')
+                    }}
                     onBlur={handleEmailBlur}
-                    style={emailError ? { borderColor: 'var(--color-danger)' } : undefined}
+                    invalid={emailError}
+                    aria-describedby={emailError ? 'profile-email-error' : emailMessage ? 'profile-email-message' : undefined}
                     data-testid="profile-email-input"
                   />
-                  <button
-                    type="button"
+                  <Button
+                    type="submit"
                     id="btn-change-email"
-                    className="button-secondary"
-                    style={{ whiteSpace: 'nowrap', padding: '0 15px' }}
-                    onClick={handleChangeEmail}
+                    variant="secondary"
+                    pending={emailSaving}
+                    disabled={!emailChanged}
                     data-testid="profile-change-email-button"
                   >
                     Změnit
-                  </button>
+                  </Button>
                 </div>
                 {emailError && (
-                  <div id="profile-email-error" className="error-message" style={{ marginTop: '5px', textAlign: 'left' }}>
+                  <p id="profile-email-error" className="mt-1 text-label text-(--status-error)">
                     Zadej e-mail ve správném formátu.
-                  </div>
+                  </p>
                 )}
                 {emailMessage && !emailError && (
-                  <p id="profile-email-message" className="message" style={{ marginTop: '5px', textAlign: 'left' }}>
+                  <p id="profile-email-message" className="mt-1 text-label text-(--status-error)">
                     {emailMessage}
                   </p>
                 )}
-              </div>
+                {emailChanged && (
+                  <div className="mt-3">
+                    <label htmlFor="profile-email-password">Současné heslo</label>
+                    <Input
+                      type="password"
+                      id="profile-email-password"
+                      name="currentPassword"
+                      autoComplete="current-password"
+                      maxLength={100}
+                      value={emailPassword}
+                      onChange={(e) => {
+                        setEmailPassword(e.target.value)
+                        setEmailPasswordError('')
+                      }}
+                      invalid={Boolean(emailPasswordError)}
+                      aria-describedby={emailPasswordError ? 'profile-email-password-hint profile-email-password-error' : 'profile-email-password-hint'}
+                      data-testid="profile-email-password-input"
+                    />
+                    <p id="profile-email-password-hint" className="mt-1 text-label text-(--text-muted)">
+                      Na původní adresu pošleme upozornění o změně.
+                    </p>
+                    {emailPasswordError && (
+                      <p id="profile-email-password-error" className="mt-1 text-label text-(--status-error)">
+                        {emailPasswordError}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form>
             </div>
 
             <div className="drawer-section">
