@@ -12,6 +12,7 @@ import { MEMBER_PALETTE } from '@/lib/memberPalette'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
 import { tooManyAttemptsMessage } from './tooManyAttempts'
+import { SignupConsent } from '@/components/shared/SignupConsent'
 
 interface RegisterFormProps {
   onShowLogin: () => void
@@ -210,6 +211,8 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
           </div>
           <input type="hidden" name="color" id="register-color" value={selectedColor} />
         </div>
+
+        <SignupConsent />
 
         <button
           type="submit"
