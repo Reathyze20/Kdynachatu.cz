@@ -70,7 +70,6 @@ const G3_DEBT: Record<string, number> = {
   '../styles/reconstruction.css': 3,
   '../styles/reservations.css': 38,
   '../styles/shopping.css': 39,
-  '../styles/superadmin.css': 3,
 }
 
 /** Totéž pro TSX (Tailwind a inline styly). */

@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Copy, Search, Shield, UserPlus } from 'lucide-react'
+import { Check, Copy, Inbox, Search, SearchX, Shield, UserPlus, Users } from 'lucide-react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
-import { formatCount, pluralize } from '@/lib/format'
+import { formatCount, formatDate, pluralize } from '@/lib/format'
+import { memberInitial } from '@/lib/memberPalette'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/shared/Card'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { LogsPanel } from '@/components/shared/LogsPanel'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
 import { superadminApi, type SuperadminCreateUserResponse, type SystemUser } from '@/api/superadmin'
 import {
   useSuperadminCreateUser,
@@ -25,16 +32,10 @@ function getRoleLabel(role: SystemUser['role']): string {
   return 'Člen'
 }
 
-function formatDateLabel(dateString: string): string {
-  const parsedDate = new Date(dateString)
-  if (Number.isNaN(parsedDate.getTime())) return 'Neznámé datum'
-
-  return parsedDate.toLocaleDateString('cs-CZ', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+/** Vnořená plocha v kartě (údaj k předání), její popisek a pole s tajným údajem. */
+const TILE_CLASS = 'grid content-start gap-1 rounded-xl bg-inset p-3 md:p-4'
+const EYEBROW_CLASS = 'text-eyebrow uppercase text-(--text-muted)'
+const CODE_CLASS = 'block whitespace-pre-wrap rounded-lg bg-sheet p-3 text-label text-(--text-main) wrap-anywhere'
 
 function getStatusMeta(user: SystemUser): { label: string; className: string } {
   if (user.isBanned) {
@@ -256,38 +257,22 @@ export function SuperAdminPage() {
   if (!isSuperAdmin) {
     return (
       <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="denied">
-        <div className="page-card admin-page-card admin-denied-card">
-          <span className="admin-kicker">Backoffice</span>
-          <h1 className="admin-page-title">Přístup odepřen</h1>
-          <p className="admin-page-lead">Tato sekce je vyhrazená pouze pro Super Adminy.</p>
-        </div>
+        <Card>
+          <PageHeader title="Přístup odepřen" subtitle="Tato sekce je vyhrazená pouze pro Super Adminy." />
+        </Card>
       </div>
     )
   }
 
   return (
     <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="ready">
-      <section className="page-card admin-page-card admin-overview-card superadmin-overview-card">
-        <div className="admin-overview-header">
-          <div className="admin-overview-copy">
-            <span className="admin-kicker">Backoffice</span>
-            <h1 className="admin-page-title">Globální dohled nad účty a provozem</h1>
-            <p className="admin-page-lead">
-              Tady řešíš systémové účty napříč celou aplikací, blokace, ruční zakládání uživatelů a provozní logy. Rozhraní je záměrně stejné jako cabin admin, ale s větším důrazem na kontrolu a bezpečnost.
-            </p>
-          </div>
-
-          <div className="admin-hero-actions">
-            <button type="button" className="btn btn-primary" onClick={() => scrollToSection('superadmin-create-user')} data-testid="superadmin-create-user-jump-button">
-              <UserPlus size={16} />
-              Nový účet
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => scrollToSection('superadmin-logs')} data-testid="superadmin-logs-jump-button">
-              <Shield size={16} />
-              Provozní logy
-            </button>
-          </div>
-        </div>
+      <Card as="section">
+        <PageHeader
+          title="Globální dohled nad účty a provozem"
+          subtitle="Tady řešíš systémové účty napříč celou aplikací, blokace, ruční zakládání uživatelů a provozní logy. Rozhraní je záměrně stejné jako cabin admin, ale s větším důrazem na kontrolu a bezpečnost."
+          primaryAction={{ label: 'Nový účet', icon: UserPlus, onClick: () => scrollToSection('superadmin-create-user') }}
+          secondaryActions={[{ label: 'Provozní logy', icon: Shield, onSelect: () => scrollToSection('superadmin-logs') }]}
+        />
 
         <div className="admin-overview-grid">
           <article className="admin-overview-stat admin-overview-stat--forest">
@@ -314,24 +299,16 @@ export function SuperAdminPage() {
             <p className="admin-overview-stat-meta">Počet globálních správců s přístupem do backoffice.</p>
           </article>
         </div>
-      </section>
+      </Card>
 
-      <div className="admin-layout-grid superadmin-layout-grid">
-        <section className="page-card admin-page-card admin-card admin-users-card" id="superadmin-users" data-testid="superadmin-users-section">
-          <div className="admin-card-header">
-            <div>
-              <div className="admin-card-eyebrow">Systémové účty</div>
-              <div className="admin-card-title-row">
-                <h2 className="admin-card-title">Přehled uživatelů</h2>
-                <span className="admin-card-counter">
-                  {isLoading || isError ? 'Načítám…' : `${filteredUsers.length}/${users.length}`}
-                </span>
-              </div>
-              <p className="admin-card-description">
-                Filtruj podle role, stavu nebo textu. Přímo z listu zablokuješ problémový účet a okamžitě vidíš, kdo má globální práva.
-              </p>
-            </div>
-          </div>
+      <div className="admin-layout-grid">
+        <Card as="section" className="space-y-4" id="superadmin-users" data-testid="superadmin-users-section">
+          <AdminCardHeading
+            eyebrow="Systémové účty"
+            title="Přehled uživatelů"
+            meta={isLoading || isError ? 'Načítám…' : `${filteredUsers.length}/${users.length}`}
+            description="Filtruj podle role, stavu nebo textu. Přímo z listu zablokuješ problémový účet a okamžitě vidíš, kdo má globální práva."
+          />
 
           <div className="admin-toolbar">
             <label className="admin-search" htmlFor="superadmin-user-search">
@@ -346,7 +323,7 @@ export function SuperAdminPage() {
               />
             </label>
 
-            <div className="superadmin-filter-groups">
+            <div className="grid gap-3">
               <div className="admin-filter-row" role="tablist" aria-label="Filtrovat účty podle role" data-testid="superadmin-role-filters">
                 {roleFilters.map((option) => (
                   <button
@@ -381,6 +358,7 @@ export function SuperAdminPage() {
             <UserListSkeleton />
           ) : isError ? (
             <FeatureErrorFallback
+              bare
               error={error instanceof Error ? error : new Error('Nepodařilo se načíst systémové uživatele')}
               resetErrorBoundary={() => {
                 void refetch()
@@ -388,21 +366,11 @@ export function SuperAdminPage() {
               title="Systémové účty se nepodařilo načíst"
             />
           ) : filteredUsers.length === 0 ? (
-            <div className="admin-empty-state">
-              <h3>{users.length === 0 ? 'Systém je zatím prázdný' : 'Tomu filtru nic neodpovídá'}</h3>
-              <p>
-                {users.length === 0
-                  ? 'Jakmile vznikne první účet, objeví se tady včetně jeho stavu a systémových práv.'
-                  : 'Zkus upravit filtry nebo vyčistit hledání.'}
-              </p>
-              {hasFilters ? (
-                <div className="admin-empty-actions">
-                  <button type="button" className="btn btn-secondary" onClick={resetFilters}>
-                    Vyčistit filtry
-                  </button>
-                </div>
-              ) : null}
-            </div>
+            <EmptyState
+              icon={users.length === 0 ? Users : SearchX}
+              message={users.length === 0 ? 'Zatím tu nejsou žádné účty.' : 'Tomu filtru nic neodpovídá, zkus upravit filtry nebo hledání.'}
+              action={hasFilters ? { label: 'Vyčistit filtry', onClick: resetFilters } : undefined}
+            />
           ) : (
             <>
               <div className="admin-list-meta">
@@ -412,23 +380,23 @@ export function SuperAdminPage() {
                     : 'Účty jsou řazené podle privilegovanosti, stavu a data vytvoření.'}
                 </span>
                 {hasFilters ? (
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={resetFilters}>
+                  <Button variant="ghost" size="sm" onClick={resetFilters}>
                     Vyčistit filtry
-                  </button>
+                  </Button>
                 ) : null}
               </div>
 
-              <div className="admin-members-list superadmin-members-list">
+              <div className="admin-members-list">
                 {filteredUsers.map((user) => {
                   const statusMeta = getStatusMeta(user)
                   const isSelf = currentUser?.userId === user.id
                   const lockActionDisabled = isSelf || user.isSuperAdmin
 
                   return (
-                    <article key={user.id} className={`admin-user-card superadmin-user-card ${isSelf ? 'is-current-user' : ''}`} data-testid="superadmin-user-card" data-user-id={user.id}>
+                    <article key={user.id} className={`admin-user-card ${isSelf ? 'is-current-user' : ''}`} data-testid="superadmin-user-card" data-user-id={user.id}>
                       <div className="admin-user-main">
-                        <div className="superadmin-user-avatar">
-                          <span>{user.username.charAt(0).toUpperCase()}</span>
+                        <div aria-hidden="true" className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary">
+                          {memberInitial(user.username)}
                         </div>
 
                         <div className="admin-user-identity">
@@ -437,13 +405,13 @@ export function SuperAdminPage() {
                             {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
                           </div>
                           <div className="admin-user-subline">
-                            <span>{user.email || 'Účet bez e-mailu'}</span>
-                            <span>Založen {formatDateLabel(user.createdAt)}</span>
+                            <span className="wrap-anywhere">{user.email || 'Účet bez e-mailu'}</span>
+                            <span>Založen {formatDate(user.createdAt) || 'neznámo kdy'}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="admin-user-tags superadmin-user-tags">
+                      <div className="admin-user-tags">
                         {user.isSuperAdmin ? <span className="admin-role-badge admin-role-badge--superadmin">Super Admin</span> : null}
                         <span className={`admin-role-badge admin-role-badge--${user.role === 'admin' ? 'admin' : user.role === 'guest' ? 'guest' : 'member'}`}>
                           {getRoleLabel(user.role)}
@@ -452,9 +420,8 @@ export function SuperAdminPage() {
                       </div>
 
                       <div className="admin-user-actions">
-                        <button
-                          type="button"
-                          className={`btn ${user.isBanned ? 'btn-secondary' : 'btn-danger'}`}
+                        <Button
+                          variant={user.isBanned ? 'secondary' : 'danger'}
                           onClick={() => {
                             setBanError(null)
                             setPendingBanUser(user)
@@ -470,7 +437,7 @@ export function SuperAdminPage() {
                           data-testid="superadmin-toggle-ban-button"
                         >
                           {user.isBanned ? 'Zrušit blokaci' : 'Zablokovat'}
-                        </button>
+                        </Button>
                       </div>
                     </article>
                   )
@@ -478,21 +445,15 @@ export function SuperAdminPage() {
               </div>
             </>
           )}
-        </section>
+        </Card>
 
-        <aside className="admin-sidebar-stack superadmin-sidebar-stack">
-          <section className="page-card admin-page-card admin-card" id="superadmin-create-user" data-testid="superadmin-create-user-section">
-            <div className="admin-card-header">
-              <div>
-                <div className="admin-card-eyebrow">Ruční založení</div>
-                <div className="admin-card-title-row">
-                  <h2 className="admin-card-title">Vytvořit účet</h2>
-                </div>
-                <p className="admin-card-description">
-                  Použij pro podporu, onboarding nebo ruční zásah. Po vytvoření dostaneš nouzové údaje i informaci, zda se povedlo doručit verifikační e-mail.
-                </p>
-              </div>
-            </div>
+        <aside className="admin-sidebar-stack">
+          <Card as="section" className="space-y-4" id="superadmin-create-user" data-testid="superadmin-create-user-section">
+            <AdminCardHeading
+              eyebrow="Ruční založení"
+              title="Vytvořit účet"
+              description="Použij pro podporu, onboarding nebo ruční zásah. Po vytvoření dostaneš nouzové údaje i informaci, zda se povedlo doručit verifikační e-mail."
+            />
 
             <form
               className="admin-compact-form admin-user-create-form"
@@ -504,11 +465,11 @@ export function SuperAdminPage() {
             >
               <div className="form-group">
                 <label htmlFor="superadmin-username">Uživatelské jméno</label>
-                <input id="superadmin-username" name="username" type="text" minLength={2} maxLength={50} required data-testid="superadmin-create-username-input" />
+                <Input id="superadmin-username" name="username" type="text" minLength={2} maxLength={50} required data-testid="superadmin-create-username-input" />
               </div>
               <div className="form-group">
                 <label htmlFor="superadmin-email">E-mail</label>
-                <input id="superadmin-email" name="email" type="email" maxLength={255} required data-testid="superadmin-create-email-input" />
+                <Input id="superadmin-email" name="email" type="email" maxLength={255} required data-testid="superadmin-create-email-input" />
               </div>
               <div className="form-group">
                 <label htmlFor="superadmin-role">Výchozí role</label>
@@ -518,77 +479,65 @@ export function SuperAdminPage() {
                   <option value="guest">Host</option>
                 </select>
               </div>
-              <button type="submit" className="btn btn-primary" disabled={createUser.isPending} data-testid="superadmin-create-submit-button">
-                <UserPlus size={16} />
+              <Button type="submit" className="w-full" pending={createUser.isPending} data-testid="superadmin-create-submit-button">
+                {createUser.isPending ? null : <UserPlus aria-hidden="true" />}
                 {createUser.isPending ? 'Zakládám…' : 'Vytvořit účet'}
-              </button>
+              </Button>
             </form>
 
             {createError ? <div className="error-message show admin-section-error">{createError}</div> : null}
-          </section>
+          </Card>
 
-          <section className="page-card admin-page-card admin-card superadmin-handoff-card">
-            <div className="admin-card-header">
-              <div>
-                <div className="admin-card-eyebrow">Bezpečný handoff</div>
-                <div className="admin-card-title-row">
-                  <h2 className="admin-card-title">Poslední vytvořený účet</h2>
-                </div>
-                <p className="admin-card-description">
-                  Když onboarding e-mail odejde, zůstane tady jen shrnutí účtu. Nouzové údaje se ukážou jen při failu doručení nebo v prostředí bez SMTP.
-                </p>
-              </div>
-            </div>
+          <Card as="section">
+            <AdminCardHeading
+              eyebrow="Bezpečný handoff"
+              title="Poslední vytvořený účet"
+              description="Když onboarding e-mail odejde, zůstane tady jen shrnutí účtu. Nouzové údaje se ukážou jen při failu doručení nebo v prostředí bez SMTP."
+            />
 
             {lastCreatedUser ? (
-              <div className="superadmin-secret-stack">
-                <div className="superadmin-secret-card">
-                  <span className="superadmin-secret-label">Účet</span>
-                  <strong>{lastCreatedUser.user.username}</strong>
-                  <span>{lastCreatedUser.user.email || 'Bez e-mailu'}</span>
+              <div className="grid gap-3">
+                <div className={TILE_CLASS}>
+                  <span className={EYEBROW_CLASS}>Účet</span>
+                  <strong className="wrap-anywhere">{lastCreatedUser.user.username}</strong>
+                  <span className="wrap-anywhere">{lastCreatedUser.user.email || 'Bez e-mailu'}</span>
                 </div>
 
                 {hasFallbackSecrets ? (
                   <>
-                    <div className="superadmin-secret-actions">
-                      <button type="button" className="btn btn-secondary" onClick={showSecrets ? hideSecrets : revealSecretsTemporarily}>
+                    <div className="grid gap-2 rounded-xl border border-dashed border-rule-soft p-3">
+                      <Button variant="secondary" onClick={showSecrets ? hideSecrets : revealSecretsTemporarily}>
                         {showSecrets ? 'Skrýt citlivé údaje' : 'Zobrazit dočasně na 20 s'}
-                      </button>
-                      <p className="superadmin-secret-help">
+                      </Button>
+                      <p className="text-label text-(--text-muted)">
                         Citlivé údaje drž schované, dokud je opravdu nepotřebuješ předat.
                       </p>
                     </div>
 
-                    <div className="superadmin-secret-card">
-                      <span className="superadmin-secret-label">Dočasné heslo</span>
-                      <code>{showSecrets ? lastCreatedUser.tempPassword : 'Skryto. Nejdřív použij dočasné zobrazení.'}</code>
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => copySecret('password', lastCreatedUser.tempPassword!)} disabled={!showSecrets}>
-                        {copiedSecret === 'password' ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Kopírovat</>}
-                      </button>
+                    <div className={TILE_CLASS}>
+                      <span className={EYEBROW_CLASS}>Dočasné heslo</span>
+                      <code className={CODE_CLASS}>{showSecrets ? lastCreatedUser.tempPassword : 'Skryto. Nejdřív použij dočasné zobrazení.'}</code>
+                      <Button variant="secondary" size="sm" className="w-full md:w-fit" onClick={() => copySecret('password', lastCreatedUser.tempPassword!)} disabled={!showSecrets}>
+                        {copiedSecret === 'password' ? <><Check aria-hidden="true" /> Zkopírováno</> : <><Copy aria-hidden="true" /> Kopírovat</>}
+                      </Button>
                     </div>
 
-                    <div className="superadmin-secret-card">
-                      <span className="superadmin-secret-label">Fallback token</span>
-                      <code>{showSecrets ? lastCreatedUser.verificationToken : 'Skryto. Nejdřív použij dočasné zobrazení.'}</code>
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => copySecret('token', lastCreatedUser.verificationToken!)} disabled={!showSecrets}>
-                        {copiedSecret === 'token' ? <><Check size={14} /> Zkopírováno</> : <><Copy size={14} /> Kopírovat</>}
-                      </button>
+                    <div className={TILE_CLASS}>
+                      <span className={EYEBROW_CLASS}>Fallback token</span>
+                      <code className={CODE_CLASS}>{showSecrets ? lastCreatedUser.verificationToken : 'Skryto. Nejdřív použij dočasné zobrazení.'}</code>
+                      <Button variant="secondary" size="sm" className="w-full md:w-fit" onClick={() => copySecret('token', lastCreatedUser.verificationToken!)} disabled={!showSecrets}>
+                        {copiedSecret === 'token' ? <><Check aria-hidden="true" /> Zkopírováno</> : <><Copy aria-hidden="true" /> Kopírovat</>}
+                      </Button>
                     </div>
                   </>
                 ) : (
-                  <div className="admin-empty-state">
-                    <h3>Není potřeba nic předávat ručně</h3>
-                    <p>Onboarding e-mail obsahuje aktivační odkaz i dočasné heslo, takže nouzové údaje nebyly vráceny.</p>
-                  </div>
+                  <EmptyState icon={Check} message="Ručně není potřeba nic předávat, onboarding e-mail obsahuje aktivační odkaz i dočasné heslo." />
                 )}
               </div>
             ) : (
-              <div className="admin-empty-state">
-                <h3>Zatím není co předat</h3>
-                <p>Po vytvoření účtu se tady objeví shrnutí a případně nouzové údaje, když onboarding e-mail neodejde.</p>
-              </div>
+              <EmptyState icon={Inbox} message="Zatím není co předat, po vytvoření účtu se tady objeví shrnutí a případně nouzové údaje." />
             )}
-          </section>
+          </Card>
         </aside>
       </div>
 
