@@ -2,7 +2,7 @@ import { useId } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation } from "@/api/dashboard";
 import { daysUntil, formatDateRange, formatShortDayDate, formatWeekendRange, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
-import { pluralize } from "@/lib/utils";
+import { pluralize } from "@/lib/format";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";

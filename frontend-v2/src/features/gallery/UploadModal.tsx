@@ -4,7 +4,7 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { useUploadPhotos } from './hooks/useGallery'
 import { showToast } from '@/lib/toast'
-import { formatCount, pluralize } from '@/lib/utils'
+import { formatCount, pluralize } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
 import { Upload, ImagePlus, X } from 'lucide-react'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'

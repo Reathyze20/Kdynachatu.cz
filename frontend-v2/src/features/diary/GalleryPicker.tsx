@@ -10,7 +10,7 @@ import {
 } from '@/features/gallery/hooks/useGallery'
 import type { GalleryFolder } from '@/api/gallery'
 import { Modal } from '@/components/shared/Modal'
-import { formatCount } from '@/lib/utils'
+import { formatCount } from '@/lib/format'
 
 interface Props {
   /** IDs fotek již přidaných do záznamu (greyscale, nelze znovu vybrat) */

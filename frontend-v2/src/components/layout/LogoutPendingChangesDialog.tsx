@@ -5,7 +5,7 @@
  */
 import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/ui/button'
-import { formatCount, pluralize } from '@/lib/utils'
+import { formatCount, pluralize } from '@/lib/format'
 import type { LogoutPendingChangesDialogProps } from '@/hooks/useLogout'
 
 export function LogoutPendingChangesDialog({

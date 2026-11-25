@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Plus, FolderOpen, MoreVertical, Pencil, Trash2, Image } from 'lucide-react'
 import type { GalleryFolder } from '@/api/gallery'
-import { formatCount } from '@/lib/utils'
+import { formatCount } from '@/lib/format'
 
 interface Props {
   folders: GalleryFolder[]
