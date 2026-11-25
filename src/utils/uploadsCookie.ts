@@ -5,13 +5,14 @@
  */
 import type { CookieOptions, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { IS_PRODUCTION } from "../config/config";
 
 export const UPLOADS_COOKIE = "kdynachatu_uploads";
 
 const cookieOptions = (): CookieOptions => ({
   httpOnly: true,
   sameSite: "strict",
-  secure: process.env.NODE_ENV === "production",
+  secure: IS_PRODUCTION,
   path: "/uploads",
 });
 

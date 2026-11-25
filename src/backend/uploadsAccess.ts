@@ -17,7 +17,7 @@ const SAFE_PATH = /^(?:[A-Za-z0-9_-][A-Za-z0-9._-]*\/)?[A-Za-z0-9_-][A-Za-z0-9._
 const NARROW_COVER = `${COVER_PHOTO_NARROW_SUFFIX}.webp`;
 
 /** URL záznamu v DB, kterému soubor patří (náhled → originál, úzká titulní fotka → široká), jinak null. */
-export function ownerUrlFor(relativePath: string): string | null {
+function ownerUrlFor(relativePath: string): string | null {
   if (!SAFE_PATH.test(relativePath)) return null;
   const [dir, name] = relativePath.includes("/") ? relativePath.split("/") : ["", relativePath];
   if (dir === "thumbs") return `/uploads/${name}`;
@@ -58,8 +58,7 @@ export function createUploadsHandler(uploadsPath: string): RequestHandler {
       return res.status(500).json({ message: "Chyba serveru." });
     }
 
-    // `private, no-cache`: sdílené cache nic neuloží a prohlížeč se před každým použitím zeptá
-    // (304 přes ETag), takže odhlášení nebo ban platí i pro už stažené fotky.
+    // `private, no-cache`: sdílené cache nic neuloží, prohlížeč revaliduje (304 přes ETag) – ban platí hned.
     res.sendFile(relativePath, { root: uploadsPath, dotfiles: "deny", cacheControl: false, headers: { "Cache-Control": "private, no-cache" } }, (error) => {
       if (error && !res.headersSent) notFound();
     });
