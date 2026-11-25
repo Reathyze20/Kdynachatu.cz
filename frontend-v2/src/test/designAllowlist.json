@@ -123,7 +123,8 @@
       "features/reservations/ui/ReservationDetail.tsx", "features/shopping/InventoryRow.tsx", "features/shopping/ItemRow.tsx",
       "features/shopping/ListDetail.tsx", "features/shopping/PantryView.tsx"
     ],
-    "Landing page: ilustrace a ikony statické stránky (DESIGN.md §4)": ["features/landing/LandingPage.tsx"]
+    "Landing page: ilustrace a ikony statické stránky (DESIGN.md §4)": ["features/landing/LandingPage.tsx"],
+    "Scéna chaty: pixel art skládaný ze znakových mřížek spritů podle stavu chaty (#558), lucide ani statický obrázek to neumí": ["features/dashboard/CabinScene.tsx"]
   },
   "iconSize": {
     "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [

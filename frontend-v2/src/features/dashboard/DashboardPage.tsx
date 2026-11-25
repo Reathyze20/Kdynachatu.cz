@@ -256,7 +256,7 @@ export function DashboardPage() {
               <FeatureErrorFallback title="Rezervace se nepodařilo načíst" error={reservationsQuery.error as Error} resetErrorBoundary={() => reservationsQuery.refetch()} />
             </ErrorBoundary>
           ) : reservationsQuery.data ? (
-            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} />
+            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} />
           ) : null}
         </motion.div>
 
