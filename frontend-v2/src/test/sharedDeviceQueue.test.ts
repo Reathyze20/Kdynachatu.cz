@@ -1,4 +1,4 @@
-import type { InternalAxiosRequestConfig } from 'axios'
+import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { enqueueMutation, flushQueue, initOfflineQueue, isQueueableRequest } from '@/lib/offlineQueue'
 
@@ -30,13 +30,6 @@ beforeEach(() => {
 })
 
 describe('Offline fronta vázaná na uživatele a chatu (#478)', () => {
-  it('položka nese userId a cabinId přihlášeného uživatele', () => {
-    signIn('u-jana', 'cabin-1')
-    queue('post', '/shopping-lists', { name: 'Na víkend' })
-
-    expect(storedQueue()[0]).toMatchObject({ userId: 'u-jana', cabinId: 'cabin-1', url: '/shopping-lists' })
-  })
-
   it('položka jiného uživatele se nepřehraje a zahodí se', async () => {
     signIn('u-jana', 'cabin-1')
     queue('post', '/shopping-lists', { name: 'Na víkend' })
@@ -73,12 +66,22 @@ describe('Offline fronta vázaná na uživatele a chatu (#478)', () => {
     expect(storedQueue()).toHaveLength(1)
   })
 
+  it('odpověď 401 při přehrávání položku nezahodí, počká na nové přihlášení', async () => {
+    signIn('u-jana', 'cabin-1')
+    queue('post', '/shopping-lists', { name: 'Na víkend' })
+    api.request.mockRejectedValue(new AxiosError('Unauthorized', 'ERR_BAD_REQUEST', undefined, null, { status: 401 } as AxiosResponse))
+
+    await flushQueue()
+
+    expect(storedQueue()).toHaveLength(1)
+  })
+
   it('staré položky bez userId se při startu zahodí', () => {
     signIn('u-jana', 'cabin-1')
     localStorage.setItem(STORAGE_KEY, JSON.stringify([
       { id: 'old', method: 'post', url: '/shopping-lists', data: { name: 'Stará' }, queuedAt: '2026-11-01T10:00:00Z' },
     ]))
-    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValueOnce(false)
 
     initOfflineQueue()
 

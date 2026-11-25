@@ -74,7 +74,7 @@ function parseBody(data: unknown): unknown {
 }
 
 /** Heslo, změna e-mailu nebo smazání účtu: bez připojení má request selhat, ne čekat. */
-function touchesAccount(method: string, url: string, body: unknown): boolean {
+function isAccountSensitive(method: string, url: string, body: unknown): boolean {
   const keys = body && typeof body === 'object' ? Object.keys(body) : []
   if (keys.some((key) => PASSWORD_KEY.test(key))) return true
   const path = url.split('?')[0]
@@ -138,7 +138,7 @@ export function isQueueableRequest(config: InternalAxiosRequestConfig | undefine
   if (config.headers?.[REPLAY_HEADER]) return false
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) return false
   if (EXCLUDED_URL_PARTS.some((part) => config.url!.includes(part))) return false
-  if (touchesAccount(config.method.toLowerCase(), config.url, parseBody(config.data))) return false
+  if (isAccountSensitive(config.method.toLowerCase(), config.url, parseBody(config.data))) return false
   return true
 }
 
@@ -199,8 +199,9 @@ export async function flushQueue(): Promise<void> {
         sent += 1
         writeQueue(readQueue().filter((q) => q.id !== entry.id))
       } catch (err) {
-        if (isNetworkError(err)) {
-          // Spojení zase vypadlo — zbytek fronty počká na další pokus
+        const status = (err as { response?: { status?: number } }).response?.status
+        if (isNetworkError(err) || status === 401) {
+          // Spojení vypadlo, nebo vypršela session (#478) — položka počká na další pokus
           break
         }
         // Server request odmítl (např. konflikt, validace) — zahodit, jinak blokuje frontu

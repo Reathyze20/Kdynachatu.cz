@@ -13,6 +13,7 @@ import {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SESSION_RESET_EVENT } from '@/lib/sessionReset'
+import { getActiveCabinId, getStoredUserId } from '@/lib/authStorage'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -128,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((payload: SetAuthPayload) => {
     // Jiný účet nebo chata = nová session (#478); obnova tokenu téhož účtu (změna hesla) cache nechá
     const isNewSession =
-      getAuthItem('userId') !== payload.userId || getAuthItem('cabinId') !== (payload.cabinId ?? null)
+      getStoredUserId() !== payload.userId || getActiveCabinId() !== (payload.cabinId ?? null)
     const store = payload.remember ? localStorage : sessionStorage
     const otherStore = payload.remember ? sessionStorage : localStorage
     ;['authToken', 'username', 'userId', 'role', 'animalIcon', 'cabinId', 'activeCabinId', 'isSuperAdmin'].forEach((k) =>
