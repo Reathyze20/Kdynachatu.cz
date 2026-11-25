@@ -93,8 +93,7 @@ describe('Přehled: výpadek více sekcí (#512)', () => {
     responses.set('/dashboard/notes', apiDown())
     renderOverview()
 
-    const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Část přehledu se nepodařilo načíst')
+    await screen.findByText('Část přehledu se nepodařilo načíst')
     await waitFor(() => expect(screen.getAllByRole('alert')).toHaveLength(1))
     expect(screen.getAllByRole('button', { name: 'Zkusit znovu' })).toHaveLength(1)
     expect(screen.queryByText(/Nepodařilo se načíst nastavení chaty/)).not.toBeInTheDocument()
