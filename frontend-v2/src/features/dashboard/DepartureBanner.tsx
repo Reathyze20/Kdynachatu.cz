@@ -38,9 +38,11 @@ interface Props {
   reservationId: string;
   departureChecklist: string[];
   onRefresh: () => void;
+  /** Protokol odjezdu i do chatu; host chat nemá (#484), jeho předávka jde jen do rezervace */
+  postToChat?: boolean;
 }
 
-export function DepartureBanner({ reservationId, departureChecklist, onRefresh }: Props) {
+export function DepartureBanner({ reservationId, departureChecklist, onRefresh, postToChat = true }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [dismissed, setDismissed] = useState(isDismissedToday);
@@ -75,7 +77,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh }
       if (note) {
         fullMessage += `\n**Vzkaz:** ${note}`;
       }
-      await apiClient.post("/channels/messages", { message: fullMessage });
+      if (postToChat) await apiClient.post("/channels/messages", { message: fullMessage });
       return { queued: false };
     },
     onSuccess: ({ queued }) => {

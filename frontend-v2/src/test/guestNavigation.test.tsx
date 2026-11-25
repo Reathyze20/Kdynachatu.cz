@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { MORE_NAV, PRIMARY_NAV, visibleNavItems } from '@/lib/navRoutes'
+import { MORE_NAV, PRIMARY_NAV, isGuestAllowedPath, visibleNavItems } from '@/lib/navRoutes'
 
 // Host vidí jen svůj pobyt (#484, PRODUCT.md „Role na chatě“): Přehled, Kalendář a Předávku.
 vi.mock('@/context/AuthContext', () => ({
@@ -26,5 +26,10 @@ describe('navigace hosta (#484)', () => {
     const visible = [...visibleNavItems(PRIMARY_NAV, null, true), ...visibleNavItems(MORE_NAV, null, true)].map((i) => i.to)
     for (const forbidden of ['/shopping', '/notes', '/gallery', '/diary', '/reconstruction']) expect(visible).not.toContain(forbidden)
     expect(visibleNavItems(MORE_NAV, null)).toHaveLength(MORE_NAV.length) // člen beze změny
+  })
+
+  it('na přímou adresu zakázané sekce host nesmí, smí jen Přehled a Kalendář (s Předávkou)', () => {
+    expect(['/dashboard', '/reservations'].every(isGuestAllowedPath)).toBe(true)
+    for (const path of ['/notes', '/shopping', '/gallery', '/diary', '/reconstruction', '/admin']) expect(isGuestAllowedPath(path)).toBe(false)
   })
 })

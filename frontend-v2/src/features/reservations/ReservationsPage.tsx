@@ -126,6 +126,12 @@ export function ReservationsPage() {
   // Open choice modal to decide between Reservation or Availability
   const handleRangeComplete = (from: string, to: string) => {
     setEditingReservation(null);
+    if (isGuest) { // host volno ostatním nehlásí (#484), rovnou rezervuje
+      setBookingFrom(from);
+      setBookingTo(to);
+      setBookingOpen(true);
+      return;
+    }
     setChoiceFrom(from);
     setChoiceTo(to);
     setChoiceOpen(true);
@@ -154,6 +160,7 @@ export function ReservationsPage() {
 
   // After successful reservation create → check inventory
   const handleReservationCreated = async (_: string) => {
+    if (isGuest) return showToast("Rezervace uložena!", "success"); // zásoby chaty host nevidí
     showToast("Rezervace uložena! Kontroluji zásoby…", "info");
     const summary = await fetchMissingSummary();
     if (!summary || (summary.count === 0 && !summary.hasShoppingItems)) {

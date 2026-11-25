@@ -44,6 +44,11 @@ export function visibleNavItems(items: NavItem[], features: Record<string, boole
   return items.filter((i) => (!i.featureKey || isFeatureEnabled(features, i.featureKey)) && (!isGuest || i.forGuest))
 }
 
+/** Stránka patří do whitelistu hosta (#484); ostatní stránky chaty host neotevře */
+export function isGuestAllowedPath(pathname: string): boolean {
+  return [...PRIMARY_NAV, ...MORE_NAV].some((i) => i.forGuest && i.to.split('?')[0] === pathname)
+}
+
 /**
  * Najde aktivní položku: cesta musí sedět (i podstránky) a všechny query parametry odkazu musí být v URL.
  * Když sedí víc položek (Kalendář i Předávka), vyhraje ta s víc parametry — aktivní je vždy nejvýš jedna.

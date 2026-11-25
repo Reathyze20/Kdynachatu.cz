@@ -231,6 +231,7 @@ export function DashboardPage() {
           reservationId={reservationsQuery.data.departingReservationId}
           departureChecklist={departureChecklist}
           onRefresh={() => reservationsQuery.refetch()}
+          postToChat={!isGuest}
         />
       )}
 
