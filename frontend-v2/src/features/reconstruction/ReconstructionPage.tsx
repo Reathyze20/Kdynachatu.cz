@@ -6,12 +6,13 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Building2, Lightbulb, ListTodo } from 'lucide-react'
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useReconstruction, useCreateRecItem, useUpdateRecItem } from './hooks/useReconstruction'
 import { KanbanColumn } from './KanbanColumn'
+import { useReconstructionSensors } from './dndSensors'
 import { ReconstructionSkeleton } from './ReconstructionSkeleton'
 import { TaskFormModal } from './TaskFormModal'
 import { showToast } from '@/lib/toast'
@@ -136,7 +137,7 @@ export function ReconstructionPage() {
 
   // ── DnD ───────────────────────────────────────────────────────────────────
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  const sensors = useReconstructionSensors()
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event

@@ -87,7 +87,9 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
   const [description, setDescription] = useState(editItem?.description ?? '')
   const [link, setLink] = useState(editItem?.link ?? '')
   const [thumbnail, setThumbnail] = useState(editItem?.thumbnail ?? '')
-  const [costIdea, setCostIdea] = useState<string>(editItem?.category === 'idea' ? String(editItem.cost ?? '') : '')
+  // Idea and task share the cost, so it survives a category change in edit mode.
+  const initialCost = editItem && editItem.category !== 'company' ? String(editItem.cost ?? '') : ''
+  const [costIdea, setCostIdea] = useState<string>(initialCost)
   const [phone, setPhone] = useState(editItem?.phone ?? '')
   const [email, setEmail] = useState(editItem?.email ?? '')
   const [companyLink, setCompanyLink] = useState(editItem?.category === 'company' ? (editItem.link ?? '') : '')
@@ -95,7 +97,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
   const [deadline, setDeadline] = useState(
     editItem?.category === 'task' ? (editItem.deadline ? editItem.deadline.split('T')[0] : '') : '',
   )
-  const [costTask, setCostTask] = useState<string>(editItem?.category === 'task' ? String(editItem.cost ?? '') : '')
+  const [costTask, setCostTask] = useState<string>(initialCost)
 
   const isEdit = !!editItem
   const modalTitle = isEdit
@@ -150,34 +152,32 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
       }
     >
       <form id="rec-task-form" className="rec-modal-form" onSubmit={handleSubmit} onChangeCapture={() => onDirty?.()} data-testid="reconstruction-item-form">
-          {/* Category select (hidden in edit mode) */}
-          {!isEdit && (
-            <div className="form-group">
-              <span className="form-label">Kategorie</span>
-              <div className="rec-category-tabs" role="tablist" aria-label="Kategorie položky rekonstrukce" data-testid="reconstruction-category-tabs">
-                {CATEGORY_TABS.map(({ value, label, icon: Icon }) => {
-                  const isActive = category === value
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`rec-category-tab${isActive ? ' is-active' : ''}`}
-                      aria-pressed={isActive}
-                      onClick={() => {
-                        onDirty?.()
-                        setCategory(value)
-                      }}
-                      data-testid="reconstruction-category-tab"
-                      data-category={value}
-                    >
-                      <Icon size={16} aria-hidden="true" />
-                      <span>{label}</span>
-                    </button>
-                  )
-                })}
-              </div>
+          {/* Category – in edit mode it moves the card to another column without dragging */}
+          <div className="form-group">
+            <span className="form-label">Kategorie</span>
+            <div className="rec-category-tabs" role="tablist" aria-label="Kategorie položky rekonstrukce" data-testid="reconstruction-category-tabs">
+              {CATEGORY_TABS.map(({ value, label, icon: Icon }) => {
+                const isActive = category === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`rec-category-tab${isActive ? ' is-active' : ''}`}
+                    aria-pressed={isActive}
+                    onClick={() => {
+                      onDirty?.()
+                      setCategory(value)
+                    }}
+                    data-testid="reconstruction-category-tab"
+                    data-category={value}
+                  >
+                    <Icon size={16} aria-hidden="true" />
+                    <span>{label}</span>
+                  </button>
+                )
+              })}
             </div>
-          )}
+          </div>
 
           {/* Title */}
           <div className="form-group">
