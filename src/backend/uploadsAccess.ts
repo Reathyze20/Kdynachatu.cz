@@ -3,7 +3,8 @@
  * Token přichází v httpOnly cookie (`utils/uploadsCookie.ts`) a ověří se stejně jako v `protect`.
  * Vlastnictví se hledá v DB podle cesty, kterou ukládají routy: galerie (i deník a náhledy
  * `thumbs/`), tapety a titulní fotka chaty (i úzká varianta `-sm`). Bez platné cookie 401,
- * cizí či neznámý soubor 404.
+ * cizí či neznámý soubor 404. Host dostane jen titulní fotku (#546, whitelist hosta v
+ * `testing/routeSecurityRegistry.ts`).
  */
 import type { RequestHandler } from "express";
 import prisma from "../utils/prisma";
@@ -25,11 +26,18 @@ function ownerUrlFor(relativePath: string): string | null {
   return `/uploads/${relativePath}`;
 }
 
-async function belongsToCabin(url: string, cabinId: string): Promise<boolean> {
+/**
+ * Host (#484) vidí z chaty jen `coverPhotoUrl` z `GET /api/cabin`, proto i z uploadů jen titulní
+ * fotku (#546). Galerie, deník, náhledy a tapety vlastní chaty mu vrátí 404 jako cizí soubor.
+ */
+async function mayAccess(url: string, user: { cabinId: string; role: string }): Promise<boolean> {
+  const { cabinId } = user;
+  const coverQuery = prisma.cabin.findFirst({ where: { id: cabinId, coverPhotoUrl: url }, select: { id: true } });
+  if (user.role === "guest") return Boolean(await coverQuery);
   const [photo, wallpaper, cabin] = await Promise.all([
     prisma.galleryPhoto.findFirst({ where: { src: url, folder: { cabinId } }, select: { id: true } }),
     prisma.wallpaper.findFirst({ where: { url, cabinId }, select: { id: true } }),
-    prisma.cabin.findFirst({ where: { id: cabinId, coverPhotoUrl: url }, select: { id: true } }),
+    coverQuery,
   ]);
   return Boolean(photo || wallpaper || cabin);
 }
@@ -52,7 +60,7 @@ export function createUploadsHandler(uploadsPath: string): RequestHandler {
       if (!user) return res.status(401).json({ message: "Nepřihlášeno." });
 
       const ownerUrl = ownerUrlFor(relativePath);
-      if (!ownerUrl || !user.cabinId || !(await belongsToCabin(ownerUrl, user.cabinId))) return notFound();
+      if (!ownerUrl || !user.cabinId || !(await mayAccess(ownerUrl, { cabinId: user.cabinId, role: user.role }))) return notFound();
     } catch (error) {
       logger.prismaError("Uploads access check failed", error);
       return res.status(500).json({ message: "Chyba serveru." });
