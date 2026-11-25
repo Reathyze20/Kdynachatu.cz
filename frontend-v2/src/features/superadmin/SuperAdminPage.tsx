@@ -310,18 +310,20 @@ export function SuperAdminPage() {
             description="Filtruj podle role, stavu nebo textu. Přímo z listu zablokuješ problémový účet a okamžitě vidíš, kdo má globální práva."
           />
 
-          <div className="admin-toolbar">
-            <label className="admin-search" htmlFor="superadmin-user-search">
-              <Search size={16} aria-hidden="true" />
-              <input
+          <div className="grid gap-3">
+            <div className="relative">
+              <Search size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--text-muted)" />
+              <Input
                 id="superadmin-user-search"
                 type="search"
+                className="pl-10"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Hledat podle jména nebo e-mailu"
+                aria-label="Hledat podle jména nebo e-mailu"
                 data-testid="superadmin-user-search-input"
               />
-            </label>
+            </div>
 
             <div className="grid gap-3">
               <div className="admin-filter-row" role="tablist" aria-label="Filtrovat účty podle role" data-testid="superadmin-role-filters">
@@ -373,7 +375,7 @@ export function SuperAdminPage() {
             />
           ) : (
             <>
-              <div className="admin-list-meta">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-meta text-(--text-muted)">
                 <span>
                   {hasFilters
                     ? `Zobrazuji ${formatCount(filteredUsers.length, 'účet', 'účty', 'účtů')} podle aktivních filtrů.`
