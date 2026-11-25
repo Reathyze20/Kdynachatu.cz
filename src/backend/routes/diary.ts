@@ -10,6 +10,16 @@ import { PrismaClient } from "../../generated/prisma/client.js";
 
 const router = Router();
 
+const PHOTO_NOT_FOUND = { message: "Fotka nenalezena." };
+
+/** True when every attached gallery photo belongs to the cabin; a foreign or unknown one fails the whole write (#483). */
+async function galleryPhotosInCabin(photoIds: string[] | undefined, cabinId: string): Promise<boolean> {
+  const unique = [...new Set(photoIds ?? [])];
+  if (unique.length === 0) return true;
+  const found = await prisma.galleryPhoto.count({ where: { id: { in: unique }, folder: { cabinId } } });
+  return found === unique.length;
+}
+
 // ============================================================================
 //                         GET ALL FOLDERS
 // ============================================================================
@@ -298,6 +308,9 @@ router.post("/entries", protect, requireCabin, validate(createDiaryEntrySchema),
     if (!folder) {
       return res.status(404).json({ message: "Složka nenalezena." });
     }
+    if (!(await galleryPhotosInCabin(galleryPhotoIds, req.user.cabinId!))) {
+      return res.status(404).json(PHOTO_NOT_FOUND);
+    }
 
     const newEntry = await prisma.diaryEntry.create({
       data: {
@@ -364,6 +377,9 @@ router.put("/entries/:id", protect, requireCabin, validate(updateDiaryEntrySchem
     }
     if (req.user.role !== "admin" && existing.authorId !== req.user.userId) {
       return res.status(403).json({ message: "Nemáš oprávnění upravit tento záznam." });
+    }
+    if (!(await galleryPhotosInCabin(galleryPhotoIds, req.user.cabinId!))) {
+      return res.status(404).json(PHOTO_NOT_FOUND);
     }
 
     // Update content + replace photo associations in a transaction

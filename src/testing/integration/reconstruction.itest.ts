@@ -94,6 +94,31 @@ describe("reconstruction: lists for cabin A contain nothing from cabin B", () =>
   });
 });
 
+describe("reconstruction: a source message from cabin B is rejected (#483)", () => {
+  test("POST /reconstruction with a cabin B sourceMessageId → 404, nothing created", async () => {
+    const noteB = await prisma.note.create({ data: { userId: world.memberB.id, cabinId: world.cabinB.id, message: "Tajná zpráva B" } });
+    const countBefore = await prisma.reconstructionItem.count();
+    const res = await as(app, world.memberA)
+      .post("/api/reconstruction")
+      .send({ category: "idea", title: "Z cizí zprávy", sourceMessageId: noteB.id });
+    assert.equal(res.status, 404);
+    assert.equal(await prisma.reconstructionItem.count(), countBefore);
+  });
+
+  test("a cabin A source message is stored (positive control)", async () => {
+    const noteA = await prisma.note.create({ data: { userId: world.memberA.id, cabinId: world.cabinA.id, message: "Zpráva A" } });
+    const res = await as(app, world.memberA)
+      .post("/api/reconstruction")
+      .send({ category: "idea", title: "Z vlastní zprávy", sourceMessageId: noteA.id });
+    try {
+      assert.equal(res.status, 201);
+      assert.equal((await prisma.reconstructionItem.findUnique({ where: { id: res.body.id } }))?.sourceMessageId, noteA.id);
+    } finally {
+      await prisma.reconstructionItem.deleteMany({ where: { id: res.body.id } });
+    }
+  });
+});
+
 describe("reconstruction: same-cabin flows still work (positive control)", () => {
   test("POST /reconstruction in A → 201 and realtime goes only to cabin A's room", async () => {
     const recorder = recordRealtimeEmits();

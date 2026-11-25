@@ -110,7 +110,7 @@ export const updateInventoryItemSchema = z.object({
 export const createNoteSchema = z.object({
   message: z.string().min(1, "Zpráva je povinná").max(2000, "Maximální délka je 2000 znaků"),
   threadName: z.string().max(100, "Maximální délka je 100 znaků").optional(),
-  // Missing = main thread. Checking that the thread belongs to the cabin is #483.
+  // Missing = main thread; a thread from another cabin is 404 (#483).
   threadId: z.string().uuid("Neplatné ID vlákna").optional().nullable(),
   replyToId: z.string().uuid("Neplatné ID zprávy").optional().nullable(),
 });
@@ -230,11 +230,6 @@ export const reservationIdParamsSchema = deleteReservationSchema;
 
 export const assignReservationSchema = z.object({
   newOwnerId: z.string().uuid("Neplatné ID uživatele"),
-});
-
-// Reservation — checkout
-export const completeCheckoutSchema = z.object({
-  reservationId: z.string().uuid("Neplatné ID rezervace"),
 });
 
 // Shopping list item — status update

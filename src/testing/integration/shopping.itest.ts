@@ -119,6 +119,27 @@ describe("shopping splits: splitting with a cabin B user → 404, nothing is cre
   }
 });
 
+describe("shopping: a source message from cabin B is rejected (#483)", () => {
+  test("POST /shopping-list/:listId/items with a cabin B sourceMessageId → 404, nothing created", async () => {
+    const noteB = await prisma.note.create({ data: { userId: world.memberB.id, cabinId: world.cabinB.id, message: "Tajná zpráva B" } });
+    const countBefore = await prisma.shoppingListItem.count();
+    const res = await as(app, world.memberA).post(`/api/shopping-list/${listA}/items`).send({ name: "Z cizí zprávy", sourceMessageId: noteB.id });
+    assert.equal(res.status, 404);
+    assert.equal(await prisma.shoppingListItem.count(), countBefore);
+  });
+
+  test("a cabin A source message is stored (positive control)", async () => {
+    const noteA = await prisma.note.create({ data: { userId: world.memberA.id, cabinId: world.cabinA.id, message: "Zpráva A" } });
+    const res = await as(app, world.memberA).post(`/api/shopping-list/${listA}/items`).send({ name: "Z vlastní zprávy", sourceMessageId: noteA.id });
+    try {
+      assert.equal(res.status, 201);
+      assert.equal((await prisma.shoppingListItem.findUnique({ where: { id: res.body.id } }))?.sourceMessageId, noteA.id);
+    } finally {
+      await prisma.shoppingListItem.deleteMany({ where: { id: res.body.id } });
+    }
+  });
+});
+
 describe("shopping: lists for cabin A contain nothing from cabin B", () => {
   const leaks = () => [
     listB, itemB, pantryB, pantryItemB, orphanItemB, world.memberB.id, world.adminB.id,
