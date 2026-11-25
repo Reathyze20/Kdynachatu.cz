@@ -11,6 +11,14 @@ export interface GalleryFolder {
   photoCount: number
   coverPhotoUrl?: string | null
   createdAt: string
+  /** Uživatelské jméno autora; album s fotkami smí smazat autor nebo správce. */
+  createdBy?: string
+}
+
+/** Odpověď hromadného mazání: server smaže jen fotky, které uživatel smí (#507). */
+export interface BulkDeletePhotosResult {
+  message: string
+  deleted: number
 }
 
 export interface GalleryPhoto {
@@ -63,6 +71,6 @@ export const galleryApi = {
   deletePhoto: (id: string): Promise<void> =>
     apiClient.delete(`/gallery/photos/${id}`).then(() => undefined),
 
-  deletePhotos: (photoIds: string[]): Promise<void> =>
-    apiClient.delete('/gallery/photos', { data: { photoIds } }).then(() => undefined),
+  deletePhotos: (photoIds: string[]): Promise<BulkDeletePhotosResult> =>
+    apiClient.delete<BulkDeletePhotosResult>('/gallery/photos', { data: { photoIds } }).then(r => r.data),
 }

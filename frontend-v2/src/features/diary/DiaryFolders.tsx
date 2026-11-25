@@ -30,9 +30,11 @@ interface Props {
   onRename: (folder: DiaryFolder) => void
   onDelete: (folder: DiaryFolder) => void
   onNewFolder: () => void
+  /** Smí uživatel pobyt přejmenovat a smazat? Bez něj se akce nenabízí (#507). */
+  canManage?: (folder: DiaryFolder) => boolean
 }
 
-export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder }: Props) {
+export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder, canManage = () => false }: Props) {
   const [period, setPeriod] = useState<PeriodFilter>('all')
 
   const visible = filterFolders(folders, period)
@@ -91,24 +93,26 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder 
                 )}
               </div>
             </div>
-            <div className="folder-card-hover-actions" onClick={e => e.stopPropagation()}>
-              <button
-                className="icon-btn edit-folder-btn"
-                title="Přejmenovat"
-                aria-label="Přejmenovat"
-                onClick={() => onRename(folder)}
-              >
-                <Pencil className="w-4 h-4" aria-hidden="true" />
-              </button>
-              <button
-                className="icon-btn delete-folder-btn"
-                title="Smazat"
-                aria-label="Smazat"
-                onClick={() => onDelete(folder)}
-              >
-                <Trash2 className="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
+            {canManage(folder) && (
+              <div className="folder-card-hover-actions" onClick={e => e.stopPropagation()}>
+                <button
+                  className="icon-btn edit-folder-btn"
+                  title="Přejmenovat"
+                  aria-label="Přejmenovat"
+                  onClick={() => onRename(folder)}
+                >
+                  <Pencil className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <button
+                  className="icon-btn delete-folder-btn"
+                  title="Smazat"
+                  aria-label="Smazat"
+                  onClick={() => onDelete(folder)}
+                >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

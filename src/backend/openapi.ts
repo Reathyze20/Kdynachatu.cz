@@ -1130,6 +1130,17 @@ const paths: Record<string, OpenApiObject> = {
         "413": jsonResponse(ref("ErrorResponse"), "Soubor je vetsi nez 15 MB"),
       },
     },
+    delete: {
+      tags: ["Gallery"],
+      summary: "Hromadne smaz fotky; clen smaze jen vlastni, cizi se preskoci",
+      security: bearerSecurity,
+      requestBody: jsonRequestBody({ type: "object", required: ["photoIds"], properties: { photoIds: { type: "array", minItems: 1, maxItems: 100, items: { type: "string", format: "uuid" } } } }),
+      responses: {
+        "200": jsonResponse({ type: "object", required: ["message", "deleted"], properties: { message: { type: "string" }, deleted: { type: "integer", minimum: 0, description: "Kolik fotek se opravdu smazalo" } } }, "Smazane fotky, ktere uzivatel smi smazat"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny vstup"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+      },
+    },
   },
   "/api/admin/system": {
     get: {

@@ -23,12 +23,19 @@ import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
+import { isAuthorOrAdmin } from '@/lib/permissions'
+import type { GalleryFolder, GalleryPhoto } from '@/api/gallery'
 
 type View = 'folders' | 'photos'
 
 export function GalleryPage() {
   useDocumentTitle('Galerie')
-  const { isGuest } = useAuth()
+  const { user, isGuest } = useAuth()
+
+  // Stejná pravidla jako backend (#507): album s fotkami smaže autor nebo správce, fotku ten, kdo ji nahrál, nebo správce.
+  const canDeleteFolder = (folder: GalleryFolder) =>
+    (folder.photoCount ?? 0) === 0 || isAuthorOrAdmin(user, { username: folder.createdBy })
+  const canDeletePhoto = (photo: GalleryPhoto) => isAuthorOrAdmin(user, { username: photo.uploadedBy })
   const {
     data: folders = [],
     isLoading: foldersLoading,
@@ -120,8 +127,15 @@ export function GalleryPage() {
   async function handleConfirmedDeleteSelected() {
     setBulkDeleteError(null)
     try {
-      await deletePhotos.mutateAsync([...selectedPhotos])
-      showToast('Fotky smazány.', 'success')
+      const requested = selectedPhotos.size
+      const { deleted } = await deletePhotos.mutateAsync([...selectedPhotos])
+      // Server smaže jen fotky, které uživatel smí; hláška říká, co se opravdu stalo.
+      if (deleted < requested) {
+        const why = user?.role === 'admin' ? 'ostatní už mezitím někdo smazal' : 'ostatní nejsou tvoje'
+        showToast(`Smazáno ${deleted} z ${requested}, ${why}.`, 'info')
+      } else {
+        showToast('Fotky smazány.', 'success')
+      }
       setSelectedPhotos(new Set())
       setIsSelectionMode(false)
       setBulkDeleteConfirmOpen(false)
@@ -250,6 +264,7 @@ export function GalleryPage() {
                   onDelete={openDeleteConfirm}
                   onSearchChange={setSearchQuery}
                   onSortChange={setSortValue}
+                  canDelete={canDeleteFolder}
                 />
               )}
             </motion.div>
@@ -287,6 +302,7 @@ export function GalleryPage() {
                   onUpload={() => setShowUploadModal(true)}
                   folderName={currentFolderName}
                   onBack={backToFolders}
+                  canDeletePhoto={canDeletePhoto}
                 />
               )}
             </motion.div>

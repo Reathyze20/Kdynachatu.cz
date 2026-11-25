@@ -530,7 +530,8 @@ router.delete("/photos", protect, requireCabin, validate(bulkDeletePhotosSchema)
     });
 
     emitToCabin(req.user!.cabinId!, "gallery:changed", { folderId: deletable[0]?.folderId });
-    res.json({ message: `Smazáno ${deletable.length} fotek.` });
+    // `deleted`: kolik fotek se opravdu smazalo – cizí fotky člena se tiše přeskočí (#507).
+    res.json({ message: `Smazáno ${deletable.length} fotek.`, deleted: deletable.length });
   } catch (error) {
     logger.error("GALLERY", "Bulk delete photos error", { error: String(error), count: photoIds?.length });
     res.status(500).json({ message: "Chyba při hromadném mazání." });

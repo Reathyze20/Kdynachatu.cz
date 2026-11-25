@@ -24,6 +24,8 @@ interface Props {
   onUpload: () => void
   folderName: string
   onBack: () => void
+  /** Smí uživatel fotku smazat? Jen takovou jde vybrat k hromadnému mazání (#507). */
+  canDeletePhoto?: (photo: GalleryPhoto) => boolean
 }
 
 export function PhotoGrid({
@@ -40,6 +42,7 @@ export function PhotoGrid({
   onUpload,
   folderName,
   onBack,
+  canDeletePhoto = () => false,
 }: Props) {
   const [page, setPage] = useState(0)
   const masonryRef = useRef<HTMLDivElement>(null)
@@ -58,11 +61,14 @@ export function PhotoGrid({
     masonryRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Výběr slouží jen k mazání, proto jde vybrat jen to, co server opravdu smaže.
+  const deletableIds = photos.filter(canDeletePhoto).map(p => p.id)
+
   function handleSelectAll() {
-    if (selectedPhotos.size === photos.length) {
+    if (deletableIds.length > 0 && deletableIds.every(id => selectedPhotos.has(id))) {
       onDeselectAll()
     } else {
-      onSelectAll(photos.map(p => p.id))
+      onSelectAll(deletableIds)
     }
   }
 
@@ -116,14 +122,16 @@ export function PhotoGrid({
                   </motion.div>
                 )}
               </AnimatePresence>
-              <button
-                className={`gallery-tool-btn ${isSelectionMode ? 'gallery-tool-btn--active' : ''}`}
-                onClick={onToggleSelectionMode}
-                title={isSelectionMode ? 'Zrušit výběr' : 'Vybrat fotky'}
-              >
-                {isSelectionMode ? <X size={16} /> : <CheckSquare size={16} />}
-                <span className="gallery-btn-label">{isSelectionMode ? 'Zrušit' : 'Vybrat'}</span>
-              </button>
+              {(isSelectionMode || deletableIds.length > 0) && (
+                <button
+                  className={`gallery-tool-btn ${isSelectionMode ? 'gallery-tool-btn--active' : ''}`}
+                  onClick={onToggleSelectionMode}
+                  title={isSelectionMode ? 'Zrušit výběr' : 'Vybrat fotky'}
+                >
+                  {isSelectionMode ? <X size={16} /> : <CheckSquare size={16} />}
+                  <span className="gallery-btn-label">{isSelectionMode ? 'Zrušit' : 'Vybrat'}</span>
+                </button>
+              )}
               <button className="btn-primary gallery-upload-btn" onClick={onUpload} data-testid="gallery-upload-button">
                 <Upload size={16} />
                 <span className="gallery-btn-label">Nahrát</span>
@@ -156,19 +164,22 @@ export function PhotoGrid({
         {pagePhotos.map((photo, idx) => {
           const globalIdx = page * PAGE_SIZE + idx
           const isSelected = selectedPhotos.has(photo.id)
+          const isLocked = isSelectionMode && !canDeletePhoto(photo)
           return (
             <motion.div
               key={photo.id}
-              className={`photo-masonry-item${isSelected ? ' photo-masonry-item--selected' : ''}`}
+              className={`photo-masonry-item${isSelected ? ' photo-masonry-item--selected' : ''}${isLocked ? ' photo-masonry-item--locked' : ''}`}
               onClick={() => {
-                if (isSelectionMode) onToggleSelect(photo.id)
-                else onOpenLightbox(globalIdx)
+                if (!isSelectionMode) onOpenLightbox(globalIdx)
+                else if (!isLocked) onToggleSelect(photo.id)
               }}
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.3) }}
               role="gridcell"
               aria-selected={isSelected}
+              aria-disabled={isLocked || undefined}
+              title={isLocked ? 'Tuhle fotku smaže jen ten, kdo ji nahrál, nebo správce.' : undefined}
               aria-label={photo.description ?? `Fotka ${globalIdx + 1}`}
               data-testid="gallery-photo-card"
               data-photo-id={photo.id}
@@ -179,7 +190,7 @@ export function PhotoGrid({
                 loading="lazy"
               />
               <div className="photo-masonry-overlay" />
-              {isSelectionMode && (
+              {isSelectionMode && !isLocked && (
                 <div className={`photo-select-badge${isSelected ? ' photo-select-badge--active' : ''}`}>
                   {isSelected && <Check size={14} strokeWidth={3} />}
                 </div>

@@ -22,6 +22,7 @@ import { Modal } from '@/components/shared/Modal'
 import { PromptDialog } from '@/components/shared/PromptDialog'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
+import { isAuthorOrAdmin } from '@/lib/permissions'
 
 type View = 'folders' | 'entries'
 
@@ -265,6 +266,7 @@ export function DiaryPage() {
               onRename={openRenameModal}
               onDelete={openDeleteModal}
               onNewFolder={openCreateModal}
+              canManage={(folder) => isAuthorOrAdmin(user, { username: folder.createdBy })}
             />
           )
         )}
