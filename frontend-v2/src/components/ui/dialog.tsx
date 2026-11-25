@@ -5,9 +5,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 
 const Dialog = DialogPrimitive.Root
-const DialogPortal = DialogPrimitive.Portal
 const DialogContent = DialogPrimitive.Content
 const DialogTitle = DialogPrimitive.Title
-const DialogClose = DialogPrimitive.Close
 
-export { Dialog, DialogPortal, DialogContent, DialogTitle, DialogClose }
+export { Dialog, DialogContent, DialogTitle }

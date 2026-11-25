@@ -97,14 +97,17 @@ describe('Modal', () => {
   it('Esc ve vnořeném dialogu zavře jen horní', async () => {
     const outerClose = vi.fn()
     const innerClose = vi.fn()
-    render(
+    const nested = (innerOpen: boolean) => (
       <Modal isOpen onClose={outerClose} title="Zápisník">
         <p>Obsah</p>
-        <Modal isOpen onClose={innerClose} title="Zavřít bez uložení?">
+        <Modal isOpen={innerOpen} onClose={innerClose} title="Zavřít bez uložení?">
           <p>Potvrzení</p>
         </Modal>
-      </Modal>,
+      </Modal>
     )
+    const { rerender } = render(nested(false))
+    await screen.findByRole('dialog', { name: 'Zápisník' })
+    rerender(nested(true))
     await screen.findByRole('dialog', { name: 'Zavřít bez uložení?' })
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(innerClose).toHaveBeenCalledTimes(1)

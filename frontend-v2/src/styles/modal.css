@@ -32,8 +32,8 @@
   overflow: hidden;
 }
 
-/* Focus dostane karta, když dialog nemá pole; titulek přečte čtečka, obrys netřeba. */
-.modal-unified-card:focus {
+/* Focus dostane dialog (pozadí), když nemá pole; titulek přečte čtečka, obrys netřeba. */
+.modal-unified-overlay:focus {
   outline: none;
 }
 
