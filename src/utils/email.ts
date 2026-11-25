@@ -379,7 +379,8 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
 
 // ─── E-mail changed: notice to the old address (#475) ───────────────────────
 
-const escapeHtml = (value: string): string =>
+/** Escapuje hodnotu pro vložení do HTML e-mailu (jména, názvy chat, odkazy). */
+export const escapeHtml = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /** Upozornění na starou adresu, že se e-mail u účtu změnil (nebo byl odebrán, `newEmail: null`). */
