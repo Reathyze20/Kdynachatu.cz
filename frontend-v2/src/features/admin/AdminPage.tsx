@@ -216,10 +216,10 @@ const DANGER_ACTIONS: Array<{
 ]
 
 /** Výběr role s viditelnou šipkou (globální `select` v forms.css má `appearance: none`). */
-function RoleSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
+function RoleSelect({ className = '', ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="relative">
-      <select {...props} className="min-h-(--touch-target-min)! pr-10! text-base!">
+      <select {...props} className={`min-h-(--touch-target-min)! pr-10! text-base! ${className}`}>
         <option value="user">Člen</option>
         <option value="admin">Admin</option>
         <option value="guest">Host</option>
@@ -415,7 +415,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
 
           {isAdmin && (
             <section aria-labelledby="edit-user-danger-zone" className="mt-6 border-t border-rule-soft pt-4">
-              <h4 id="edit-user-danger-zone" className="text-eyebrow uppercase text-(--status-error)">Nebezpečná zóna</h4>
+              <h4 id="edit-user-danger-zone" className="text-eyebrow uppercase text-(--text-muted)">Nebezpečná zóna</h4>
               <ul className="mt-2 divide-y divide-rule-soft">
                 {DANGER_ACTIONS.map((action) => {
                   const blocked = isSelf && action.selfHint !== undefined
