@@ -181,6 +181,8 @@ export const TREE: Sprite = [
 ];
 
 export const MOON: Sprite = ["..MMMM..", ".MMMM...", "MMMM....", "MMM.....", "MMM.....", "MMMM....", ".MMMM...", "..MMMM.."];
+/** Ptáček, který ve stavu Animovaná občas přeletí oblohu (#565). */
+export const BIRD: Sprite = ["oo...oo", "..o.o..", "...o..."];
 /** Kouř z komína, spodní obláček sedí nad komínem. */
 export const SMOKE: Sprite = [
   ".~~~......", "~~~~~.....", "~~~~~.....", ".~~~......", "....~~~...", "...~~~~~..",

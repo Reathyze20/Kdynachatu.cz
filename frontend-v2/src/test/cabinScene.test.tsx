@@ -300,3 +300,88 @@ describe('Počasí a denní doba ve scéně chaty (#564)', () => {
     }
   })
 })
+
+// Vypínač „Scéna chaty“ a animace (#565): jen hodnota vypínače, výchozí stav a přítomnost scény, ne snímky animací.
+// `data-motion` na obrázku říká, jestli se scéna hýbe (animated), stojí (paused) nebo je statická (static).
+function prefersReducedMotion(reduce: boolean) {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: reduce && query === '(prefers-reduced-motion: reduce)', media: query, addEventListener: vi.fn(), removeEventListener: vi.fn(),
+  }))
+}
+
+describe('Vypínač „Scéna chaty“ na Přehledu (#565)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+  })
+
+  it('bez uložené volby se scéna hýbe', async () => {
+    prefersReducedMotion(false)
+    renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
+
+    expect(await scene()).toHaveAttribute('data-motion', 'animated')
+  })
+
+  it('bez uložené volby je scéna při prefers-reduced-motion: reduce statická', async () => {
+    prefersReducedMotion(true)
+    renderOverview(reservations())
+
+    expect(await scene()).toHaveAttribute('data-motion', 'static')
+  })
+
+  it('uložená volba přebije výchozí stav podle zařízení', async () => {
+    prefersReducedMotion(false)
+    localStorage.setItem('cabinSceneMode', 'static')
+    renderOverview(reservations())
+    expect(await scene()).toHaveAttribute('data-motion', 'static')
+
+    cleanup()
+    prefersReducedMotion(true)
+    localStorage.setItem('cabinSceneMode', 'animated')
+    renderOverview(reservations())
+    expect(await scene()).toHaveAttribute('data-motion', 'animated')
+  })
+
+  it('Skrytá: scéna není v DOM, karta „Na chatě teď“ i prázdný stav zůstávají', async () => {
+    localStorage.setItem('cabinSceneMode', 'hidden')
+    renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
+
+    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(header).getByRole('group', { name: 'Teď' })).toHaveTextContent('Novákovi')
+    expect(screen.queryByRole('img', { name: /^Scéna chaty/ })).not.toBeInTheDocument()
+
+    cleanup()
+    renderOverview(reservations())
+    await screen.findByText('Chata zatím čeká')
+    expect(screen.queryByRole('img', { name: /^Scéna chaty/ })).not.toBeInTheDocument()
+  })
+
+  it('animace stojí, když je stránka na pozadí, a po návratu se rozběhne', async () => {
+    renderOverview(reservations())
+    const img = await scene()
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    expect(img).toHaveAttribute('data-motion', 'paused')
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    expect(img).toHaveAttribute('data-motion', 'animated')
+  })
+
+  it('animace stojí, když je scéna mimo obrazovku', async () => {
+    const callbacks: ((entries: { isIntersecting: boolean }[]) => void)[] = []
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(cb: (entries: { isIntersecting: boolean }[]) => void) { callbacks.push(cb) }
+      observe() {}
+      disconnect() {}
+    })
+    renderOverview(reservations())
+    const img = await scene()
+
+    act(() => callbacks.forEach((cb) => cb([{ isIntersecting: false }])))
+    expect(img).toHaveAttribute('data-motion', 'paused')
+    act(() => callbacks.forEach((cb) => cb([{ isIntersecting: true }])))
+    expect(img).toHaveAttribute('data-motion', 'animated')
+  })
+})

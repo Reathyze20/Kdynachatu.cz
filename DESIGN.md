@@ -102,6 +102,7 @@ Vybírá se role, ne velikost v pixelech. Utilita `text-<role>` nastaví velikos
 - Vstup `easeOut`, odchod `easeIn`, nikdy lineárně. Animují se `opacity` a `transform`, ne rozměry a pozice (`width`, `height`, `top`, `left`).
 - Animuje se otevření a zavření modálu, přidání a odebrání položky seznamu, rozbalení a přepnutí záložky. Přechod mezi routami řeší `AppShell`, stránka ho nepřidává. Změna textu, obnovení dat ani poloha scrollu se neanimují.
 - Při `prefers-reduced-motion: reduce` pohyb odpadne nebo se zkrátí na prolnutí.
+- **Výjimka „Scéna chaty a maskot“ (#558, #565).** Jen scéna chaty (`CabinScene`) a maskot smí mít pomalé smyčkové a občasné náhodné animace, krokované jako pixel art (`--animate-scene-*` v `@theme`, `shadcn-tokens.css`). Hýbou jen `opacity` a `transform` a stojí, když je stránka na pozadí nebo scéna mimo obrazovku. Vždy respektují `prefers-reduced-motion` a vypínač „Scéna chaty“ v profilu (Animovaná / Statická / Skrytá, per zařízení): bez uložené volby je při `reduce` scéna Statická, výslovná volba v profilu platí přednostně. Pravidlo „Klid“ platí pro zbytek appky dál a smyčku jinde zakazuje guard `loopAnimation`.
 
 ## 6. Komponenty
 
@@ -244,6 +245,7 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `legacyButton` | třída `btn` nebo `btn-*` v TS/TSX (zmrazený legacy systém tlačítek, místo něj `Button`) |
 | `legacyCard` | třída `page-card`, `glass-card`, `admin-card` v TS/TSX, holé `card` v `className`, `cn()`/`clsx()` nebo selektoru (místo nich `Card`) |
 | `legacyEmptyState` | třída `<něco>-empty-<něco>` v TS/TSX (místo ní `EmptyState`) |
+| `loopAnimation` | smyčková animace (`infinite`, `repeat: Infinity`, `animate-spin`/`pulse`/`ping`/`bounce`, `animate-scene-*`) mimo Scénu chaty a maskota (kapitola 5) |
 
 ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 
