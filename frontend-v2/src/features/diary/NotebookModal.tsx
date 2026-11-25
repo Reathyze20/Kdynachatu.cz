@@ -46,6 +46,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   const [showPickerModal, setShowPickerModal] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [contentError, setContentError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false)
@@ -57,7 +58,13 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   const { data: attachedPhotos = [] } = usePhotosByIds(entryPhotoIds)
 
   // Neuložené změny proti tomu, co je na serveru – jen ty se ukládají a jen kvůli nim se ptáme.
-  const isDirty = content !== (entry?.content ?? '') || !samePhotoIds(entryPhotoIds, entry?.galleryPhotoIds ?? [])
+  // Nový den, kam přibyly jen mezery, je pořád prázdný den.
+  const savedContent = entry?.content ?? ''
+  const savedPhotoIds = entry?.galleryPhotoIds ?? []
+  const photosChanged = !samePhotoIds(entryPhotoIds, savedPhotoIds)
+  const isDirty = entry
+    ? content !== savedContent || photosChanged
+    : content.trim() !== '' || photosChanged
 
   // ── Navigace prev / next ─────────────────────────────────────────────────
   const dateKey = dateObj.toISOString().slice(0, 10)
@@ -67,9 +74,10 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
 
   // Při změně záznamu (navigace prev/next) reiniciujem state
   useEffect(() => {
-    setContent(entry?.content ?? '')
-    setEntryPhotoIds(entry?.galleryPhotoIds ?? [])
+    setContent(savedContent)
+    setEntryPhotoIds(savedPhotoIds)
     setSaveError(null)
+    setContentError(null)
     setDeleteError(null)
     setDiscardConfirmOpen(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,9 +86,10 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   /** Uloží jen skutečnou změnu; prázdný text server odmítne, tak ho ani neposíláme. */
   async function save(): Promise<boolean> {
     setSaveError(null)
+    setContentError(null)
     if (!isDirty) return true
     if (content.trim() === '') {
-      setSaveError(entry?.id
+      setContentError(entry?.id
         ? 'Zápis nemůže být prázdný. Napiš pár slov, nebo zápis vytrhni.'
         : 'Zápis nemůže být prázdný. Napiš pár slov, ať je co uložit.')
       return false
@@ -157,7 +166,9 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   }
 
   async function navigate(direction: 'prev' | 'next') {
-    // Změněný den se před přechodem uloží, nezměněný nebo prázdný projde bez requestu
+    // Změněný den se před přechodem uloží, nezměněný projde bez requestu.
+    // Druhé klepnutí během ukládání by poslalo zápis znovu (u nového dne duplicitně).
+    if (saveEntry.isPending) return
     const ok = await save()
     if (!ok) return
     const idx = direction === 'prev' ? currentIdx - 1 : currentIdx + 1
@@ -173,7 +184,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
       <button
         className="notebook-nav-btn"
         onClick={() => navigate('prev')}
-        disabled={!hasPrev}
+        disabled={!hasPrev || saveEntry.isPending}
         aria-label="Předchozí den"
       >
         ‹
@@ -182,7 +193,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
       <button
         className="notebook-nav-btn"
         onClick={() => navigate('next')}
-        disabled={!hasNext}
+        disabled={!hasNext || saveEntry.isPending}
         aria-label="Další den"
       >
         ›
@@ -238,14 +249,20 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
                 value={content}
                 onChange={e => {
                   if (saveError) setSaveError(null)
+                  if (contentError) setContentError(null)
                   setContent(e.target.value.slice(0, MAX_CHARS))
                 }}
+                aria-invalid={contentError ? true : undefined}
+                aria-describedby={contentError ? 'diary-entry-content-error' : undefined}
                 placeholder="Napiš co se dnes dělo…"
                 maxLength={MAX_CHARS}
                 rows={12}
                 data-testid="diary-entry-textarea"
               />
               <div className="char-counter">{content.length}/{MAX_CHARS}</div>
+              {contentError ? (
+                <div id="diary-entry-content-error" className="error-message show" role="alert">{contentError}</div>
+              ) : null}
             </div>
           </div>
 

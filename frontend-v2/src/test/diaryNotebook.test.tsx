@@ -65,6 +65,32 @@ describe('zápisník deníku: listování dny (#503)', () => {
     expect(showToast).not.toHaveBeenCalled()
   })
 
+  it('nový den jen s mezerami je pořád prázdný: přejde bez ukládání', async () => {
+    const { onNavigate } = renderNotebook()
+
+    await userEvent.type(screen.getByTestId('diary-entry-textarea'), '   ')
+    fireEvent.click(screen.getByRole('button', { name: 'Další den' }))
+
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledTimes(1))
+    expect(api.post).not.toHaveBeenCalled()
+  })
+
+  it('dvojí klepnutí na šipku během ukládání pošle zápis jen jednou', async () => {
+    let finish: (value: unknown) => void = () => {}
+    api.post.mockImplementation(() => new Promise(resolve => { finish = resolve }))
+    const { onNavigate } = renderNotebook()
+
+    await userEvent.type(screen.getByTestId('diary-entry-textarea'), 'Přijeli jsme')
+    const next = screen.getByRole('button', { name: 'Další den' })
+    fireEvent.click(next)
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1))
+    fireEvent.click(next)
+    finish({ data: { ...entry('Přijeli jsme'), id: 'e-new' } })
+
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledTimes(1))
+    expect(api.post).toHaveBeenCalledTimes(1)
+  })
+
   it('z nezměněného zápisu přejde na předchozí den bez ukládání a bez toastu', async () => {
     const { onNavigate } = renderNotebook(entry('Ráno mlha, odpoledne houby.'))
 
@@ -95,7 +121,10 @@ describe('zápisník deníku: listování dny (#503)', () => {
     await userEvent.clear(screen.getByTestId('diary-entry-textarea'))
     fireEvent.click(screen.getByRole('button', { name: 'Další den' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/prázdn/i)
+    const error = await screen.findByRole('alert')
+    expect(error).toHaveTextContent(/prázdn/i)
+    expect(screen.getByTestId('diary-entry-textarea')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByTestId('diary-entry-textarea')).toHaveAccessibleDescription(error.textContent ?? '')
     expect(api.put).not.toHaveBeenCalled()
     expect(onNavigate).not.toHaveBeenCalled()
   })
@@ -126,7 +155,7 @@ describe('zápisník deníku: zavření s neuloženým textem (#503)', () => {
     const textarea = screen.getByTestId('diary-entry-textarea')
     await userEvent.type(textarea, 'Rozdělaný zápis')
 
-    fireEvent.click(screen.getAllByTestId('modal-close-button')[0])
+    fireEvent.click(screen.getByTestId('modal-close-button'))
 
     const dialog = (await screen.findByText('Zavřít bez uložení?')).closest('[role="dialog"]') as HTMLElement
     expect(onClose).not.toHaveBeenCalled()
