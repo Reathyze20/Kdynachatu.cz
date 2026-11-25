@@ -486,9 +486,11 @@ function MetaLine({ items }: { items: string[] }) {
   )
 }
 
+const MEMBER_LIST_CLASS = '-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6'
+
 function UserListSkeleton() {
   return (
-    <ul className="-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6" aria-hidden="true">
+    <ul className={MEMBER_LIST_CLASS} aria-hidden="true">
       {Array.from({ length: 4 }).map((_, i) => (
         <ListRow as="li" key={i} action={<div className="skeleton h-12 w-24" />}>
           <div className="flex items-center gap-3">
@@ -1151,7 +1153,7 @@ export function AdminPage() {
                   ) : null}
                 </div>
 
-                <ul id="users-list" className="-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6" data-testid="admin-users-list">
+                <ul id="users-list" className={MEMBER_LIST_CLASS} data-testid="admin-users-list">
                   {filteredUsers.map((user) => (
                     <UserRow key={user.id} user={user} isSelf={currentUser?.userId === user.id} onEdit={() => setEditUser(user)} />
                   ))}
