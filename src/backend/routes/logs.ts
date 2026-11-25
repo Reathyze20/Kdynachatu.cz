@@ -3,6 +3,7 @@ import { protect, protectWithTokenFallback } from '../../middleware/authMiddlewa
 import logger           from '../../utils/logger';
 import prisma           from '../../utils/prisma';
 import { z }            from 'zod';
+import { boundClientLogContext } from './clientLogContext';
 
 const router = Router();
 
@@ -18,7 +19,8 @@ const ClientErrorSchema = z.object({
   url:       z.string().max(500).optional(),
   path:      z.string().max(300).optional(),
   component: z.string().max(100).optional(),
-  context:   z.record(z.string(), z.unknown()).optional(),
+  // Velký context se ořízne (počet klíčů, délka hodnot, hloubka), viz clientLogContext.ts.
+  context:   z.record(z.string(), z.unknown()).transform(boundClientLogContext).optional(),
   requestId: z.string().max(100).optional(),
   errorId:   z.string().max(100).optional(),
   level:     z.enum(['error', 'warn', 'info']).default('error'),
@@ -147,7 +149,8 @@ router.post('/client/anon', (req: Request, res: Response) => {
     return res.status(400).json({ message: 'Neplatný formát.' });
   }
 
-  const ip  = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '—';
+  // req.ip respektuje `trust proxy` (app.ts); surová hlavička X-Forwarded-For jde od klienta podvrhnout.
+  const ip  = req.ip ?? '—';
   if (!checkAnonRateLimit(ip)) {
     return res.status(429).json({ message: 'Too many error reports.' });
   }
