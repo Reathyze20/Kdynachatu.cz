@@ -124,14 +124,6 @@ export const DORMOUSE_SLEEPING: Sprite = [
   "..ooooooooooooo...",
 ];
 
-/** Zápraží 28 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39 chaty): tam spí a odpočívá plch. */
-export const PORCH: Sprite = [
-  "fffFffffFffffFffffFffffFffff",
-  "FFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-  ".oFFo...........oFFo........",
-  ".oFFo...........oFFo........",
-];
-
 /** Šála spícího plcha: za hlavou zastrčenou pod ocasem, cíp vykukuje dole. */
 export const DORMOUSE_SLEEPING_SCARF: Sprite = [
   "", "", "", "", "", "",
@@ -139,6 +131,14 @@ export const DORMOUSE_SLEEPING_SCARF: Sprite = [
   ".....Zz",
   ".....zZ",
   "......Zz",
+];
+
+/** Zápraží 28 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39 chaty): tam spí a odpočívá plch. */
+export const PORCH: Sprite = [
+  "fffFffffFffffFffffFffffFffff",
+  "FFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+  ".oFFo...........oFFo........",
+  ".oFFo...........oFFo........",
 ];
 
 export const ZZZ: Sprite = ["...oooo", ".....o.", "....o..", "...oooo", "ooo....", ".o.....", "ooo...."];

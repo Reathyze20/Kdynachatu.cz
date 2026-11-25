@@ -45,10 +45,11 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
   // Zazimování přebíjí obsazenost i auto (souhlasí s bannerem „Chata je zazimovaná“).
   const arriving = !winterized && todays.some((s) => s.from === today);
   const departing = !winterized && todays.some((s) => s.to === today);
-  const w = weather && typeof weather === "object" ? weather : null;
+  const forecast = weather && typeof weather === "object" ? weather : null;
   // Východ a západ slunce jsou „HH:MM“ v čase obce chaty; zařízení rodiny je ve stejném pásmu.
-  const night = w?.sunriseTime && w.sunsetTime
-    ? hhmm(now) < w.sunriseTime || hhmm(now) >= w.sunsetTime
+  const clock = hhmm(now);
+  const night = forecast?.sunriseTime && forecast.sunsetTime
+    ? clock < forecast.sunriseTime || clock >= forecast.sunsetTime
     : hour >= NIGHT_FROM_HOUR || hour < NIGHT_UNTIL_HOUR;
   return {
     occupied: !winterized && present,
@@ -58,9 +59,9 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
     winterized,
     night,
     // Počasí se kreslí přes všechny stavy obsazenosti včetně zazimování.
-    snowing: !!w && isSnowCode(w.weatherCode),
-    snowCover: !!w && w.snowDepth > 0,
-    frost: !!w && w.temp <= 0,
+    snowing: !!forecast && isSnowCode(forecast.weatherCode),
+    snowCover: !!forecast && forecast.snowDepth > 0,
+    frost: !!forecast && forecast.temp <= 0,
   };
 }
 

@@ -52,7 +52,8 @@ function seededRandom(seed: number) {
   return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 }
 
-/** Sníh přebarví louku, kopce a střechu; jinovatka trávu, střechu a stromy (na stromech přebíjí sníh). */
+/** Sníh přebarví louku, kopce a střechu; jinovatka trávu, střechu a stromy. Na stromech má jinovatka přednost
+ * před sněhem, aby byl mráz vidět i pod sněhovou pokrývkou. */
 function landscape({ night, snowing, snowCover, frost }: CabinSceneState): Layer[] {
   const rnd = seededRandom(7);
   const sky = layer("sky");
@@ -79,9 +80,9 @@ function landscape({ night, snowing, snowCover, frost }: CabinSceneState): Layer
 /** Chata se střechou nad okapem zvlášť, aby ji sníh nebo jinovatka přebarvily bez rohů stěny (r/R). */
 function cabin({ snowCover, frost }: CabinSceneState, glass: Record<string, string>): Layer {
   const roof: Record<string, string> = snowCover ? { r: "snow", R: "snow-shade" } : frost ? { R: "rime" } : {};
-  const l = drawSprite(layer("cabin"), CABIN.slice(0, CABIN_EAVE_ROW), CABIN_X, CABIN_Y, { ...glass, ...roof });
-  drawSprite(l, CABIN.slice(CABIN_EAVE_ROW), CABIN_X, CABIN_Y + CABIN_EAVE_ROW, glass);
-  return drawSprite(l, PORCH, PORCH_X, PORCH_TOP);
+  const cabinLayer = drawSprite(layer("cabin"), CABIN.slice(0, CABIN_EAVE_ROW), CABIN_X, CABIN_Y, { ...glass, ...roof });
+  drawSprite(cabinLayer, CABIN.slice(CABIN_EAVE_ROW), CABIN_X, CABIN_Y + CABIN_EAVE_ROW, glass);
+  return drawSprite(cabinLayer, PORCH, PORCH_X, PORCH_TOP);
 }
 
 /** Vločky přes celou scénu, zatím bez pohybu (rozpohybuje je ticket s animacemi). */
