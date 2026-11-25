@@ -2,6 +2,9 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { boundClientLogContext, CLIENT_LOG_CONTEXT_LIMITS as LIMITS } from "./clientLogContext";
 
+/** Rezerva na obálku `{ truncated, preview }` a escapování náhledu nad `maxTotalLength`. */
+const WRAPPER_SLACK = 100;
+
 describe("boundClientLogContext", () => {
   test("a typical frontend context passes unchanged", () => {
     const context = {
@@ -56,7 +59,7 @@ describe("boundClientLogContext", () => {
     );
     const result = boundClientLogContext(wide);
     assert.equal(result.truncated, true);
-    assert.ok(JSON.stringify(result).length <= LIMITS.maxTotalLength + 100);
+    assert.ok(JSON.stringify(result).length <= LIMITS.maxTotalLength + WRAPPER_SLACK);
   });
 
   test("a __proto__ key stays a plain own property and does not change the prototype", () => {

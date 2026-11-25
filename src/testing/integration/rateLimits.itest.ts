@@ -112,6 +112,8 @@ describe("rate limits: anonymous client logs (10 per minute per IP)", () => {
 });
 
 describe("client logs: context size is bounded", () => {
+  /** Rezerva na obálku `{ truncated, preview }` a escapování náhledu nad `maxTotalLength`. */
+  const maxLoggedLength = CLIENT_LOG_CONTEXT_LIMITS.maxTotalLength + 100;
   const oversizedContext = {
     huge: "x".repeat(100_000),
     deep: { a: { b: { c: { d: { e: { f: "hluboko" } } } } } },
@@ -126,9 +128,10 @@ describe("client logs: context size is bounded", () => {
     assert.equal(res.status, 204);
     assert.equal(frontendLogs.length, 1);
     const logged = JSON.stringify(frontendLogs[0].fields.context);
-    assert.ok(logged.length <= CLIENT_LOG_CONTEXT_LIMITS.maxTotalLength + 100, `logged context has ${logged.length} chars`);
+    assert.ok(logged.length <= maxLoggedLength, `logged context has ${logged.length} chars`);
     assert.ok(!logged.includes("x".repeat(CLIENT_LOG_CONTEXT_LIMITS.maxStringLength + 1)));
     assert.ok(!logged.includes("key199"));
+    assert.ok(!logged.includes("hluboko"), "objects nested too deep are cut off");
   });
 
   test("the anonymous endpoint bounds the context as well", async () => {
@@ -139,6 +142,6 @@ describe("client logs: context size is bounded", () => {
       .send({ message: "Anonymní chyba s velkým kontextem", context: oversizedContext });
     assert.equal(res.status, 204);
     const logged = JSON.stringify(frontendLogs[0]?.fields.context);
-    assert.ok(logged.length <= CLIENT_LOG_CONTEXT_LIMITS.maxTotalLength + 100, `logged context has ${logged.length} chars`);
+    assert.ok(logged.length <= maxLoggedLength, `logged context has ${logged.length} chars`);
   });
 });
