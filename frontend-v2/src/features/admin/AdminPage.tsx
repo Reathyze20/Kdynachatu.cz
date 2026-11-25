@@ -32,7 +32,7 @@ import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
-import { ChevronDown, Mail, Pencil, ScrollText, Search, SearchX, SlidersHorizontal, TicketPlus, UserPlus, Users } from 'lucide-react'
+import { ChevronDown, Mail, Pencil, ScrollText, Search, SearchX, SlidersHorizontal, Ticket, TicketPlus, UserPlus, Users } from 'lucide-react'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
@@ -88,19 +88,6 @@ function getUserStatusMeta(user: Pick<CabinUser, 'isBanned' | 'isVerified' | 'is
   }
 }
 
-function formatDateLabel(dateString: string | null | undefined): string {
-  if (!dateString) return 'Neznámé datum'
-
-  const parsedDate = new Date(dateString)
-  if (Number.isNaN(parsedDate.getTime())) return 'Neznámé datum'
-
-  return parsedDate.toLocaleDateString('cs-CZ', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function isInviteExpired(expiresAt: string): boolean {
   return new Date() > new Date(expiresAt)
 }
@@ -149,13 +136,13 @@ function buildInviteShareText(invite: Invite): string {
       ? 'Pozvánka je na jedno použití.'
       : `Pozvánku lze použít ${invite.maxUses}×.`
 
-  return `Ahoj, zvu tě do chaty „${invite.cabinName}“ v aplikaci Kdy na chatu. Připoj se přes tento odkaz: ${buildInviteUrl(invite.token)} Role po přijetí: ${roleLabel}. Platnost do ${formatDateLabel(invite.expiresAt)}. ${usageHint}`
+  return `Ahoj, zvu tě do chaty „${invite.cabinName}“ v aplikaci Kdy na chatu. Připoj se přes tento odkaz: ${buildInviteUrl(invite.token)} Role po přijetí: ${roleLabel}. Platnost do ${formatDate(invite.expiresAt)}. ${usageHint}`
 }
 
 function buildRevokeConfirmMessage(invite: Invite): string {
   const roleLabel = getRoleLabel(invite.role).toLocaleLowerCase('cs-CZ')
   const author = invite.createdBy?.username ? `, autor: ${invite.createdBy.username}` : ''
-  return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ (platí do ${formatDateLabel(invite.expiresAt)}${author}). Odkaz přestane fungovat a kdo ho už dostal, se přes něj nepřipojí.`
+  return `Pozvánka pro roli ${roleLabel} do chaty „${invite.cabinName}“ (platí do ${formatDate(invite.expiresAt)}${author}). Odkaz přestane fungovat a kdo ho už dostal, se přes něj nepřipojí.`
 }
 
 function isAdminWorkspace(value: string | null): value is AdminWorkspace {
@@ -488,6 +475,20 @@ function MetaLine({ items }: { items: string[] }) {
 
 const MEMBER_LIST_CLASS = '-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6'
 
+/** Obsah řádku pozvánky: role a stav, pod tím meta text. */
+function InviteSummary({ invite, meta }: { invite: Invite; meta: string[] }) {
+  const status = getInviteStatus(invite)
+  return (
+    <div className="grid min-w-0 gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={getRoleBadgeClass(invite.role)}>{getRoleLabel(invite.role)}</span>
+        <span className={status.className}>{status.label}</span>
+      </div>
+      <MetaLine items={meta} />
+    </div>
+  )
+}
+
 function UserListSkeleton() {
   return (
     <ul className={MEMBER_LIST_CLASS} aria-hidden="true">
@@ -663,22 +664,16 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   const inactiveInvites = invites.filter((invite) => isInviteExpired(invite.expiresAt) || isInviteExhausted(invite))
 
   return (
-    <section className="page-card admin-page-card admin-card admin-invites-card" id="admin-invites" data-testid="admin-invites-section">
-      <div className="admin-card-header">
-        <div>
-          <div className="admin-card-eyebrow">Pozvánky</div>
-          <div className="admin-card-title-row">
-            <h2 className="admin-card-title">Odkazy pro nové členy</h2>
-            <span className="admin-card-counter">{formatCount(activeInvites.length, 'aktivní', 'aktivní', 'aktivních')}</span>
-          </div>
-          <p className="admin-card-description">
-            Rychlé vstupy pro rodinu, brigádníka nebo hosta. Aktivní pozvánky drž na očích, staré nech v archivu.
-          </p>
-        </div>
-      </div>
+    <Card as="section" className="space-y-4" id="admin-invites" data-testid="admin-invites-section">
+      <AdminCardHeading
+        eyebrow="Pozvánky"
+        title="Odkazy pro nové členy"
+        meta={formatCount(activeInvites.length, 'aktivní', 'aktivní', 'aktivních')}
+        description="Rychlé vstupy pro rodinu, brigádníka nebo hosta. Aktivní pozvánky drž na očích, staré nech v archivu."
+      />
 
       <form
-        className="admin-compact-form admin-invite-create-form"
+        className="grid gap-x-3 md:grid-cols-3 md:items-end [&_.form-group]:mb-3"
         onSubmit={handleCreate}
         onChange={() => {
           if (createError) setCreateError(null)
@@ -691,92 +686,82 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         </div>
         <div className="form-group">
           <label htmlFor="invite-days">Platnost (dní)</label>
-          <input id="invite-days" name="invite-days" type="number" min={1} max={365} defaultValue={7} data-testid="invite-days-input" />
+          <Input id="invite-days" name="invite-days" type="number" min={1} max={365} defaultValue={7} data-testid="invite-days-input" />
         </div>
         <div className="form-group">
           <label htmlFor="invite-max-uses">Počet použití</label>
-          <input id="invite-max-uses" name="invite-max-uses" type="number" min={1} max={100} defaultValue={1} placeholder="1" data-testid="invite-max-uses-input" />
+          <Input id="invite-max-uses" name="invite-max-uses" type="number" min={1} max={100} defaultValue={1} placeholder="1" data-testid="invite-max-uses-input" />
         </div>
-        <button type="submit" className="btn btn-primary" disabled={createInvite.isPending} data-testid="invite-create-submit">
-          <TicketPlus size={16} />
+        <Button type="submit" className="md:col-span-3" pending={createInvite.isPending} data-testid="invite-create-submit">
+          {createInvite.isPending ? null : <TicketPlus aria-hidden="true" />}
           {createInvite.isPending ? 'Vytvářím…' : 'Vytvořit pozvánku'}
-        </button>
+        </Button>
       </form>
-      <p className="admin-form-note">Pro rodinu je nejpraktičtější jednorázová pozvánka. Pole počet použití můžeš smazat, pokud chceš sdílený odkaz.</p>
+      <p className="text-label text-(--text-muted)">Pro rodinu je nejpraktičtější jednorázová pozvánka. Pole počet použití můžeš smazat, pokud chceš sdílený odkaz.</p>
       {createError ? (
         <div className="error-message show admin-section-error" role="alert">{createError}</div>
       ) : null}
 
       {isLoading ? (
-        <div className="admin-inline-loader">
-          <div className="spinner" />
-          <span>Načítám pozvánky…</span>
-        </div>
+        <ul className={MEMBER_LIST_CLASS} aria-hidden="true">
+          {[0, 1].map((i) => (
+            <ListRow as="li" key={i}><div className="grid gap-2"><div className="skeleton h-4 w-2/5" /><div className="skeleton h-4 w-3/5" /></div></ListRow>
+          ))}
+        </ul>
       ) : isError ? (
         <FeatureErrorFallback
+          bare
           error={error instanceof Error ? error : new Error('Nepodařilo se načíst pozvánky')}
           resetErrorBoundary={onRetry}
           title="Pozvánky se nepodařilo načíst"
         />
       ) : activeInvites.length === 0 ? (
-        <div className="admin-empty-state">
-          <h3>Žádné aktivní pozvánky</h3>
-          <p>Jakmile vytvoříš nový odkaz, objeví se tady s informací o využití a expiraci.</p>
-        </div>
+        <EmptyState icon={Ticket} message="Zatím tu nejsou žádné aktivní pozvánky." />
       ) : (
-        <div className="admin-invite-list" data-testid="invite-active-list">
+        <ul className={MEMBER_LIST_CLASS} data-testid="invite-active-list">
           {activeInvites.map((inv) => (
-            <article key={inv.id} className="admin-invite-card" data-testid="invite-card" data-invite-id={inv.id}>
-              <div className="admin-invite-main">
-                <div className="admin-invite-top">
-                  <span className={getRoleBadgeClass(inv.role)}>{getRoleLabel(inv.role)}</span>
-                  <span className={getInviteStatus(inv).className}>{getInviteStatus(inv).label}</span>
-                </div>
-                <div className="admin-invite-meta">
-                  <span>
-                    {inv.maxUses !== null
+            <ListRow as="li" key={inv.id} data-testid="invite-card" data-invite-id={inv.id}>
+              <div className="grid gap-2">
+                <InviteSummary
+                  invite={inv}
+                  meta={[
+                    inv.maxUses !== null
                       ? isInviteAccepted(inv)
                         ? `Přijato ${inv.usedCount}/${inv.maxUses}`
                         : `${inv.usedCount}/${inv.maxUses} použití`
                       : inv.usedCount > 0
                         ? `Použito ${inv.usedCount}×`
-                        : 'Sdílená pozvánka'}
-                  </span>
-                  <span>Platí do {formatDateLabel(inv.expiresAt)}</span>
-                  <span>Chata {inv.cabinName}</span>
-                  {inv.createdBy?.username ? <span>Vytvořil {inv.createdBy.username}</span> : null}
+                        : 'Sdílená pozvánka',
+                    `Platí do ${formatDate(inv.expiresAt)}`,
+                    `Chata ${inv.cabinName}`,
+                    ...(inv.createdBy?.username ? [`Vytvořil ${inv.createdBy.username}`] : []),
+                  ]}
+                />
+                <div className="grid gap-2 md:flex md:flex-wrap">
+                  <CopyForWhatsAppButton
+                    text={buildInviteShareText(inv)}
+                    onCopied={() => setActionError(null)}
+                    onError={() => setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')}
+                    testId="invite-copy-message-button"
+                  />
+                  <Button variant="secondary" size="sm" onClick={() => handleOpenEmailModal(inv)} data-testid="invite-email-button">
+                    <Mail aria-hidden="true" />E-mail
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => setRevokeTarget(inv)}
+                    disabled={revokeInvite.isPending}
+                    data-testid="invite-revoke-button"
+                  >
+                    Zrušit
+                  </Button>
                 </div>
               </div>
-              <div className="admin-invite-actions">
-                <CopyForWhatsAppButton
-                  text={buildInviteShareText(inv)}
-                  onCopied={() => setActionError(null)}
-                  onError={() => setActionError('Prohlížeč nepovolil zkopírování textu pozvánky. Zkus akci zopakovat nebo zprávu poslat e-mailem.')}
-                  testId="invite-copy-message-button"
-                />
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => handleOpenEmailModal(inv)}
-                  title="Odeslat pozvánku e-mailem"
-                  data-testid="invite-email-button"
-                >
-                  <Mail size={14} /> E-mail
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-danger btn-sm"
-                  onClick={() => setRevokeTarget(inv)}
-                  disabled={revokeInvite.isPending}
-                  title="Zrušit pozvánku"
-                  data-testid="invite-revoke-button"
-                >
-                  Zrušit
-                </button>
-              </div>
-            </article>
+            </ListRow>
           ))}
-        </div>
+        </ul>
       )}
       {actionError ? (
         <div className="error-message show admin-section-error" role="alert">{actionError}</div>
@@ -788,34 +773,28 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
             <span>Archiv neaktivních pozvánek</span>
             <span className="admin-details-count">{inactiveInvites.length}</span>
           </summary>
-          <div className="admin-invite-archive">
+          <ul className={MEMBER_LIST_CLASS} data-testid="invite-archive-list">
             {inactiveInvites.map((inv) => (
-              <article key={inv.id} className="admin-invite-card admin-archive-card">
-                <div className="admin-invite-main">
-                  <div className="admin-invite-top">
-                    <span className={getRoleBadgeClass(inv.role)}>{getRoleLabel(inv.role)}</span>
-                    <span className={getInviteStatus(inv).className}>{getInviteStatus(inv).label}</span>
-                  </div>
-                  <div className="admin-invite-meta">
-                    <span>{isInviteAccepted(inv) ? `Přijato ${inv.usedCount}${inv.maxUses ? `/${inv.maxUses}` : '×'}` : `${inv.usedCount} použití`}</span>
-                    <span>Platnost do {formatDateLabel(inv.expiresAt)}</span>
-                    <span>Chata {inv.cabinName}</span>
-                  </div>
-                </div>
-                <div className="admin-invite-actions">
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleRevoke(inv.id)}
-                    disabled={revokeInvite.isPending}
-                    title="Odstranit záznam pozvánky"
-                  >
+              <ListRow
+                as="li"
+                key={inv.id}
+                action={
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRevoke(inv.id)} disabled={revokeInvite.isPending}>
                     Odstranit
-                  </button>
-                </div>
-              </article>
+                  </Button>
+                }
+              >
+                <InviteSummary
+                  invite={inv}
+                  meta={[
+                    isInviteAccepted(inv) ? `Přijato ${inv.usedCount}${inv.maxUses ? `/${inv.maxUses}` : '×'}` : `${inv.usedCount} použití`,
+                    `Platnost do ${formatDate(inv.expiresAt)}`,
+                    `Chata ${inv.cabinName}`,
+                  ]}
+                />
+              </ListRow>
             ))}
-          </div>
+          </ul>
         </details>
       )}
 
@@ -844,13 +823,13 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         onClose={handleCloseEmailModal}
         title="Odeslat pozvánku e-mailem"
         footer={
-          <div className="admin-modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={handleCloseEmailModal} disabled={sendInviteEmail.isPending}>
+          <div className="flex w-full justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={handleCloseEmailModal} disabled={sendInviteEmail.isPending}>
               Zrušit
-            </button>
-            <button type="submit" form="invite-email-form" className="btn btn-primary" disabled={sendInviteEmail.isPending}>
+            </Button>
+            <Button type="submit" form="invite-email-form" pending={sendInviteEmail.isPending}>
               {sendInviteEmail.isPending ? 'Odesílám…' : 'Odeslat pozvánku'}
-            </button>
+            </Button>
           </div>
         }
       >
@@ -861,7 +840,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
             </p>
             <div className="form-group">
               <label htmlFor="invite-email-target">E-mail příjemce</label>
-              <input
+              <Input
                 id="invite-email-target"
                 type="email"
                 value={emailValue}
@@ -882,7 +861,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           </form>
         ) : null}
       </Modal>
-    </section>
+    </Card>
   )
 }
 

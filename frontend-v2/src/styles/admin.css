@@ -698,13 +698,6 @@
   min-height: 44px;
 }
 
-.admin-modal-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
 .admin-compact-form {
   display: grid;
   gap: 0.95rem;
@@ -714,18 +707,9 @@
   margin-bottom: 0;
 }
 
-.admin-user-create-form .btn,
-.admin-invite-create-form .btn {
+.admin-user-create-form .btn {
   width: 100%;
   min-height: 46px;
-}
-
-.admin-invite-create-form {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.admin-invite-create-form .btn {
-  grid-column: 1 / -1;
 }
 
 .admin-form-note {
@@ -863,63 +847,6 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.95rem;
-}
-
-.admin-invite-list,
-.admin-invite-archive {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.admin-invite-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.9rem;
-  padding: 1rem;
-  border-radius: 16px;
-  border: 1px solid rgba(63, 123, 99, 0.1);
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.admin-archive-card {
-  opacity: 0.82;
-  background: rgba(248, 249, 250, 0.9);
-}
-
-.admin-invite-main {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.admin-invite-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.admin-invite-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.8rem;
-  margin-top: 0.55rem;
-  color: var(--text-muted, #6b7280);
-  font-size: 0.83rem;
-  line-height: 1.55;
-}
-
-.admin-invite-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.admin-invite-actions .btn {
-  min-height: 44px;
 }
 
 .admin-invite-share-preview {
@@ -1265,10 +1192,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-sidebar-stack > .admin-invites-card {
-    grid-column: 1 / -1;
-  }
-
   .admin-overview-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1337,10 +1260,6 @@
     grid-template-columns: 1fr;
   }
 
-  .admin-invite-create-form {
-    grid-template-columns: 1fr;
-  }
-
   .admin-overview-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1367,11 +1286,6 @@
     min-width: 0;
   }
 
-  .admin-modal-actions {
-    flex-direction: column;
-  }
-
-  .admin-modal-actions .btn,
   .main-content-admin .btn-sm {
     width: 100%;
     min-height: 44px;
@@ -1425,23 +1339,10 @@
     margin-right: 0;
   }
 
-  .admin-invite-card {
-    flex-direction: column;
-  }
-
-  .admin-invite-meta {
-    flex-direction: column;
-    gap: 0.3rem;
-    font-size: 0.86rem;
-    color: var(--text-secondary, #4b5563);
-  }
-
-  .admin-invite-actions,
   .admin-empty-actions {
     width: 100%;
   }
 
-  .admin-invite-actions .btn,
   .admin-empty-actions .btn,
   .admin-user-actions .btn {
     width: 100%;

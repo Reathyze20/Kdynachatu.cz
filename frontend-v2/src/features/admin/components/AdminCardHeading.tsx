@@ -5,14 +5,19 @@ interface AdminCardHeadingProps {
   eyebrow: string
   title: string
   description?: ReactNode
+  /** Krátký počet vedle nadpisu („2 aktivní“). */
+  meta?: string
 }
 
 /** Hlavička karty ve správě a backoffice na typové škále DESIGN.md §3: eyebrow, nadpis karty `h2`, popisek. */
-export function AdminCardHeading({ eyebrow, title, description }: AdminCardHeadingProps) {
+export function AdminCardHeading({ eyebrow, title, description, meta }: AdminCardHeadingProps) {
   return (
     <div className="mb-4 grid gap-1">
       <span className="text-eyebrow uppercase text-(--text-muted)">{eyebrow}</span>
-      <h2 className="text-card-title text-(--text-main)">{title}</h2>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h2 className="text-card-title text-(--text-main)">{title}</h2>
+        {meta && <span className="text-meta text-(--text-muted)">{meta}</span>}
+      </div>
       {description && <p className="text-label text-(--text-muted)">{description}</p>}
     </div>
   )
