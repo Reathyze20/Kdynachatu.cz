@@ -17,7 +17,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
         <li><strong>Visí na tobě</strong> – věci, které máš udělat. Tlačítko tě vezme rovnou k úkolu.</li>
         <li><strong>Potřebuje pozornost</strong> – zásoby, které docházejí, a závady z poslední předávky. „Koupím já“ dá ostatním vědět, že to přivezeš.</li>
         <li><strong>Vzkaz</strong> – připnutá zpráva pro každého, kdo na chatu přijede.</li>
-        <li><strong>Dnes odjíždíš!</strong> – v den odjezdu se nahoře objeví připomínka, abys vyplnil(a) předávku.</li>
+        <li><strong>Dnes odjíždíš!</strong> – v den odjezdu se nahoře objeví připomínka, ať nezapomeneš na předávku.</li>
       </ul>
     </>
   ),
@@ -27,8 +27,8 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <p>Kdo kdy jede na chatu. Pobyty jsou barevně v kalendáři, jejich seznam je vedle (na mobilu pod kalendářem).</p>
       <ul>
         <li><strong>Výběr dne</strong> – klepni na den a seznam ukáže jen pobyty, které ten den zasahují.</li>
-        <li><strong>Nový pobyt</strong> – na vybraný den klepni ještě jednou (příjezd) a pak na den odjezdu. Vybereš, jestli chatu rezervuješ, nebo jen dáš vědět, že máš dovolenou. Jde to i tlačítkem „Nová rezervace“.</li>
-        <li><strong>Typ rezervace</strong> – ve formuláři vybereš pevnou, předběžnou nebo záložní.</li>
+        <li><strong>Nový pobyt</strong> – na vybraný den klepni ještě jednou (příjezd) a pak na den odjezdu. Pak vybereš, jestli chatu rezervuješ, nebo jen dáš vědět, že máš dovolenou (host rovnou rezervuje). Jde to i tlačítkem „Nová rezervace“.</li>
+        <li><strong>Typ rezervace</strong> – ve formuláři vybereš pevnou, nebo předběžnou. Když se termín kryje s jinou rezervací, uloží se tvoje jako záložní.</li>
         <li><strong>Detail pobytu</strong> – klepni na pobyt v kalendáři nebo v seznamu. Svůj pobyt tu upravíš nebo smažeš.</li>
         <li><strong>Hlídat</strong> – u cizího pobytu: až se termín uvolní, objeví se to na nástěnce chaty.</li>
       </ul>
@@ -42,7 +42,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
         <li><strong>Kdy</strong> – během pobytu, nejlíp těsně před odjezdem. Nejpozději den po odjezdu.</li>
         <li><strong>V den odjezdu</strong> – na Přehledu se objeví „Dnes odjíždíš!“. Odtud odškrtneš, co zkontrolovat před odjezdem, a necháš vzkaz.</li>
         <li><strong>Kdykoli jindy</strong> – v Kalendáři otevři svůj pobyt, dole najdeš „Stav chaty při odjezdu“. Jde to jen u pevné rezervace.</li>
-        <li><strong>Co vyplnit</strong> – plynovou bombu, jestli je vypnuté topení a uzavřená voda, co je rozbité, co jsi na chatě nechal(a) a vzkaz pro dalšího. Všechno je nepovinné. Nakonec klepni na „Potvrdit odjezd“.</li>
+        <li><strong>Co vyplnit</strong> – plynovou bombu, jestli je vypnuté topení a uzavřená voda, co je rozbité, co na chatě zůstalo (dřevo, jídlo…) a vzkaz pro dalšího. Všechno je nepovinné. Nakonec klepni na „Potvrdit odjezd“.</li>
         <li><strong>Bez signálu</strong> – předávka počká v telefonu a odešle se, jakmile budeš online.</li>
       </ul>
     </>
@@ -66,7 +66,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <ul>
         <li><strong>Témata</strong> – vyber téma ze seznamu, nebo založ nové tlačítkem „Nové téma“. Téma najdeš i vyhledáváním.</li>
         <li><strong>Zpráva</strong> – napiš text a odešli. Jedna zpráva má nejvýš 2&nbsp;000 znaků.</li>
-        <li><strong>Co se zprávou</strong> – podrž na ní prst (na počítači klikni pravým tlačítkem). Můžeš odpovědět, zkopírovat text, přidat věc do nákupu nebo z ní udělat úkol do Rekonstrukce. Svou zprávu upravíš nebo smažeš.</li>
+        <li><strong>Co se zprávou</strong> – podrž na ní prst (na počítači klikni pravým tlačítkem). Můžeš odpovědět, zkopírovat text, přidat věc do nákupu nebo z ní udělat úkol do Rekonstrukce. Svou zprávu můžeš smazat, upravit jen do 15 minut po odeslání.</li>
       </ul>
     </>
   ),
@@ -124,7 +124,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <ul>
         <li><strong>Nová pozvánka</strong> – vyber roli, na kolik dní platí a kolikrát jde použít. Pak klepni na „Vytvořit pozvánku“.</li>
         <li><strong>Sdílení</strong> – „Zkopírovat pro WhatsApp“ připraví zprávu s odkazem. Pozvánku jde poslat i e-mailem.</li>
-        <li><strong>Archiv</strong> – vypršelé a zrušené pozvánky jsou dole v archivu, aby nepřekážely.</li>
+        <li><strong>Archiv</strong> – vypršelé a vyčerpané pozvánky jsou dole v archivu, aby nepřekážely.</li>
       </ul>
     </>
   ),
