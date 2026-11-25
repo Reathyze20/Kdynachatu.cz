@@ -7,6 +7,7 @@ import { useVoteRecItem, useUpdateRecStatus, useDeleteRecItem } from './hooks/us
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
+import { DRAGGABLE_TOUCH_ACTION } from './dndSensors'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { escapeHtml } from '@/lib/utils'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
@@ -376,7 +377,7 @@ function DraggableCard({ id, disabled, children }: DraggableCardProps) {
   return (
     <div
       ref={setNodeRef}
-      style={{ opacity: isDragging ? 0.35 : 1, touchAction: 'none', cursor: disabled ? 'default' : 'grab' }}
+      style={{ opacity: isDragging ? 0.35 : 1, touchAction: DRAGGABLE_TOUCH_ACTION, cursor: disabled ? 'default' : 'grab' }}
       {...(disabled ? {} : { ...listeners, ...attributes })}
     >
       {children}
