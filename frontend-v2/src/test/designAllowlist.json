@@ -88,7 +88,7 @@
   "legacyEmptyState": {
     "Jednorázový prázdný stav *-empty-*, nahradí ho <EmptyState> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx", "features/admin/components/StagingFeedbackSection.tsx",
-      "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx", "features/reconstruction/KanbanColumn.tsx",
+      "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx",
       "features/shopping/ListDetail.tsx", "features/shopping/ListMaster.tsx", "features/shopping/PantryView.tsx",
       "features/superadmin/SuperAdminPage.tsx"
     ]
@@ -108,7 +108,7 @@
     "Lokální formátovač data, času nebo částky přes toLocale*String, převede se na lib/format.ts (#456)": [
       "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx", "features/admin/components/StagingFeedbackSection.tsx",
       "features/dashboard/PinnedNote.tsx", "features/gallery/FolderGrid.tsx", "features/landing/LandingPage.tsx",
-      "features/notes/ChatView.tsx", "features/reconstruction/KanbanColumn.tsx", "features/reconstruction/ReconstructionPage.tsx",
+      "features/notes/ChatView.tsx", "features/reconstruction/ReconstructionPage.tsx",
       "features/superadmin/SuperAdminPage.tsx", "lib/errorDetails.ts"
     ],
     "Lokální pole s názvy měsíců, převede se na monthName / formatLongDate z lib/format.ts (#456)": [
@@ -129,7 +129,7 @@
     "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [
       "components/shared/Toast.tsx", "features/admin/AdminPage.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
-      "features/notes/MessageBubble.tsx", "features/reconstruction/KanbanColumn.tsx", "features/reconstruction/ReconstructionPage.tsx",
+      "features/notes/MessageBubble.tsx", "features/reconstruction/ReconstructionPage.tsx",
       "features/reconstruction/TaskFormModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/ReservationList.tsx", "features/superadmin/SuperAdminPage.tsx", "features/weather/StayWeatherCard.tsx"
     ],

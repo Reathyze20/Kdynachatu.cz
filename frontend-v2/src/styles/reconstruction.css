@@ -196,8 +196,8 @@
 
 /* �� Column variants ��������������������������������������������������������� */
 .kanban-column.col-navrzeno .kanban-column-header {
-  border-bottom-color: #93c5fd;
-  color: #1d4ed8;
+  border-bottom-color: rgb(var(--rule));
+  color: rgb(var(--ok));
 }
 
 .kanban-column.col-navrzeno .kanban-column-icon {
@@ -205,12 +205,12 @@
 }
 
 .kanban-column.col-navrzeno .kanban-count {
-  background: rgba(59, 130, 246, 0.1);
-  color: #1d4ed8;
+  background: var(--ok-bg);
+  color: rgb(var(--ok));
 }
 
 .kanban-column.col-schvaleno .kanban-column-header {
-  border-bottom-color: #86efac;
+  border-bottom-color: rgb(var(--rule));
   /* --ok: green-700 on paper drops to 4.4 : 1 (#341) */
   color: rgb(var(--ok));
 }
@@ -220,12 +220,12 @@
 }
 
 .kanban-column.col-schvaleno .kanban-count {
-  background: rgba(34, 197, 94, 0.1);
+  background: var(--ok-bg);
   color: rgb(var(--ok));
 }
 
 .kanban-column.col-probehlo .kanban-column-header {
-  border-bottom-color: #6ee7b7;
+  border-bottom-color: rgb(var(--rule));
   color: rgb(var(--ok));
 }
 
@@ -234,7 +234,7 @@
 }
 
 .kanban-column.col-probehlo .kanban-count {
-  background: rgba(16, 185, 129, 0.1);
+  background: var(--ok-bg);
   color: rgb(var(--ok));
 }
 
@@ -253,8 +253,8 @@
 }
 
 .kanban-column-body.kanban-drop-over {
-  background: color-mix(in srgb, var(--color-primary, #6366f1) 8%, transparent);
-  outline: 2px dashed var(--color-primary, #6366f1);
+  background: var(--brand-primary-light);
+  outline: 2px dashed var(--brand-primary);
   outline-offset: -4px;
   border-radius: 8px;
   transition: background 0.15s, outline 0.15s;
@@ -275,10 +275,6 @@
 
 /* �� Kanban item card (base) ������������������������������������������������� */
 .kanban-item {
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-strong, #e5e7eb);
-  box-shadow: var(--shadow-xs);
   transition:
     box-shadow var(--transition-base),
     transform var(--transition-base),
@@ -290,19 +286,9 @@
   will-change: transform;
 }
 
-.kanban-item::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 3px;
-  background: linear-gradient(90deg, rgba(63, 123, 99, 0.85), rgba(52, 211, 153, 0.35));
-  opacity: 0.85;
-}
-
 .kanban-item:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
-  border-color: var(--border-strong);
 }
 
 /* �� Card header ������������������������������������������������������������� */
@@ -315,7 +301,7 @@
 
 .kanban-item-title {
   font-weight: 600;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   color: var(--text-main);
   line-height: 1.4;
   margin: 0;
@@ -533,8 +519,8 @@
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong, #e5e7eb);
+  background: rgb(var(--sheet));
+  border: 1px solid rgb(var(--rule));
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
   color: var(--text-main);
@@ -556,12 +542,12 @@
 .company-status-select {
   width: 100%;
   font: inherit;
-  font-size: var(--font-size-xs);
+  min-height: var(--touch-target-min);
+  font-size: var(--font-size-base);
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--border-strong, #e5e7eb);
+  background: rgb(var(--sheet));
   border-radius: var(--radius-md);
-  padding: 8px 10px;
+  padding: 0 var(--space-md);
 }
 
 .company-status-select:focus {
@@ -640,7 +626,8 @@
 
 /* Bez opacity: zprůhlednění by srazilo kontrast tlumeného textu pod 4,5 : 1 (G1, #257). */
 .kanban-item.task-done {
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+  /* Kopie --inset (238 230 217): mutedTextContrast.test.ts čte podklad jako rgba() a měří na něm kontrast. */
+  background: rgba(238, 230, 217, 0.95);
 }
 
 .task-deadline {
@@ -979,7 +966,7 @@ select.form-input {
 
 .company-action-btn,
 .reconstruction-empty-action {
-  min-height: 36px;
+  min-height: var(--touch-target-min);
 }
 
 .vote-btn {
@@ -1282,10 +1269,8 @@ select.form-input {
     min-height: 44px;
   }
 
-  .company-action-btn,
   .reconstruction-empty-action,
-  .vote-btn,
-  .company-status-select {
+  .vote-btn {
     min-height: 44px;
   }
 
