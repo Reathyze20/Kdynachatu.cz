@@ -396,7 +396,7 @@ Legacy frontend (`src/frontend/`) obsahuje:
 
 | Soubor | Mount path | Endpointů | Auth | Cabin | Zod validace | Poznámky |
 |--------|-----------|:---------:|:----:|:-----:|:------------:|----------|
-| [auth.ts](src/backend/routes/auth.ts) | `/api` | 3 (login, register, verify) | ❌/✅ | ❌ | ✅ loginSchema, registerSchema, verifyEmailSchema | Rate limited |
+| [auth.ts](src/backend/routes/auth.ts) | `/api` | 3 (login, register, verify) | ❌/✅ | ❌ | ✅ loginSchema, registerSchema (PIN verify-email zrušen, #476) | Rate limited |
 | [dashboard.ts](src/backend/routes/dashboard.ts) | `/api/dashboard` | 3 (reservations, shopping, notes) | ✅ | ✅ | ❌ | Granulární dashboard data |
 | [reservations.ts](src/backend/routes/reservations.ts) | `/api/reservations` | 16 | ✅ | ✅ | ✅ create, update, monthlyNote, delete, checkout | Nejkomplexnější route |
 | [channels.ts](src/backend/routes/channels.ts) | `/api/channels` | 8 | ✅ | ✅ | ✅ createChannel, createMessage | Nahrazuje noteThreads |
