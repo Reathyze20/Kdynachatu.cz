@@ -87,17 +87,15 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
   const [description, setDescription] = useState(editItem?.description ?? '')
   const [link, setLink] = useState(editItem?.link ?? '')
   const [thumbnail, setThumbnail] = useState(editItem?.thumbnail ?? '')
-  // Idea and task share the cost, so it survives a category change in edit mode.
-  const initialCost = editItem && editItem.category !== 'company' ? String(editItem.cost ?? '') : ''
-  const [costIdea, setCostIdea] = useState<string>(initialCost)
+  // Idea and task share one cost, so it survives a category change in edit mode.
+  const [cost, setCost] = useState<string>(editItem && editItem.category !== 'company' ? String(editItem.cost ?? '') : '')
   const [phone, setPhone] = useState(editItem?.phone ?? '')
   const [email, setEmail] = useState(editItem?.email ?? '')
-  const [companyLink, setCompanyLink] = useState(editItem?.category === 'company' ? (editItem.link ?? '') : '')
+  const [companyLink, setCompanyLink] = useState(editItem?.link ?? '')
   const [companyStatus, setCompanyStatus] = useState<CompanyStatus>(getInitialCompanyStatus(editItem))
   const [deadline, setDeadline] = useState(
     editItem?.category === 'task' ? (editItem.deadline ? editItem.deadline.split('T')[0] : '') : '',
   )
-  const [costTask, setCostTask] = useState<string>(initialCost)
 
   const isEdit = !!editItem
   const modalTitle = isEdit
@@ -123,7 +121,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
     if (category === 'idea') {
       data.link = link.trim()
       data.thumbnail = thumbnail.trim()
-      if (costIdea) data.cost = Number(costIdea)
+      if (cost) data.cost = Number(cost)
     } else if (category === 'company') {
       data.phone = phone.trim()
       data.email = email.trim()
@@ -131,7 +129,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
       data.status = companyStatus
     } else if (category === 'task') {
       data.deadline = deadline || undefined
-      if (costTask) data.cost = Number(costTask)
+      if (cost) data.cost = Number(cost)
     }
     onSubmit(data)
   }
@@ -250,8 +248,8 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                   type="number"
                   min="0"
                   className="form-input"
-                  value={costIdea}
-                  onChange={(e) => setCostIdea(e.target.value)}
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
                   placeholder="0"
                   data-testid="reconstruction-idea-cost-input"
                 />
@@ -337,8 +335,8 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                   type="number"
                   min="0"
                   className="form-input"
-                  value={costTask}
-                  onChange={(e) => setCostTask(e.target.value)}
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
                   placeholder="0"
                   data-testid="reconstruction-task-cost-input"
                 />

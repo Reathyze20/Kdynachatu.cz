@@ -114,4 +114,16 @@ describe('changing the category without dragging (#502)', () => {
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ category: 'task', title: 'Nová terasa', cost: 12000 }))
   })
+
+  it('keeps the link when an idea becomes a company', () => {
+    const onSubmit = vi.fn()
+    const idea = { ...IDEA, link: 'https://example.cz/terasa' }
+    render(<TaskFormModal initialCategory="idea" editItem={idea} onClose={vi.fn()} onSubmit={onSubmit} />)
+
+    const companyTab = screen.getAllByTestId('reconstruction-category-tab').find((tab) => tab.dataset.category === 'company')
+    fireEvent.click(companyTab!)
+    fireEvent.click(screen.getByTestId('reconstruction-submit-button'))
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ category: 'company', link: 'https://example.cz/terasa' }))
+  })
 })
