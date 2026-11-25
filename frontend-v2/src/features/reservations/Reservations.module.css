@@ -15,13 +15,20 @@
   min-height: 0;
 }
 
+/* Když se kalendář do výšky okna nevejde, posouvá se stránka – nic se neořezává (#505). */
+@media (min-width: 1024px) {
+  .page {
+    overflow-y: auto;
+  }
+}
+
 /* ── Calendar Card ─────────────────────────────────────────────────── */
 
+/* Bez min-height: 0 – karta se nestlačí pod svůj obsah (#505). */
 .calendarCard {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: 0;
   background: var(--bg-app);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
@@ -141,6 +148,8 @@ button.newReservationButton {
   width: 100%;
   min-width: 0;
   overflow: hidden;
+  /* overflow: hidden nuluje minimální výšku – bez toho flexbox mřížku stlačí a uřízne šestý týden (#505) */
+  flex-shrink: 0;
 }
 
 /* ── Stat Badges ───────────────────────────────────────────────────── */
@@ -208,7 +217,8 @@ button.newReservationButton {
 .calDays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(6, minmax(0, 1fr));
+  /* Řádek je aspoň tak vysoký jako jeho obsah (číslo dne + pruh pobytu), nikdy se neořízne (#505) */
+  grid-template-rows: repeat(6, minmax(min-content, 1fr));
   flex: 1;
   min-height: 0;
   overflow: hidden;

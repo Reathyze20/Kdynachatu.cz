@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import layoutCssRaw from '@/styles/layout.css?raw'
 import dashboardCssRaw from '@/styles/dashboard.css?raw'
 import navCssRaw from '@/styles/nav.css?raw'
+import reservationsCssRaw from '@/features/reservations/Reservations.module.css?raw'
 
 /**
  * CSS kontrakt desktop rámu #1b (#171). jsdom neumí media queries ani layout,
@@ -235,5 +236,32 @@ describe('Výška spodní mobilní lišty — jeden zdroj pravdy (#196)', () => 
 
   it('odsazení obsahu od lišty je jen v nav.css, layout.css ho nepřebíjí ani neduplikuje', () => {
     expect(declarationsAt(layoutCssRaw, '#page-container', 375).has('padding-bottom')).toBe(false)
+  })
+})
+
+// Měsíční mřížka (#505): `.calendarGridScroller` má `overflow: hidden`, takže jeho minimální výška je 0
+// a ve vysokém okně s pevnou výškou stránky (1440 × 900) ho flexbox stlačil a šestý týden uřízl.
+// Řádky mají výšku aspoň podle obsahu (číslo dne + pruh pobytu), karta se nestlačí pod obsah
+// a když se nevejde, posouvá se stránka kalendáře – stejně jako hlavní sloupec Přehledu.
+describe('Kalendář — měsíční mřížka se neořezává (#505)', () => {
+  it.each([375, 1024, 1440])('na šířce %i px nemají řádky mřížky nulovou minimální výšku', (width) => {
+    const rows = declarationsAt(reservationsCssRaw, '.calDays', width).get('grid-template-rows') ?? ''
+    expect(rows).not.toMatch(/minmax\(\s*0/)
+  })
+
+  it.each([1024, 1440])('na šířce %i px je řádek mřížky aspoň tak vysoký jako jeho obsah', (width) => {
+    expect(declarationsAt(reservationsCssRaw, '.calDays', width).get('grid-template-rows')).toMatch(/minmax\(\s*min-content/)
+  })
+
+  it.each([1024, 1440])('na šířce %i px se mřížka v kartě nestlačí', (width) => {
+    expect(flexShrinkAt(reservationsCssRaw, '.calendarGridScroller', width)).toBe(0)
+  })
+
+  it.each([1024, 1440])('na šířce %i px karta kalendáře nemá nulovou minimální výšku', (width) => {
+    expect(declarationsAt(reservationsCssRaw, '.calendarCard', width).get('min-height') ?? 'auto').not.toBe('0')
+  })
+
+  it.each([1024, 1440])('na šířce %i px se stránka kalendáře posouvá, když se mřížka nevejde', (width) => {
+    expect(declarationsAt(reservationsCssRaw, '.page', width).get('overflow-y')).toBe('auto')
   })
 })
