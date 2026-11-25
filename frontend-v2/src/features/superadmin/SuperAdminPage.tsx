@@ -4,6 +4,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { formatCount, formatDate, pluralize } from '@/lib/format'
+import { memberInitial } from '@/lib/memberPalette'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/shared/Card'
@@ -31,10 +32,10 @@ function getRoleLabel(role: SystemUser['role']): string {
   return 'Člen'
 }
 
-/** Vnořená plocha v kartě (údaj k předání) a její popisek. */
+/** Vnořená plocha v kartě (údaj k předání), její popisek a pole s tajným údajem. */
 const TILE_CLASS = 'grid content-start gap-1 rounded-xl bg-inset p-3 md:p-4'
 const EYEBROW_CLASS = 'text-eyebrow uppercase text-(--text-muted)'
-const CODE_CLASS = 'block whitespace-pre-wrap rounded-lg bg-sheet p-3 font-mono text-meta text-(--text-main) wrap-anywhere'
+const CODE_CLASS = 'block whitespace-pre-wrap rounded-lg bg-sheet p-3 text-label text-(--text-main) wrap-anywhere'
 
 function getStatusMeta(user: SystemUser): { label: string; className: string } {
   if (user.isBanned) {
@@ -367,7 +368,7 @@ export function SuperAdminPage() {
           ) : filteredUsers.length === 0 ? (
             <EmptyState
               icon={users.length === 0 ? Users : SearchX}
-              message={users.length === 0 ? 'Systém je zatím prázdný, první účet se tady objeví i se svým stavem.' : 'Tomu filtru nic neodpovídá, zkus upravit filtry nebo hledání.'}
+              message={users.length === 0 ? 'Zatím tu nejsou žádné účty.' : 'Tomu filtru nic neodpovídá, zkus upravit filtry nebo hledání.'}
               action={hasFilters ? { label: 'Vyčistit filtry', onClick: resetFilters } : undefined}
             />
           ) : (
@@ -395,7 +396,7 @@ export function SuperAdminPage() {
                     <article key={user.id} className={`admin-user-card ${isSelf ? 'is-current-user' : ''}`} data-testid="superadmin-user-card" data-user-id={user.id}>
                       <div className="admin-user-main">
                         <div aria-hidden="true" className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary">
-                          {user.username.charAt(0).toUpperCase()}
+                          {memberInitial(user.username)}
                         </div>
 
                         <div className="admin-user-identity">
@@ -508,7 +509,7 @@ export function SuperAdminPage() {
                       <Button variant="secondary" onClick={showSecrets ? hideSecrets : revealSecretsTemporarily}>
                         {showSecrets ? 'Skrýt citlivé údaje' : 'Zobrazit dočasně na 20 s'}
                       </Button>
-                      <p className="text-meta text-(--text-muted)">
+                      <p className="text-label text-(--text-muted)">
                         Citlivé údaje drž schované, dokud je opravdu nepotřebuješ předat.
                       </p>
                     </div>
