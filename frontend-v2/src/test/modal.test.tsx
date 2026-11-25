@@ -87,11 +87,33 @@ describe('Modal', () => {
     await waitFor(() => expect(within(dialog).getByRole('textbox', { name: 'Název' })).toHaveFocus())
   })
 
-  it('Tab zůstává v dialogu: z poslední akce skočí na první', async () => {
+  it('Tab zůstává v dialogu: z poslední akce skočí na první a Shift+Tab zpět', async () => {
     const { user, dialog } = await openHarness()
-    within(dialog).getByRole('button', { name: 'Uložit' }).focus()
+    const close = within(dialog).getByRole('button', { name: 'Zavřít' })
+    await waitFor(() => expect(close).toHaveFocus())
+    await user.tab({ shift: true })
+    expect(within(dialog).getByRole('button', { name: 'Uložit' })).toHaveFocus()
     await user.tab()
-    expect(within(dialog).getByRole('button', { name: 'Zavřít' })).toHaveFocus()
+    expect(close).toHaveFocus()
+  })
+
+  it('dialog vykreslený rovnou otevřený vrátí po zavření focus tam, kde byl', async () => {
+    const user = userEvent.setup()
+    function OpenOnMount() {
+      const [open, setOpen] = useState(false)
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>Otevřít zápisník</button>
+          {open && <Modal isOpen onClose={() => setOpen(false)} title="Zápisník"><p>Obsah</p></Modal>}
+        </>
+      )
+    }
+    render(<OpenOnMount />)
+    const trigger = screen.getByRole('button', { name: 'Otevřít zápisník' })
+    await user.click(trigger)
+    await screen.findByRole('dialog', { name: 'Zápisník' })
+    await user.click(screen.getByRole('button', { name: 'Zavřít' }))
+    await waitFor(() => expect(trigger).toHaveFocus())
   })
 
   it('Esc ve vnořeném dialogu zavře jen horní', async () => {

@@ -4,12 +4,13 @@
  * Renders into a React portal attached to document.body.
  * Provides consistent SaaS-grade look: glassmorphism backdrop, white rounded card,
  * structured header/body/footer zones, Escape key & backdrop click to close.
- * Entrance/exit animations via framer-motion. Do 640 px bottom sheet (DESIGN.md §6).
+ * Entrance/exit animations via framer-motion. Bottom sheet up to 640 px (DESIGN.md §6).
  *
- * Stojí na primitivu ui/dialog (Radix): titulek je přístupné jméno, Esc zavře jen horní dialog,
- * Tab zůstává v dialogu, focus jde na první pole a po zavření zpět; `persistent` blokuje Esc i pozadí.
- * Radix běží s modal={false}: modální režim by schoval (aria-hidden) a vypnul (pointer-events)
- * zbytek stránky i s toasty a lightboxem nad zápisníkem deníku. Pozadí a zámek scrollu řeší Modal.
+ * Built on the ui/dialog primitive (Radix): the title is the accessible name, Esc closes only the
+ * topmost dialog, Tab cycles inside, focus moves in on open and returns on close; `persistent`
+ * blocks Esc and backdrop click. Radix runs with modal={false}: modal mode would aria-hide and
+ * disable pointer events on the rest of the page, including toasts and the diary lightbox opened
+ * above the notebook. The backdrop and scroll lock are therefore handled here.
  *
  * Usage:
  *   <Modal isOpen={open} onClose={close} title="Edit Item" footer={<buttons/>}>
@@ -22,7 +23,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 
-/** Pozadí je zároveň obsah dialogu Radixu (role, Esc, focus); karta je jen vzhled uvnitř. */
+/** The backdrop is the Radix dialog content (role, Esc, focus scope); the card is just the look inside. */
 const MotionDialogContent = motion.create(DialogContent)
 const FIRST_FIELD = 'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), [autofocus]'
 
@@ -74,9 +75,9 @@ function ModalLayer({
   maxWidth = 'max-w-lg',
   persistent = false,
 }: ModalProps) {
-  // Kam vrátit focus: prvek aktivní při otevření, ještě než autoFocus nebo Radix focus přesune.
+  // Where focus returns on close: the element active at open time, before autoFocus or Radix move it.
   const [wasOpen, setWasOpen] = useState(isOpen)
-  const [returnFocusTo, setReturnFocusTo] = useState<Element | null>(null)
+  const [returnFocusTo, setReturnFocusTo] = useState<Element | null>(() => (isOpen ? document.activeElement : null))
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen)
     if (isOpen) setReturnFocusTo(document.activeElement)
@@ -94,10 +95,15 @@ function ModalLayer({
     }
   }, [isOpen])
 
+  // First form field, else the first button (close), so Shift+Tab also cycles inside.
+  // Small delay as before, so callers' timing (entrance animation) stays the same.
   function focusFirstField(e: Event) {
     e.preventDefault()
     const layer = e.currentTarget as HTMLElement
-    ;(layer.querySelector<HTMLElement>(FIRST_FIELD) ?? layer).focus()
+    setTimeout(() => {
+      if (!layer.isConnected) return
+      ;(layer.querySelector<HTMLElement>(FIRST_FIELD) ?? layer.querySelector<HTMLElement>('button') ?? layer).focus()
+    }, 50)
   }
 
   function returnFocus(e: Event) {
@@ -121,7 +127,7 @@ function ModalLayer({
           onOpenAutoFocus={focusFirstField}
           onCloseAutoFocus={returnFocus}
           onEscapeKeyDown={(e) => { if (persistent) e.preventDefault() }}
-          // Klik na pozadí řeší handleBackdropClick; klik do toastu nebo lightboxu dialog nezavírá.
+          // Backdrop click is handleBackdropClick; a click into a toast or lightbox does not close.
           onInteractOutside={(e) => e.preventDefault()}
           variants={overlayVariants}
           initial="hidden"
