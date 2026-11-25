@@ -23,7 +23,7 @@ interface Props {
   onDirty?: () => void
 }
 
-// ─── Category labels ──────────────────────────────────────────────────────────
+// ─── Dialog titles ────────────────────────────────────────────────────────────
 
 const DIALOG_TITLES: Record<RecCategory, { create: string; edit: string }> = {
   idea: { create: 'Nový nápad', edit: 'Upravit nápad' },
@@ -123,7 +123,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
           {/* Category – in edit mode it moves the card to another column without dragging */}
           <div className="form-group">
             <span id="rec-category-label" className="mb-1.5 block text-label text-(--text-main)">Kategorie</span>
-            {/* Segmentový přepínač: tři segmenty v jedné řadě i na 360 px, vybraný leží jako papír na vnořeném poli. */}
+            {/* Segmented control: three segments in one row even at 360 px, the selected one is paper on the inset track. */}
             <div className="flex gap-1 rounded-xl bg-inset p-1" role="group" aria-labelledby="rec-category-label" data-testid="reconstruction-category-tabs">
               {CATEGORY_TABS.map(({ value, label, icon: Icon }) => {
                 const isActive = category === value
