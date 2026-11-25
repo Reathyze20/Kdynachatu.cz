@@ -16,7 +16,7 @@ export function useLogout(): () => void {
 
   return useCallback(() => {
     logout()
-    showToast('Odhlášení úspěšné', 'info')
+    showToast('Odhlášeno.', 'info')
     navigate('/login', { replace: true })
   }, [logout, navigate])
 }

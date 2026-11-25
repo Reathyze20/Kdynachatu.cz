@@ -2,7 +2,7 @@
  * components/layout/ProfileDrawer.tsx
  * Překlad: #profile-drawer-overlay z index.html + initProfileDrawer() z main.ts
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '@/api/client'
 import { PromptDialog } from '@/components/shared/PromptDialog'
@@ -34,6 +34,7 @@ interface ProfileDrawerProps {
 export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, user, token, login } = useAuth()
   const logoutThisDevice = useLogout()
+  const logoutHintId = useId()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
@@ -556,7 +557,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
             <div className="drawer-section mt-8">
               <h3>Přihlášená zařízení</h3>
-              <p id="profile-logout-hint" className="mt-2 mb-4 text-label text-(--text-muted)">
+              <p id={logoutHintId} className="mt-2 mb-4 text-label text-(--text-muted)">
                 Odhlásí tě jen na tomhle zařízení. Hodí se, když telefon nebo tablet předáváš dalšímu z rodiny.
               </p>
 
@@ -564,7 +565,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 type="button"
                 variant="secondary"
                 className="w-full"
-                aria-describedby="profile-logout-hint"
+                aria-describedby={logoutHintId}
                 onClick={() => {
                   onClose()
                   logoutThisDevice()

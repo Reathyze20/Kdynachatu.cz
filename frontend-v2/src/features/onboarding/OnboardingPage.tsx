@@ -40,7 +40,7 @@ export default function OnboardingPage() {
 
 function CreateCabinOnboarding() {
   const { login, user } = useAuth()
-  const logout = useLogout()
+  const logoutThisDevice = useLogout()
   const navigate = useNavigate()
   const nameRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -184,7 +184,7 @@ function CreateCabinOnboarding() {
             </button>
             <button 
               type="button" 
-              onClick={logout}
+              onClick={logoutThisDevice}
               className="button-secondary"
               style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
               data-testid="onboarding-logout-button"

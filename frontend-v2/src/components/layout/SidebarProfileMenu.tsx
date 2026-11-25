@@ -22,7 +22,7 @@ const MENU_GAP_PX = 8
 
 export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuProps) {
   const { user, isAdmin, isSuperAdmin } = useAuth()
-  const logout = useLogout()
+  const logoutThisDevice = useLogout()
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number } | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -96,7 +96,7 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
 
   function handleLogout() {
     closeMenu()
-    logout()
+    logoutThisDevice()
   }
 
   const username = user?.username ?? 'Uživatel'
