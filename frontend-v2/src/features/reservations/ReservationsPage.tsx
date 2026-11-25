@@ -28,7 +28,8 @@ import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { Modal } from "@/components/shared/Modal";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import styles from "./Reservations.module.css";
-import { isIsoDateInRange } from "@/lib/dateUtils";
+import { isIsoDateInRange, nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { formatDateRange } from "@/lib/format";
 
 /** Filter reservations that intersect with the given calendar month */
 function filterByMonth(reservations: Reservation[], month: number, year: number) {
@@ -204,9 +205,12 @@ export function ReservationsPage() {
     setBookingOpen(true);
   };
 
-  // Assign from detail/list
-  const handleAssign = (_: string) => {
-    showToast("Funkce přiřazení bude brzy dostupná.", "info");
+  // Free day picked in the calendar → booking form from that day (#506)
+  const handleBookFromDay = (day: string) => {
+    setEditingReservation(null);
+    setBookingFrom(day);
+    setBookingTo("");
+    setBookingOpen(true);
   };
 
   // ── Skeleton while loading ────────────────────────────────────────────
@@ -255,7 +259,6 @@ export function ReservationsPage() {
                   onBack={() => setSelectedReservation(null)}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
-                  onAssign={handleAssign}
                 />
               ) : (
                 <ReservationList
@@ -268,6 +271,7 @@ export function ReservationsPage() {
                   onShowDetail={showDetail}
                   selectedDay={selectedDay}
                   onClearDayFilter={() => setSelectedDay(null)}
+                  onBookFromDay={handleBookFromDay}
                   hideMonthlyNote={isGuest}
                 />
               )}
@@ -335,6 +339,11 @@ export function ReservationsPage() {
         maxWidth="max-w-md"
       >
         <div className="space-y-4 py-2">
+          {choiceFrom && choiceTo && (
+            <p className="text-base font-semibold text-foreground" data-testid="choice-range">
+              {formatDateRange(choiceFrom, choiceTo)} · {nightsBetween(choiceFrom, choiceTo)} {nightsLabel(nightsBetween(choiceFrom, choiceTo))}
+            </p>
+          )}
           <p className="text-slate-600 text-sm">
             Co chceš v tomto termínu naplánovat?
           </p>

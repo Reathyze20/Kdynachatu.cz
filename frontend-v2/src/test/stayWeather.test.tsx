@@ -84,7 +84,7 @@ function renderDetail(from: string, to: string, cabin: object = PLACE, role = 'm
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <MemoryRouter>
-        <ReservationDetail reservation={stay} onBack={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} onAssign={vi.fn()} />
+        <ReservationDetail reservation={stay} onBack={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />
       </MemoryRouter>
     </QueryClientProvider>,
   )
