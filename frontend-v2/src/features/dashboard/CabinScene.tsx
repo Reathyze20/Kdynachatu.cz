@@ -1,14 +1,20 @@
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import type { DashboardReservationsData, WeatherResult } from "@/api/dashboard";
-import { cabinSceneLabel, deriveCabinScene, mascotPose, type CabinSceneState } from "./cabinSceneState";
+import { useCabinSceneMode } from "@/hooks/useCabinSceneMode";
+import { cn } from "@/lib/utils";
+import { cabinSceneLabel, deriveCabinScene, mascotPose, type CabinSceneState, type MascotPose } from "./cabinSceneState";
 import {
-  AXE, CABIN, CABIN_EAVE_ROW, CABIN_PORCH_ROW, CAR, DORMOUSE, DORMOUSE_SCARF, DORMOUSE_SLEEPING, DORMOUSE_SLEEPING_SCARF, MOON, PORCH,
+  AXE, BIRD, CABIN, CABIN_EAVE_ROW, CABIN_PORCH_ROW, CAR, DORMOUSE, DORMOUSE_SCARF, DORMOUSE_SLEEPING, DORMOUSE_SLEEPING_SCARF, MOON, PORCH,
   SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite,
 } from "./cabinSceneSprites";
 
 /**
- * Scéna chaty nahoře v kartě „Na chatě teď“ (#563). Statický obrázek: stav z `cabinSceneState.ts`,
+ * Scéna chaty nahoře v kartě „Na chatě teď“ (#563). Obrázek stavu chaty: stav z `cabinSceneState.ts`,
  * sprity z `cabinSceneSprites.ts`, počasí ze sdíleného dotazu Přehledu na dnešní počasí (#564). Jednotka mřížky je 1,5 CSS px (pruh 114 px = 76 řádků). Široký
  * viewBox se na užší kartě ořízne po stranách, chata s maskotem zůstane uprostřed.
+ * Podle volby „Scéna chaty“ (#565) je
+ * animovaná, statická, nebo se nevykreslí; krokované animace (`--animate-scene-*` v `shadcn-tokens.css`) stojí, když je
+ * stránka na pozadí nebo scéna mimo obrazovku.
  */
 const W = 640;
 const H = 76;
@@ -20,12 +26,17 @@ const PORCH_X = CABIN_X - PORCH[0].length;
 /** Horní hrana podlahy zápraží: prodloužení vlevo navazuje na zápraží chaty. */
 const PORCH_TOP = CABIN_Y + CABIN_PORCH_ROW;
 
-/** Jedna vrstva = jeden sprite na místě: token → cesta. Pořadí vrstev je pořadí kreslení. */
-interface Layer { name: string; paths: Map<string, string>; opacity?: number }
+/** Jedna vrstva = jeden sprite na místě: token → cesta. Pořadí vrstev je pořadí kreslení. `motion` jsou třídy
+ * animace vrstvy, platí jen ve stavu Animovaná. */
+interface Layer { name: string; paths: Map<string, string>; opacity?: number; motion?: string }
 
-function layer(name: string): Layer {
-  return { name, paths: new Map() };
+function layer(name: string, motion?: string): Layer {
+  return { name, paths: new Map(), motion };
 }
+
+/** Otáčení a dýchání kolem vlastního okraje vrstvy (dlaň, nohy), ne kolem počátku SVG. */
+const PIVOT_PAW = "[transform-box:fill-box] origin-bottom-right";
+const PIVOT_FEET = "[transform-box:fill-box] origin-bottom";
 
 function add(l: Layer, token: string, d: string) {
   l.paths.set(token, (l.paths.get(token) ?? "") + d);
@@ -85,16 +96,22 @@ function cabin({ snowCover, frost }: CabinSceneState, glass: Record<string, stri
   return drawSprite(cabinLayer, PORCH, PORCH_X, PORCH_TOP);
 }
 
-/** Vločky přes celou scénu, zatím bez pohybu (rozpohybuje je ticket s animacemi). */
-function snowfall(): Layer {
+/** Vločky přes celou scénu. Při animaci padají: kopie nad scénou se posouvá o výšku scény, smyčka tak navazuje bez skoku. */
+function snowfall(moving: boolean): Layer {
   const rnd = seededRandom(13);
-  const flakes = layer("snowfall");
+  const flakes = layer("snowfall", "animate-scene-snow");
   for (let n = 0; n < (W * H) / 90; n++) {
     const size = n % 3 ? 1 : 2;
-    add(flakes, "snow", box(Math.floor(rnd() * W), Math.floor(rnd() * H), size, size));
+    const x = Math.floor(rnd() * W);
+    const y = Math.floor(rnd() * H);
+    add(flakes, "snow", box(x, y, size, size));
+    if (moving) add(flakes, "snow", box(x, y - H, size, size));
   }
   return flakes;
 }
+
+/** Plch dýchá ve spánku, při štípání a mávání se občas protáhne; zazimovaný odpočívá bez hnutí. */
+const BODY_MOTION: Record<MascotPose, string | undefined> = { sleep: `animate-scene-breathe ${PIVOT_FEET}`, chop: `animate-scene-stretch ${PIVOT_FEET}`, wave: `animate-scene-stretch ${PIVOT_FEET}`, idle: undefined };
 
 function mascot(state: CabinSceneState): Layer[] {
   const pose = mascotPose(state);
@@ -105,21 +122,24 @@ function mascot(state: CabinSceneState): Layer[] {
   const y = (onPorch ? PORCH_TOP : GROUND) - sprite.length;
   const props = layer("props");
   if (pose === "chop") drawSprite(props, STUMP, x - 15, GROUND - STUMP.length);
-  const body = drawSprite(layer("mascot"), sprite, x, y);
+  const body = drawSprite(layer("mascot", BODY_MOTION[pose]), sprite, x, y);
   if (state.frost) drawSprite(body, pose === "sleep" ? DORMOUSE_SLEEPING_SCARF : DORMOUSE_SCARF, x, y);
-  const extra = layer("mascot-extra");
-  if (pose === "sleep") drawSprite(extra, ZZZ, x + 7, y - 8, state.night ? { o: "light" } : {});
-  if (pose === "chop") drawSprite(extra, AXE, x - 8, y + 5);
-  if (pose === "wave") drawSprite(extra, WAVE, x - 3, y + 7);
-  return [props, body, extra];
+  const layers = [props, body];
+  if (pose === "sleep") layers.push(drawSprite(layer("zzz", "animate-scene-zzz"), ZZZ, x + 7, y - 8, state.night ? { o: "light" } : {}));
+  if (pose === "chop") layers.push(drawSprite(layer("axe", `animate-scene-chop ${PIVOT_PAW}`), AXE, x - 8, y + 5));
+  if (pose === "wave") layers.push(drawSprite(layer("wave", `animate-scene-wave ${PIVOT_PAW}`), WAVE, x - 3, y + 7));
+  return layers;
 }
 
-function buildScene(state: CabinSceneState): Layer[] {
+/** `moving` = volba Animovaná: přidá vrstvy, které existují jen v pohybu (ptáček, vločky nad scénou). */
+function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
   const { occupied, winterized, night } = state;
   const glass = winterized ? WINDOW_LOOK.shut : occupied ? WINDOW_LOOK.lit : night ? WINDOW_LOOK.dark : WINDOW_LOOK.day;
   const layers = [...landscape(state), cabin(state, glass)];
   if (state.carParked) layers.push(drawSprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
   layers.push(...mascot(state));
+  // Občasný drobný detail: ve dne přeletí ptáček zleva doprava (start i cíl jsou mimo scénu). U zazimované chaty se nic neděje.
+  if (moving && !night && !winterized) layers.push(drawSprite(layer("bird", "animate-scene-bird"), BIRD, -BIRD[0].length - 3, 10));
   if (night) {
     const rnd = seededRandom(11);
     const veil = layer("night");
@@ -134,9 +154,29 @@ function buildScene(state: CabinSceneState): Layer[] {
     }
     if (occupied) layers.push(drawSprite(layer("window-glow"), CABIN, CABIN_X, CABIN_Y, glass, "gGQ"));
   }
-  if (occupied) layers.push(drawSprite(layer("smoke"), SMOKE, CABIN_X + 34, CABIN_Y - SMOKE.length - 1));
-  if (state.snowing) layers.push(snowfall());
+  if (occupied) layers.push(drawSprite(layer("smoke", "animate-scene-smoke"), SMOKE, CABIN_X + 34, CABIN_Y - SMOKE.length - 1));
+  if (state.snowing) layers.push(snowfall(moving));
   return layers;
+}
+
+const subscribeVisibility = (onChange: () => void) => {
+  document.addEventListener("visibilitychange", onChange);
+  return () => document.removeEventListener("visibilitychange", onChange);
+};
+const pageVisible = () => document.visibilityState !== "hidden";
+
+/** Smí se scéna hýbat: stránka není na pozadí a scéna je aspoň zčásti na obrazovce. Bez IntersectionObserveru platí „na obrazovce“. */
+function useOnScreen(ref: RefObject<HTMLElement | null>, enabled: boolean): boolean {
+  const visible = useSyncExternalStore(subscribeVisibility, pageVisible, () => true);
+  const [inView, setInView] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!enabled || !el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => setInView(entries[entries.length - 1]?.isIntersecting ?? true));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, enabled]);
+  return visible && inView;
 }
 
 interface Props {
@@ -146,14 +186,21 @@ interface Props {
   weather?: WeatherResult;
 }
 
-/** Neinteraktivní obrázek stavu chaty s popisem pro čtečky. */
+/** Neinteraktivní obrázek stavu chaty s popisem pro čtečky. `data-motion`: animated (hýbe se), paused (stojí na pozadí
+ * nebo mimo obrazovku), static (volba Statická). */
 export function CabinScene({ data, winterized, weather }: Props) {
+  const [mode] = useCabinSceneMode();
+  const ref = useRef<HTMLDivElement>(null);
+  const moving = mode === "animated";
+  const onScreen = useOnScreen(ref, moving);
+  if (mode === "hidden") return null;
   const state = deriveCabinScene(data, winterized, new Date(), weather);
+  const motion = !moving ? "static" : onScreen ? "animated" : "paused";
   return (
-    <div className="w-full self-stretch overflow-hidden rounded-xl">
-      <svg role="img" aria-label={cabinSceneLabel(state)} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" shapeRendering="crispEdges" className="block h-[114px] w-full">
-        {buildScene(state).map((l) => (
-          <g key={l.name} opacity={l.opacity}>
+    <div ref={ref} className="w-full self-stretch overflow-hidden rounded-xl">
+      <svg role="img" aria-label={cabinSceneLabel(state)} data-motion={motion} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" shapeRendering="crispEdges" className="block h-[114px] w-full">
+        {buildScene(state, moving).map((l) => (
+          <g key={l.name} opacity={l.opacity} className={moving && l.motion ? cn(l.motion, motion === "paused" && "[animation-play-state:paused]") : undefined}>
             {[...l.paths].map(([token, d]) => <path key={token} d={d} style={{ fill: `var(--scene-${token})` }} />)}
           </g>
         ))}

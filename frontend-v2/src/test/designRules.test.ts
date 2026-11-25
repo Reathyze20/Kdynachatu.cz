@@ -91,6 +91,13 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
     bad: ['className="gallery-empty-state"', "className='detail-empty-state-title'", 'className={`kanban-empty-icon ${x}`}', "querySelector('.admin-empty-actions')"],
     good: ['data-testid="gallery-empty-create-folder-button"', 'className="badge-empty"', 'className="master-empty"', "id: `empty-${n}`"],
   },
+  loopAnimation: {
+    bad: [
+      'animation: spin 1s linear infinite;', 'animation-iteration-count: infinite;', 'style={{ animation: "spin 0.7s linear infinite" }}',
+      'transition={{ repeat: Infinity }}', 'className="h-4 animate-spin"', 'className="motion-safe:animate-pulse"', 'className="animate-scene-smoke"',
+    ],
+    good: ['animation: fade-in 0.2s ease-out;', 'useInfiniteQuery({', '// infinite query cache', 'staleTime: Infinity', 'className="animate-in"'],
+  },
 }
 
 describe('pravidla DESIGN.md rozpoznají porušení', () => {

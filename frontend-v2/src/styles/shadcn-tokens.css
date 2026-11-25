@@ -142,3 +142,28 @@
   --text-eyebrow--font-weight: 700;
   --text-eyebrow--letter-spacing: 0.06em;
 }
+
+/* ── Scéna chaty a maskot (#565, DESIGN.md §5): jediné smyčkové animace v appce, utility animate-scene-* jen
+   pro CabinScene. Krokované jako pixel art, hýbou jen transform a opacity. Délky smyček jsou nesoudělné, aby
+   ptáček a protažení plcha nepřicházely v pravidelném rytmu. V SVG jsou px jednotky mřížky scény.        */
+@theme {
+  --animate-scene-smoke: scene-smoke 3s steps(3) infinite;
+  --animate-scene-zzz: scene-zzz 4s steps(4) infinite;
+  --animate-scene-breathe: scene-breathe 3.2s step-end infinite;
+  --animate-scene-stretch: scene-stretch 17s step-end infinite;
+  --animate-scene-chop: scene-chop 1.4s step-end infinite;
+  --animate-scene-wave: scene-wave 1.2s step-end infinite;
+  --animate-scene-snow: scene-snow 9s steps(38) infinite;
+  --animate-scene-bird: scene-bird 47s steps(110) infinite;
+
+  @keyframes scene-smoke { to { transform: translateY(-6px); opacity: 0.25; } }
+  @keyframes scene-zzz { to { transform: translateY(-6px); opacity: 0; } }
+  @keyframes scene-breathe { 50% { transform: scale(1.04, 1.1); } }
+  @keyframes scene-stretch { 90% { transform: scale(1.03, 1.1); } 95% { transform: none; } }
+  @keyframes scene-chop { 50% { transform: rotate(-50deg); } }
+  @keyframes scene-wave { 50% { transform: rotate(-20deg); } }
+  /* O výšku scény (76 jednotek): vločky nad scénou navážou přesně na start smyčky. */
+  @keyframes scene-snow { to { transform: translateY(76px); } }
+  /* Přelet trvá pětinu smyčky (asi 9 s), zbytek čeká ptáček za pravým okrajem. */
+  @keyframes scene-bird { 20%, 100% { transform: translateX(670px); } }
+}

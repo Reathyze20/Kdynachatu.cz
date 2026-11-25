@@ -144,6 +144,13 @@ export const DESIGN_RULES: DesignRule[] = [
     match: /(?<!\b(?:id|htmlFor|name|data-testid)=["'`])(?<=["'`\s{.])[\w-]*?\w-empty-[\w-]+(?=["'`\s}$:.,])/g,
   },
   {
+    name: 'loopAnimation',
+    hint: 'smyčková animace (infinite, repeat: Infinity, animate-spin/pulse/ping/bounce, animate-scene-*) jen ve Scéně chaty a maskotovi (DESIGN.md §5); jinde pohyb jen krátce po akci',
+    // Trvalá výjimka „Scéna chaty a maskot“ (#565): scéna a její keyframes v Tailwind @theme.
+    scope: (file) => !['features/dashboard/CabinScene.tsx', 'styles/shadcn-tokens.css'].includes(file),
+    match: /animation(?:-iteration-count)?\s*:[^;{}]*\binfinite\b|repeat:\s*Infinity\b|\banimate-(?:spin|pulse|ping|bounce|scene-[\w-]+)\b/g,
+  },
+  {
     name: 'newCssFile',
     hint: 'nový .css soubor nevzniká, nový vzhled se píše utilitami Tailwindu nad tokeny',
     scope: (file) => file.endsWith('.css') && !PERMANENT_CSS.includes(file),

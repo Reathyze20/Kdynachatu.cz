@@ -20,6 +20,14 @@ import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memb
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { useNavigate } from 'react-router-dom'
 import { LogOut, ScrollText, Settings, Shield } from 'lucide-react'
+import { useCabinSceneMode, type CabinSceneMode } from '@/hooks/useCabinSceneMode'
+
+/** Volba „Scéna chaty“ (#565): scéna na Přehledu (později i maskot na liště), jen v tomto zařízení. */
+const SCENE_MODES: { value: CabinSceneMode; label: string }[] = [
+  { value: 'animated', label: 'Animovaná' },
+  { value: 'static', label: 'Statická' },
+  { value: 'hidden', label: 'Skrytá' },
+]
 
 interface ProfileData {
   email: string
@@ -37,6 +45,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   // Šuplík se zavře až při odhlášení, jinak by s ním zmizel i dotaz na neodeslané změny (#537)
   const { requestLogout, pendingDialog } = useLogout(onClose)
   const logoutHintId = useId()
+  const sceneHeadingId = useId()
+  const [sceneMode, setSceneMode] = useCabinSceneMode()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
@@ -514,6 +524,18 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 </div>
                 <input type="hidden" id="profile-animal-icon" value={selectedAnimal} readOnly />
               </div>
+            </div>
+
+            <div className="drawer-section">
+              <h3 id={sceneHeadingId}>Scéna chaty</h3>
+              <div role="group" aria-labelledby={sceneHeadingId} className="flex flex-wrap gap-2">
+                {SCENE_MODES.map(({ value, label }) => (
+                  <Button key={value} size="sm" variant={sceneMode === value ? 'primary' : 'secondary'} aria-pressed={sceneMode === value} onClick={() => setSceneMode(value)}>
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <p className="mt-2 text-label text-(--text-muted)">Obrázek chaty na Přehledu. Volba platí jen v tomto zařízení.</p>
             </div>
           </div>
 

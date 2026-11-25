@@ -136,5 +136,13 @@
       "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx",
       "features/invite/InvitePage.tsx", "features/shopping/PantryView.tsx"
     ]
+  },
+  "loopAnimation": {
+    "Indikátor načítání nebo odesílání (spinner, skeleton): smyčka běží jen do konce načítání": [
+      "components/ui/button.tsx", "features/notes/MessageInput.tsx", "features/reconstruction/ReconstructionSkeleton.tsx",
+      "features/reservations/Reservations.module.css", "features/weather/StayWeatherCard.tsx", "styles/base.css", "styles/gallery.css",
+      "styles/invite.css", "styles/notes.css", "styles/skeleton.css"
+    ],
+    "Dekorativní smyčka z doby před #565 (pulzující tečka stavu, landing page), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/landing.css", "styles/reservations.css"]
   }
 }
