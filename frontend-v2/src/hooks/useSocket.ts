@@ -9,10 +9,7 @@ import apiClient from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { markDataReceived } from '@/lib/dataFreshness'
 
-/**
- * Prodleva před ověřením relace po odpojení serverem. Změna vlastního hesla odpojí i tohle zařízení
- * a nový token z odpovědi musí stihnout dorazit (pak se efekt spustí znovu a ověření zruší).
- */
+/** Prodleva před ověřením relace: změna vlastního hesla odpojí i tohle zařízení a nový token z odpovědi ověření zruší. */
 const SESSION_CHECK_DELAY_MS = 1500
 
 /**
@@ -37,9 +34,8 @@ export function useSocket() {
       reconnectionDelay: 2000,
     })
 
-    // Server spojení ukončil nebo handshake odmítl (zneplatněné přihlášení, ban, #486). Socket.IO se pak
-    // samo nepřipojuje; o odhlášení rozhodne REST – 401/403 zpracuje interceptor apiClient a pošle
-    // uživatele na přihlášení. Výpadek sítě (`socket.active`) sem nepatří, ten řeší reconnect.
+    // Server spojení ukončil nebo handshake odmítl (zneplatněné přihlášení, #486): Socket.IO se samo nepřipojí.
+    // Rozhodne REST – 401/403 zpracuje interceptor apiClient a pošle na přihlášení. Výpadek sítě řeší reconnect.
     let sessionCheck: ReturnType<typeof setTimeout> | undefined
     const verifySessionSoon = () => {
       clearTimeout(sessionCheck)

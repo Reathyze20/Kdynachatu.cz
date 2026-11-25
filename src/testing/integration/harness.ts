@@ -136,10 +136,7 @@ export function recordRealtimeEmits() {
   return { emits, restore: () => { io.to = originalTo; } };
 }
 
-/**
- * Před každým testovým souborem: čistá DB, dvě chaty, aplikace bez portu, cronu a rate limitů.
- * `server` (HTTP + Socket.IO) neposlouchá; socketové testy ho samy pustí na náhodném portu.
- */
+/** Před každým testovým souborem: čistá DB, dvě chaty, aplikace a server (HTTP + Socket.IO) bez portu, cronu a rate limitů. */
 export async function setupIntegrationFile(): Promise<{ app: Express; server: Server; world: TestWorld }> {
   await resetDatabase();
   const world = await seedTwoCabins();

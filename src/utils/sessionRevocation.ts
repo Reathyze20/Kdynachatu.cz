@@ -3,12 +3,10 @@ import prisma from "./prisma";
 import { disconnectUserSockets } from "./socket";
 
 /**
- * Zneplatnění všech přihlášení uživatele (#485): zvýší `User.tokenVersion`, takže auth middleware
- * i socket handshake odmítnou každý dříve vydaný token. Volá se při změně a resetu hesla, banu,
- * odebrání z chaty, změně role, smazání účtu a z „Odhlásit všude“.
- *
- * Po commitu se navíc odpojí všechny živé sockety uživatele (#486). Odpojení až po commitu je
- * záměr: klient se hned připojuje znovu a handshake musí už vidět novou verzi tokenu.
+ * Zneplatní všechna přihlášení uživatele (#485): zvýší `User.tokenVersion`, takže auth middleware
+ * i socket handshake odmítnou každý dříve vydaný token. Volá se při změně a resetu hesla, banu, odebrání z chaty,
+ * změně role, smazání účtu a z „Odhlásit všude“. Exportované funkce po commitu odpojí sockety uživatele (#486);
+ * až po commitu, protože klient se hned připojuje znovu a handshake už musí vidět novou verzi.
  */
 async function bumpTokenVersion(userId: string, db: Prisma.TransactionClient): Promise<number> {
   const { tokenVersion } = await db.user.update({
@@ -37,8 +35,8 @@ export async function updateUserAndRevokeSessions(userId: string, data: Prisma.U
 }
 
 /**
- * Smazání účtu. Smazaný uživatel by 401 dostal i bez nové verze; zneplatnění je tu kvůli jednomu
- * místu, které relace ruší, a odpojení socketů.
+ * Smazání účtu. Smazaný uživatel by 401 dostal i bez nové verze, ticket #485 ale chce zneplatnění
+ * i tady, aby se na něj ve stejném místě navázalo odpojení socketů (#486).
  */
 export async function deleteUserAndRevokeSessions(userId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {

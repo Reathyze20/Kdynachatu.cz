@@ -13,7 +13,6 @@ import logger from "./logger";
 
 let io: Server | null = null;
 
-/** Uživatel socketu podle DB v okamžiku handshaku (#486), ne podle obsahu tokenu. */
 interface SocketUser {
   userId: string;
   username: string;
@@ -21,17 +20,12 @@ interface SocketUser {
   cabinId: string | null;
 }
 
-type AuthenticatedSocket = Socket & { user?: SocketUser };
-
 /** Role, které smí číst data chaty, a tedy dostávat její události. Host ne (#486). */
 const CABIN_READER_ROLES: readonly CabinRole[] = ["admin", "user"];
 
 const userRoom = (userId: string) => `user:${userId}`;
 
-/**
- * Ověří token a načte uživatele z DB stejně jako HTTP `protect`: smazaný, zabanovaný a uživatel
- * se zneplatněným tokenem (stará `tokenVersion`) se nepřipojí. Vrací null = odmítnout.
- */
+/** Token + uživatel z DB jako u HTTP `protect` (#486): smazaný, zabanovaný a stará `tokenVersion` → null. */
 async function authenticateHandshake(token: string): Promise<SocketUser | null> {
   let decoded: JwtPayload;
   try {
@@ -61,7 +55,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
     path: "/ws",
   });
 
-  // ── Auth middleware: JWT + uživatel z DB ───────────────────────────────
+  // ── JWT authentication middleware ──────────────────────────────────────
   io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;
     if (!token) {
@@ -71,7 +65,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
     try {
       const user = await authenticateHandshake(token);
       if (!user) return next(new Error("Neplatný token"));
-      (socket as AuthenticatedSocket).user = user;
+      (socket as Socket & { user: SocketUser }).user = user;
       next();
     } catch (error) {
       logger.error("SOCKET", "Handshake user hydration failed", { error: String(error) });
@@ -80,7 +74,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
   });
 
   // ── Connection handler ────────────────────────────────────────────────
-  io.on("connection", (socket: AuthenticatedSocket) => {
+  io.on("connection", (socket: Socket & { user?: SocketUser }) => {
     const user = socket.user;
     if (!user) {
       socket.disconnect();
@@ -89,7 +83,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
     // Room uživatele: zneplatnění relací přes něj odpojí všechna jeho spojení.
     socket.join(userRoom(user.userId));
-    // Room chaty (tenant isolation) jen pro role, které smí data chaty číst.
+    // Join cabin-specific room for tenant isolation – jen role, které smí data chaty číst
     if (user.cabinId && (CABIN_READER_ROLES as readonly string[]).includes(user.role)) {
       socket.join(`cabin:${user.cabinId}`);
     }
@@ -127,10 +121,7 @@ export function emitToCabin(cabinId: string, event: string, data: unknown): void
   io.to(`cabin:${cabinId}`).emit(event, data);
 }
 
-/**
- * Ukončí všechna živá spojení uživatele (#486). Volá se až po commitu zneplatnění relací,
- * aby se klient nestihl znovu připojit se starou verzí tokenu.
- */
+/** Ukončí všechna živá spojení uživatele (#486). Volá ji zneplatnění relací po commitu. */
 export function disconnectUserSockets(userId: string): void {
   if (!io) return;
   io.in(userRoom(userId)).disconnectSockets(true);
