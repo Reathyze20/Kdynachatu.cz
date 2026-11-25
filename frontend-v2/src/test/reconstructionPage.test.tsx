@@ -86,7 +86,7 @@ describe('stránka Rekonstrukce podle DESIGN.md (#521)', () => {
   })
 })
 
-/** Šířka z `@media (max-width: …)`, ve kterém pravidlo se selektorem nastaví danou deklaraci. */
+/** Šířka z `@media (max-width: Npx)` (jen tento tvar, bez vnořených bloků), ve kterém pravidlo se selektorem nastaví deklaraci. */
 function maxWidthOf(css: string, selector: string, declaration: string): string | undefined {
   for (const media of css.matchAll(/@media\s*\(max-width:\s*(\d+)px\)\s*\{((?:[^{}]*\{[^{}]*\})*)[^{}]*\}/g)) {
     for (const rule of media[2].matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
