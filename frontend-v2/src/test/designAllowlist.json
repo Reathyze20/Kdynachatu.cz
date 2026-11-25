@@ -75,7 +75,7 @@
   },
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/FeatureErrorFallback.tsx", "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
+      "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
       "components/shared/LogsPanel.tsx", "features/admin/AdminPage.tsx",
       "features/admin/components/StagingFeedbackSection.tsx", "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",

@@ -15,25 +15,7 @@ import {
   getUserFriendlyMessage,
 } from '@/lib/errorDetails'
 
-const GLOBAL_ERROR_QUIPS = [
-  'Celá aplikace odešla. To se jen tak nevidí.',
-  'Server se rozhodl dát si pauzu. Bez upozornění.',
-  'Tohle je ta vzácná chyba, o které se píše v učebnicích.',
-  'Aplikace zkusila něco odvážného. Nevyšlo to.',
-  'I ti nejlepší programátoři nechávají někdy chyby. Tohle je jeden z těch případů.',
-  'Technicky vzato — tohle by nemělo existovat.',
-  'Chata stojí, ale aplikace se zatřásla.',
-]
-
 type ErrorWithMessage = { message?: string; stack?: string }
-
-function pickStableQuip(seed: string, quips: string[]): string {
-  let hash = 0
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0
-  }
-  return quips[hash % quips.length]
-}
 
 function CopyAllButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -78,7 +60,6 @@ function CopyAllButton({ text }: { text: string }) {
 
 export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
   const err = error as ErrorWithMessage
-  const quip = pickStableQuip(err?.message ?? 'GlobalFallback', GLOBAL_ERROR_QUIPS)
   const supportDetails = extractSupportErrorDetails(error)
   const friendlyMessage = getUserFriendlyMessage(supportDetails.status,
     'Omlouváme se za nepříjemnosti. Zkus obnovit stránku — pokud chyba přetrvá, kontaktuj správce chaty.',
@@ -175,19 +156,6 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
           }}
         >
           {friendlyMessage}
-        </p>
-
-        {/* Quip */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: '0.8rem',
-            color: 'var(--text-placeholder, #6b7280)',
-            fontStyle: 'italic',
-            opacity: 0.8,
-          }}
-        >
-          „{quip}"
         </p>
 
         {/* ── Support info panel ──────────────────────────────────────── */}

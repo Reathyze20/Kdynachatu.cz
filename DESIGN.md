@@ -119,7 +119,7 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | `EmptyState` | `shared/` | Prázdná sekce: `icon` (lucide, vykreslí se 24 px), `message` (jedna věta), volitelná `action` (stejný tvar jako `primaryAction`, primární tlačítko). | existuje (#454) |
 | `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`, `rounded-2xl`, uvnitř `p-4 md:p-6`. `as` (`div`, `section`, `article`, `li`), `flush` bez vnitřního odsazení pro kartu se seznamem `ListRow`. | existuje (#454) |
 | `ListRow` | `shared/` | Řádek seznamu, výška aspoň 48 px, `children` = obsah, `action` = slot vpravo (kebab menu nebo jedna ikona lehké položky). `as="li"` uvnitř `<ul>`. Odsazení `px-4 md:px-6` sedí s `Card`, oddělovače dá rodič (`divide-y divide-rule-soft`). | existuje (#454) |
-| `FeatureErrorFallback` | `shared/` | Selhání načtení sekce, s tlačítkem znovu. | existuje |
+| `FeatureErrorFallback` | `shared/` | Selhání načtení sekce: `title` (co se stalo) + „Zkus to znovu.“, jedno tlačítko „Zkusit znovu“, technické údaje sbalené pod „Podrobnosti pro podporu“. `bare` bez vlastní karty, když leží uvnitř jiné karty. | existuje (#512) |
 | `AuthLayout` | `layout/` | Rám veřejných obrazovek mimo landing page: fotka chaty pod závojem, papírová karta, logo a název appky na střed (jediné `h1`), volitelně `subtitle`. Karta má víc vzduchu než běžná (`px-6 py-8 md:p-8`). Na mobilu karta začíná pod horním okrajem, od `md` je svisle na střed. Pohled přihlášení / registrace / obnova hesla je v URL (`?view=`). | existuje pro přihlášení, registraci a obnovu hesla, ostatní obrazovky **Cíl** #525 |
 | `TwoColumnLayout` | `layout/` | Hlavní sloupec + boční panel na desktopu. Master-detail seznamy jsou výjimka. | existuje |
 | Skeletony | `RouteTransitionSkeleton`, `*Skeleton` ve featurách, třídy `.skeleton-*` | Načítání obsahu ve tvaru výsledného rozvržení. | existují |
@@ -181,7 +181,7 @@ Každá obrazovka s daty řeší čtyři stavy:
 |---|---|
 | Načítání | skeleton ve tvaru výsledku. Spinner jen v tlačítku během odesílání |
 | Prázdno | `EmptyState`: „Zatím tu nejsou žádná alba.“ + akce „Nové album“ |
-| Selhání načtení sekce | `FeatureErrorFallback` s tlačítkem znovu, zbytek stránky funguje |
+| Selhání načtení sekce | `FeatureErrorFallback` s tlačítkem znovu, zbytek stránky funguje. Selže-li víc sekcí najednou, jedna souhrnná hláška s jedním „Zkusit znovu“, které načte všechny |
 | Data | obsah |
 
 - Toast jen potvrzuje výsledek akce („Rezervace uložena.“). Chyby pole patří k poli.
@@ -196,7 +196,7 @@ Každá obrazovka s daty řeší čtyři stavy:
 - **Prázdný stav:** „Zatím tu nejsou žádná X.“ + akce.
 - Velké písmeno jen na začátku věty (i v nadpisech a tlačítkách). Výpustka je znak „…“, ne tři tečky.
 - Pojmenování podle uživatele, ne systému („Předávka“, ne „checkout record“). Jeden název akce skrz celý tok („Předat chatu“ → „Chata předána“).
-- **Emoji** jen v reakcích chatu, avatarech a textech pro WhatsApp. **Humor** jen ve vtipných hláškách `FeatureErrorFallback`.
+- **Emoji** jen v reakcích chatu, avatarech a textech pro WhatsApp. **Humor** se nepíše, ani v chybových stavech (#512).
 
 ## 9. Formáty
 
