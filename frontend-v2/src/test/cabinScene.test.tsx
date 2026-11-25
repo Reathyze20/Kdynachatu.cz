@@ -108,6 +108,12 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     expect(img).toHaveAccessibleName(/plch spí na zápraží/i)
   })
 
+  it('v den odjezdu bez příjezdu plch do 14:00 u auta mává (#579)', async () => {
+    renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-07', TODAY)) }), { time: '13:59' })
+
+    expect(await scene()).toHaveAccessibleName(/u chaty stojí auto\. plch mává/i)
+  })
+
   it('v den příjezdu stojí auto i po 14:00 (#579)', async () => {
     renderOverview(reservations({ upcomingReservations: [stay('r-new', 'Svobodovi', TODAY, '2026-12-13')] }), { time: '18:00' })
 

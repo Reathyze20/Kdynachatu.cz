@@ -18,8 +18,8 @@ export interface CabinSceneState {
   occupied: boolean;
   arriving: boolean;
   departing: boolean;
-  /** Auto u chaty: celý den příjezdu, v den odjezdu bez příjezdu jen do 14:00 (#579). */
-  car: boolean;
+  /** Auto stojí u chaty: celý den příjezdu, v den odjezdu bez příjezdu jen do `DEPARTURE_HOUR` (#579). */
+  carParked: boolean;
   winterized: boolean;
   night: boolean;
 }
@@ -39,7 +39,7 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
     occupied: !winterized && present,
     arriving,
     departing,
-    car: arriving || (departing && hour < DEPARTURE_HOUR),
+    carParked: arriving || (departing && hour < DEPARTURE_HOUR),
     winterized,
     night: hour >= NIGHT_FROM_HOUR || hour < NIGHT_UNTIL_HOUR,
   };
@@ -48,7 +48,7 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
 /** Auto má přednost před štípáním: když u chaty stojí auto, plch mává, i když je někdo na chatě. */
 export function mascotPose(s: CabinSceneState): MascotPose {
   if (s.winterized) return "idle";
-  if (s.car) return "wave";
+  if (s.carParked) return "wave";
   return s.occupied ? "chop" : "sleep";
 }
 
@@ -64,7 +64,7 @@ export function cabinSceneLabel(s: CabinSceneState): string {
   const parts = [
     s.winterized ? "Chata je zazimovaná, okenice jsou zavřené." : "",
     s.occupied ? "Někdo je na chatě, z komína jde kouř a svítí okno." : s.winterized ? "" : "Chata je prázdná.",
-    !s.car ? "" :
+    !s.carParked ? "" :
       s.arriving && s.departing ? "Dnes se na chatě střídají, u chaty stojí auto." :
       s.arriving ? "Dnes někdo přijíždí, u chaty stojí auto." : "Dnes někdo odjíždí, u chaty stojí auto.",
     POSE_TEXT[mascotPose(s)],

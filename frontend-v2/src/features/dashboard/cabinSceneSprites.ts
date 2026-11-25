@@ -24,7 +24,8 @@ export const WINDOW_LOOK = {
   shut: { g: "roof", G: "roof-dark", Q: "roof", X: "roof", Y: "ink" },
 } satisfies Record<string, Record<string, string>>;
 
-/** Chata zboku 60 × 40. Zápraží (f/F) je řádek 36, komín nad sloupci 38–43. */
+/** Chata zboku 60 × 40. Zápraží (f/F) je řádek `CABIN_PORCH_ROW`, komín nad sloupci 38–43. */
+export const CABIN_PORCH_ROW = 36;
 export const CABIN: Sprite = [
   ".....................................oooooooo...............",
   ".....................................occcccco...............",
@@ -72,10 +73,10 @@ export const CABIN: Sprite = [
  * (ne kočka), velké tmavé oči jen s jemným stínem (ne mýval), huňatý ocas bez pruhů zvednutý vedle těla
  * (ne přes záda jako veverka z avatarů). */
 export const DORMOUSE: Sprite = [
-  ".oo..........oo.........",
-  "oddo........oddo..oooo..",
-  "odbboooooooobbdo.obbbbo.",
-  "obbbbbbbbbbbbbboobbbbbbo",
+  "..oo........oo..........",
+  ".oddo......oddo...oooo..",
+  "oddddo....oddddo.obbbbo.",
+  "oddddooooooddddoobbbbbbo",
   "obbbbbbbbbbbbbboobbdbbbo",
   "obbbbbbbbbbbbbboobddbbbo",
   "obbieebbbbieebbo.oddbbbo",
@@ -111,7 +112,7 @@ export const DORMOUSE_SLEEPING: Sprite = [
   "...oo.oo.ooooooooooooooo........",
 ];
 
-/** Zápraží 35 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39): tam spí a odpočívá plch. */
+/** Zápraží 35 × 4 vlevo od chaty na úrovni jejího zápraží (řádky 36–39 chaty): tam spí a odpočívá plch. */
 export const PORCH: Sprite = [
   "fffFffffFffffFffffFffffFffffFffffFf",
   "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",

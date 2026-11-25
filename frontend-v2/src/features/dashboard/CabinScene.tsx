@@ -1,6 +1,6 @@
 import type { DashboardReservationsData } from "@/api/dashboard";
 import { cabinSceneLabel, deriveCabinScene, mascotPose, type CabinSceneState } from "./cabinSceneState";
-import { AXE, CABIN, CAR, DORMOUSE, DORMOUSE_SLEEPING, MOON, PORCH, SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite } from "./cabinSceneSprites";
+import { AXE, CABIN, CABIN_PORCH_ROW, CAR, DORMOUSE, DORMOUSE_SLEEPING, MOON, PORCH, SCENE_PALETTE, SMOKE, STUMP, TREE, WAVE, WINDOW_LOOK, ZZZ, type Sprite } from "./cabinSceneSprites";
 
 /**
  * Scéna chaty nahoře v kartě „Na chatě teď“ (#563). Statický obrázek: stav z `cabinSceneState.ts`,
@@ -14,8 +14,8 @@ const GROUND = 68;
 const CABIN_X = W / 2 - 45;
 const CABIN_Y = GROUND - CABIN.length;
 const PORCH_X = CABIN_X - PORCH[0].length;
-/** Horní hrana podlahy zápraží (řádek 36 chaty). */
-const PORCH_TOP = CABIN_Y + 36;
+/** Horní hrana podlahy zápraží: prodloužení vlevo navazuje na zápraží chaty. */
+const PORCH_TOP = CABIN_Y + CABIN_PORCH_ROW;
 
 /** Jedna vrstva = jeden sprite na místě: token → cesta. Pořadí vrstev je pořadí kreslení. */
 interface Layer { name: string; paths: Map<string, string>; opacity?: number }
@@ -91,7 +91,7 @@ function buildScene(state: CabinSceneState): Layer[] {
   const { occupied, winterized, night } = state;
   const glass = winterized ? WINDOW_LOOK.shut : occupied ? WINDOW_LOOK.lit : night ? WINDOW_LOOK.dark : WINDOW_LOOK.day;
   const layers = [...landscape(night), drawSprite(drawSprite(layer("cabin"), CABIN, CABIN_X, CABIN_Y, glass), PORCH, PORCH_X, PORCH_TOP)];
-  if (state.car) layers.push(drawSprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
+  if (state.carParked) layers.push(drawSprite(layer("car"), CAR, CABIN_X + 92, GROUND - CAR.length + 2));
   layers.push(...mascot(state));
   if (night) {
     const rnd = seededRandom(11);
