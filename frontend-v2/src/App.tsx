@@ -72,6 +72,13 @@ function AdminRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+// ─── Guard: host vidí jen svůj pobyt (#484), ostatní sekce chaty ho vrátí na Přehled ─
+function MemberRoute({ children }: { children: ReactNode }) {
+  const { isGuest } = useAuth()
+  if (isGuest) return <Navigate to="/dashboard" replace />
+  return <>{children}</>
+}
+
 function SuperAdminRoute({ children }: { children: ReactNode }) {
   const { isSuperAdmin, user } = useAuth()
   if (!isSuperAdmin) return <Navigate to={user?.cabinId ? '/dashboard' : '/onboarding'} replace />
@@ -146,11 +153,11 @@ function AppRoutes() {
       >
         <Route path="/dashboard"      element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><DashboardPage /></Suspense></ErrorBoundary>} />
         <Route path="/reservations"   element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ReservationsPage /></Suspense></ErrorBoundary>} />
-        <Route path="/notes"          element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><NotesPage /></Suspense></ErrorBoundary>} />
-        <Route path="/shopping"       element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ShoppingPage /></Suspense></ErrorBoundary>} />
-        <Route path="/gallery"        element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><GalleryPage /></Suspense></ErrorBoundary>} />
-        <Route path="/diary"          element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><DiaryPage /></Suspense></ErrorBoundary>} />
-        <Route path="/reconstruction" element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ReconstructionPage /></Suspense></ErrorBoundary>} />
+        <Route path="/notes"          element={<MemberRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><NotesPage /></Suspense></ErrorBoundary></MemberRoute>} />
+        <Route path="/shopping"       element={<MemberRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ShoppingPage /></Suspense></ErrorBoundary></MemberRoute>} />
+        <Route path="/gallery"        element={<MemberRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><GalleryPage /></Suspense></ErrorBoundary></MemberRoute>} />
+        <Route path="/diary"          element={<MemberRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><DiaryPage /></Suspense></ErrorBoundary></MemberRoute>} />
+        <Route path="/reconstruction" element={<MemberRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ReconstructionPage /></Suspense></ErrorBoundary></MemberRoute>} />
         <Route path="/admin" element={<AdminRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><AdminPage /></Suspense></ErrorBoundary></AdminRoute>} />
         <Route path="/admin/invites" element={<AdminRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><AdminPage /></Suspense></ErrorBoundary></AdminRoute>} />
         <Route path="/admin/cabin" element={<AdminRoute><ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><AdminPage /></Suspense></ErrorBoundary></AdminRoute>} />

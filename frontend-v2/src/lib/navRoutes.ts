@@ -2,6 +2,7 @@
  * lib/navRoutes.ts — globální navigace (redesign #0, issue #171)
  * Hlavní sekce podle cyklu turnusu (Přehled · Kalendář · Předávka · Zásoby), doplňky pod „Víc“.
  * Admin a backoffice nejsou sekce chaty, žijí v profilovém menu (SidebarProfileMenu, ProfileDrawer).
+ * Host (`guest`) vidí jen svůj pobyt (#484, PRODUCT.md „Role na chatě“): Přehled, Kalendář a Předávku.
  */
 import type { LucideIcon } from 'lucide-react'
 import { Home, CalendarDays, KeyRound, ShoppingCart, MessageCircle, Images, BookOpen, Hammer } from 'lucide-react'
@@ -14,6 +15,8 @@ export interface NavItem {
   icon: LucideIcon
   /** Položka je viditelná jen pokud cabin.features[featureKey] není vypnuté */
   featureKey?: string
+  /** Sekce patří i hostovi (whitelist #484); ostatní host nevidí */
+  forGuest?: true
 }
 
 /**
@@ -22,9 +25,9 @@ export interface NavItem {
  * `?sekce=predavka` stránka nečte, jen odliší aktivní tab od Kalendáře.
  */
 export const PRIMARY_NAV: NavItem[] = [
-  { to: '/dashboard',                   label: 'Přehled',  icon: Home },
-  { to: '/reservations',                label: 'Kalendář', icon: CalendarDays, featureKey: 'reservations' },
-  { to: '/reservations?sekce=predavka', label: 'Předávka', icon: KeyRound,     featureKey: 'reservations' },
+  { to: '/dashboard',                   label: 'Přehled',  icon: Home, forGuest: true },
+  { to: '/reservations',                label: 'Kalendář', icon: CalendarDays, featureKey: 'reservations', forGuest: true },
+  { to: '/reservations?sekce=predavka', label: 'Předávka', icon: KeyRound,     featureKey: 'reservations', forGuest: true },
   { to: '/shopping',                    label: 'Zásoby',   icon: ShoppingCart, featureKey: 'shopping' },
 ]
 
@@ -36,9 +39,9 @@ export const MORE_NAV: NavItem[] = [
   { to: '/reconstruction', label: 'Rekonstrukce', icon: Hammer,        featureKey: 'reconstruction' },
 ]
 
-/** Položky, jejichž funkce je v chatě zapnutá */
-export function visibleNavItems(items: NavItem[], features: Record<string, boolean> | null | undefined): NavItem[] {
-  return items.filter((i) => !i.featureKey || isFeatureEnabled(features, i.featureKey))
+/** Položky, jejichž funkce je v chatě zapnutá; hostovi jen sekce z jeho whitelistu */
+export function visibleNavItems(items: NavItem[], features: Record<string, boolean> | null | undefined, isGuest = false): NavItem[] {
+  return items.filter((i) => (!i.featureKey || isFeatureEnabled(features, i.featureKey)) && (!isGuest || i.forGuest))
 }
 
 /**

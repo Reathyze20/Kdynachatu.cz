@@ -108,6 +108,8 @@ interface Props {
   onShowDetail: (r: Reservation) => void;
   selectedDay?: string | null;
   onClearDayFilter?: () => void;
+  /** Host poznámku k měsíci nevidí (#484) */
+  hideMonthlyNote?: boolean;
 }
 
 function formatDayChip(dateStr: string): string {
@@ -124,6 +126,7 @@ export function ReservationList({
   onShowDetail,
   selectedDay,
   onClearDayFilter,
+  hideMonthlyNote = false,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -145,7 +148,7 @@ export function ReservationList({
     data: monthlyNote,
     isError: monthlyNoteFailed,
     refetch: refetchMonthlyNote,
-  } = useMonthlyNote(year, month);
+  } = useMonthlyNote(year, month, !hideMonthlyNote);
   const updateNote = useUpdateMonthlyNote();
 
   const sourceList = viewMode === "upcoming" ? futureReservations : reservations;
@@ -297,8 +300,8 @@ export function ReservationList({
         </AnimatePresence>
       </div>
 
-      {/* ── D. Monthly note ── */}
-      <div className={css.noteSection}>
+      {/* ── D. Monthly note (host ji nevidí, #484) ── */}
+      {!hideMonthlyNote && <div className={css.noteSection}>
         <div className={css.noteHeader}>
           <h4 className={css.sectionHeading} style={{ margin: 0 }}>
             Poznámka k {MONTH_NAMES_GENITIVE[month]}
@@ -338,7 +341,7 @@ export function ReservationList({
             <p className={css.notePlaceholder}>Přidat vzkaz k tomuto měsíci pro ostatní…</p>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* ── Note edit modal ── */}
       <Modal

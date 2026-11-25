@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import apiClient from "@/api/client";
+import { useAuth } from "@/context/AuthContext";
 import { showToast } from "@/lib/toast";
 import { handleMutationError } from "@/lib/mutationError";
 import type {
@@ -33,7 +34,9 @@ export function useReservationsData() {
 }
 
 export function useUsers() {
+  const { isGuest } = useAuth();
   return useQuery<ReservationUser[]>({
+    enabled: !isGuest, // seznam členů host nedostane (#484)
     queryKey: USERS_KEY,
     queryFn: () => apiClient.get<ReservationUser[]>("/users").then((r) => r.data),
     staleTime: 5 * 60_000,
@@ -230,8 +233,9 @@ export interface MonthlyNote {
 export const MONTHLY_NOTE_KEY = (year: number, month: number) =>
   ["reservations", "monthly-note", year, month] as const;
 
-export function useMonthlyNote(year: number, month: number) {
+export function useMonthlyNote(year: number, month: number, enabled = true) {
   return useQuery<MonthlyNote | null>({
+    enabled,
     queryKey: MONTHLY_NOTE_KEY(year, month),
     queryFn: async () => {
       try {

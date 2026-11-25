@@ -60,7 +60,7 @@ export function ReservationsPage() {
   useDocumentTitle('Rezervace');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const cal = useCalendar();
 
   const { data, isLoading, isError, error, refetch } = useReservationsData();
@@ -250,6 +250,7 @@ export function ReservationsPage() {
                   onShowDetail={setSelectedReservation}
                   selectedDay={selectedDay}
                   onClearDayFilter={() => setSelectedDay(null)}
+                  hideMonthlyNote={isGuest}
                 />
               )}
             </div>
