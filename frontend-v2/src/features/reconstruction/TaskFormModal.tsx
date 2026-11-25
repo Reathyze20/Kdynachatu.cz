@@ -5,20 +5,11 @@
 import { useState, useEffect, useRef } from 'react'
 import type { CompanyStatus, RecItem, RecItemCreate, RecCategory } from '@/api/reconstruction'
 import { Modal } from '@/components/shared/Modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
-import {
-  Building2,
-  CalendarDays,
-  FileText,
-  Globe,
-  Hammer,
-  Image as ImageIcon,
-  Lightbulb,
-  Link2,
-  Mail,
-  Phone,
-  Wallet,
-} from 'lucide-react'
+import { Building2, Hammer, Lightbulb } from 'lucide-react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,12 +23,12 @@ interface Props {
   onDirty?: () => void
 }
 
-// ─── Category labels ──────────────────────────────────────────────────────────
+// ─── Dialog titles ────────────────────────────────────────────────────────────
 
-const CATEGORY_LABELS: Record<RecCategory, string> = {
-  idea: 'Nápad & Inspirace',
-  company: 'Firma / Kontakt',
-  task: 'Úkol & Rozpočet',
+const DIALOG_TITLES: Record<RecCategory, { create: string; edit: string }> = {
+  idea: { create: 'Nový nápad', edit: 'Upravit nápad' },
+  company: { create: 'Nová firma', edit: 'Upravit firmu' },
+  task: { create: 'Nový úkol', edit: 'Upravit úkol' },
 }
 
 const CATEGORY_TABS: Array<{ value: RecCategory; label: string; icon: LucideIcon }> = [
@@ -56,25 +47,6 @@ function getInitialCompanyStatus(editItem: RecItem | null): CompanyStatus {
   }
 
   return 'pending'
-}
-
-interface FieldLabelProps {
-  htmlFor: string
-  icon: LucideIcon
-  children: string
-  required?: boolean
-}
-
-function FieldLabel({ htmlFor, icon: Icon, children, required = false }: FieldLabelProps) {
-  return (
-    <label htmlFor={htmlFor} className="form-label">
-      <span className="rec-label-content">
-        <Icon size={14} className="rec-label-icon" aria-hidden="true" />
-        <span>{children}</span>
-        {required && <span className="label-required">*</span>}
-      </span>
-    </label>
-  )
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -98,9 +70,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
   )
 
   const isEdit = !!editItem
-  const modalTitle = isEdit
-    ? `Upravit — ${CATEGORY_LABELS[category]}`
-    : `Nová položka — ${CATEGORY_LABELS[category]}`
+  const modalTitle = DIALOG_TITLES[category][isEdit ? 'edit' : 'create']
 
   const titleInputRef = useRef<HTMLInputElement>(null)
 
@@ -141,26 +111,28 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
       title={modalTitle}
       maxWidth="max-w-lg"
       footer={
-        <div className="rec-modal-footer-actions">
-          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isLoading} data-testid="reconstruction-cancel-button">Zrušit</button>
-          <button type="submit" form="rec-task-form" className="rec-submit-btn btn btn-primary" disabled={isLoading} data-testid="reconstruction-submit-button">
+        <div className="modal-dialog-actions">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading} data-testid="reconstruction-cancel-button">Zrušit</Button>
+          <Button type="submit" form="rec-task-form" pending={isLoading} data-testid="reconstruction-submit-button">
             {isLoading ? 'Ukládám…' : isEdit ? 'Uložit změny' : 'Přidat položku'}
-          </button>
+          </Button>
         </div>
       }
     >
-      <form id="rec-task-form" className="rec-modal-form" onSubmit={handleSubmit} onChangeCapture={() => onDirty?.()} data-testid="reconstruction-item-form">
+      <form id="rec-task-form" className="flex flex-col" onSubmit={handleSubmit} onChangeCapture={() => onDirty?.()} data-testid="reconstruction-item-form">
           {/* Category – in edit mode it moves the card to another column without dragging */}
           <div className="form-group">
-            <span className="form-label">Kategorie</span>
-            <div className="rec-category-tabs" role="tablist" aria-label="Kategorie položky rekonstrukce" data-testid="reconstruction-category-tabs">
+            <span id="rec-category-label" className="mb-1.5 block text-label text-(--text-main)">Kategorie</span>
+            {/* Segmented control: three segments in one row even at 360 px, the selected one is paper on the inset track. */}
+            <div className="flex gap-1 rounded-xl bg-inset p-1" role="group" aria-labelledby="rec-category-label" data-testid="reconstruction-category-tabs">
               {CATEGORY_TABS.map(({ value, label, icon: Icon }) => {
                 const isActive = category === value
                 return (
-                  <button
+                  <Button
                     key={value}
                     type="button"
-                    className={`rec-category-tab${isActive ? ' is-active' : ''}`}
+                    variant="ghost"
+                    className={cn('flex-1 px-2 text-(--text-muted)', isActive && 'bg-sheet text-(--text-main) shadow-xs hover:bg-sheet')}
                     aria-pressed={isActive}
                     onClick={() => {
                       onDirty?.()
@@ -169,9 +141,9 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                     data-testid="reconstruction-category-tab"
                     data-category={value}
                   >
-                    <Icon size={16} aria-hidden="true" />
-                    <span>{label}</span>
-                  </button>
+                    <Icon aria-hidden="true" />
+                    {label}
+                  </Button>
                 )
               })}
             </div>
@@ -179,12 +151,11 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
 
           {/* Title */}
           <div className="form-group">
-            <FieldLabel htmlFor="rec-title" icon={FileText} required>Název</FieldLabel>
-            <input
+            <label htmlFor="rec-title">Název</label>
+            <Input
               ref={titleInputRef}
               id="rec-title"
               type="text"
-              className="form-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
@@ -202,7 +173,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
 
           {/* Description */}
           <div className="form-group">
-            <FieldLabel htmlFor="rec-desc" icon={FileText}>Popis</FieldLabel>
+            <label htmlFor="rec-desc">Popis (nepovinné)</label>
             <textarea
               id="rec-desc"
               className="form-input"
@@ -218,11 +189,10 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
           {category === 'idea' && (
             <div id="dynamic-fields-idea" className="dynamic-fields">
               <div className="form-group">
-                <FieldLabel htmlFor="rec-link-idea" icon={Link2}>Odkaz</FieldLabel>
-                <input
+                <label htmlFor="rec-link-idea">Odkaz (nepovinné)</label>
+                <Input
                   id="rec-link-idea"
                   type="url"
-                  className="form-input"
                   value={link ?? ''}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="https://..."
@@ -230,11 +200,10 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                 />
               </div>
               <div className="form-group">
-                <FieldLabel htmlFor="rec-thumbnail" icon={ImageIcon}>Náhledový obrázek</FieldLabel>
-                <input
+                <label htmlFor="rec-thumbnail">Náhledový obrázek (nepovinné)</label>
+                <Input
                   id="rec-thumbnail"
                   type="url"
-                  className="form-input"
                   value={thumbnail ?? ''}
                   onChange={(e) => setThumbnail(e.target.value)}
                   placeholder="https://..."
@@ -242,12 +211,11 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                 />
               </div>
               <div className="form-group">
-                <FieldLabel htmlFor="rec-cost-idea" icon={Wallet}>Odhadovaná cena</FieldLabel>
-                <input
+                <label htmlFor="rec-cost-idea">Odhadovaná cena (nepovinné)</label>
+                <Input
                   id="rec-cost-idea"
                   type="number"
                   min="0"
-                  className="form-input"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
                   placeholder="0"
@@ -261,11 +229,10 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
           {category === 'company' && (
             <div id="dynamic-fields-company" className="dynamic-fields">
               <div className="form-group">
-                <FieldLabel htmlFor="rec-phone" icon={Phone}>Telefon</FieldLabel>
-                <input
+                <label htmlFor="rec-phone">Telefon (nepovinné)</label>
+                <Input
                   id="rec-phone"
                   type="tel"
-                  className="form-input"
                   value={phone ?? ''}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+420 123 456 789"
@@ -273,11 +240,10 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                 />
               </div>
               <div className="form-group">
-                <FieldLabel htmlFor="rec-email" icon={Mail}>E-mail</FieldLabel>
-                <input
+                <label htmlFor="rec-email">E-mail (nepovinné)</label>
+                <Input
                   id="rec-email"
                   type="email"
-                  className="form-input"
                   value={email ?? ''}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="firma@example.cz"
@@ -285,11 +251,10 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                 />
               </div>
               <div className="form-group">
-                <FieldLabel htmlFor="rec-link-company" icon={Globe}>Web</FieldLabel>
-                <input
+                <label htmlFor="rec-link-company">Web (nepovinné)</label>
+                <Input
                   id="rec-link-company"
                   type="url"
-                  className="form-input"
                   value={companyLink ?? ''}
                   onChange={(e) => setCompanyLink(e.target.value)}
                   placeholder="https://..."
@@ -297,7 +262,7 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
                 />
               </div>
               <div className="form-group">
-                <FieldLabel htmlFor="rec-status-company" icon={Building2}>Stav</FieldLabel>
+                <label htmlFor="rec-status-company">Stav</label>
                 <select
                   id="rec-status-company"
                   className="form-input"
@@ -318,23 +283,21 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
           {category === 'task' && (
             <div id="dynamic-fields-task" className="dynamic-fields">
               <div className="form-group">
-                <FieldLabel htmlFor="rec-deadline" icon={CalendarDays}>Termín</FieldLabel>
-                <input
+                <label htmlFor="rec-deadline">Termín (nepovinné)</label>
+                <Input
                   id="rec-deadline"
                   type="date"
-                  className="form-input"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                   data-testid="reconstruction-task-deadline-input"
                 />
               </div>
               <div className="form-group">
-                <FieldLabel htmlFor="rec-cost-task" icon={Wallet}>Odhadovaná cena</FieldLabel>
-                <input
+                <label htmlFor="rec-cost-task">Odhadovaná cena (nepovinné)</label>
+                <Input
                   id="rec-cost-task"
                   type="number"
                   min="0"
-                  className="form-input"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
                   placeholder="0"
