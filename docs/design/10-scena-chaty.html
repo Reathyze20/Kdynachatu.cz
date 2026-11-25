@@ -1,0 +1,272 @@
+<!doctype html>
+<!-- Picker k #558 / #561. Po výběru je to archiv – závazný je DESIGN.md a kód. Funguje offline (žádné externí zdroje). -->
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 · Scéna chaty a maskot – picker</title>
+<style>
+/* Barvy stránky z frontend-v2/src/styles/variables.css (papír, inkoust, jedle). */
+:root { --page: #f6f0e6; --ink: #26211c; --ink-2: #5e5246; --rule: #e6ddcf; --brand: #3e5c47; --brand-light: #e4e1d6; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 400 15px/1.5 system-ui, "Segoe UI", sans-serif; color: var(--ink); background: #ece6dc; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px; }
+h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -.02em; }
+h2 { margin: 36px 0 4px; font-size: 21px; }
+.lead, .muted { color: var(--ink-2); max-width: 900px; margin: 0 0 12px; }
+.controls { position: sticky; top: 0; z-index: 10; background: #ece6dcf2; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ctl > b { width: 110px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); }
+.ctl button { border: 1px solid var(--rule); background: #fffdf8; color: var(--ink); font: 600 14px/1.2 inherit; padding: 8px 14px; border-radius: 999px; cursor: pointer; min-height: 40px; }
+.ctl button[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 1px; background: var(--brand-light); }
+.pick { background: #fffdf8; border: 1px solid var(--rule); border-radius: 12px; padding: 10px 14px; font-weight: 600; }
+.pick code { background: var(--brand-light); padding: 2px 6px; border-radius: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, 360px); gap: 14px; }
+figure { margin: 0; background: #fffdf8; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+figcaption { padding: 8px 12px 10px; font-size: 14px; }
+figcaption b { display: block; }
+.strip { display: block; overflow: hidden; line-height: 0; }
+.strip svg, .sprite svg { image-rendering: pixelated; }
+.mascots { display: grid; grid-template-columns: 120px repeat(6, auto); gap: 8px 18px; align-items: end; background: #fffdf8; border: 1px solid var(--rule); border-radius: 14px; padding: 14px; overflow-x: auto; }
+.mascots .h { font-size: 13px; color: var(--ink-2); text-align: center; }
+.mascots .n { font-weight: 700; align-self: center; }
+.real { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.phone { position: relative; width: 375px; height: 520px; background: var(--page); border: 10px solid #2b2621; border-radius: 34px; overflow: hidden; }
+.phone .top { padding: 14px 16px 6px; font-weight: 800; font-size: 20px; }
+.card { background: #fff; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; margin: 0 16px; }
+.card .txt { padding: 12px 14px 14px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.desk { width: 640px; max-width: 100%; background: var(--page); border: 1px solid var(--rule); border-radius: 14px; padding: 20px 0; }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: flex; background: #fffdf8; border-top: 1px solid var(--rule); }
+.bar span { flex: 1; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.bar span:first-child { color: var(--brand); }
+.help { position: absolute; right: 14px; bottom: 76px; width: 44px; height: 44px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 800; }
+.walker { position: absolute; left: 0; bottom: 63px; pointer-events: none; animation: walk 10s linear infinite; }
+.walker .wk { animation: vis 10s steps(1) infinite; } .walker .wv { animation: vis2 10s steps(1) infinite; }
+@keyframes walk { 0% { transform: translateX(-50px); } 35%, 65% { transform: translateX(130px); } 100% { transform: translateX(-50px); } }
+@keyframes vis { 0% { opacity: 1; } 35% { opacity: 0; } 65% { opacity: 1; } }
+@keyframes vis2 { 0% { opacity: 0; } 35% { opacity: 1; } 65% { opacity: 0; } }
+/* Animace scény: jen opacity a transform, krokované. Statická = pozastaveno. */
+.fa { animation: blink .8s steps(1) infinite; } .fb { animation: blink .8s steps(1) -.4s infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.pf { animation: puff 3s steps(5) infinite; }
+@keyframes puff { from { transform: translate(0, 0); opacity: .9; } to { transform: translate(-4px, -10px); opacity: 0; } }
+.fl { animation: fall 7s steps(40) infinite; }
+@keyframes fall { to { transform: translateY(var(--h)); } }
+.zz { animation: zz 3s steps(6) infinite; }
+@keyframes zz { 0% { transform: translate(0, 0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(2px, -5px); opacity: 0; } }
+.tw { animation: blink 3s steps(1) infinite; }
+.static svg *, .static .walker, .static .walker * { animation-play-state: paused !important; }
+.static .walker { display: none; }
+@media (prefers-reduced-motion: reduce) { svg *, .walker, .walker * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<p role="note" style="margin:0;padding:10px 16px;background:#fff3cd;color:#3b2f1e;font-weight:600;text-align:center;border-bottom:1px solid #e0c97a">Picker k #558. Vyber variantu stylu a maskota a zapiš volbu do #558. Appka se zatím nemění.</p>
+<div class="wrap">
+  <h1>Scéna chaty a maskot</h1>
+  <p class="lead">Malé „okno na chatu“ nahoře v kartě <b>Na chatě teď</b>. Obrázek ukazuje stav chaty, maskot je její obyvatel. Pixel art je definovaný jako znakové mřížky nad omezenou paletou a vykreslený do SVG s ostrými hranami. Lidé ani nic, podle čeho by šla poznat konkrétní chata nebo místo, se nekreslí (ADR-0006). Jména v textech karet jsou smyšlená.</p>
+  <div class="controls" id="controls"></div>
+  <h2>Kandidáti na maskota</h2>
+  <p class="muted">Ani jeden není mezi zvířaty avatarů (avatary mají ježka, veverku, lišku…, ne plcha, jezevce ani sýčka). Kreslení se drží zvířete, ne postavy: žádné oblečení ani rekvizity Krtečka, Večerníčka, Rumcajse nebo Pata a Mata. Šála je jen pro mráz.</p>
+  <div class="mascots" id="mascots"></div>
+  <div id="variants"></div>
+  <h2>Reálná velikost</h2>
+  <p class="muted">Pruh přes celou šířku karty, vysoký 112–114 px. Vlevo mobil (karta 343 px) s ukázkou chůze maskota po horní hraně spodní lišty: přijde, zastaví se, zamává a odejde, tlačítku nápovědy se vyhne. V appce nejvýš jednou za otevření, tady ve smyčce. Ve stavu Statická se na liště neukáže. Vpravo desktop (karta 640 px). Varianta, maskot a stav se berou z voleb nahoře.</p>
+  <div class="real" id="real"></div>
+</div>
+<script>
+// ---- Sprity: znakové mřížky. '.' = průhledné. Barvy jsou v paletách níže. ----
+const SIDE = { by: 20, porch: [2, 8], chim: [20, -1], g: [
+  "...................ooo........",
+  "...................oco........",
+  "...................oco........",
+  ".....ooooooooooooooocoooo.....",
+  "....orrrrrrrrrrrrrrocorrro....",
+  "...oRRRRRRRRRRRRRRRRRRRRRRo...",
+  "..orrrrrrrrrrrrrrrrrrrrrrrro..",
+  ".orrrrrrrrrrrrrrrrrrrrrrrrrro.",
+  "oRRRRRRRRRRRRRRRRRRRRRRRRRRRRo",
+  ".oooooooooooooooooooooooooooo.",
+  ".powwwwwwwwwwwwwwwwwwwwwwwwo..",
+  ".poWWoooooWWWWWWWWWWWWWWWWWo..",
+  ".powwoDDDowwwwwwooooooowwwwo..",
+  ".poWWoDDDoWWWWWWoggmggoWWWWo..",
+  ".powwoDDDowwwwwwommmmmowwwwo..",
+  ".poWWoDDnoWWWWWWoggmggoWWWWo..",
+  ".powwoDDDowwwwwwoggmggowwwwo..",
+  ".poWWoDDDoWWWWWWoooooooWWWWo..",
+  "fffffffffffffwwwwwwwwwwwwwwo..",
+  "FFFFFFFFFFFFFsssssssssssssss.."] };
+const ISO = { by: 29, porch: [1, 18], chim: [24, -1], g: [
+  ".......................ooo........",
+  ".......................oco........",
+  ".......................ocoo.......",
+  ".......................ocoro......",
+  ".....................ooccorro.....",
+  "...................ooRrccoRRo.....",
+  ".................ooRrrrccoRRro....",
+  "...............ooRrrrrRccorrrro...",
+  "............oooRrrrrRRRooorrRRo...",
+  "..........ooRRrrrrRRRRrrrrRRRRro..",
+  ".........oRRrrrrRRRRrrrrRRRRrrrro.",
+  "........oorrrrRRRRrrrrRRRRrrrrRRo.",
+  "......ooworrRRRRrrrrRRRRrrrrRRRRro",
+  "....oowWwWoRRRrrrrRRRRrrrrRRRRrrro",
+  "..oowWwWwWworrrrRRRRrrrrRRRRrrrrRo",
+  "...owWwWwWworrRRRRrrrrRRRRrrrrRRo.",
+  "...oWWWWwWwWoRRRrrrrRRRRrrrrRVvvo.",
+  "...owwWWWWwWoRrrrrRRRRrrrrRVvvvvo.",
+  "...owwwDWWWWworrRRRRrrrrRVggvvVVo.",
+  "...oWWwDDDWWWoRRRRrrrrRVggggVVVVo.",
+  "...oWWWDDDDwWWoRrrrrVVggggggVVvvo.",
+  "...owwWDDDDwwworrrVVvvggggggvvoo..",
+  "....oowDDDDWwwwwoVvvvvggggvvoo....",
+  "....ooooDDDWWWwwovvvVVggvvoo......",
+  "..ooffo.ooDwWWWWovVVVVvvoo........",
+  "..offffoo.oowwWWoVVVvvoo..........",
+  "...ooffffoo.oowwoVvvoo............",
+  ".....ooffffo..ooovoo..............",
+  ".......offoo....oo................",
+  "........oo........................"] };
+const CAR = [
+  ".....oooooooo.......",
+  "....ouqqquqqquo.....",
+  "...ouuqqquqqqquoo...",
+  ".oouuuuuuuuuuuuuuuo.",
+  "oxuuuuuuuuuuuuuuuuyo",
+  "oUUUUUUUUUUUUUUUUUUo",
+  ".oUooooUUUUUUooooUo.",
+  "...ohho......ohho..."];
+const TREE = ["...j...", "..jjJ..", "..jJj..", ".jjjjJ.", "..jJj..", ".jjJjj.", "jjjjjJj", ".jJjjj.", "jjjjJjj", "...k...", "...k..."];
+const MOON = [".MM.", "MM..", "MM..", ".MM."];
+const ZZ = ["zzz", "..z", ".z.", "zzz"];
+// Maskoti 12×10, zepředu. S = krk (šála v mrazu), e/w/E/y/Y = oči (spánek je přemapuje), a = ruka/křídlo.
+const MASCOTS = {
+  plch: { name: "Plch", note: "šedý, velké tmavé oči, huňatý ocas", sleep: { w: "d", e: "d", E: "o" },
+    pal: { b: "#8d8680", d: "#6b6560", l: "#e4dccd", e: "#1a1a1a", E: "#1a1a1a", w: "#ffffff", n: "#c98b86", f: "#c9a99a", a: "#8d8680" },
+    g: [".oo....oo...", "oddooooddo..", "obbbbbbbbo..", "odweddwedo.o", "odEEddEEdood", "obbbnnbbbodd", ".oSSSSSSo.dd", "obllllllbodo", "obllllllboo.", "..ff....ff.."] },
+  jezevec: { name: "Jezevec", note: "bílá hlava s černými pruhy, šedé tělo", sleep: { e: "k" },
+    pal: { b: "#9a948c", d: "#6e6862", w: "#f3eee4", k: "#26211c", e: "#a07850", n: "#26211c", a: "#26211c" },
+    g: [".oo.oooo.oo.", "owkkwwwwkkwo", "owkkwwwwkkwo", "owkewwwwekwo", ".okkwwwwkko.", "..okwnnwko..", ".oSSSSSSSSo.", "obbbbbbbbbbo", "obbddddddbbo", ".kk......kk."] },
+  sycek: { name: "Sýček", note: "hnědý s bílými tečkami, žluté oči, bez oušek", sleep: { y: "b", E: "b", Y: "o" },
+    pal: { b: "#8a6a4a", d: "#5e4632", l: "#d9c4a3", w: "#f3eee4", y: "#e8b830", Y: "#e8b830", E: "#1a1a1a", n: "#b5a58a", f: "#b5a58a", a: "#5e4632" },
+    g: ["..oooooooo..", ".obwbbbbwbo.", "obwwwbbwwwbo", "obyEybbyEybo", "obYYYbbYYYbo", ".obbbnnbbbo.", ".oSSSSSSSSo.", "odlwlllwlldo", "odllwllwlldo", "..ff....ff.."] } };
+const MCOMMON = { o: "#26211c", h: "#7a5230", x: "#b8bec5", Z: "#b23a2e", K: "#7a5230", l: "#d9b98a", z: "#26211c" };
+const WAVE = [["a..", "a..", ".a.", "..a"], ["...", "a..", ".aa", "..a"]];
+const CHOP_UP = ["xx....", "xxh...", "x..h..", "...h..", "....a.", "....a.", "....a.", "....a.", "....a.", "....aa"];
+const CHOP_DOWN = [".....aaa", "...hh...", ".xh.....", "xx......"];
+const STUMP = [".ll..", "oKKKo", "oKKKo"];
+// ---- Varianty stylu ----
+const JEDLE = { sky: "#e4e1d6", night: "#1a2721", tint: "#0d1a14", hill: "#b9c2ad", hill2: "#d3d5c6", grass: "#5d7a52", grass2: "#3e5c47",
+  snow: "#ffffff", snow2: "#e5e7eb", rime: "#dfe9ee", star: "#fef3c7", smoke: "#ece8e0", o: "#26211c", r: "#5e5246", R: "#463c33", c: "#8a4b06",
+  w: "#a0703f", W: "#7a5230", v: "#86592f", V: "#664222", D: "#5a3a22", n: "#e8b830", m: "#d9c3a3", g: "#cfd8d0", N: "#2a3a33", L: "#f2c46b", H: "#6e4528",
+  f: "#b08350", F: "#7a5230", s: "#8f877c", p: "#7a5230", j: "#2f4636", J: "#3e5c47", k: "#5e4632", u: "#991b1c", U: "#6e1414", q: "#cfd8d0",
+  x: "#dc2626", y: "#fef3c7", h: "#9ca3af", M: "#fef3c7", "*": "#ffffff", "+": "#dfe3e8", i: "#dfe9ee" };
+const VARIANTS = [
+  { id: "A", name: "A · Jedle zboku", desc: "Pohled zboku, pixel 4 px, paleta z tokenů appky (jedle, papír, inkoust). Hrubší pixel, chata zblízka.", p: 4, h: 28, cab: SIDE, pal: JEDLE },
+  { id: "B", name: "B · Sépie zboku", desc: "Pohled zboku, pixel 3 px, tlumená papírová paleta (papír, sépie, jedle jen na stromech a autě). Jemnější pixel, víc krajiny.", p: 3, h: 38, cab: SIDE,
+    pal: { ...JEDLE, sky: "#f6f0e6", night: "#26211c", tint: "#1c1712", hill: "#d8ccb8", hill2: "#e6ddcf", grass: "#b8a582", grass2: "#9c8a6a", r: "#8b6f57", R: "#5e5246",
+      c: "#94785e", w: "#c9a77f", W: "#a58660", D: "#5e5246", n: "#d97706", m: "#efe6d6", g: "#e6ddcf", N: "#3a332c", L: "#e8a948", H: "#8b6f57", f: "#c9a77f",
+      F: "#8b6f57", s: "#a89c8a", p: "#8b6f57", J: "#5e7a5f", k: "#5e5246", u: "#3e5c47", U: "#2f4636", q: "#e6ddcf" } },
+  { id: "C", name: "C · Jedle izometrie", desc: "Izometrický pohled (2 : 1), pixel 3 px, stejná paleta jako A. Chata má objem, louka je vidět shora.", p: 3, h: 38, cab: ISO, pal: JEDLE }];
+const STATES = [
+  { t: "1 · Prázdno", d: "Maskot spí na zápraží.", card: "Teď tam nikdo není. Další pobyt: Novákovi od pátku." },
+  { t: "2 · Obsazeno", d: "Štípe dříví, z komína jde kouř, svítí okno.", occ: 1, card: "Na chatě jsou Novákovi, do neděle." },
+  { t: "3 · Příjezd nebo odjezd dnes", d: "U chaty stojí auto, maskot mává.", car: 1, card: "Dnes přijíždějí Novákovi." },
+  { t: "4 · Předávka ve stejný den", d: "Obsazeno i auto: kouř, okno, auto, maskot mává.", occ: 1, car: 1, card: "Dnes odjíždějí Novákovi a přijíždějí Svobodovi." },
+  { t: "5 · Zazimováno", d: "Okenice zavřené, maskot jen sedí. Přebíjí obsazenost i auto.", occ: 1, winter: 1, card: "Chata je zazimovaná." },
+  { t: "6 · Noc s hvězdami", d: "Obsazeno v noci: tmavá obloha, svítí okno.", occ: 1, night: 1, card: "Na chatě jsou Novákovi, do neděle." },
+  { t: "7 · Sněžení", d: "Padají vločky (přes jakýkoli stav).", occ: 1, snowing: 1, card: "Na chatě jsou Novákovi. Sněží." },
+  { t: "8 · Sníh na střeše", d: "Bílá střecha, stromy i louka, chata prázdná.", snow: 1, card: "Teď tam nikdo není. Leží sníh." },
+  { t: "9 · Mráz", d: "Maskot v šále, jinovatka na střeše, trávě a stromech.", occ: 1, frost: 1, card: "Na chatě jsou Novákovi. Mrzne." }];
+// ---- Vykreslování ----
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function draw(out, grid, x, y, pal, map = {}, only) {
+  grid.forEach((row, j) => { for (let i = 0; i < row.length;) {
+    let k = i; while (k < row.length && row[k] === row[i]) k++;
+    const c = map[row[i]] || row[i], col = pal[c];
+    if (row[i] !== "." && col && (!only || only.includes(row[i]))) out.push(`<rect x="${x + i}" y="${y + j}" width="${k - i}" height="1" fill="${col}"/>`);
+    i = k; } });
+}
+const rect = (out, x, y, w, h, fill, cls = "", extra = "") => out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" class="${cls}" ${extra}/>`);
+function mascot(out, M, x, y, pose, frost, z = "#26211c") {
+  const pal = { ...MCOMMON, z, ...M.pal, S: frost ? MCOMMON.Z : M.pal.b, T: MCOMMON.Z }, map = pose === "sleep" ? M.sleep : {};
+  const g = (cls, fn) => { out.push(`<g class="${cls}">`); fn(); out.push("</g>"); };
+  if (pose === "walk") {
+    g("fa", () => draw(out, M.g, x, y, pal));
+    g("fb", () => draw(out, [...M.g.slice(0, 9), "." + M.g[9].slice(0, -1)], x, y - 1, pal));
+    return;
+  }
+  if (pose === "chop") draw(out, STUMP, x - 10, y + 7, pal);
+  draw(out, M.g, x, y, pal, map);
+  if (frost) draw(out, ["Z"], x + 9, y + 7, pal); // cíp šály
+  if (pose === "wave") { g("fa", () => draw(out, WAVE[0], x - 2, y + 3, pal)); g("fb", () => draw(out, WAVE[1], x - 2, y + 3, pal)); }
+  if (pose === "chop") { g("fa", () => draw(out, CHOP_UP, x - 5, y - 3, pal)); g("fb", () => draw(out, CHOP_DOWN, x - 7, y + 6, pal)); }
+  if (pose === "sleep") g("zz", () => draw(out, ZZ, x + 9, y - 4, pal));
+}
+function scene(V, M, st, wpx) {
+  const { p, h: H, cab, pal } = V, W = Math.ceil(wpx / p), iso = cab === ISO, o = []; seed = 7;
+  const gy = iso ? H - 13 : H - 4, base = iso ? H - 3 : gy, cw = cab.g[0].length;
+  const cx = Math.max(2, Math.floor((W - cw - 36) / 2)), cy = base - cab.by;
+  const winter = st.winter, occ = st.occ && !winter, car = st.car && !winter, night = st.night;
+  const pose = winter ? "idle" : car ? "wave" : occ ? "chop" : "sleep";
+  rect(o, 0, 0, W, H, night ? pal.night : pal.sky);
+  [[pal.hill2, 0.34, 9, 1], [pal.hill, 0.18, 6, 3]].forEach(([col, k, f, ph]) => { for (let x = 0; x < W; x++) {
+    const top = gy - Math.round(H * k + 1.6 * Math.sin(x / f + ph) + Math.sin(x / 3.3)); rect(o, x, top, 1, gy - top, st.snow ? pal.snow2 : col); } });
+  rect(o, 0, gy, W, H - gy, st.snow ? pal.snow : pal.grass2); rect(o, 0, gy, W, 1, st.snow ? pal.snow : st.frost ? pal.rime : pal.grass);
+  for (let n = 0; n < W / 3; n++) rect(o, Math.floor(rnd() * W), gy + 1 + Math.floor(rnd() * (H - gy - 1)), 1, 1, st.snow ? pal.snow2 : st.frost ? pal.rime : pal.grass);
+  const treeMap = st.snow ? { J: "*" } : st.frost ? { J: "i" } : {};
+  for (let x = 1; x < W - 6; x += 7 + Math.floor(rnd() * 5)) if (x + 7 < cx - 2 || x > cx + cw + 38) draw(o, TREE, x, gy - 11 + (iso ? 3 + Math.floor(rnd() * 4) : 0), pal, treeMap);
+  const cabMap = { g: winter ? "H" : occ ? "L" : night ? "N" : "g", ...(st.snow ? { r: "*", R: "+" } : st.frost ? { R: "i" } : {}) };
+  draw(o, cab.g, cx, cy, pal, cabMap);
+  const mx = pose === "chop" ? cx + cw + 11 : pose === "wave" ? cx + cw + 3 : cx + cab.porch[0];
+  const my = pose === "chop" || pose === "wave" ? base - 10 : cy + cab.porch[1];
+  if (car) draw(o, CAR, cx + cw + 16, base - 8, pal);
+  mascot(o, M, mx, my, pose, st.frost);
+  if (night) { rect(o, 0, 0, W, H, pal.tint, "", 'opacity=".5"');
+    for (let n = 0; n < W / 4; n++) rect(o, Math.floor(rnd() * W), Math.floor(rnd() * (gy - H * 0.34 - 2)), 1, 1, pal.star, n % 3 ? "" : "tw", `style="animation-delay:-${n % 5}s"`);
+    draw(o, MOON, W - 10, 2, pal); if (occ) draw(o, cab.g, cx, cy, pal, cabMap, "g"); }
+  if (occ) for (let n = 0; n < 3; n++) rect(o, cx + cab.chim[0] - (n % 2), cy + cab.chim[1] - 1, 2, 2, pal.smoke, "pf", `style="animation-delay:-${n}s"`);
+  if (st.snowing) { o.push(`<g class="fl" style="--h:${H}px">`); for (let n = 0; n < W * H / 30; n++) rect(o, Math.floor(rnd() * W), Math.floor(rnd() * 2 * H) - H, 1, 1, pal.snow); o.push("</g>"); }
+  const label = `${V.name}, maskot ${M.name}: ${st.t.replace(/^\d · /, "")}`;
+  return `<svg role="img" aria-label="${label}" viewBox="0 0 ${W} ${H}" width="${W * p}" height="${H * p}" shape-rendering="crispEdges">${o.join("")}</svg>`;
+}
+function sprite(M, pose, frost, p = 6) {
+  const o = []; mascot(o, M, 10, 5, pose, frost);
+  return `<div class="sprite"><svg role="img" aria-label="${M.name}" viewBox="0 0 24 15" width="${24 * p}" height="${15 * p}" shape-rendering="crispEdges">${o.join("")}</svg></div>`;
+}
+// ---- Stránka ----
+const sel = { m: "plch", v: "A", s: 1, motion: "anim" };
+const groups = [
+  ["Maskot", "m", Object.entries(MASCOTS).map(([k, M]) => [k, M.name])],
+  ["Varianta", "v", VARIANTS.map((V) => [V.id, V.name])],
+  ["Stav (reálná velikost)", "s", STATES.map((s, i) => [i, s.t.split(" · ")[0]])],
+  ["Pohyb", "motion", [["anim", "Animovaná"], ["static", "Statická"]]]];
+function render() {
+  const M = MASCOTS[sel.m], V = VARIANTS.find((v) => v.id === sel.v), st = STATES[sel.s];
+  document.body.classList.toggle("static", sel.motion === "static");
+  document.getElementById("controls").innerHTML = groups.map(([label, key, opts]) => `<div class="ctl"><b>${label}</b>${opts.map(([val, txt]) =>
+    `<button type="button" data-k="${key}" data-v="${val}" aria-pressed="${String(sel[key]) === String(val)}">${txt}</button>`).join("")}</div>`).join("")
+    + `<div class="pick">Tvoje volba do #558: <code>Scéna chaty: varianta ${V.name}, maskot ${M.name}</code></div>`;
+  const poses = [["Spí", "sleep"], ["Štípe dříví", "chop"], ["Mává", "wave"], ["Nic nedělá", "idle"], ["Mráz (šála)", "idle", 1], ["Chůze", "walk"]];
+  document.getElementById("mascots").innerHTML = "<span></span>" + poses.map(([t]) => `<span class="h">${t}</span>`).join("")
+    + Object.values(MASCOTS).map((m) => `<span class="n">${m.name}<br><small class="muted">${m.note}</small></span>` + poses.map(([, pose, fr]) => sprite(m, pose, fr)).join("")).join("");
+  document.getElementById("variants").innerHTML = VARIANTS.map((v) => `<h2>Varianta ${v.name}</h2><p class="muted">${v.desc} Maskot: ${M.name}. Náhled 360 px = šířka karty na mobilu.</p><div class="grid">`
+    + STATES.map((s) => `<figure><div class="strip">${scene(v, M, s, 360)}</div><figcaption><b>${s.t}</b>${s.d}</figcaption></figure>`).join("") + "</div>").join("");
+  const card = (w) => `<div class="card"><div class="strip">${scene(V, M, st, w)}</div><div class="txt"><div class="eyebrow">Na chatě teď</div>${st.card}</div></div>`;
+  const walk = []; mascot(walk, M, 0, 1, "walk"); const wave = []; mascot(wave, M, 3, 1, "wave");
+  const svg = (o) => `<svg viewBox="0 0 15 11" width="45" height="33" shape-rendering="crispEdges" aria-hidden="true">${o.join("")}</svg>`;
+  document.getElementById("real").innerHTML = `<div class="phone"><div class="top">Přehled</div>${card(343)}
+    <div class="help" aria-hidden="true">?</div><div class="walker" aria-hidden="true"><div class="wk">${svg(walk)}</div><div class="wv" style="position:absolute;top:0">${svg(wave)}</div></div>
+    <nav class="bar" aria-label="Ukázka spodní lišty"><span>Přehled</span><span>Kalendář</span><span>Předávka</span><span>Zásoby</span><span>Víc</span></nav></div>
+    <div class="desk">${card(608)}</div>`;
+}
+document.getElementById("controls").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  sel[b.dataset.k] = b.dataset.k === "s" ? Number(b.dataset.v) : b.dataset.v; render();
+});
+render();
+</script>
+</body>
+</html>
