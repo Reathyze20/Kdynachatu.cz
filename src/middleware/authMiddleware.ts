@@ -42,6 +42,7 @@ function buildUserFromToken(decoded: JwtPayload): JwtPayload {
 async function hydrateAuthenticatedUser(decoded: JwtPayload): Promise<
   | { status: "ok"; user: JwtPayload }
   | { status: "missing" }
+  | { status: "revoked" }
   | { status: "banned" }
 > {
   const activeUser = await prisma.user.findUnique({
@@ -53,12 +54,20 @@ async function hydrateAuthenticatedUser(decoded: JwtPayload): Promise<
       cabinId: true,
       isSuperAdmin: true,
       isBanned: true,
+      tokenVersion: true,
     },
   });
 
   if (!activeUser) {
     logger.warn("AUTH", "Authenticated user no longer exists", { userId: decoded.userId });
     return { status: "missing" };
+  }
+
+  // Před kontrolou banu: ban relace zneplatní, takže starý token zabanovaného dostane 401 (#485).
+  // Token bez verze (vydaný před #485) neprojde – po nasazení se každý jednou znovu přihlásí.
+  if (decoded.tokenVersion !== activeUser.tokenVersion) {
+    logger.warn("AUTH", "Rejected revoked token", { userId: activeUser.id });
+    return { status: "revoked" };
   }
 
   if (activeUser.isBanned) {
@@ -74,6 +83,7 @@ async function hydrateAuthenticatedUser(decoded: JwtPayload): Promise<
       role: activeUser.role,
       cabinId: activeUser.cabinId,
       isSuperAdmin: activeUser.isSuperAdmin,
+      tokenVersion: activeUser.tokenVersion,
     },
   };
 }
@@ -108,7 +118,7 @@ async function authenticateRequest(
   try {
     const hydratedUser = await hydrateAuthenticatedUser(decoded);
 
-    if (hydratedUser.status === "missing") {
+    if (hydratedUser.status === "missing" || hydratedUser.status === "revoked") {
       res.status(401).json({ message: "Neplatný token." });
       return false;
     }

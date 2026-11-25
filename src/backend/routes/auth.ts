@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import { signAuthToken } from "../../utils/authToken";
+import { updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { sendPasswordResetEmail, sendVerificationEmailWithPIN, sendVerificationEmailWithToken } from "../../utils/email";
@@ -451,14 +452,8 @@ router.post("/reset-password", validate(resetPasswordSchema), async (req: Reques
       return res.status(400).json({ message: "Resetovací odkaz je neplatný nebo již vypršel." });
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash: await hashPassword(password),
-        passwordResetToken: null,
-        passwordResetExpiresAt: null,
-      },
-    });
+    const passwordHash = await hashPassword(password);
+    await updateUserAndRevokeSessions(user.id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
 
     logger.info("AUTH", "Password reset completed", { userId: user.id, username: user.username });
 
@@ -579,6 +574,7 @@ router.get("/refresh-token", protect, async (req: Request, res: Response) => {
         animalIcon: true,
         color: true,
         isSuperAdmin: true,
+        tokenVersion: true,
       },
     });
 

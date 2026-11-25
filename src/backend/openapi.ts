@@ -186,6 +186,14 @@ const schemas: Record<string, JsonSchema> = {
       newPassword: { type: "string", format: "password" },
     },
   },
+  ChangeMyPasswordResponse: {
+    type: "object",
+    required: ["message", "token"],
+    properties: {
+      message: { type: "string", example: "Heslo úspěšně změněno." },
+      token: { type: "string", description: "Novy JWT pro aktualni zarizeni; vsechny drivejsi tokeny prestaly platit" },
+    },
+  },
   CreateUserRequest: {
     type: "object",
     required: ["username", "password"],
@@ -743,11 +751,24 @@ const paths: Record<string, OpenApiObject> = {
     patch: {
       tags: ["Users"],
       summary: "Zmen heslo prihlaseneho uzivatele",
+      description: "Zvysi verzi tokenu: vsechna drivejsi prihlaseni (i na jinych zarizenich) prestanou platit. Aktualni zarizeni dostane v odpovedi novy token.",
       security: bearerSecurity,
       requestBody: jsonRequestBody(ref("ChangeMyPasswordRequest")),
       responses: {
-        "200": jsonResponse(ref("MessageResponse"), "Heslo bylo zmeneno"),
+        "200": jsonResponse(ref("ChangeMyPasswordResponse"), "Heslo bylo zmeneno, odpoved nese novy token"),
         "400": jsonResponse(ref("ErrorResponse"), "Puvodni heslo nesedi"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+      },
+    },
+  },
+  "/api/users/me/logout-all": {
+    post: {
+      tags: ["Users"],
+      summary: "Odhlasit vsude: zneplatni vsechny tokeny uzivatele vcetne aktualniho",
+      description: "Zvysi verzi tokenu. Kazdy drive vydany token pak vraci 401, i ten, kterym byl pozadavek poslan. Telo se ignoruje.",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(ref("MessageResponse"), "Uzivatel byl odhlasen na vsech zarizenich"),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
       },
     },
@@ -1181,6 +1202,7 @@ export const openApiSpec = {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
+        description: "JWT s platnosti 7 dni nese tokenVersion. Token bez verze nebo se starou verzi (po zmene hesla, banu, odebrani z chaty, zmene role, smazani uctu nebo Odhlasit vsude) vraci 401.",
       },
     },
     schemas,

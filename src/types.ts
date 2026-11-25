@@ -5,6 +5,8 @@ export interface JwtPayload {
   role: string;
   cabinId: string | null;
   isSuperAdmin?: boolean;
+  /** Verze přihlášení (#485). Token bez ní nebo se starou verzí auth middleware odmítne. */
+  tokenVersion?: number;
 }
 
 export interface User {
@@ -198,4 +200,16 @@ export interface MunicipalitySearchResponse {
 // (…/<uuid>-sm.webp). Obě jsou ve velikosti pozadí appky (#340).
 export interface SetCabinCoverPhotoRequest {
   photoId: string;
+}
+
+// PATCH /api/users/me/password – změna vlastního hesla zneplatní všechna přihlášení (#485).
+// Aktuální zařízení dostane v odpovědi nový token, aby se nemuselo znovu přihlašovat.
+export interface ChangeMyPasswordResponse {
+  message: string;
+  token: string;
+}
+
+// POST /api/users/me/logout-all – „Odhlásit všude“: zneplatní všechny tokeny uživatele včetně aktuálního (#485).
+export interface LogoutEverywhereResponse {
+  message: string;
 }

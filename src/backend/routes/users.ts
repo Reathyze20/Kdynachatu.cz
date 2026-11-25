@@ -3,11 +3,13 @@ import { protect } from "../../middleware/authMiddleware";
 import { requireCabin } from "../../middleware/cabinMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
-import { createUserSchema, updateProfileSchema, changeMyPasswordSchema, changeRoleSchema, changePasswordSchema, adminUpdateUserSchema } from "../../validators/schemas";
+import { createUserSchema, updateProfileSchema, changeMyPasswordSchema, logoutEverywhereSchema, changeRoleSchema, changePasswordSchema, adminUpdateUserSchema } from "../../validators/schemas";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
+import { signAuthToken } from "../../utils/authToken";
+import { deleteUserAndRevokeSessions, revokeUserSessions, updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import type { JwtPayload } from "../../types";
 
 const router = Router();
@@ -165,19 +167,31 @@ router.patch("/me/password", protect, validate(changeMyPasswordSchema), async (r
       return res.status(400).json({ message: "Nesprávné původní heslo." });
     }
 
-    await prisma.user.update({
-      where: { id: req.user.userId },
-      data: {
-        passwordHash: await hashPassword(newPassword),
-        passwordResetToken: null,
-        passwordResetExpiresAt: null,
-      }
-    });
+    // Ostatní zařízení se odhlásí, aktuální dostane token s novou verzí (#485).
+    const passwordHash = await hashPassword(newPassword);
+    const tokenVersion = await updateUserAndRevokeSessions(user.id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
 
-    res.json({ message: "Heslo úspěšně změněno." });
+    const token = signAuthToken({ ...user, tokenVersion });
+    res.json({ message: "Heslo úspěšně změněno.", token });
   } catch (error) {
     logger.error("USERS", "Change my password error", { error: String(error) });
     res.status(500).json({ message: "Chyba." });
+  }
+});
+
+// ============================================================================
+//               LOG OUT EVERYWHERE (#485) — i z aktuálního zařízení
+// ============================================================================
+router.post("/me/logout-all", protect, validate(logoutEverywhereSchema), async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Nejdřív se přihlas." });
+
+  try {
+    await revokeUserSessions(req.user.userId);
+    logger.info("USERS", "User logged out everywhere", { userId: req.user.userId });
+    res.json({ message: "Odhlásili jsme tě na všech zařízeních." });
+  } catch (error) {
+    logger.error("USERS", "Logout everywhere error", { error: String(error), userId: req.user.userId });
+    res.status(500).json({ message: "Odhlášení se nepovedlo. Zkus to znovu." });
   }
 });
 
@@ -216,7 +230,7 @@ router.delete("/me", protect, async (req: Request, res: Response) => {
     }
 
     // Delete user — Prisma cascade handles related records
-    await prisma.user.delete({ where: { id: req.user.userId } });
+    await deleteUserAndRevokeSessions(req.user.userId);
 
     logger.info("USERS", "User self-deleted account (GDPR)", {
       userId: req.user.userId,
@@ -265,10 +279,7 @@ router.put("/:id/role", protect, requireCabin, validate(changeRoleSchema), admin
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
 
-    await prisma.user.update({
-      where: { id },
-      data: { role },
-    });
+    await updateUserAndRevokeSessions(id, { role });
     res.status(200).json({ message: "Role změněna." });
   } catch (error) {
     logger.error("USERS", "Change role error", { error: String(error), userId: id });
@@ -292,14 +303,8 @@ router.put("/:id/password", protect, requireCabin, validate(changePasswordSchema
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
 
-    await prisma.user.update({
-      where: { id },
-      data: {
-        passwordHash: await hashPassword(password),
-        passwordResetToken: null,
-        passwordResetExpiresAt: null,
-      },
-    });
+    const passwordHash = await hashPassword(password);
+    await updateUserAndRevokeSessions(id, { passwordHash, passwordResetToken: null, passwordResetExpiresAt: null });
     res.status(200).json({ message: "Heslo změněno." });
   } catch (error) {
     logger.error("USERS", "Change password error", { error: String(error), userId: id });
@@ -331,10 +336,9 @@ router.patch("/:id", protect, requireCabin, validate(adminUpdateUserSchema), adm
       data.passwordResetExpiresAt = null;
     }
 
-    await prisma.user.update({
-      where: { id },
-      data,
-    });
+    // Změna role nebo hesla zneplatní stará přihlášení (#485).
+    if (data.role || data.passwordHash) await updateUserAndRevokeSessions(id, data);
+    else await prisma.user.update({ where: { id }, data });
     res.status(200).json({ message: "Uživatel upraven." });
   } catch (error) {
     logger.error("USERS", "Update user error", { error: String(error), userId: id });
@@ -357,9 +361,7 @@ router.delete("/:id", protect, requireCabin, adminOnly, async (req: Request, res
       return res.status(404).json({ message: "Uživatel nenalezen." });
     }
 
-    await prisma.user.delete({
-      where: { id },
-    });
+    await deleteUserAndRevokeSessions(id);
     res.status(200).json({ message: "Uživatel smazán." });
   } catch (error) {
     logger.error("USERS", "Delete user error", { error: String(error), userId: id });
@@ -390,7 +392,7 @@ router.patch("/:id/remove-from-cabin", protect, requireCabin, adminOnly, async (
 
     if (deleteData) {
       // Hard remove — delete user entirely (cascade)
-      await prisma.user.delete({ where: { id } });
+      await deleteUserAndRevokeSessions(id);
       logger.info("USERS", "User hard-removed from cabin (data deleted)", {
         userId: id,
         username: targetUser.username,
@@ -400,10 +402,7 @@ router.patch("/:id/remove-from-cabin", protect, requireCabin, adminOnly, async (
       res.json({ message: "Uživatel a jeho data byly smazány." });
     } else {
       // Soft remove — keep user but unlink from cabin
-      await prisma.user.update({
-        where: { id },
-        data: { cabinId: null, role: "user" },
-      });
+      await updateUserAndRevokeSessions(id, { cabinId: null, role: "user" });
       logger.info("USERS", "User soft-removed from cabin (data preserved)", {
         userId: id,
         username: targetUser.username,

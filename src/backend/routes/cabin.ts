@@ -373,6 +373,7 @@ router.post("/create", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), protect, va
           animalIcon: true,
           cabinId: true,
           isSuperAdmin: true,
+          tokenVersion: true,
         },
       });
       return { cabin, updatedUser };

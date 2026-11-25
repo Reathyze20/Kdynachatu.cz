@@ -179,6 +179,7 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "GET /api/users/me": AUTHENTICATED,
   "PATCH /api/users/me": AUTHENTICATED,
   "PATCH /api/users/me/password": AUTHENTICATED,
+  "POST /api/users/me/logout-all": AUTHENTICATED, // „Odhlásit všude“ (#485)
   "DELETE /api/users/me": AUTHENTICATED,
   "DELETE /api/users/:id/reservations": ADMIN,
   "PUT /api/users/:id/role": ADMIN,

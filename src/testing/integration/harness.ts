@@ -20,6 +20,8 @@ export interface TestUser {
   username: string;
   role: string;
   cabinId: string;
+  /** `User.tokenVersion` při vytvoření (výchozí 0). Po zneplatnění relací (#485) starý token neprojde. */
+  tokenVersion?: number;
 }
 
 export interface TestWorld {
@@ -57,7 +59,7 @@ async function createCabinUser(username: string, role: string, cabinId: string, 
       cabinId,
     },
   });
-  return { id: user.id, username, role, cabinId };
+  return { id: user.id, username, role, cabinId, tokenVersion: user.tokenVersion };
 }
 
 async function seedCabin(letter: "a" | "b", passwordHash: string) {
@@ -91,9 +93,16 @@ export async function addGuests(world: TestWorld): Promise<TestWorldWithGuests> 
   };
 }
 
-/** Token stejně, jak ho vydává aplikace (bez login endpointu a jeho rate limiteru). */
+/** Token stejně, jak ho vydává aplikace (bez login endpointu a jeho rate limiteru), s verzí tokenu uživatele (#485). */
 export function tokenFor(user: TestUser): string {
-  return signAuthToken({ id: user.id, username: user.username, role: user.role, cabinId: user.cabinId, isSuperAdmin: false });
+  return signAuthToken({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    cabinId: user.cabinId,
+    isSuperAdmin: false,
+    tokenVersion: user.tokenVersion ?? 0,
+  });
 }
 
 /** HTTP klient přihlášený jako daný uživatel. */

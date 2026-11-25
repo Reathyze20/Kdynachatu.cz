@@ -30,6 +30,7 @@ describe("JWT TTL", () => {
       role: "admin",
       cabinId: "cabin-1",
       isSuperAdmin: false,
+      tokenVersion: 3,
     });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload;
@@ -40,13 +41,15 @@ describe("JWT TTL", () => {
     assert.equal(decoded.role, "admin");
     assert.equal(decoded.cabinId, "cabin-1");
     assert.equal(decoded.isSuperAdmin, false);
+    assert.equal(decoded.tokenVersion, 3);
   });
 
-  test("all 4 token-issuing routes use signAuthToken and no route hardcodes a TTL", () => {
+  test("all 5 token-issuing routes use signAuthToken and no route hardcodes a TTL", () => {
     const expectedCallSites: Record<string, number> = {
       "auth.ts": 2, // POST /login, GET /refresh-token
       "cabin.ts": 1, // POST /create (založení chaty)
       "invites.ts": 1, // POST /accept/:token (přijetí pozvánky)
+      "users.ts": 1, // PATCH /me/password (nový token aktuálního zařízení, #485)
     };
 
     for (const [file, count] of Object.entries(expectedCallSites)) {
