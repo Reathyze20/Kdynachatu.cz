@@ -117,6 +117,12 @@ export function getQueueLength(): number {
   return readOwnQueue().length
 }
 
+/** Zahodí změny přihlášeného uživatele v aktivní chatě; cizí položky nechá (odhlášení, #537). */
+export function discardOwnQueue(): void {
+  const owner = currentOwner()
+  writeQueue(readQueue().filter((entry) => !isOwnedBy(entry, owner)))
+}
+
 /** Čeká ve frontě request s touto metodou a URL? (štítek „Čeká na odeslání“, #276) */
 export function isMutationQueued(method: string, url: string): boolean {
   const m = method.toLowerCase()

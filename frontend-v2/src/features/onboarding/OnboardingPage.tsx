@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useLogout } from '@/hooks/useLogout'
+import { LogoutPendingChangesDialog } from '@/components/layout/LogoutPendingChangesDialog'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { useCabinSignup } from '@/features/auth/hooks/useCabinSignup'
@@ -40,7 +41,7 @@ export default function OnboardingPage() {
 
 function CreateCabinOnboarding() {
   const { login, user } = useAuth()
-  const logoutThisDevice = useLogout()
+  const { requestLogout, pendingDialog } = useLogout()
   const navigate = useNavigate()
   const nameRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
@@ -184,7 +185,7 @@ function CreateCabinOnboarding() {
             </button>
             <button 
               type="button" 
-              onClick={logoutThisDevice}
+              onClick={requestLogout}
               className="button-secondary"
               style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
               data-testid="onboarding-logout-button"
@@ -192,6 +193,7 @@ function CreateCabinOnboarding() {
               Odhlásit se
             </button>
           </div>
+          <LogoutPendingChangesDialog {...pendingDialog} />
         </div>
       </div>
     </div>

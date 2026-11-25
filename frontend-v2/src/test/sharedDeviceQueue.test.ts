@@ -1,6 +1,6 @@
 import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { enqueueMutation, flushQueue, initOfflineQueue, isQueueableRequest } from '@/lib/offlineQueue'
+import { discardOwnQueue, enqueueMutation, flushQueue, getQueueLength, initOfflineQueue, isQueueableRequest } from '@/lib/offlineQueue'
 
 // #478: offline fronta je vázaná na uživatele a chatu, hesla a účet do ní nikdy nejdou.
 // Fiktivní data, žádná reálná chata.
@@ -74,6 +74,21 @@ describe('Offline fronta vázaná na uživatele a chatu (#478)', () => {
     await flushQueue()
 
     expect(storedQueue()).toHaveLength(1)
+  })
+
+  it('zahození smaže jen položky přihlášeného uživatele v aktivní chatě (#537)', () => {
+    signIn('u-petr', 'cabin-1')
+    queue('post', '/shopping-lists', { name: 'Petrův' })
+    signIn('u-jana', 'cabin-2')
+    queue('post', '/shopping-lists', { name: 'Janin v chatě 2' })
+    signIn('u-jana', 'cabin-1')
+    queue('post', '/shopping-lists', { name: 'Janin 1' })
+    queue('patch', '/notes/n-1', { text: 'Janin 2' })
+
+    discardOwnQueue()
+
+    expect(getQueueLength()).toBe(0)
+    expect(storedQueue().map((entry) => (entry.data as { name: string }).name)).toEqual(['Petrův', 'Janin v chatě 2'])
   })
 
   it('staré položky bez userId se při startu zahodí', () => {
