@@ -92,7 +92,7 @@ describe('Nastavení chaty: titulní fotka (#321)', () => {
     expect(del).toHaveBeenCalledWith('/cabin/cover-photo')
     expect(await screen.findByText('V Galerii u fotky zvol Nastavit jako titulní.')).toBeInTheDocument()
     expect(screen.queryByTestId('cabin-settings-cover-photo-preview')).toBeNull()
-    expect(showToast).toHaveBeenCalledWith('Titulní fotka odebrána', 'success')
+    expect(showToast).toHaveBeenCalledWith('Titulní fotka odebrána.', 'success')
     expect(name).toHaveValue('Chata U Lesa a Potoka')
   })
 

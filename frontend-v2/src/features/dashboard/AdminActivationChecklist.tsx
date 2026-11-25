@@ -74,7 +74,7 @@ export function AdminActivationChecklist({ data }: Props) {
       ? "Zbývá už jen poslední krok pro běžný provoz."
       : `Pro běžný provoz ještě zbývá dokončit ${pendingSteps.length} kroky.`;
   const lead = pendingSteps.length === 0
-    ? "Všechno důležité je nastavené a dashboard může zůstat čistě přehledový."
+    ? "Všechno důležité je nastavené."
     : `Na později nic nehoří, ale doporučujeme ještě dokončit: ${pendingSteps.map((step) => step.title).join(", ")}.`;
 
   return (

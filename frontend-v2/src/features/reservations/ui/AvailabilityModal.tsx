@@ -5,7 +5,6 @@ import {
   useUpdateAvailability,
   useDeleteAvailability,
 } from "../hooks/useReservations";
-import { showToast } from "@/lib/toast";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 
@@ -65,7 +64,7 @@ export function AvailabilityModal({ open, onClose, fromDate, toDate, myAvailabil
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!from || !to) { showToast("Vyplň datum od a do.", "error"); return; }
+    if (!from || !to) { setSubmitError("Vyplň datum od a do."); return; }
     setSubmitting(true);
     setSubmitError(null);
     try {

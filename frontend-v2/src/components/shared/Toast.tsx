@@ -78,6 +78,8 @@ function ToastCard({
   onDismiss: (id: number) => void
 }) {
   const Icon = ICONS[item.type] ?? Info
+  // Potvrzení čtečka přečte, až domluví; naléhavě jen chybu (#513).
+  const isError = item.type === 'error'
 
   return (
     <motion.div
@@ -89,8 +91,8 @@ function ToastCard({
       className={`toast toast-${item.type}`}
       data-testid="toast"
       data-toast-type={item.type}
-      role="alert"
-      aria-live="assertive"
+      role={isError ? 'alert' : 'status'}
+      aria-live={isError ? 'assertive' : 'polite'}
     >
       <Icon className="toast-icon" />
 

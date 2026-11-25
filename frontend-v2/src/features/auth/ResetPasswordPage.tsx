@@ -85,7 +85,7 @@ export function ResetPasswordPage() {
       })
       setViewState('success')
       setMessage(data.message || 'Heslo bylo změněno.')
-      showToast('Heslo bylo úspěšně změněno.', 'success')
+      showToast('Heslo změněno.', 'success')
     } catch (err: unknown) {
       const data = (err as { response?: { data?: ResetPasswordResponse } }).response?.data
       const text = data?.message || 'Nepodařilo se nastavit nové heslo.'

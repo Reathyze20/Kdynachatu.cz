@@ -6,7 +6,6 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { apiClient } from '@/api/client'
-import { showToast } from '@/lib/toast'
 import { Eye, EyeOff } from 'lucide-react'
 import type { DemoAccount } from '@/api/auth'
 import { AuthLayout } from '@/components/layout/AuthLayout'
@@ -88,7 +87,6 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
         isSuperAdmin: data.isSuperAdmin,
         remember: rememberMe,
       })
-      showToast('Přihlášení úspěšné', 'success')
       navigate(data.cabinId ? '/dashboard' : data.isSuperAdmin ? '/superadmin' : '/onboarding', { replace: true })
     } catch (err: unknown) {
       const data = (err as { response?: { data?: AuthErrorResponse } }).response?.data

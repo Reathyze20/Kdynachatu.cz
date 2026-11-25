@@ -233,7 +233,7 @@ export function SuperAdminPage() {
       await navigator.clipboard.writeText(value)
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
       setCopiedSecret(kind)
-      showToast('Hodnota zkopírována', 'success')
+      showToast('Hodnota zkopírována.', 'success')
       copyTimerRef.current = setTimeout(() => setCopiedSecret(null), 1800)
     } catch {
       showToast('Prohlížeč nepovolil kopírování.', 'error')

@@ -147,7 +147,7 @@ export function useCheckoutReservation() {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
     },
     onSuccess: () => {
-      showToast("Odjezdový checklist dokončen", "success");
+      showToast("Odjezdový checklist dokončen.", "success");
     },
   });
 }
@@ -163,7 +163,7 @@ export function useCreateAvailability() {
       apiClient.post<UserAvailability>("/reservations/availabilities", payload).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
-      showToast("Volno nahlášeno!", "success");
+      showToast("Volno nahlášeno.", "success");
     },
     onError: handleMutationError("Nepodařilo se uložit volno"),
   });
@@ -176,7 +176,7 @@ export function useUpdateAvailability() {
       apiClient.patch<UserAvailability>(`/reservations/availabilities/${id}`, payload).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
-      showToast("Volno upraveno!", "success");
+      showToast("Volno upraveno.", "success");
     },
     onError: handleMutationError("Nepodařilo se upravit volno"),
   });

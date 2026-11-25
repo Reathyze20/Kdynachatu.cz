@@ -46,7 +46,7 @@ export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
     },
     onSuccess: (data) => {
       onNoteUpdate(data.pinnedHandoverNote, data.handoverNoteAuthor, data.handoverNoteUpdatedAt);
-      showToast("Vzkaz uložen", "success");
+      showToast("Vzkaz uložen.", "success");
       setModalOpen(false);
       setSaveError(null);
     },

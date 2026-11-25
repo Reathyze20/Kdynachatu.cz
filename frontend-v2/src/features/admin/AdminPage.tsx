@@ -203,7 +203,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
       {
         onSuccess: () => {
           setSaveError(null)
-          showToast('Uživatel upraven', 'success')
+          showToast('Uživatel upraven.', 'success')
           onClose()
         },
         onError: (error) => {
@@ -226,7 +226,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
         onSuccess: () => {
           setConfirmError(null)
           setConfirmAction(null)
-          showToast('Rezervace smazány', 'success')
+          showToast('Rezervace smazány.', 'success')
         },
         onError: (error) => {
           setConfirmError(
@@ -246,7 +246,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
           onSuccess: () => {
             setConfirmError(null)
             setConfirmAction(null)
-            showToast('Uživatel odebrán z chaty', 'success')
+            showToast('Uživatel odebrán z chaty.', 'success')
             onDeleted()
             onClose()
           },
@@ -267,7 +267,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
         onSuccess: () => {
           setConfirmError(null)
           setConfirmAction(null)
-          showToast('Uživatel smazán', 'success')
+          showToast('Uživatel smazán.', 'success')
           onDeleted()
           onClose()
         },
@@ -498,7 +498,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
       {
         onSuccess: () => {
           setCreateError(null)
-          showToast('Pozvánka vytvořena', 'success')
+          showToast('Pozvánka vytvořena.', 'success')
           form.reset()
         },
         onError: (error) => {
@@ -519,7 +519,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
     revokeInvite.mutate(id, {
       onSuccess: () => {
         setActionError(null)
-        showToast('Pozvánka zrušena', 'success')
+        showToast('Pozvánka zrušena.', 'success')
         onSuccess?.()
       },
       onError: (error) => {
@@ -565,7 +565,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
       {
         onSuccess: (response) => {
           setEmailError(null)
-          showToast(response.message || 'Pozvánka odeslána e-mailem', 'success')
+          showToast(response.message || 'Pozvánka odeslána e-mailem.', 'success')
           handleCloseEmailModal()
         },
         onError: (error) => {
@@ -950,14 +950,14 @@ export function AdminPage() {
       role: String(fd.get('role') ?? 'user'),
     }
     if (!body.username || !body.password) {
-      showToast('Vyplň uživatelské jméno a heslo', 'error')
+      setCreateUserError('Vyplň uživatelské jméno a heslo.')
       return
     }
     setCreateUserError(null)
     createUser.mutate(body, {
       onSuccess: () => {
         setCreateUserError(null)
-        showToast('Uživatel vytvořen', 'success')
+        showToast('Uživatel vytvořen.', 'success')
         form.reset()
       },
       onError: (error) => {
