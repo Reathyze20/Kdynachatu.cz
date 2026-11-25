@@ -4,6 +4,7 @@
 import { Router, Request, Response } from "express";
 import { hashPassword } from "../../utils/password";
 import { signAuthToken } from "../../utils/authToken";
+import { setUploadsCookie } from "../../utils/uploadsCookie";
 import { FRONTEND_URL } from "../../config/config";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
@@ -298,6 +299,7 @@ router.post("/accept/:token", validate(acceptInviteSchema), async (req: Request,
 
     // Generate JWT — user is immediately logged in
     const jwtToken = signAuthToken(newUser);
+    setUploadsCookie(res, jwtToken);
 
     logger.info("INVITES", "Invite accepted — new user created", {
       userId: newUser.id,

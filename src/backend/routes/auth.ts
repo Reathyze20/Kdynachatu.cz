@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import { signAuthToken } from "../../utils/authToken";
+import { clearUploadsCookie, setUploadsCookie } from "../../utils/uploadsCookie";
 import { updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
@@ -99,6 +100,7 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
     }
 
     const token = signAuthToken(user);
+    setUploadsCookie(res, token);
 
     res.json({
       token,
@@ -506,6 +508,7 @@ router.get("/refresh-token", protect, async (req: Request, res: Response) => {
     if (!user) return res.status(404).json({ message: "Uživatel nenalezen." });
 
     const token = signAuthToken(user);
+    setUploadsCookie(res, token);
 
     logger.info("AUTH", "Token refreshed", { userId: user.id, hasCabin: !!user.cabinId });
 
@@ -523,6 +526,20 @@ router.get("/refresh-token", protect, async (req: Request, res: Response) => {
     logger.error("AUTH", "Refresh token error", { error: String(error) });
     res.status(500).json({ message: "Chyba serveru." });
   }
+});
+
+// ============================================================================
+//  Cookie pro fotky (#487): POST /api/session-cookie ji nastaví z tokenu přihlášené
+//  relace (start appky po nasazení, kdy cookie ještě nemá), POST /api/logout ji smaže.
+// ============================================================================
+router.post("/session-cookie", protect, (req: Request, res: Response) => {
+  setUploadsCookie(res, req.headers.authorization!.slice("Bearer ".length));
+  res.status(204).end();
+});
+
+router.post("/logout", (_req: Request, res: Response) => {
+  clearUploadsCookie(res);
+  res.status(204).end();
 });
 
 export default router;

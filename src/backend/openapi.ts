@@ -643,6 +643,27 @@ const paths: Record<string, OpenApiObject> = {
       },
     },
   },
+  "/api/session-cookie": {
+    post: {
+      tags: ["Auth"],
+      summary: "Nastav cookie pro fotky z tokenu prihlasene relace",
+      description: "Set-Cookie s tymz JWT (HttpOnly, SameSite=Strict, Path=/uploads, platnost do exp tokenu). /uploads/* vyda soubor jen s touto cookie a jen clenovi chaty, ktere patri (jinak 401/404). Cookie nastavuje i login a kazde vydani noveho tokenu.",
+      security: bearerSecurity,
+      responses: {
+        "204": { description: "Cookie nastavena" },
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+      },
+    },
+  },
+  "/api/logout": {
+    post: {
+      tags: ["Auth"],
+      summary: "Odhlaseni: smaze cookie pro fotky",
+      responses: {
+        "204": { description: "Cookie smazana" },
+      },
+    },
+  },
   "/api/register": {
     post: {
       tags: ["Auth"],

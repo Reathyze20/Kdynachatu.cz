@@ -51,6 +51,8 @@ const EXCLUDED_URL_PARTS = [
   '/staging-feedback', // tester má hned vidět, že se neuložilo, a text mu zůstane v poli
   '/users/me/password',
   '/users/me/logout-all',
+  '/session-cookie',
+  '/logout',
 ]
 /** Klíč těla s heslem: heslo nesmí skončit v plaintextu v LocalStorage (#478). */
 const PASSWORD_KEY = /password/i

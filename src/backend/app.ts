@@ -20,6 +20,7 @@ import { requestContext } from "../utils/asyncContext";
 import { httpLogger } from "../middleware/httpLogger";
 import { initSocketServer } from "../utils/socket";
 import { openApiSpec } from "./openapi";
+import { createUploadsHandler } from "./uploadsAccess";
 
 // Import routes
 import authRoutes from "./routes/auth";
@@ -181,12 +182,8 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
     fs.mkdirSync(uploadsPath, { recursive: true });
   }
 
-  // Uploads are served by both dev and prod
-  app.use("/uploads", express.static(uploadsPath, {
-    maxAge: "7d",
-    etag: true,
-    immutable: true, // Upload filenames contain UUIDs — never change
-  }));
+  // Uploady jen přihlášenému členovi chaty, které soubor patří (cookie, #487); dev i prod
+  app.use("/uploads", createUploadsHandler(uploadsPath));
 
   // In production, serve Vite-built static assets from dist/frontend
   // In dev, Vite dev server handles frontend (proxied via vite.config.ts)

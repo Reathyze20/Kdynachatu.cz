@@ -68,4 +68,12 @@ export const authApi = {
     const { data } = await apiClient.post<LogoutEverywhereResponse>('/users/me/logout-all')
     return data
   },
+  /** Nastaví httpOnly cookie pro fotky z tokenu přihlášené relace (#487); login ji nastavuje sám. */
+  syncUploadsCookie: async (): Promise<void> => {
+    await apiClient.post('/session-cookie')
+  },
+  /** Smaže cookie pro fotky (#487). */
+  logout: async (): Promise<void> => {
+    await apiClient.post('/logout')
+  },
 }

@@ -69,7 +69,7 @@ export default defineConfig({
         // a chatě; offline čtení řeší TanStack Query, zápisy lib/offlineQueue.
         runtimeCaching: [
           {
-            // Fotky a náhledy (veřejné statické soubory, názvy se nemění)
+            // Fotky a náhledy (jen s cookie přihlášeného člena chaty, #487; názvy se nemění)
             urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/uploads/'),
             handler: 'CacheFirst',
             options: {

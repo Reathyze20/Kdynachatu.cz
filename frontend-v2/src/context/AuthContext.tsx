@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { SESSION_RESET_EVENT } from '@/lib/sessionReset'
 import { getActiveCabinId, getStoredUserId } from '@/lib/authStorage'
+import { authApi } from '@/api/auth'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -108,6 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
   const navigate = useNavigate()
 
+  // Relace z doby před cookie pro fotky (#487) ji dostane při startu appky; nové přihlášení ji má z loginu
+  useEffect(() => {
+    if (readStoredUser().token) authApi.syncUploadsCookie().catch(() => undefined)
+  }, [])
+
   // Handle session expiry fired by axios interceptor
   useEffect(() => {
     const resetAuthState = () => {
@@ -180,8 +186,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setToken(null)
     setActiveCabinId(null)
-    // Úklid cache dat účtu na sdíleném zařízení (#478, lib/sessionReset.ts)
+    // Úklid cache dat účtu na sdíleném zařízení (#478, lib/sessionReset.ts) a cookie pro fotky (#487)
     window.dispatchEvent(new CustomEvent(SESSION_RESET_EVENT))
+    authApi.logout().catch(() => undefined)
     navigate('/', { replace: true })
   }, [navigate])
 
