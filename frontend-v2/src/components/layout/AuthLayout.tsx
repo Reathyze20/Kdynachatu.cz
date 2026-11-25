@@ -28,7 +28,7 @@ interface AuthLayoutProps extends HTMLAttributes<HTMLDivElement> {
  */
 export function AuthLayout({ subtitle, className, children, ...props }: AuthLayoutProps) {
   const sheet = (
-    <Card className={cn('auth-card w-full max-w-md px-6 py-8 md:px-8', className)} {...props}>
+    <Card className={cn('auth-card w-full max-w-md px-6 py-8 md:p-8', className)} {...props}>
       <div className="mb-6 flex flex-col items-center gap-2 text-center">
         <img src="/logo-icon.svg" alt="" className="h-12 w-auto" />
         <h1 className="text-page-title text-(--text-main)">Kdy na chatu</h1>

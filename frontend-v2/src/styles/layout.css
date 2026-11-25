@@ -5,7 +5,7 @@
    Auth pages — pole formuláře v rámu AuthLayout (components/layout/AuthLayout.tsx, #525)
    ============================================================================ */
 
-/* ── Auth brand (logo + název) ──────────────────────────────────────── */
+/* ── Auth brand (logo + název) – už jen OnboardingPage, zmizí s jejím převodem na AuthLayout (#525) ── */
 
 .auth-brand {
   display: flex;

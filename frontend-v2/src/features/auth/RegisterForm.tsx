@@ -118,7 +118,7 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
           data-testid="register-back-to-login-link"
         >
           <ArrowLeft size={16} aria-hidden="true" />
-          Vrátit se na přihlášení
+          Zpět na přihlášení
         </a>
       </AuthLayout>
     )
