@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { membersApi } from '@/api/members'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
@@ -39,6 +40,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
   const [emailMessage, setEmailMessage] = useState('')
+  // Změna e-mailu chce současné heslo (#475)
+  const [emailPassword, setEmailPassword] = useState('')
+  const [emailPasswordError, setEmailPasswordError] = useState('')
 
   // ─── Color / Avatar state ───────────────────────────────────────────────────
   const [selectedColor, setSelectedColor] = useState(FALLBACK_MEMBER_COLOR)
@@ -94,6 +98,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     setEmail(profileData?.email ?? '')
     setEmailError(false)
     setEmailMessage('')
+    setEmailPassword('')
+    setEmailPasswordError('')
     setSelectedColor(profileData?.color ?? FALLBACK_MEMBER_COLOR)
     setSelectedAnimal(profileData?.animalIcon ?? '')
     setSecurityMessage('')
@@ -135,6 +141,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   }
 
   // ─── Změnit e-mail ──────────────────────────────────────────────────────────
+  const emailChanged = email.trim() !== (profileData?.email ?? '')
+
   async function handleChangeEmail() {
     const emailVal = email.trim()
     if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
@@ -142,14 +150,24 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       setEmailError(true)
       return
     }
+    if (!emailChanged) return
+    if (!emailPassword) {
+      setEmailPasswordError('Pro změnu e-mailu zadej své současné heslo.')
+      return
+    }
     try {
-      await apiClient.patch('/users/me', { email: emailVal })
+      await authApi.changeMyEmail(emailVal, emailPassword)
       setEmailMessage('')
-      setEmailError(false)
-      showToast('E-mail změněn', 'success')
-    } catch {
-      setEmailMessage('Chyba.')
-      setEmailError(true)
+      setEmailPassword('')
+      showToast('E-mail změněn.', 'success')
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+    } catch (err: unknown) {
+      const response = (err as { response?: { status?: number; data?: { message?: string } } })?.response
+      if (response?.status === 403) {
+        setEmailPasswordError(response.data?.message ?? 'Nesprávné heslo. Zkus to znovu.')
+      } else {
+        setEmailMessage('E-mail se nepodařilo změnit. Zkus to znovu.')
+      }
     }
   }
 
@@ -423,6 +441,24 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   <p id="profile-email-message" className="message" style={{ marginTop: '5px', textAlign: 'left' }}>
                     {emailMessage}
                   </p>
+                )}
+                {emailChanged && (
+                  <div className="mt-3">
+                    <label htmlFor="profile-email-password">Současné heslo</label>
+                    <Input
+                      type="password"
+                      id="profile-email-password"
+                      autoComplete="current-password"
+                      maxLength={100}
+                      value={emailPassword}
+                      onChange={(e) => { setEmailPassword(e.target.value); setEmailPasswordError('') }}
+                      invalid={Boolean(emailPasswordError)}
+                      aria-describedby={`profile-email-password-hint${emailPasswordError ? ' profile-email-password-error' : ''}`}
+                      data-testid="profile-email-password-input"
+                    />
+                    <p id="profile-email-password-hint" className="mt-1 text-label text-(--text-muted)">Na původní adresu pošleme upozornění o změně.</p>
+                    {emailPasswordError && <p id="profile-email-password-error" className="mt-1 text-label text-(--status-error)">{emailPasswordError}</p>}
+                  </div>
                 )}
               </div>
             </div>

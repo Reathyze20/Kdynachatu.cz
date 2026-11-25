@@ -9,6 +9,7 @@ import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
 import logger from "../../utils/logger";
 import { signAuthToken } from "../../utils/authToken";
+import { sendEmailChangedNotice } from "../../utils/email";
 import { deleteUserAndRevokeSessions, revokeUserSessions, updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import type { JwtPayload } from "../../types";
 
@@ -134,9 +135,23 @@ router.get("/me", protect, async (req: Request, res: Response) => {
 router.patch("/me", protect, validate(updateProfileSchema), async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: "Nejdřív se přihlas." });
 
-  const { email, color, animalIcon } = req.body;
+  const { email, color, animalIcon, currentPassword } = req.body;
 
   try {
+    // Změna e-mailu chce současné heslo (#475): ukradený token nesmí stačit na vlastní adresu + reset hesla.
+    const current = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { username: true, email: true, passwordHash: true },
+    });
+    if (!current) return res.status(404).json({ message: "Uživatel nenalezen" });
+
+    const emailChanged = email !== undefined && email !== current.email;
+    if (emailChanged && !(currentPassword && (await verifyPassword(currentPassword, current.passwordHash)))) {
+      return res.status(403).json({
+        message: currentPassword ? "Nesprávné heslo. Zkus to znovu." : "Pro změnu e-mailu zadej své současné heslo.",
+      });
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: req.user.userId },
       data: {
@@ -146,6 +161,16 @@ router.patch("/me", protect, validate(updateProfileSchema), async (req: Request,
       },
       select: { email: true, color: true, animalIcon: true }
     });
+
+    if (emailChanged && current.email) {
+      // Změna už platí; nedoručené upozornění ji nevrací, jen se zaloguje.
+      try {
+        await sendEmailChangedNotice(current.email, { username: current.username, newEmail: updatedUser.email });
+      } catch (error) {
+        logger.error("USERS", "E-mail changed notice failed", { userId: req.user.userId, error: String(error) });
+      }
+    }
+
     res.json({ message: "Profil aktualizován.", user: updatedUser });
   } catch (error) {
     logger.error("USERS", "Update me error", { error: String(error) });

@@ -202,6 +202,19 @@ export interface SetCabinCoverPhotoRequest {
   photoId: string;
 }
 
+// PATCH /api/users/me – změna e-mailu (i odebrání) chce současné heslo, ostatní pole ne (#475).
+export interface UpdateProfileRequest {
+  email?: string | null;
+  color?: string;
+  animalIcon?: string;
+  currentPassword?: string;
+}
+
+export interface UpdateProfileResponse {
+  message: string;
+  user: { email: string | null; color: string; animalIcon: string | null };
+}
+
 // PATCH /api/users/me/password – změna vlastního hesla zneplatní všechna přihlášení (#485).
 // Aktuální zařízení dostane v odpovědi nový token, aby se nemuselo znovu přihlašovat.
 export interface ChangeMyPasswordResponse {
