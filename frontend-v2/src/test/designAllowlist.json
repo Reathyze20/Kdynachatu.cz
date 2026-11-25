@@ -5,7 +5,7 @@
       "styles/cabin-settings.css", "styles/calendar.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
-      "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/superadmin.css", "styles/toast.css"
+      "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/toast.css"
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
@@ -54,7 +54,7 @@
       "styles/calendar.css", "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
       "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/onboarding.css", "styles/reconstruction.css",
-      "styles/reservations.css", "styles/shopping.css", "styles/status-header.css", "styles/superadmin.css", "styles/toast.css"
+      "styles/reservations.css", "styles/shopping.css", "styles/status-header.css", "styles/toast.css"
     ],
     "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"],
     "Skeleton s mřížkou sm:/xl:, sjednotí se s rozvržením stránek": ["components/shared/RouteTransitionSkeleton.tsx"]
@@ -69,8 +69,7 @@
       "features/reservations/calendar/CalendarGrid.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx", "features/settings/CabinSettingsPage.tsx",
-      "features/shopping/EditInventoryModal.tsx", "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx",
-      "features/superadmin/SuperAdminPage.tsx"
+      "features/shopping/EditInventoryModal.tsx", "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx"
     ]
   },
   "legacyCard": {
@@ -81,15 +80,14 @@
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
       "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/onboarding/OnboardingPage.tsx",
-      "features/settings/CabinSettingsPage.tsx", "features/superadmin/SuperAdminPage.tsx"
+      "features/settings/CabinSettingsPage.tsx"
     ]
   },
   "legacyEmptyState": {
     "Jednorázový prázdný stav *-empty-*, nahradí ho <EmptyState> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/LogsPanel.tsx",
       "features/gallery/FolderGrid.tsx", "features/gallery/PhotoGrid.tsx",
-      "features/shopping/ListDetail.tsx", "features/shopping/ListMaster.tsx", "features/shopping/PantryView.tsx",
-      "features/superadmin/SuperAdminPage.tsx"
+      "features/shopping/ListDetail.tsx", "features/shopping/ListMaster.tsx", "features/shopping/PantryView.tsx"
     ]
   },
   "newCssFile": {
@@ -99,7 +97,7 @@
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/onboarding.css", "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",
-      "styles/status-header.css", "styles/superadmin.css", "styles/toast.css", "styles/view-transitions.css"
+      "styles/status-header.css", "styles/toast.css", "styles/view-transitions.css"
     ],
     "Duplicitní import hub, který nic neimportuje (vstup je src/index.css), smazat": ["styles/index.css"]
   },
@@ -108,7 +106,7 @@
       "components/shared/LogsPanel.tsx",
       "features/dashboard/PinnedNote.tsx", "features/gallery/FolderGrid.tsx", "features/landing/LandingPage.tsx",
       "features/notes/ChatView.tsx",
-      "features/superadmin/SuperAdminPage.tsx", "lib/errorDetails.ts"
+      "lib/errorDetails.ts"
     ],
     "Lokální pole s názvy měsíců, převede se na monthName / formatLongDate z lib/format.ts (#456)": [
       "features/diary/NotebookModal.tsx", "features/reservations/calendar/CalendarGrid.tsx",
@@ -131,7 +129,7 @@
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
       "features/notes/MessageBubble.tsx",
       "features/reservations/ui/BookingForm.tsx",
-      "features/reservations/ui/ReservationList.tsx", "features/superadmin/SuperAdminPage.tsx", "features/weather/StayWeatherCard.tsx"
+      "features/reservations/ui/ReservationList.tsx", "features/weather/StayWeatherCard.tsx"
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
       "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
