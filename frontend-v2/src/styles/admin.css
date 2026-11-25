@@ -1336,10 +1336,6 @@
     max-width: none;
   }
 
-  .admin-overview-copy--wide {
-    max-width: none;
-  }
-
   .admin-sidebar-stack {
     grid-template-columns: 1fr;
   }

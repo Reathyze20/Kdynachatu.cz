@@ -17,10 +17,13 @@ const supportSteps = [
   'Detail logu pak spojí request, modul, cestu i support stopu do jednoho místa.',
 ]
 
-const summary = [
-  ['Rychlý postup', 'Vezmi support kód, filtruj logy a dohledej request bez SSH skákání po serveru.'],
-  ['Frontend i backend', 'Panel umí míchat klientské chyby, warningy i HTTP provoz podle jedné společné stopy.'],
-  ['Navazující akce', 'Ze supportu se hned vrátíš na členy, pozvánky nebo nastavení, když problém souvisí s oprávněním nebo konfigurací.'],
+const summaryCards = [
+  { title: 'Rychlý postup', text: 'Vezmi support kód, filtruj logy a dohledej request bez SSH skákání po serveru.' },
+  { title: 'Frontend i backend', text: 'Panel umí míchat klientské chyby, warningy i HTTP provoz podle jedné společné stopy.' },
+  {
+    title: 'Navazující akce',
+    text: 'Ze supportu se hned vrátíš na členy, pozvánky nebo nastavení, když problém souvisí s oprávněním nebo konfigurací.',
+  },
 ]
 
 const quickLinks = [
@@ -47,7 +50,7 @@ export function AdminDiagnosticsPage() {
         <AdminSectionMenu active="diagnostics" />
 
         <div className="grid gap-3 md:grid-cols-3">
-          {summary.map(([title, text]) => (
+          {summaryCards.map(({ title, text }) => (
             <article key={title} className="grid content-start gap-1 rounded-xl bg-inset p-3 md:p-4">
               <strong className="text-card-title text-(--text-main)">{title}</strong>
               <span className="text-label text-(--text-muted)">{text}</span>
