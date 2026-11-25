@@ -114,24 +114,6 @@
   min-height: 46px;
 }
 
-.admin-shell-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.admin-shell-topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.admin-shell-copy {
-  min-width: 0;
-  max-width: 58rem;
-}
-
 .admin-section-nav {
   position: sticky;
   top: 0.35rem;
@@ -199,19 +181,6 @@
   color: var(--text-muted, #6b7280);
   font-size: 0.75rem;
   line-height: 1.1;
-}
-
-.admin-page-title--compact {
-  max-width: none;
-  margin-top: 0.45rem;
-  font-size: clamp(1.45rem, 2.1vw, 1.95rem);
-}
-
-.admin-page-lead--compact {
-  margin-top: 0.45rem;
-  max-width: 60ch;
-  font-size: 0.9rem;
-  line-height: 1.55;
 }
 
 .admin-summary-strip {
@@ -544,7 +513,8 @@
 
 .admin-user-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  /* Štítky pod jménem, akce vpravo: ve třech sloupcích se jméno lámalo po písmenech. */
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.9rem;
   align-items: center;
   padding: 1rem 1.05rem;
@@ -587,17 +557,6 @@
   overflow-wrap: anywhere;
 }
 
-.admin-user-self-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.22rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(63, 123, 99, 0.12);
-  color: rgb(var(--ok));
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
 .admin-user-subline {
   display: flex;
   flex-wrap: wrap;
@@ -618,77 +577,65 @@
 }
 
 .admin-user-tags {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 0.5rem;
 }
 
+/* Štítky role a stavu: typografie stavového štítku (DESIGN.md §3 Eyebrow), barvy z rolí §2.
+   Kontrast textu na podbarvení ≥ 4,5 : 1. Stav nese barvu z --ok / --low / --empty, role je tichá
+   na --inset, vlastní účet a superadmin jsou zvýrazněná plocha (--brand-primary-light). */
+.admin-user-self-badge,
 .admin-role-badge,
 .admin-status-badge,
 .admin-invite-status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.45rem 0.78rem;
-  border-radius: 999px;
-  font-size: 0.77rem;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  background: rgb(var(--inset));
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
   font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.admin-role-badge--admin {
-  background: rgba(214, 244, 224, 0.95);
-  color: #166534;
-}
-
-.admin-role-badge--member {
-  background: rgba(223, 232, 255, 0.95);
-  color: #3730a3;
-}
-
-.admin-role-badge--guest {
-  background: rgba(255, 242, 210, 0.95);
-  color: #9a4d00;
-}
-
+.admin-user-self-badge,
 .admin-role-badge--superadmin {
-  background: linear-gradient(135deg, rgba(29, 78, 216, 0.95), rgba(67, 56, 202, 0.92));
-  color: #fff;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+}
+
+.admin-role-badge--admin {
+  color: var(--text-main);
 }
 
 .admin-status-badge--active,
 .admin-invite-status--active {
-  background: rgba(224, 247, 233, 0.9);
-  color: #166534;
+  background: var(--ok-bg);
+  color: rgb(var(--ok));
 }
 
-.admin-status-badge--pending {
-  background: rgba(254, 243, 199, 0.92);
-  color: #9a4d00;
+.admin-status-badge--pending,
+.admin-invite-status--expired {
+  background: var(--low-bg);
+  color: rgb(var(--low));
 }
 
 .admin-status-badge--banned {
-  background: rgba(254, 226, 226, 0.95);
-  color: #b91c1c;
-}
-
-.admin-status-badge--inactive {
-  background: rgba(243, 244, 246, 0.96);
-  color: #4b5563;
-}
-
-.admin-invite-status--expired {
-  background: rgba(255, 236, 214, 0.95);
-  color: #9a4d00;
-}
-
-.admin-invite-status--accepted {
-  background: rgba(239, 246, 255, 0.95);
-  color: #1d4ed8;
+  background: var(--empty-bg);
+  color: rgb(var(--empty));
 }
 
 .admin-user-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   display: flex;
   justify-content: flex-end;
 }
@@ -717,47 +664,6 @@
   color: var(--text-muted, #6b7280);
   font-size: 0.84rem;
   line-height: 1.6;
-}
-
-.admin-task-list {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.admin-task-list .btn {
-  width: 100%;
-  justify-content: center;
-  min-height: 46px;
-}
-
-.admin-focus-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.admin-focus-metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.9rem;
-  border-radius: 16px;
-  border: 1px solid rgba(63, 123, 99, 0.12);
-  background: rgba(248, 251, 249, 0.92);
-}
-
-.admin-focus-metric span {
-  color: var(--text-muted, #6b7280);
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.admin-focus-metric strong {
-  color: var(--text-main, #1a2721);
-  font-size: 1.4rem;
-  line-height: 1.1;
 }
 
 .admin-support-steps {
@@ -930,10 +836,6 @@
   color: var(--text-muted, #6b7280);
   font-size: 0.82rem;
   line-height: 1.55;
-}
-
-.admin-user-card--skeleton {
-  grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
 .admin-user-avatar-skeleton {
@@ -1171,14 +1073,8 @@
   }
 
   .admin-summary-strip,
-  .admin-workspace-grid,
-  .admin-focus-metrics {
+  .admin-workspace-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-shell-topbar {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .admin-sidebar-stack {
@@ -1249,8 +1145,7 @@
   }
 
   .admin-workspace-grid,
-  .admin-summary-strip,
-  .admin-focus-metrics {
+  .admin-summary-strip {
     grid-template-columns: 1fr;
   }
 
@@ -1273,6 +1168,8 @@
 
   .admin-user-tags,
   .admin-user-actions {
+    grid-column: auto;
+    grid-row: auto;
     justify-content: flex-start;
   }
 
