@@ -10,6 +10,7 @@ import './index.css'
 import App from './App'
 import { installGlobalErrorHandlers } from '@/lib/errorReporting'
 import { initOfflineQueue } from '@/lib/offlineQueue'
+import { installSessionCacheReset } from '@/lib/sessionReset'
 import { initPwaInstall } from '@/lib/pwaInstall'
 import { clearLegacyStorage } from '@/lib/legacyStorage'
 
@@ -102,6 +103,8 @@ window.addEventListener('offline-queue:flushed', () => {
   // Server má po přehrání fronty novější data než cache → obnovit vše
   void queryClient.invalidateQueries()
 })
+// Sdílené zařízení (#478): konec session smaže cache dotazů i uploadů
+installSessionCacheReset(queryClient)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
