@@ -43,7 +43,7 @@ export function useDeleteThread() {
     onSuccess: () => qc.invalidateQueries({ queryKey: THREADS_KEY }),
     onError: (err) => {
       showToast(
-        isNetworkError(err) ? OFFLINE_TOAST_MSG : "Nepodařilo se smazat kanál.",
+        isNetworkError(err) ? OFFLINE_TOAST_MSG : "Téma se nepodařilo smazat. Zkus to znovu.",
         isNetworkError(err) ? "info" : "error",
       );
     },

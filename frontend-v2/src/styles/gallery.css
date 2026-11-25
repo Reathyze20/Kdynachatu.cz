@@ -537,6 +537,12 @@ button.folder-context-item.folder-context-item--danger:hover {
   filter: brightness(0.85);
 }
 
+/* Cizí fotka ve výběru: smazat ji smí jen autor nebo správce (#507) */
+.photo-masonry-item--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Description overlay */
 .photo-masonry-desc {
   position: absolute;

@@ -20,10 +20,13 @@ interface Props {
   onDelete: (id: string) => void
   onSearchChange: (v: string) => void
   onSortChange: (v: string) => void
+  /** Smí uživatel album smazat? Bez něj se Smazat nenabízí (#507). */
+  canDelete?: (folder: GalleryFolder) => boolean
 }
 
-function FolderContextMenu({ folderId, onRename, onDelete, onClose }: {
+function FolderContextMenu({ folderId, canDelete, onRename, onDelete, onClose }: {
   folderId: string
+  canDelete: boolean
   onRename: (id: string) => void
   onDelete: (id: string) => void
   onClose: () => void
@@ -47,13 +50,15 @@ function FolderContextMenu({ folderId, onRename, onDelete, onClose }: {
         <Pencil size={14} />
         Přejmenovat
       </button>
-      <button
-        className="folder-context-item folder-context-item--danger"
-        onClick={() => { onDelete(folderId); onClose() }}
-      >
-        <Trash2 size={14} />
-        Smazat
-      </button>
+      {canDelete && (
+        <button
+          className="folder-context-item folder-context-item--danger"
+          onClick={() => { onDelete(folderId); onClose() }}
+        >
+          <Trash2 size={14} />
+          Smazat
+        </button>
+      )}
     </div>
   )
 }
@@ -78,6 +83,7 @@ export function FolderGrid({
   onDelete,
   onSearchChange,
   onSortChange,
+  canDelete = () => false,
 }: Props) {
   const [contextMenuId, setContextMenuId] = useState<string | null>(null)
 
@@ -232,6 +238,7 @@ export function FolderGrid({
             {contextMenuId === f.id && (
               <FolderContextMenu
                 folderId={f.id}
+                canDelete={canDelete(f)}
                 onRename={onRename}
                 onDelete={onDelete}
                 onClose={() => setContextMenuId(null)}

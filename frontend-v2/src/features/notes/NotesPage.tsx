@@ -22,7 +22,9 @@ import apiClient from "@/api/client";
 import { PromptDialog } from "@/components/shared/PromptDialog";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
-import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { getNetworkAwareActionMessage, isForbiddenError } from "@/lib/networkError";
+import { useAuth } from "@/context/AuthContext";
+import { isAuthorOrAdmin } from "@/lib/permissions";
 
 interface Users {
   username: string;
@@ -32,6 +34,7 @@ interface Users {
 
 export function NotesPage() {
   useDocumentTitle('Chat');
+  const { user } = useAuth();
   const {
     data: threads = [],
     isLoading: threadsLoading,
@@ -117,6 +120,11 @@ export function NotesPage() {
     return threads.find((t) => t.id === activeThreadId)?.name ?? "—";
   }, [activeThreadId, threads]);
 
+  // Téma smí smazat jen ten, kdo ho založil, nebo správce – stejně jako backend (#507).
+  const activeThread = threads.find((t) => t.id === activeThreadId);
+  const canDeleteActiveThread =
+    activeThreadId !== null && !!activeThread && isAuthorOrAdmin(user, { id: activeThread.createdById });
+
   const handleSelectThread = (id: string | null) => {
     setActiveThreadId(id);
     setReplyToNote(null);
@@ -166,11 +174,13 @@ export function NotesPage() {
       showToast("Téma bylo smazáno.", "success");
     } catch (error) {
       setDeleteThreadError(
-        getNetworkAwareActionMessage(
-          error,
-          "Téma se nepodařilo smazat. Zkus to znovu.",
-          "Spojení vypadlo dřív, než se téma stihlo smazat. Zkus to znovu po obnovení připojení.",
-        ),
+        isForbiddenError(error)
+          ? "Téma může smazat jen ten, kdo ho založil, nebo správce."
+          : getNetworkAwareActionMessage(
+              error,
+              "Téma se nepodařilo smazat. Zkus to znovu.",
+              "Spojení vypadlo dřív, než se téma stihlo smazat. Zkus to znovu po obnovení připojení.",
+            ),
       );
     }
   };
@@ -276,7 +286,7 @@ export function NotesPage() {
                   onAddToShopping={setShoppingNote}
                   onCreateRepair={setRepairNote}
                   onReply={setReplyToNote}
-                  onDeleteThread={handleDeleteThread}
+                  onDeleteThread={canDeleteActiveThread ? handleDeleteThread : undefined}
                 />
               )}
               <MessageInput

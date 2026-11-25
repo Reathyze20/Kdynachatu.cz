@@ -21,6 +21,8 @@ export interface DiaryFolder {
   endDate: string
   activityTag?: ActivityTag | null
   createdAt: string
+  /** Uživatelské jméno autora; přejmenovat a smazat smí autor nebo správce. */
+  createdBy?: string
   stats?: { entries: number; photos: number }
 }
 

@@ -6,6 +6,7 @@ import { createFolderSchema, renameFolderSchema, updatePhotoDescriptionSchema, b
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { emitToCabin } from "../../utils/socket";
+import type { BulkDeletePhotosResponse } from "../../types";
 import { UPLOADS_PATH, THUMBS_PATH } from "../../config/config";
 import fs from "fs";
 import path from "path";
@@ -530,7 +531,9 @@ router.delete("/photos", protect, requireCabin, validate(bulkDeletePhotosSchema)
     });
 
     emitToCabin(req.user!.cabinId!, "gallery:changed", { folderId: deletable[0]?.folderId });
-    res.json({ message: `Smazáno ${deletable.length} fotek.` });
+    // `deleted`: kolik fotek se opravdu smazalo – cizí fotky člena se přeskočí (#507).
+    const body: BulkDeletePhotosResponse = { message: `Smazáno ${deletable.length} fotek.`, deleted: deletable.length };
+    res.json(body);
   } catch (error) {
     logger.error("GALLERY", "Bulk delete photos error", { error: String(error), count: photoIds?.length });
     res.status(500).json({ message: "Chyba při hromadném mazání." });
