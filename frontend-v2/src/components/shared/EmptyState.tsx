@@ -1,18 +1,18 @@
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ActionButton, type Action } from "./actionButton"
+import { ActionButton, type Action } from "./ActionButton"
 
 export interface EmptyStateProps {
-  /** Ikona lucide, vykreslí se 24 px a čtečka ji přeskočí. */
+  /** Ikona lucide, vykreslĂ­ se 24 px a ÄŤteÄŤka ji pĹ™eskoÄŤĂ­. */
   icon: LucideIcon
-  /** Jedna věta: „Zatím tu nejsou žádná alba.“ (DESIGN.md §8). */
+  /** Jedna vÄ›ta: â€žZatĂ­m tu nejsou ĹľĂˇdnĂˇ alba.â€ś (DESIGN.md Â§8). */
   message: string
-  /** Volitelná akce, co udělat dál („Nové album“). */
+  /** VolitelnĂˇ akce, co udÄ›lat dĂˇl (â€žNovĂ© albumâ€ś). */
   action?: Action
   className?: string
 }
 
-/** Prázdná sekce (DESIGN.md §7 „Stavy“): ikona, jedna věta a volitelná akce. Místo jednorázových tříd `*-empty-*`. */
+/** PrĂˇzdnĂˇ sekce (DESIGN.md Â§7 â€žStavyâ€ś): ikona, jedna vÄ›ta a volitelnĂˇ akce. MĂ­sto jednorĂˇzovĂ˝ch tĹ™Ă­d `*-empty-*`. */
 export function EmptyState({ icon: Icon, message, action, className }: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center gap-3 px-4 py-8 text-center", className)}>
