@@ -35,7 +35,7 @@ interface Props {
 }
 
 export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, onAssign }: Props) {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const isMine = r.userId === user?.userId;
   const isAdmin = user?.role === "admin";
   const canEdit = isMine || isAdmin;
@@ -59,7 +59,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
   const { data: watchData, refetch: refetchWatch } = useQuery<WatchStatus>({
     queryKey: ["watch", r.id],
     queryFn: () => apiClient.get<WatchStatus>(`/reservations/${r.id}/watch`).then((res) => res.data),
-    enabled: !isMine,
+    enabled: !isMine && !isGuest, // hlídání termínu host nemá (#484)
   });
 
   const handleWatchToggle = async (watching: boolean) => {
@@ -203,7 +203,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
           )}
         </div>
         <div className="flex gap-2 items-center">
-          {!isMine && (
+          {!isMine && !isGuest && (
             watchData?.watching ? (
               <button className="px-3 py-1.5 rounded-[12px] text-[12px] font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm" onClick={() => void handleWatchToggle(true)} disabled={watchSubmitting} data-testid="reservation-watch-button">
                 Zrušit

@@ -14,7 +14,7 @@ import { InstallMenuItem } from '@/components/shared/InstallCard'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 
 export function MobileNav() {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
@@ -22,8 +22,8 @@ export function MobileNav() {
 
   if (!user?.cabinId) return null
 
-  const tabs = visibleNavItems(PRIMARY_NAV, cabin?.features)
-  const more = visibleNavItems(MORE_NAV, cabin?.features)
+  const tabs = visibleNavItems(PRIMARY_NAV, cabin?.features, isGuest)
+  const more = visibleNavItems(MORE_NAV, cabin?.features, isGuest)
   const active = findActiveNavItem([...tabs, ...more], location)
   const activeMore = active && more.includes(active) ? active : undefined
   // V sekci schované pod „Víc“ má záložka ikonu té sekce, popisek zůstává „Víc“ (úzké displeje).

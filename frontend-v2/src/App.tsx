@@ -20,6 +20,7 @@ import { GlobalFallback } from '@/components/shared/GlobalFallback'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { RouteLoadingFallback } from '@/components/shared/RouteTransitionSkeleton'
 import { lazyRetry } from '@/lib/lazyRetry'
+import { isGuestAllowedPath } from '@/lib/navRoutes'
 import { Suspense } from 'react'
 import type { ReactNode } from 'react'
 
@@ -63,6 +64,13 @@ function CabinGuard({ children }: { children: ReactNode }) {
     return <Navigate to="/onboarding" replace />
   }
 
+  return <>{children}</>
+}
+// ─── Guard: host smí jen stránky svého pobytu (#484), ostatní ho vrátí na Přehled ─
+function GuestGuard({ children }: { children: ReactNode }) {
+  const { isGuest } = useAuth()
+  const location = useLocation()
+  if (isGuest && !isGuestAllowedPath(location.pathname)) return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
 // ─── Guard pro admin-only routy (zabrání lazy-load chunků pro ne-adminy) ─────────
@@ -139,7 +147,9 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <CabinGuard>
-              <AppShell />
+              <GuestGuard>
+                <AppShell />
+              </GuestGuard>
             </CabinGuard>
           </PrivateRoute>
         }

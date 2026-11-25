@@ -23,14 +23,14 @@ interface DesktopSidebarProps {
 }
 
 export function DesktopSidebar({ onOpenProfileDrawer, today }: DesktopSidebarProps) {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
   const { canInstall } = usePwaInstall()
 
   const hasCabin = Boolean(user?.cabinId)
-  const primary = hasCabin ? visibleNavItems(PRIMARY_NAV, cabin?.features) : []
-  const more = hasCabin ? visibleNavItems(MORE_NAV, cabin?.features) : []
+  const primary = hasCabin ? visibleNavItems(PRIMARY_NAV, cabin?.features, isGuest) : []
+  const more = hasCabin ? visibleNavItems(MORE_NAV, cabin?.features, isGuest) : []
   const active = findActiveNavItem([...primary, ...more], location)
   const homeTo = user?.isSuperAdmin && !hasCabin ? '/superadmin' : '/dashboard'
 

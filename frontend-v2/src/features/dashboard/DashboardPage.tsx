@@ -117,7 +117,7 @@ const cardVariants = {
 
 export function DashboardPage() {
   useDocumentTitle('Přehled');
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isGuest, user } = useAuth();
   const [pinnedNote, setPinnedNote] = useState<string | null>(null);
   const [pinnedNoteAuthor, setPinnedNoteAuthor] = useState<string | null>(null);
   const [pinnedNoteUpdatedAt, setPinnedNoteUpdatedAt] = useState<string | null>(null);
@@ -157,6 +157,7 @@ export function DashboardPage() {
       const { data } = await apiClient.get<DashboardShoppingData>("/dashboard/shopping");
       return DashboardShoppingSchema.parse(data) as DashboardShoppingData;
     },
+    enabled: !isGuest, // host nevidí zásoby ani vzkazy chaty (#484)
     refetchInterval: 5 * 60 * 1000,
     staleTime: 30_000,
   });
@@ -167,6 +168,7 @@ export function DashboardPage() {
       const { data } = await apiClient.get<DashboardNotesData>("/dashboard/notes");
       return DashboardNotesSchema.parse(data) as DashboardNotesData;
     },
+    enabled: !isGuest,
     refetchInterval: 5 * 60 * 1000,
     staleTime: 30_000,
   });
@@ -229,6 +231,7 @@ export function DashboardPage() {
           reservationId={reservationsQuery.data.departingReservationId}
           departureChecklist={departureChecklist}
           onRefresh={() => reservationsQuery.refetch()}
+          postToChat={!isGuest}
         />
       )}
 
@@ -289,7 +292,7 @@ export function DashboardPage() {
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {isDesktop && nudges}
       {isDesktop && attention}
-      <div data-testid="dashboard-handover-widget">
+      {!isGuest && <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />
         ) : notesQuery.isError ? (
@@ -306,7 +309,7 @@ export function DashboardPage() {
             }}
           />
         ) : null}
-      </div>
+      </div>}
     </div>
   );
 
