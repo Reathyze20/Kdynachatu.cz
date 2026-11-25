@@ -8,6 +8,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { reconstructionApi, type RecCategory, type RecItem } from '@/api/reconstruction'
 import { ReconstructionPage } from '@/features/reconstruction/ReconstructionPage'
+import layoutCss from '@/styles/layout.css?raw'
+import reconstructionCss from '@/styles/reconstruction.css?raw'
 
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { userId: 'user-1' }, isGuest: false }) }))
@@ -68,10 +70,39 @@ describe('stránka Rekonstrukce podle DESIGN.md (#521)', () => {
     expect(screen.queryByRole('region', { name: 'Celkový rozpočet' })).not.toBeInTheDocument()
   })
 
+  it('při načítání ukáže kostru stránky na papírové kartě se třemi sloupci', () => {
+    renderPage(() => new Promise<RecItem[]>(() => {}))
+    const skeleton = screen.getByRole('status', { name: 'Načítám rekonstrukce' })
+    expect(skeleton).toHaveClass('bg-sheet')
+    expect(skeleton).not.toHaveClass('page-card')
+    expect(skeleton.querySelectorAll('.kanban-column')).toHaveLength(3)
+  })
+
   it('když se data nenačtou, hlavička zůstane a chyba nabídne nový pokus', async () => {
     renderPage(() => Promise.reject(new Error('down')))
     expect(await screen.findByText('Rekonstrukce se nepodařilo načíst')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'Rekonstrukce a plány' })).toBeInTheDocument()
     expect(screen.queryByTestId('reconstruction-summary')).not.toBeInTheDocument()
+  })
+})
+
+/** Šířka z `@media (max-width: …)`, ve kterém pravidlo se selektorem nastaví danou deklaraci. */
+function maxWidthOf(css: string, selector: string, declaration: string): string | undefined {
+  for (const media of css.matchAll(/@media\s*\(max-width:\s*(\d+)px\)\s*\{((?:[^{}]*\{[^{}]*\})*)[^{}]*\}/g)) {
+    for (const rule of media[2].matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const selectors = rule[1].replace(/\/\*[\s\S]*?\*\//g, '').split(',').map((s) => s.trim())
+      if (selectors.includes(selector) && rule[2].replace(/\s+/g, ' ').includes(declaration)) return media[1]
+    }
+  }
+  return undefined
+}
+
+describe('tabule Rekonstrukce na šířce tabletu (#521)', () => {
+  it('sloupce jdou pod sebe přesně tam, kde končí pevná výška desktopového rámu', () => {
+    // Mezi 769 a 900 px platila mobilní pravidla tabule v rámu s pevnou výškou a karta se smrskla na 2 px.
+    const frame = maxWidthOf(layoutCss, '#page-container', 'overflow: visible')
+    expect(frame).toBeDefined()
+    expect(maxWidthOf(reconstructionCss, '.kanban-board', 'flex-direction: column')).toBe(frame)
+    expect(maxWidthOf(reconstructionCss, '.reconstruction-card', 'height: auto')).toBe(frame)
   })
 })
