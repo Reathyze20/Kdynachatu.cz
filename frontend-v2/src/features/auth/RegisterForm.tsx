@@ -10,6 +10,7 @@ import { Eye, EyeOff, Mail } from 'lucide-react'
 import { MEMBER_PALETTE } from '@/lib/memberPalette'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
+import { tooManyAttemptsMessage } from './tooManyAttempts'
 
 interface RegisterFormProps {
   onShowLogin: () => void
@@ -91,7 +92,7 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
       timerRef.current = setTimeout(onShowLogin, 1500)
     } catch (err: unknown) {
       const data = (err as { response?: { data?: RegisterResponse } }).response?.data
-      const msg = data?.message || data?.error || 'Chyba sítě'
+      const msg = tooManyAttemptsMessage(err, 'Moc pokusů za sebou.') || data?.message || data?.error || 'Chyba sítě'
       showMsg(msg, 'error')
       if (data) showToast(msg, 'error')
     } finally {

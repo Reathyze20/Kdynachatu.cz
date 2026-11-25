@@ -9,6 +9,7 @@ import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { Eye, EyeOff } from 'lucide-react'
 import type { DemoAccount } from '@/api/auth'
+import { tooManyAttemptsMessage } from './tooManyAttempts'
 
 interface LoginFormProps {
   onShowForgotPassword: () => void
@@ -97,7 +98,8 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
         return
       }
 
-      const msg = data?.message || data?.error || 'Chyba sítě – zkus to znovu'
+      const msg = tooManyAttemptsMessage(err, 'Moc pokusů o přihlášení za sebou.')
+        || data?.message || data?.error || 'Chyba sítě – zkus to znovu'
       // Chyba je vidět ve formuláři (role="alert"), toast by ji jen zopakoval (DESIGN.md §7).
       setError({ text: msg })
     } finally {
