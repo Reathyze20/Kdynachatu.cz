@@ -174,3 +174,56 @@ describe('reservations page: detail is reachable from the grid', () => {
     await waitFor(() => expect(within(panel).getByTestId('reservation-detail-card')).toBeInTheDocument())
   })
 })
+
+// #506: a free day and a picked range say what was picked.
+describe('reservations page: picking days', () => {
+  const day = (date: string) => document.querySelector(`[data-date="${date}"]`) as HTMLElement
+
+  it('a free day says it is free and offers booking from that day, even when the month has stays', async () => {
+    const user = renderPage()
+    const panel = await findPanel()
+
+    await user.click(day(`${ym}-20`))
+
+    expect(within(panel).getByText('20. 6. je volno.')).toBeInTheDocument()
+    expect(within(panel).queryByText(/V tomto měsíci nejsou/)).toBeNull()
+
+    await user.click(within(panel).getByRole('button', { name: 'Zarezervovat od 20. 6.' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Nová rezervace' })
+    expect(within(dialog).getByLabelText('Příjezd')).toHaveValue(`${ym}-20`)
+  })
+
+  it('the day filter applies even when the "Nadcházející" tab was open', async () => {
+    const user = renderPage()
+    const panel = await findPanel()
+
+    await user.click(within(panel).getByRole('button', { name: 'Nadcházející' }))
+    await user.click(day(`${ym}-20`))
+
+    expect(within(panel).getByText('20. 6. je volno.')).toBeInTheDocument()
+    expect(within(panel).queryByTestId('reservation-list-item')).toBeNull()
+  })
+
+  it('a day with a stay still lists the stay', async () => {
+    const user = renderPage()
+    const panel = await findPanel()
+
+    await user.click(day(`${ym}-11`))
+
+    expect(within(panel).getByTestId('reservation-list-item')).toBeInTheDocument()
+    expect(within(panel).queryByText(/je volno/)).toBeNull()
+  })
+
+  it('the "Vybraný termín" dialog shows the picked range and the number of nights', async () => {
+    const user = renderPage()
+    await findPanel()
+
+    await user.click(day(`${ym}-20`))
+    await user.click(day(`${ym}-20`))
+    await user.click(day(`${ym}-22`))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Vybraný termín' })
+    expect(within(dialog).getByText('20.–22. 6. · 2 noci')).toBeInTheDocument()
+  })
+})

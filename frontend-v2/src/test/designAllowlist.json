@@ -114,7 +114,7 @@
     ],
     "Lokální pole s názvy měsíců, převede se na monthName / formatLongDate z lib/format.ts (#456)": [
       "features/diary/NotebookModal.tsx", "features/reservations/calendar/CalendarGrid.tsx",
-      "features/reservations/ui/ReservationDetail.tsx", "features/reservations/ui/ReservationList.tsx"
+      "features/reservations/ui/ReservationList.tsx"
     ]
   },
   "inlineSvg": {

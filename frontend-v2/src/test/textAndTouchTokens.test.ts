@@ -83,7 +83,7 @@ const G3_DEBT_TSX: Record<string, number> = {
   '../features/landing/LandingPage.tsx': 3,
   '../features/reservations/ui/BookingForm.tsx': 2,
   '../features/reservations/ui/CheckoutSection.tsx': 3,
-  '../features/reservations/ui/ReservationDetail.tsx': 13,
+  '../features/reservations/ui/ReservationDetail.tsx': 10,
   '../features/shopping/AddToCartModal.tsx': 1,
   '../features/shopping/BulkAddToCartModal.tsx': 1,
 }

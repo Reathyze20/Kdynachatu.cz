@@ -28,7 +28,8 @@ import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { Modal } from "@/components/shared/Modal";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import styles from "./Reservations.module.css";
-import { isIsoDateInRange } from "@/lib/dateUtils";
+import { isIsoDateInRange, nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { formatDateRange } from "@/lib/format";
 
 /** Filter reservations that intersect with the given calendar month */
 function filterByMonth(reservations: Reservation[], month: number, year: number) {
@@ -196,17 +197,12 @@ export function ReservationsPage() {
     setSelectedReservation(null);
   };
 
-  // Empty booking form (calendar header button)
-  const handleNewReservation = () => {
+  // New booking form: empty from the calendar header, from a free day picked in the calendar (#506)
+  const openNewBooking = (from = "") => {
     setEditingReservation(null);
-    setBookingFrom("");
+    setBookingFrom(from);
     setBookingTo("");
     setBookingOpen(true);
-  };
-
-  // Assign from detail/list
-  const handleAssign = (_: string) => {
-    showToast("Funkce přiřazení bude brzy dostupná.", "info");
   };
 
   // ── Skeleton while loading ────────────────────────────────────────────
@@ -241,6 +237,8 @@ export function ReservationsPage() {
     ? monthFiltered.filter((r) => isIsoDateInRange(selectedDay, r.from, r.to))
     : monthFiltered;
 
+  const choiceNights = choiceFrom && choiceTo ? nightsBetween(choiceFrom, choiceTo) : 0;
+
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className={styles.page} data-testid="reservations-page" data-reservations-state="ready">
@@ -255,7 +253,6 @@ export function ReservationsPage() {
                   onBack={() => setSelectedReservation(null)}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
-                  onAssign={handleAssign}
                 />
               ) : (
                 <ReservationList
@@ -268,6 +265,7 @@ export function ReservationsPage() {
                   onShowDetail={showDetail}
                   selectedDay={selectedDay}
                   onClearDayFilter={() => setSelectedDay(null)}
+                  onBookFromDay={openNewBooking}
                   hideMonthlyNote={isGuest}
                 />
               )}
@@ -298,7 +296,7 @@ export function ReservationsPage() {
             onShowDetail={showDetail}
             onDaySelect={handleDaySelect}
             onDayClear={() => setSelectedDay(null)}
-            onNewReservation={handleNewReservation}
+            onNewReservation={() => openNewBooking()}
             quickStatsNode={
               <QuickStats
                 reservations={allReservations}
@@ -335,6 +333,11 @@ export function ReservationsPage() {
         maxWidth="max-w-md"
       >
         <div className="space-y-4 py-2">
+          {choiceFrom && choiceTo && (
+            <p className="text-card-title text-foreground">
+              {formatDateRange(choiceFrom, choiceTo)} · {choiceNights} {nightsLabel(choiceNights)}
+            </p>
+          )}
           <p className="text-slate-600 text-sm">
             Co chceš v tomto termínu naplánovat?
           </p>

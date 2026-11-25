@@ -1,8 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { ChevronDown, PenLine, X } from "lucide-react";
+import { CalendarCheck, ChevronDown, PenLine, X } from "lucide-react";
 import type { Reservation } from "@/api/reservations";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal } from "@/components/shared/Modal";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { formatShortDate } from "@/lib/format";
 import { useMonthlyNote, useUpdateMonthlyNote } from "../hooks/useReservations";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
@@ -108,6 +110,8 @@ interface Props {
   onShowDetail: (r: Reservation) => void;
   selectedDay?: string | null;
   onClearDayFilter?: () => void;
+  /** Vybraný volný den → rezervace od toho dne (#506) */
+  onBookFromDay?: (day: string) => void;
   /** Host poznámku k měsíci nevidí (#484) */
   hideMonthlyNote?: boolean;
 }
@@ -126,6 +130,7 @@ export function ReservationList({
   onShowDetail,
   selectedDay,
   onClearDayFilter,
+  onBookFromDay,
   hideMonthlyNote = false,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -151,7 +156,8 @@ export function ReservationList({
   } = useMonthlyNote(year, month, !hideMonthlyNote);
   const updateNote = useUpdateMonthlyNote();
 
-  const sourceList = viewMode === "upcoming" ? futureReservations : reservations;
+  // Vybraný den filtruje vždy, i když zůstala zapnutá záložka Nadcházející.
+  const sourceList = viewMode === "upcoming" && !selectedDay ? futureReservations : reservations;
 
   const sorted = useMemo(
     () => [...sourceList].sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()),
@@ -276,7 +282,13 @@ export function ReservationList({
             key={`${year}-${month}-${viewMode}`}
             className={css.cardList}
           >
-            {sorted.length === 0 ? (
+            {sorted.length === 0 && selectedDay ? (
+              <EmptyState
+                icon={CalendarCheck}
+                message={`${formatShortDate(selectedDay)} je volno.`}
+                action={onBookFromDay && { label: `Zarezervovat od ${formatShortDate(selectedDay)}`, onClick: () => onBookFromDay(selectedDay) }}
+              />
+            ) : sorted.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

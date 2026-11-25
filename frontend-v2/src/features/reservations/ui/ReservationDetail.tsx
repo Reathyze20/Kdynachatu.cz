@@ -1,28 +1,21 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Eye } from "lucide-react";
 import apiClient from "@/api/client";
 import type { Reservation } from "@/api/reservations";
 import { CheckoutSection } from "./CheckoutSection";
 import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { Button } from "@/components/ui/button";
 import { escapeHtml } from "@/lib/utils";
+import { getLocalTodayIso } from "@/lib/dateUtils";
+import { formatLongDate } from "@/lib/format";
 import { toMemberColor } from "@/lib/memberPalette";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { showToast } from "@/lib/toast";
 import { RESERVATION_TYPE_LABEL } from "../reservationType";
 import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
-
-const MONTH_NAMES_GEN = [
-  "Ledna", "Února", "Března", "Dubna", "Května", "Června",
-  "Července", "Srpna", "Září", "Října", "Listopadu", "Prosince",
-];
-
-function formatDateFull(date: string): string {
-  if (!date) return "";
-  const d = new Date(date + "T00:00:00");
-  return `${d.getDate()}. ${MONTH_NAMES_GEN[d.getMonth()]}`;
-}
 
 interface WatchStatus { watching: boolean }
 
@@ -31,10 +24,9 @@ interface Props {
   onBack: () => void;
   onEdit: (r: Reservation) => void;
   onDelete: (id: string) => Promise<void> | void;
-  onAssign: (id: string) => void;
 }
 
-export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, onAssign }: Props) {
+export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: Props) {
   const { user, isGuest } = useAuth();
   const isMine = r.userId === user?.userId;
   const isAdmin = user?.role === "admin";
@@ -45,6 +37,8 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [watchSubmitting, setWatchSubmitting] = useState(false);
+  // Hlídat jde jen cizí pobyt, který ještě neskončil; host hlídání nemá (#484, #506).
+  const canWatch = !isMine && !isGuest && r.to >= getLocalTodayIso();
 
   // Night count for timeline
   const nightCount = r.from && r.to
@@ -59,7 +53,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
   const { data: watchData, refetch: refetchWatch } = useQuery<WatchStatus>({
     queryKey: ["watch", r.id],
     queryFn: () => apiClient.get<WatchStatus>(`/reservations/${r.id}/watch`).then((res) => res.data),
-    enabled: !isMine && !isGuest, // hlídání termínu host nemá (#484)
+    enabled: canWatch,
   });
 
   const handleWatchToggle = async (watching: boolean) => {
@@ -122,7 +116,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
       <div className="bg-slate-50 border border-slate-100/60 rounded-[20px] p-4 flex items-center justify-between mt-1">
         <div className="flex flex-col gap-1 z-10 text-left">
           <span className="text-[10px] font-bold text-[var(--text-placeholder)] uppercase tracking-widest">Příjezd</span>
-          <span className="font-bold text-[15px] text-slate-900">{formatDateFull(r.from)}</span>
+          <span className="font-bold text-[15px] text-slate-900">{formatLongDate(r.from)}</span>
         </div>
         
         <div className="flex-1 mx-4 flex items-center justify-center relative">
@@ -134,7 +128,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
 
         <div className="flex flex-col gap-1 z-10 text-right">
           <span className="text-[10px] font-bold text-[var(--text-placeholder)] uppercase tracking-widest">Odjezd</span>
-          <span className="font-bold text-[15px] text-slate-900">{formatDateFull(r.to)}</span>
+          <span className="font-bold text-[15px] text-slate-900">{formatLongDate(r.to)}</span>
         </div>
       </div>
 
@@ -179,6 +173,29 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
         </div>
       )}
 
+      {canWatch && (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-inset p-3" data-testid="reservation-watch">
+          <div className="flex flex-col gap-0.5">
+            {watchData?.watching && (
+              <span className="inline-flex items-center gap-1.5 text-label text-foreground">
+                <Eye aria-hidden="true" className="size-4" />
+                Hlídám
+              </span>
+            )}
+            <p className="text-meta text-(--text-muted)">Až se termín uvolní, objeví se to na nástěnce chaty.</p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void handleWatchToggle(!!watchData?.watching)}
+            pending={watchSubmitting}
+            data-testid="reservation-watch-button"
+          >
+            {watchData?.watching ? "Přestat hlídat" : "Hlídat"}
+          </Button>
+        </div>
+      )}
+
       <StayWeatherCard from={r.from} to={r.to} />
       {/* ── Checkout ── */}
       <CheckoutSection reservation={r} />
@@ -203,22 +220,6 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete, on
           )}
         </div>
         <div className="flex gap-2 items-center">
-          {!isMine && !isGuest && (
-            watchData?.watching ? (
-              <button className="px-3 py-1.5 rounded-[12px] text-[12px] font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm" onClick={() => void handleWatchToggle(true)} disabled={watchSubmitting} data-testid="reservation-watch-button">
-                Zrušit
-              </button>
-            ) : (
-              <button className="px-3 py-1.5 rounded-[12px] text-[12px] font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm" title="Když se termín uvolní, objeví se to na nástěnce chaty" onClick={() => void handleWatchToggle(false)} disabled={watchSubmitting} data-testid="reservation-watch-button">
-                Hlídat
-              </button>
-            )
-          )}
-          {canEdit && isAdmin && (
-            <button className="px-3 py-1.5 rounded-[12px] text-[12px] font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm" onClick={() => onAssign(r.id)} data-testid="reservation-assign-button">
-              Přiřadit
-            </button>
-          )}
           {canEdit && (
             <button className="px-4 py-1.5 rounded-[12px] text-[12px] font-semibold bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)] transition-colors shadow-sm" onClick={() => onEdit(r)} data-testid="reservation-edit-button">
               Upravit
