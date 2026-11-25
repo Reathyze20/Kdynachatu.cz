@@ -88,6 +88,7 @@ router.post("/", protect, requireCabin, validate(createUserSchema), adminOnly, a
         role: role || "user",
         color: randomColor,
         cabinId: req.user!.cabinId,
+        isVerified: true, // účet zakládá správce chaty, žádný e-mail k ověření (#476)
       },
     });
 

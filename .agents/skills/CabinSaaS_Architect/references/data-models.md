@@ -62,7 +62,7 @@ color            String   Hex color for avatar
 animalIcon       String?  Emoji animal avatar
 email            String?  UNIQUE
 isEmailVerified  Boolean  Default false
-verificationCode String?  Legacy PIN
+verificationCode String?  Legacy PIN, unused since #476 (column kept)
 isVerified       Boolean  Default false
 isSuperAdmin     Boolean  Default false (platform-level)
 isBanned         Boolean  Default false

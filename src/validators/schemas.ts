@@ -371,12 +371,6 @@ export const adminUpdateUserSchema = z.object({
   password: z.string().min(8, "Heslo musí mít alespoň 8 znaků").max(100).optional(),
 });
 
-// Auth — verify email
-export const verifyEmailSchema = z.object({
-  username: z.string().trim().min(1, "Uživatelské jméno je povinné"),
-  code: z.string().trim().min(1, "Kód je povinný"),
-});
-
 // Invites — create
 export const createInviteSchema = z.object({
   role: z.enum(["admin", "user", "guest"]).default("user"),

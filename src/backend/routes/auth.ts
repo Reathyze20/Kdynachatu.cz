@@ -5,9 +5,9 @@ import { signAuthToken } from "../../utils/authToken";
 import { updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
-import { sendPasswordResetEmail, sendVerificationEmailWithPIN, sendVerificationEmailWithToken } from "../../utils/email";
+import { sendPasswordResetEmail, sendVerificationEmailWithToken } from "../../utils/email";
 import { validate } from "../../validators/validate";
-import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from "../../validators/schemas";
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from "../../validators/schemas";
 import { protect } from "../../middleware/authMiddleware";
 import { CABIN_SIGNUP_ENABLED } from "../../config/config";
 import { requireCabinSignupOpen, signupStatusHandler } from "./cabinSignup";
@@ -90,41 +90,12 @@ router.post("/login", validate(loginSchema), async (req: Request, res: Response)
       });
     }
 
-    // ── Token-based verification check (new SaaS flow) ──────────────────
-    if (!user.isVerified && user.role !== "admin") {
-      // If user still has a verificationToken, they used the new flow
-      if (user.verificationToken) {
-        return res.status(403).json({
-          message: "Nejdřív ověř svůj e-mail. Zkontroluj schránku a klikni na aktivační odkaz.",
-          needsVerification: true,
-        });
-      }
-
-      // ── Legacy PIN-based verification fallback ──────────────────────────
-      let code = user.verificationCode;
-      if (!code) {
-        code = Math.floor(100000 + Math.random() * 900000).toString();
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { verificationCode: code }
-        });
-      }
-
-      try {
-        await sendVerificationEmailWithPIN(user.email as string, code as string);
-        return res.status(403).json({ message: "Tvoje e-mailová adresa ještě není ověřená. Poslali jsme ti na e-mail nový ověřovací kód." });
-      } catch (err) {
-        logger.error("AUTH", "Failed to resend verification email during login", { error: String(err) });
-        const response: { message: string; testCode?: string } = {
-          message: "Tvoje e-mailová adresa ještě není ověřená a ověřovací e-mail se nepodařilo odeslat. Zkus to znovu.",
-        };
-
-        if (!isProduction) {
-          response.testCode = code;
-        }
-
-        return res.status(403).json(response);
-      }
+    // Neověřený účet se nepřihlásí bez ohledu na roli; ověřuje se jen odkazem z e-mailu (#476).
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Nejdřív ověř svůj e-mail. Zkontroluj schránku a klikni na aktivační odkaz.",
+        needsVerification: true,
+      });
     }
 
     const token = signAuthToken(user);
@@ -205,10 +176,6 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
       ? null
       : crypto.randomBytes(32).toString("hex");
 
-    const verificationCode = isFirstUser
-      ? null
-      : Math.floor(100000 + Math.random() * 900000).toString();
-
     // ── Atomic transaction: Cabin + User ───────────────────────────────
     const { newCabin, newUser } = await prisma.$transaction(async (tx) => {
       // 1. Create cabin
@@ -232,7 +199,6 @@ router.post("/register", requireCabinSignupOpen(CABIN_SIGNUP_ENABLED), async (re
           isVerified: isFirstUser,
           isEmailVerified: isFirstUser,
           verificationToken,
-          verificationCode,
         },
       });
 
@@ -494,7 +460,6 @@ router.get("/verify-token", async (req: Request, res: Response) => {
       data: {
         isVerified: true,
         verificationToken: null,
-        // Also mark legacy field as verified
         isEmailVerified: true,
         verificationCode: null,
       },
@@ -511,46 +476,6 @@ router.get("/verify-token", async (req: Request, res: Response) => {
     logger.error("AUTH", "Token verification error", {
       error: String(error),
     });
-    res.status(500).json({ message: "Chyba serveru při ověřování." });
-  }
-});
-
-// ============================================================================
-//                       VERIFY EMAIL (legacy PIN-based)
-// ============================================================================
-router.post("/verify-email", validate(verifyEmailSchema), async (req: Request, res: Response) => {
-  const { username, code } = req.body;
-
-  try {
-    const user = await prisma.user.findFirst({
-      where: { username: { equals: username, mode: "insensitive" } }
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "Uživatel nenalezen." });
-    }
-
-    if (user.isEmailVerified) {
-      return res.json({ message: "Tento účet již byl ověřen." });
-    }
-
-    if (user.verificationCode !== code) {
-      return res.status(400).json({ message: "Nesprávný verifikační kód." });
-    }
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        isEmailVerified: true,
-        verificationCode: null,
-        isVerified: true,
-        verificationToken: null,
-      }
-    });
-
-    res.json({ message: "E-mail je ověřený. Teď se můžeš přihlásit." });
-  } catch (error) {
-    logger.error("AUTH", "Verify error", { error: String(error) });
     res.status(500).json({ message: "Chyba serveru při ověřování." });
   }
 });

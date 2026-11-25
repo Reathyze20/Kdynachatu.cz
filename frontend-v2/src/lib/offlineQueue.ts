@@ -35,7 +35,6 @@ const EXCLUDED_URL_PARTS = [
   '/login',
   '/register',
   '/verify-token',
-  '/verify-email',
   '/forgot-password',
   '/reset-password',
   '/logs/client',

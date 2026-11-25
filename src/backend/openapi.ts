@@ -68,6 +68,7 @@ const schemas: Record<string, JsonSchema> = {
     properties: {
       message: { type: "string", example: "Chyba serveru." },
       code: { type: "string", nullable: true, example: "ACCOUNT_BANNED" },
+      needsVerification: { type: "boolean", nullable: true, description: "Login 403: ucet neni overeny, overuje se jen odkazem z e-mailu (i role admin)" },
       errorId: { type: "string", nullable: true, example: "a1b2c3d4" },
     },
   },
@@ -139,7 +140,8 @@ const schemas: Record<string, JsonSchema> = {
     required: ["message"],
     properties: {
       message: { type: "string", example: "Děkujeme za registraci. Poslali jsme ti e-mail s odkazem pro aktivaci účtu, zkontroluj schránku." },
-      testCode: { type: "string", nullable: true, example: "123456" },
+      requiresVerification: { type: "boolean", nullable: true, description: "true = aktivacni odkaz poslany e-mailem, ucet se prihlasi az po overeni", example: true },
+      testToken: { type: "string", nullable: true, description: "Jen mimo produkci, kdyz se aktivacni e-mail nepodarilo odeslat" },
     },
   },
   UserProfile: {
@@ -637,7 +639,7 @@ const paths: Record<string, OpenApiObject> = {
         "200": jsonResponse(ref("LoginResponse"), "Prihlaseni probehlo uspesne"),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny format requestu"),
         "401": jsonResponse(ref("ErrorResponse"), "Spatne prihlasovaci udaje"),
-        "403": jsonResponse(ref("ErrorResponse"), "Ucet neni overen nebo je blokovan"),
+        "403": jsonResponse(ref("ErrorResponse"), "Ucet neni overen (needsVerification, plati i pro admina) nebo je blokovan (code ACCOUNT_BANNED)"),
       },
     },
   },

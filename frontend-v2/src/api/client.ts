@@ -41,7 +41,7 @@ function getActiveCabinId(): string | null {
 function shouldIgnoreAuthExpiry(url?: string): boolean {
   if (!url) return false
 
-  return ['/login', '/register', '/verify-token', '/verify-email', '/forgot-password', '/reset-password', '/reset-password-token'].some((path) => url.includes(path))
+  return ['/login', '/register', '/verify-token', '/forgot-password', '/reset-password', '/reset-password-token'].some((path) => url.includes(path))
 }
 
 function clearStoredAuthState(): void {

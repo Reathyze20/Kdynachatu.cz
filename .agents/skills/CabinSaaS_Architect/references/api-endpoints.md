@@ -6,12 +6,11 @@ Complete map of all backend endpoints. Read this when building API modules or co
 
 | Method | Path | Auth | Body / Query | Response |
 |---|---|---|---|---|
-| POST | `/api/login` | no | `{ username, password }` | `{ token, username, userId, role, color, animalIcon, cabinId }` |
+| POST | `/api/login` | no | `{ username, password }` | `{ token, username, userId, role, color, animalIcon, cabinId }`; 403 `needsVerification` for an unverified account of any role (e-mail link only, #476) |
 | POST | `/api/register` | no | `{ cabinName, subdomain?, municipalityCode, username, email, password, color? }` | `{ message, requiresVerification? }`; 403 when CABIN_SIGNUP_ENABLED is off; 400 for an unknown municipality code |
 | GET | `/api/signup-status` | no | — | `{ cabinSignupEnabled }` |
 | GET | `/api/municipalities` | no | `?q=` (min 2 chars) | `{ municipalities: [{ code, name, district, region }] }`, RÚIAN list, no coordinates |
 | GET | `/api/verify-token` | no | `?token=<hash>` | `{ message }` |
-| POST | `/api/verify-email` | no | `{ username, code }` | `{ message }` |
 | GET | `/api/health` | no | — | `{ status, timestamp, database }` |
 
 ## Dashboard (`/api/dashboard`)
