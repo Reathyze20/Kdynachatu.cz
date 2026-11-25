@@ -29,6 +29,7 @@ export async function encodeUploadedImage(input: Buffer, resize: ResizeOptions, 
     return await openImage(input).resize(resize).webp({ quality }).toBuffer();
   } catch (error) {
     if (error instanceof RejectedImageError) throw error;
+    // Text chyby sharp („Input image exceeds pixel limit“); když se změní, uživatel dostane obecnou hlášku.
     const pixelLimit = error instanceof Error && error.message.includes("pixel limit");
     throw new RejectedImageError(pixelLimit ? "Obrázek má příliš velké rozměry." : NOT_AN_IMAGE);
   }
@@ -42,6 +43,7 @@ export function acceptImages(field: string, maxCount: number, maxFileSize: numbe
     parse(req, res, (error?: unknown) => {
       if (!(error instanceof multer.MulterError)) return next(error);
       const tooLarge = error.code === "LIMIT_FILE_SIZE";
-      res.status(tooLarge ? 413 : 400).json({ message: tooLarge ? "Soubor je příliš velký." : "Neplatný upload souboru." });
+      const message = tooLarge ? "Soubor je příliš velký. Nahraj menší fotku." : "Soubor se nepodařilo nahrát. Zkus to znovu.";
+      res.status(tooLarge ? 413 : 400).json({ message });
     });
 }
