@@ -48,9 +48,10 @@ describe('zrušení pozvánky (#258)', () => {
 
   it('tlačítko v seznamu je obrysové, ne plně destruktivní', async () => {
     renderInvites()
-    const button = await screen.findByTestId('invite-revoke-button')
-    expect(button.className).not.toMatch(/(^|\s)btn-danger(\s|$)/)
-    expect(button.className).toMatch(/(^|\s)btn-outline-danger(\s|$)/)
+    const classes = (await screen.findByTestId('invite-revoke-button')).className.split(/\s+/)
+    // Sdílený Button: ne plná varianta `danger`, ale obrysová `secondary` s červeným textem
+    expect(classes).not.toContain('bg-destructive')
+    expect(classes).toEqual(expect.arrayContaining(['border', 'border-input', 'text-destructive']))
   })
 
   it('ťuknutí na Zrušit pozvánku nezruší, jen otevře potvrzení s popisem pozvánky', async () => {
