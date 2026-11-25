@@ -1,13 +1,12 @@
 /**
  * Registr zabezpečení rout (#473): každá routa `METODA /cesta` má zapsáno, kdo ji smí volat.
- * Zachycuje SOUČASNÝ stav – role se tu nemění, jen evidují. Dvě kontroly nad ním:
+ * Host (`guest`) je zakázaný ve výchozím stavu (#484), smí jen routy zapsané jako `MEMBERS` nebo
+ * `AUTHENTICATED` (whitelist z PRODUCT.md, „Role na chatě“). Dvě kontroly nad ním:
  *  - `routeSecurityRegistry.test.ts` (bez DB): množina rout v Express routerech == klíče registru;
  *    nová routa bez zápisu shodí test a jmenuje ji. Routy se čtou z `app.ts` a `src/backend/routes/`
  *    parserem (TypeScript compiler API), prefixy routerů dává `findRouterMounts`.
  *  - `integration/roleMatrix.itest.ts`: pro každou routu a principála, kterému ji registr nepovoluje,
- *    ověří, že odpověď není úspěšná (401/403/404).
- * #484 přepne hosta na „zakázaný ve výchozím stavu“: stačí u rout `MEMBERS_GUEST_484` vyměnit
- * hodnotu za `WRITERS` a matice to ověří.
+ *    ověří, že odpověď není úspěšná (401/403/404); host mimo whitelist musí dostat 403.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -22,10 +21,12 @@ export type RouteAccess = readonly Principal[];
 export const PUBLIC: RouteAccess = ["public"];
 /** Jen `protect`, chata se nevyžaduje (profil, obnova tokenu, založení chaty). */
 export const AUTHENTICATED: RouteAccess = ["admin", "user", "guest", "superadmin"];
-/** Celá chata včetně hosta – host tu zůstane i po #484 (whitelist ve spec #470). */
+/**
+ * Whitelist hosta (#484): celá chata včetně hosta. V kódu `requireCabinAllowGuest`; host tu vidí
+ * a mění jen vlastní rezervace a pobyt.
+ */
 export const MEMBERS: RouteAccess = ["admin", "user", "guest"];
-/** ZNÁMÁ DÍRA, současný stav: host smí jako člen (čte chat, píše poznámky…). Zavře ji #484. */
-export const MEMBERS_GUEST_484: RouteAccess = ["admin", "user", "guest"];
+/** Členové chaty bez hosta: v kódu `requireCabin`, které hosta odmítne 403. */
 export const WRITERS: RouteAccess = ["admin", "user"];
 export const ADMIN: RouteAccess = ["admin"];
 export const SUPERADMIN: RouteAccess = ["superadmin"];
@@ -54,49 +55,49 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "DELETE /api/cabin/cover-photo": ADMIN,
   "POST /api/cabin/create": AUTHENTICATED, // člen s chatou dostane 400
   // channels.ts
-  "GET /api/channels": MEMBERS_GUEST_484,
-  "POST /api/channels": MEMBERS_GUEST_484,
-  "DELETE /api/channels/:id": MEMBERS_GUEST_484, // admin nebo autor
-  "GET /api/channels/messages": MEMBERS_GUEST_484,
+  "GET /api/channels": WRITERS,
+  "POST /api/channels": WRITERS,
+  "DELETE /api/channels/:id": WRITERS, // admin nebo autor
+  "GET /api/channels/messages": WRITERS,
   "POST /api/channels/messages": WRITERS,
-  "GET /api/channels/:channelId/messages": MEMBERS_GUEST_484,
+  "GET /api/channels/:channelId/messages": WRITERS,
   "POST /api/channels/:channelId/messages": WRITERS,
-  "POST /api/channels/:channelId/read": MEMBERS_GUEST_484,
+  "POST /api/channels/:channelId/read": WRITERS,
   // dashboard.ts
-  "GET /api/dashboard/reservations": MEMBERS, // #484 zúží na vlastní pobyt
-  "GET /api/dashboard/shopping": MEMBERS_GUEST_484,
-  "GET /api/dashboard/activation": MEMBERS_GUEST_484, // ne-adminovi vrací prázdný souhrn
-  "GET /api/dashboard/notes": MEMBERS_GUEST_484,
-  "GET /api/dashboard/reconstruction": MEMBERS_GUEST_484,
-  "GET /api/dashboard/gallery": MEMBERS_GUEST_484,
+  "GET /api/dashboard/reservations": MEMBERS, // host: jen vlastní pobyt
+  "GET /api/dashboard/shopping": WRITERS,
+  "GET /api/dashboard/activation": WRITERS, // ne-adminovi vrací prázdný souhrn
+  "GET /api/dashboard/notes": WRITERS,
+  "GET /api/dashboard/reconstruction": WRITERS,
+  "GET /api/dashboard/gallery": WRITERS,
   // diary.ts (úpravy a mazání: admin nebo autor)
-  "GET /api/diary/folders": MEMBERS_GUEST_484,
-  "POST /api/diary/folders": MEMBERS_GUEST_484,
-  "PATCH /api/diary/folders/:id": MEMBERS_GUEST_484,
-  "DELETE /api/diary/folders/:id": MEMBERS_GUEST_484,
-  "GET /api/diary/entries": MEMBERS_GUEST_484,
-  "POST /api/diary/entries": MEMBERS_GUEST_484,
-  "PUT /api/diary/entries/:id": MEMBERS_GUEST_484,
-  "DELETE /api/diary/entries/:id": MEMBERS_GUEST_484,
+  "GET /api/diary/folders": WRITERS,
+  "POST /api/diary/folders": WRITERS,
+  "PATCH /api/diary/folders/:id": WRITERS,
+  "DELETE /api/diary/folders/:id": WRITERS,
+  "GET /api/diary/entries": WRITERS,
+  "POST /api/diary/entries": WRITERS,
+  "PUT /api/diary/entries/:id": WRITERS,
+  "DELETE /api/diary/entries/:id": WRITERS,
   // gallery.ts (mazání: admin nebo autor)
-  "GET /api/gallery/folders": MEMBERS_GUEST_484,
-  "POST /api/gallery/folders": MEMBERS_GUEST_484,
-  "PATCH /api/gallery/folders/:id": MEMBERS_GUEST_484,
-  "DELETE /api/gallery/folders/:id": MEMBERS_GUEST_484,
-  "GET /api/gallery/photos": MEMBERS_GUEST_484,
-  "POST /api/gallery/photos": MEMBERS_GUEST_484,
-  "PATCH /api/gallery/photos/:id": MEMBERS_GUEST_484,
-  "DELETE /api/gallery/photos/:id": MEMBERS_GUEST_484,
-  "DELETE /api/gallery/photos": MEMBERS_GUEST_484,
+  "GET /api/gallery/folders": WRITERS,
+  "POST /api/gallery/folders": WRITERS,
+  "PATCH /api/gallery/folders/:id": WRITERS,
+  "DELETE /api/gallery/folders/:id": WRITERS,
+  "GET /api/gallery/photos": WRITERS,
+  "POST /api/gallery/photos": WRITERS,
+  "PATCH /api/gallery/photos/:id": WRITERS,
+  "DELETE /api/gallery/photos/:id": WRITERS,
+  "DELETE /api/gallery/photos": WRITERS,
   // inventory.ts
-  "GET /api/inventory": MEMBERS_GUEST_484,
-  "POST /api/inventory": MEMBERS_GUEST_484,
-  "PUT /api/inventory/:id": MEMBERS_GUEST_484,
+  "GET /api/inventory": WRITERS,
+  "POST /api/inventory": WRITERS,
+  "PUT /api/inventory/:id": WRITERS,
   "PATCH /api/inventory/:id/toggle-essential": WRITERS,
-  "DELETE /api/inventory/:id": MEMBERS_GUEST_484,
-  "POST /api/inventory/:id/add-to-cart": MEMBERS_GUEST_484,
-  "POST /api/inventory/:id/pledge": MEMBERS_GUEST_484,
-  "GET /api/inventory/missing-summary": MEMBERS_GUEST_484,
+  "DELETE /api/inventory/:id": WRITERS,
+  "POST /api/inventory/:id/add-to-cart": WRITERS,
+  "POST /api/inventory/:id/pledge": WRITERS,
+  "GET /api/inventory/missing-summary": WRITERS,
   // invites.ts (DELETE a send-email: cizí pozvánka 404 dřív než 403, kontrola role zůstává v handleru)
   "POST /api/invites": ADMIN,
   "GET /api/invites": ADMIN,
@@ -110,61 +111,61 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "POST /api/logs/client": AUTHENTICATED,
   "POST /api/logs/client/anon": PUBLIC,
   // messages.ts (úprava a mazání: autor, mazání i admin)
-  "PATCH /api/messages/:messageId": MEMBERS_GUEST_484,
-  "DELETE /api/messages/:messageId": MEMBERS_GUEST_484,
+  "PATCH /api/messages/:messageId": WRITERS,
+  "DELETE /api/messages/:messageId": WRITERS,
   "PATCH /api/messages/:messageId/pin": WRITERS,
   "PATCH /api/messages/:messageId/resolve": WRITERS,
-  "POST /api/messages/:messageId/reactions": MEMBERS_GUEST_484,
+  "POST /api/messages/:messageId/reactions": WRITERS,
   // notes.ts
-  "GET /api/notes": MEMBERS_GUEST_484,
-  "POST /api/notes": MEMBERS_GUEST_484, // host píše poznámky
+  "GET /api/notes": WRITERS,
+  "POST /api/notes": WRITERS,
   "PATCH /api/notes/:id/resolve": WRITERS,
-  "DELETE /api/notes/:id": MEMBERS_GUEST_484,
-  "PATCH /api/notes/:id": MEMBERS_GUEST_484,
+  "DELETE /api/notes/:id": WRITERS,
+  "PATCH /api/notes/:id": WRITERS,
   "PATCH /api/notes/:id/pin": WRITERS,
-  "POST /api/notes/:id/reactions": MEMBERS_GUEST_484,
+  "POST /api/notes/:id/reactions": WRITERS,
   // noteThreads.ts
-  "GET /api/note-threads": MEMBERS_GUEST_484,
-  "POST /api/note-threads": MEMBERS_GUEST_484,
-  "DELETE /api/note-threads/:id": MEMBERS_GUEST_484,
+  "GET /api/note-threads": WRITERS,
+  "POST /api/note-threads": WRITERS,
+  "DELETE /api/note-threads/:id": WRITERS,
   // reconstruction.ts
-  "GET /api/reconstruction": MEMBERS_GUEST_484,
-  "POST /api/reconstruction": MEMBERS_GUEST_484,
-  "PUT /api/reconstruction/:id": MEMBERS_GUEST_484,
-  "DELETE /api/reconstruction/:id": MEMBERS_GUEST_484,
-  "PATCH /api/reconstruction/:id/vote": MEMBERS_GUEST_484,
-  "PATCH /api/reconstruction/:id/status": MEMBERS_GUEST_484,
+  "GET /api/reconstruction": WRITERS,
+  "POST /api/reconstruction": WRITERS,
+  "PUT /api/reconstruction/:id": WRITERS,
+  "DELETE /api/reconstruction/:id": WRITERS,
+  "PATCH /api/reconstruction/:id/vote": WRITERS,
+  "PATCH /api/reconstruction/:id/status": WRITERS,
   // reservations.ts (úpravy cizí rezervace: jen admin, v handleru)
-  "GET /api/reservations": MEMBERS, // #484 zúží na vlastní rezervace
-  "POST /api/reservations": MEMBERS_GUEST_484, // host sám nerezervuje (PRODUCT.md)
-  "GET /api/reservations/monthly-note": MEMBERS_GUEST_484,
+  "GET /api/reservations": MEMBERS, // host: jen vlastní rezervace a dostupnosti
+  "POST /api/reservations": MEMBERS, // vždy na volajícího, host tedy jen pro sebe
+  "GET /api/reservations/monthly-note": WRITERS,
   "PUT /api/reservations/monthly-note": WRITERS,
   "PUT /api/reservations/:id": MEMBERS,
   "POST /api/reservations/delete": MEMBERS,
   "DELETE /api/reservations/:id": MEMBERS,
-  "GET /api/reservations/:id/watch": MEMBERS_GUEST_484,
-  "POST /api/reservations/:id/watch": MEMBERS_GUEST_484,
-  "DELETE /api/reservations/:id/watch": MEMBERS_GUEST_484,
+  "GET /api/reservations/:id/watch": WRITERS,
+  "POST /api/reservations/:id/watch": WRITERS,
+  "DELETE /api/reservations/:id/watch": WRITERS,
   "POST /api/reservations/:reservationId/assign": ADMIN, // cizí rezervace 404 dřív než 403
-  "GET /api/reservations/availabilities": MEMBERS_GUEST_484,
-  "POST /api/reservations/availabilities": MEMBERS_GUEST_484,
-  "PATCH /api/reservations/availabilities/:id": MEMBERS_GUEST_484,
-  "DELETE /api/reservations/availabilities/:id": MEMBERS_GUEST_484,
-  "PATCH /api/reservations/:id/checkout": MEMBERS,
+  "GET /api/reservations/availabilities": WRITERS,
+  "POST /api/reservations/availabilities": WRITERS,
+  "PATCH /api/reservations/availabilities/:id": WRITERS,
+  "DELETE /api/reservations/availabilities/:id": WRITERS,
+  "PATCH /api/reservations/:id/checkout": MEMBERS, // host: jen vlastní pobyt, cizí 404
   "GET /api/reservations/:id/checkout": MEMBERS,
   // shoppingList.ts
-  "POST /api/shopping-list/:listId/items": MEMBERS_GUEST_484,
-  "PUT /api/shopping-list/:itemId/purchase": MEMBERS_GUEST_484,
+  "POST /api/shopping-list/:listId/items": WRITERS,
+  "PUT /api/shopping-list/:itemId/purchase": WRITERS,
   "PATCH /api/shopping-list/:itemId/toggle-essential": WRITERS,
-  "DELETE /api/shopping-list/:itemId": MEMBERS_GUEST_484,
+  "DELETE /api/shopping-list/:itemId": WRITERS,
   // shoppingLists.ts
-  "GET /api/shopping-lists": MEMBERS_GUEST_484,
-  "POST /api/shopping-lists": MEMBERS_GUEST_484,
-  "PATCH /api/shopping-lists/:id/rename": MEMBERS_GUEST_484,
-  "DELETE /api/shopping-lists/:id": MEMBERS_GUEST_484,
-  "PATCH /api/shopping-lists/:id/resolve": MEMBERS_GUEST_484,
+  "GET /api/shopping-lists": WRITERS,
+  "POST /api/shopping-lists": WRITERS,
+  "PATCH /api/shopping-lists/:id/rename": WRITERS,
+  "DELETE /api/shopping-lists/:id": WRITERS,
+  "PATCH /api/shopping-lists/:id/resolve": WRITERS,
   // stagingFeedback.ts (jen na stagingu; čtení vrací ne-adminovi 404)
-  "POST /api/staging-feedback": MEMBERS_GUEST_484,
+  "POST /api/staging-feedback": WRITERS,
   "GET /api/staging-feedback": ADMIN,
   // superadmin.ts
   "GET /api/superadmin/users": SUPERADMIN,
@@ -173,7 +174,7 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "GET /api/superadmin/logs/files": SUPERADMIN,
   "GET /api/superadmin/logs": SUPERADMIN,
   // users.ts
-  "GET /api/users": MEMBERS_GUEST_484,
+  "GET /api/users": WRITERS,
   "POST /api/users": ADMIN,
   "GET /api/users/me": AUTHENTICATED,
   "PATCH /api/users/me": AUTHENTICATED,
@@ -189,7 +190,7 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "GET /api/users/me/export": AUTHENTICATED,
   "POST /api/users/me/leave-cabin": MEMBERS,
   // wallpapers.ts (chatu kontroluje ručně: bez chaty 400)
-  "GET /api/wallpapers": MEMBERS_GUEST_484,
+  "GET /api/wallpapers": WRITERS,
   "POST /api/wallpapers": WRITERS,
   "DELETE /api/wallpapers/:id": WRITERS, // cizí tapeta 404 dřív než 403
   // workspace.ts

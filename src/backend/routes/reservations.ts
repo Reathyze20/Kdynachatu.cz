@@ -1,13 +1,13 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
-import { requireCabin } from "../../middleware/cabinMiddleware";
+import { requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
 import { requireRole } from "../../middleware/roleMiddleware";
 import { validate } from "../../validators/validate";
 import { createReservationSchema, updateReservationSchema, upsertMonthlyNoteSchema, deleteReservationSchema, reservationIdParamsSchema, assignReservationSchema } from "../../validators/schemas";
 import { emitToCabin } from "../../utils/socket";
 import prisma from "../../utils/prisma";
 import { Prisma } from "../../generated/prisma/client.js";
-import { isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
+import { guestStayScope, isGuest, isPrimaryCollisionBlocked, sanitizeCheckoutState } from "./reservationHelpers";
 import logger from "../../utils/logger";
 
 const router = Router();
@@ -198,6 +198,9 @@ async function resolveParticipantIds(
 }
 
 const PARTICIPANT_NOT_FOUND = { message: "Účastník nenalezen." };
+/** Host nezakládá pobyty ostatním (#484), spolucestující přidává jen člen. */
+const guestAddsParticipants = (req: Request, ids: unknown) => isGuest(req.user) && Array.isArray(ids) && ids.length > 0;
+const GUEST_NO_PARTICIPANTS = { message: "Host nemůže přidávat spolucestující." };
 
 /** Načte účastníky rezervace jako payload pro API/socket. */
 async function loadParticipantsPayload(reservationId: string): Promise<ParticipantPayload[]> {
@@ -266,12 +269,12 @@ async function emitReservationUpdated(cabinId: string, reservationId: string): P
 // ============================================================================
 //                        GET ALL RESERVATIONS
 // ============================================================================
-router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
+router.get("/", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
   try {
     const cabinId = req.user!.cabinId!;
     const [reservations, availabilities] = await Promise.all([
       prisma.reservation.findMany({
-        where: { cabinId },
+        where: { cabinId, ...guestStayScope(req.user) },
         include: {
           user: {
             select: {
@@ -288,7 +291,7 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
         },
       }),
       prisma.userAvailability.findMany({
-        where: { cabinId },
+        where: { cabinId, ...(isGuest(req.user) && { userId: req.user!.userId }) }, // host: jen svoje volno
         include: {
           user: {
             select: { username: true, color: true, animalIcon: true },
@@ -341,9 +344,10 @@ router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
 // ============================================================================
 //                         CREATE RESERVATION
 // ============================================================================
-router.post("/", protect, requireCabin, validate(createReservationSchema), async (req: Request, res: Response) => {
+router.post("/", protect, requireCabinAllowGuest, validate(createReservationSchema), async (req: Request, res: Response) => {
   const { from, to, purpose, notes, handoverNote, status: requestedStatus, participantIds } = req.body;
 
+  if (guestAddsParticipants(req, participantIds)) return res.status(403).json(GUEST_NO_PARTICIPANTS);
   try {
     const newStart = new Date(from);
     const newEnd = new Date(to);
@@ -562,13 +566,14 @@ router.put("/monthly-note", protect, requireCabin, validate(upsertMonthlyNoteSch
 // ============================================================================
 //                        UPDATE RESERVATION
 // ============================================================================
-router.put("/:id", protect, requireCabin, validate(updateReservationSchema), async (req: Request, res: Response) => {
+router.put("/:id", protect, requireCabinAllowGuest, validate(updateReservationSchema), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { purpose, notes, handoverNote, status, from, to, participantIds } = req.body;
+  if (guestAddsParticipants(req, participantIds)) return res.status(403).json(GUEST_NO_PARTICIPANTS);
 
   try {
     const reservation = await prisma.reservation.findFirst({
-      where: { id, cabinId: req.user!.cabinId },
+      where: { id, cabinId: req.user!.cabinId, ...guestStayScope(req.user) }, // host: cizí pobyt 404
       include: {
         user: {
           select: {
@@ -709,7 +714,7 @@ router.put("/:id", protect, requireCabin, validate(updateReservationSchema), asy
 async function deleteReservation(req: Request, res: Response, id: string) {
   try {
     const reservation = await prisma.reservation.findFirst({
-      where: { id, cabinId: req.user!.cabinId },
+      where: { id, cabinId: req.user!.cabinId, ...guestStayScope(req.user) }, // host: cizí pobyt 404
       include: {
         user: { select: { username: true } },
       },
@@ -753,10 +758,10 @@ async function deleteReservation(req: Request, res: Response, id: string) {
 }
 
 // Původní tvar, zůstává kvůli kompatibilitě (starší klienti, offline fronta).
-router.post("/delete", protect, requireCabin, validate(deleteReservationSchema), (req: Request, res: Response) =>
+router.post("/delete", protect, requireCabinAllowGuest, validate(deleteReservationSchema), (req: Request, res: Response) =>
   deleteReservation(req, res, req.body.id));
 
-router.delete("/:id", protect, requireCabin, validate(reservationIdParamsSchema, "params"), (req: Request, res: Response) =>
+router.delete("/:id", protect, requireCabinAllowGuest, validate(reservationIdParamsSchema, "params"), (req: Request, res: Response) =>
   deleteReservation(req, res, req.params.id));
 
 // ============================================================================
@@ -1057,7 +1062,7 @@ router.delete("/availabilities/:id", protect, requireCabin, async (req: Request,
 // ============================================================================
 //                 PATCH /:id/checkout — Complete departure checklist
 // ============================================================================
-router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: Response) => {
+router.patch("/:id/checkout", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
@@ -1065,9 +1070,9 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
     const cabinId = req.user.cabinId!;
     const cleanState = sanitizeCheckoutState(req.body?.checkoutState);
 
-    // Find the reservation, ensure it belongs to the same cabin
+    // Find the reservation, ensure it belongs to the same cabin (host: jen vlastní pobyt, jinak 404)
     const reservation = await prisma.reservation.findFirst({
-      where: { id, cabinId },
+      where: { id, cabinId, ...guestStayScope(req.user) },
       select: {
         id: true,
         isCheckoutCompleted: true,
@@ -1160,7 +1165,7 @@ router.patch("/:id/checkout", protect, requireCabin, async (req: Request, res: R
 // ============================================================================
 //                 GET /:id/checkout — Get checkout status for a reservation
 // ============================================================================
-router.get("/:id/checkout", protect, requireCabin, async (req: Request, res: Response) => {
+router.get("/:id/checkout", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Neautorizováno" });
 
@@ -1168,7 +1173,7 @@ router.get("/:id/checkout", protect, requireCabin, async (req: Request, res: Res
     const cabinId = req.user.cabinId!;
 
     const reservation = await prisma.reservation.findFirst({
-      where: { id, cabinId },
+      where: { id, cabinId, ...guestStayScope(req.user) },
       select: {
         isCheckoutCompleted: true,
         checkoutCompletedBy: true,

@@ -847,7 +847,7 @@ const paths: Record<string, OpenApiObject> = {
   "/api/reservations": {
     get: {
       tags: ["Reservations"],
-      summary: "Seznam rezervaci a dostupnosti pro aktualni chatu",
+      summary: "Seznam rezervaci a dostupnosti pro aktualni chatu (host jen svoje pobyty a volno)",
       security: bearerSecurity,
       responses: {
         "200": jsonResponse(ref("ReservationListResponse"), "Data rezervaci a dostupnosti"),
@@ -919,7 +919,7 @@ const paths: Record<string, OpenApiObject> = {
   "/api/dashboard/reservations": {
     get: {
       tags: ["Dashboard"],
-      summary: "Rezervacni cast dashboardu (aktivni pobyt, nadchazejici, posledni pobyt, gate odjezdu)",
+      summary: "Rezervacni cast dashboardu (aktivni pobyt, nadchazejici, posledni pobyt, gate odjezdu); host jen svuj pobyt",
       security: bearerSecurity,
       responses: {
         "200": jsonResponse(
@@ -1174,7 +1174,7 @@ export const openApiSpec = {
   info: {
     title: "Chata API",
     version: "1.0.0",
-    description: "Starter OpenAPI coverage for backend learning flows, Swagger UI and Postman. Covers the most useful endpoints for auth, profile, cabin, reservations, shopping, inventory, channels, gallery, admin and logs. The backend contains more routes than are currently documented here.",
+    description: "Starter OpenAPI coverage for backend learning flows, Swagger UI and Postman. Covers the most useful endpoints for auth, profile, cabin, reservations, shopping, inventory, channels, gallery, admin and logs. The backend contains more routes than are currently documented here. Role guest (host) dostane 403 vsude mimo whitelist: vlastni rezervace a check-out, GET /api/cabin, dashboard rezervaci, vlastni profil; cizi pobyt je pro hosta 404.",
   },
   servers: [
     {
