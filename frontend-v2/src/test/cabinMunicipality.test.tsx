@@ -55,7 +55,7 @@ describe('nejbližší obec při registraci chaty', () => {
   it('does not register a cabin without a municipality picked from the list', async () => {
     mockGet()
     const post = vi.spyOn(apiClient, 'post')
-    renderWithClient(<RegisterForm onShowLogin={vi.fn()} onShowVerify={vi.fn()} />)
+    renderWithClient(<RegisterForm onShowLogin={vi.fn()} />)
 
     await fillAccount()
     await userEvent.type(screen.getByTestId('register-municipality-input'), 'Třebenice')
@@ -68,7 +68,7 @@ describe('nejbližší obec při registraci chaty', () => {
   it('sends the code of the picked municipality', async () => {
     mockGet()
     const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { requiresVerification: true } })
-    renderWithClient(<RegisterForm onShowLogin={vi.fn()} onShowVerify={vi.fn()} />)
+    renderWithClient(<RegisterForm onShowLogin={vi.fn()} />)
 
     await fillAccount()
     await pickTrebic('register-municipality-input')

@@ -44,7 +44,6 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "GET /api/reset-password-token": PUBLIC,
   "POST /api/reset-password": PUBLIC,
   "GET /api/verify-token": PUBLIC,
-  "POST /api/verify-email": PUBLIC,
   "GET /api/refresh-token": AUTHENTICATED,
   // admin.ts
   "GET /api/admin/system": ADMIN,

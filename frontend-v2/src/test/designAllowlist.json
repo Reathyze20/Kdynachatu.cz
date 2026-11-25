@@ -32,8 +32,8 @@
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
       "components/layout/ProfileDrawer.tsx", "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
-      "features/auth/ForgotPasswordForm.tsx", "features/auth/LoginForm.tsx", "features/auth/RegisterForm.tsx",
-      "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx", "features/auth/VerifyForm.tsx",
+      "features/auth/ForgotPasswordForm.tsx", "features/auth/RegisterForm.tsx",
+      "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
       "features/reservations/ui/CheckoutSection.tsx", "features/reservations/ui/ReservationDetail.tsx",
       "features/settings/CabinSettingsPage.tsx", "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"

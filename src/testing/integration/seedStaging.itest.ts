@@ -95,6 +95,7 @@ describe("seedStaging – kompletní fiktivní data", () => {
     assert.equal(demoUsers.filter((x) => x.role === "admin").length, 1);
     assert.equal(demoUsers.filter((x) => x.role === "user").length, 3);
     assert.ok(demoUsers.every((x) => x.email?.endsWith("@example.invalid")), "e-maily na example.invalid");
+    assert.ok(demoUsers.every((x) => x.isVerified), "demo účty jsou ověřené, login je pustí (#476)");
     const admin = demoUsers.find((x) => x.role === "admin")!;
     assert.ok(await verifyPassword(PASSWORDS.adminPassword, admin.passwordHash), "heslo správce z env");
     const mamka = demoUsers.find((x) => x.username === "demo-mamka");

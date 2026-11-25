@@ -2,7 +2,7 @@
  * features/auth/LoginForm.tsx
  * Překlad: #login-section z index.html + bindLoginForm() z main.ts
  */
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { apiClient } from '@/api/client'
@@ -14,7 +14,6 @@ interface LoginFormProps {
   onShowForgotPassword: () => void
   /** Bez handleru (registrace chat uzavřená) se odkaz na registraci nezobrazí. */
   onShowRegister?: () => void
-  onShowVerify: (username: string, prefillCode?: string) => void
   /** Fiktivní účty ze seedu – backend je posílá jen na stagingu; prázdné = sekce se nezobrazí. */
   demoAccounts?: DemoAccount[]
 }
@@ -34,24 +33,18 @@ interface AuthErrorResponse {
   error?: string
   code?: string
   needsVerification?: boolean
-  testCode?: string
 }
 
-export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, demoAccounts = [] }: LoginFormProps) {
+export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts = [] }: LoginFormProps) {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [error, setError] = useState<{ text: string; testCode?: string } | null>(null)
+  const [error, setError] = useState<{ text: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
 
   const usernameRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [])
 
   function fillDemoAccount(account: DemoAccount) {
     usernameRef.current!.value = account.username
@@ -91,15 +84,6 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
         const msg = data.message || 'Nejprve ověř svůj e-mail.'
         setError({ text: msg })
         showToast(msg, 'info')
-        return
-      }
-
-      if (data?.testCode) {
-        setError({
-          text: data.message || data.error || '',
-          testCode: data.testCode,
-        })
-        timerRef.current = setTimeout(() => onShowVerify(username, data.testCode), 4000)
         return
       }
 
@@ -225,14 +209,6 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, onShowVerify, 
             data-testid="login-error-message"
           >
             {error.text}
-            {error.testCode && (
-              <>
-                <br /><br />
-                <strong>Nouzový kód (login) pro testování:{' '}
-                  <span style={{ fontSize: '1.2em', letterSpacing: '2px', color: 'var(--color-primary)' }}>{error.testCode}</span>
-                </strong>
-              </>
-            )}
           </p>
         )}
       </form>

@@ -13,7 +13,6 @@ import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
 
 interface RegisterFormProps {
   onShowLogin: () => void
-  onShowVerify: (username: string, prefillCode?: string) => void
 }
 
 interface RegisterResponse {
@@ -21,13 +20,12 @@ interface RegisterResponse {
   error?: string
   requiresVerification?: boolean
   testToken?: string
-  testCode?: string
 }
 
-export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
+export function RegisterForm({ onShowLogin }: RegisterFormProps) {
   const navigate = useNavigate()
   const [selectedColor, setSelectedColor] = useState(MEMBER_PALETTE[0].hex)
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'warning'; testCode?: string } | null>(null)
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'warning' } | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [emailSent, setEmailSent] = useState<string | null>(null) // email address → show confirmation
@@ -89,25 +87,8 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
         return
       }
 
-      // Legacy PIN-based flow
-      if (data.message?.includes('ověřovací kód') || data.message?.includes('e-mail s kódem se nepodařilo odeslat')) {
-        if (data.testCode) {
-          setMessage({
-            text: data.message,
-            type: 'warning',
-            testCode: data.testCode,
-          })
-        } else {
-          showMsg(data.message, data.message.includes('nepodařilo') ? 'error' : 'success')
-        }
-        timerRef.current = setTimeout(
-          () => onShowVerify(username, data.testCode),
-          data.testCode || data.message.includes('nepodařilo') ? 4000 : 1000,
-        )
-      } else {
-        showMsg('Registrace úspěšná, přihlas se.', 'success')
-        timerRef.current = setTimeout(onShowLogin, 1500)
-      }
+      showMsg('Registrace úspěšná, přihlas se.', 'success')
+      timerRef.current = setTimeout(onShowLogin, 1500)
     } catch (err: unknown) {
       const data = (err as { response?: { data?: RegisterResponse } }).response?.data
       const msg = data?.message || data?.error || 'Chyba sítě'
@@ -260,14 +241,6 @@ export function RegisterForm({ onShowLogin, onShowVerify }: RegisterFormProps) {
             data-testid="register-message"
           >
             {message.text}
-            {message.testCode && (
-              <>
-                <br /><br />
-                <strong>Nouzový kód pro testování:{' '}
-                  <span style={{ fontSize: '1.2em', letterSpacing: '2px', color: 'var(--color-primary)' }}>{message.testCode}</span>
-                </strong>
-              </>
-            )}
           </p>
         )}
       </form>

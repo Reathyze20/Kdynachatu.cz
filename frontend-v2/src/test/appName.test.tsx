@@ -12,7 +12,7 @@ describe('app name „Kdy na chatu“', () => {
   it('login screen shows the app name', () => {
     render(
       <MemoryRouter>
-        <LoginForm onShowForgotPassword={vi.fn()} onShowRegister={vi.fn()} onShowVerify={vi.fn()} />
+        <LoginForm onShowForgotPassword={vi.fn()} onShowRegister={vi.fn()} />
       </MemoryRouter>,
     )
     expect(screen.getByRole('heading', { level: 1, name: 'Kdy na chatu' })).toBeInTheDocument()

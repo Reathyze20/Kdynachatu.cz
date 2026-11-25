@@ -113,7 +113,7 @@ Zjednodusene si backend predstav takhle:
 - `/api/register`
 - `/api/forgot-password`
 - `/api/reset-password`
-- `/api/verify-email`
+- `/api/verify-token`
 - `/api/invites/validate/:token`
 - `/api/invites/accept/:token`
 

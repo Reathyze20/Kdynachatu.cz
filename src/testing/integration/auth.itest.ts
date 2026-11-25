@@ -6,7 +6,7 @@ import type { Express } from "express";
 import request from "supertest";
 import prisma from "../../utils/prisma";
 import { hashPassword } from "../../utils/password";
-import { setupIntegrationFile, teardownIntegrationFile, TEST_PASSWORD, type TestWorld } from "./harness";
+import { as, setupIntegrationFile, teardownIntegrationFile, TEST_PASSWORD, type TestWorld } from "./harness";
 
 // Auth endpointy jsou mountované na `/api` (NE `/api/auth`), viz src/backend/app.ts.
 // Voláme je přímo přes supertest nad `app` – NEpoužíváme `as`/`tokenFor`, které login obcházejí.
@@ -75,7 +75,6 @@ describe("auth login", () => {
 
   test("neověřený uživatel (s verificationToken) → 403 + needsVerification, žádný e-mail", async () => {
     const passwordHash = await hashPassword(TEST_PASSWORD);
-    // verificationToken MUSÍ být nastaven, jinak login spadne do legacy PIN větve, která posílá e-mail.
     const unverified = await prisma.user.create({
       data: {
         username: "unverified-a",
@@ -93,6 +92,65 @@ describe("auth login", () => {
     const res = await login(unverified.username, TEST_PASSWORD);
     assert.equal(res.status, 403);
     assert.equal(res.body.needsVerification, true);
+  });
+});
+
+describe("auth: jen ověření odkazem, žádný legacy PIN (#476)", () => {
+  async function unverifiedUser(username: string, role: string, verificationToken: string | null) {
+    return prisma.user.create({
+      data: {
+        username,
+        email: `${username}@example.test`,
+        passwordHash: await hashPassword(TEST_PASSWORD),
+        color: "#5d9b62",
+        role,
+        cabinId: world.cabinA.id,
+        isVerified: false,
+        isEmailVerified: false,
+        verificationToken,
+      },
+    });
+  }
+
+  test("POST /api/verify-email → 404 (endpoint zrušen)", async () => {
+    const res = await request(app).post("/api/verify-email").send({ username: world.memberA.username, code: "123456" });
+    assert.equal(res.status, 404);
+  });
+
+  test("neověřený admin se nepřihlásí a dostane stejnou hlášku jako neověřený člen", async () => {
+    const admin = await unverifiedUser("unverified-admin-a", "admin", rawToken());
+    const member = await unverifiedUser("unverified-member-a", "user", rawToken());
+
+    const adminRes = await login(admin.username, TEST_PASSWORD);
+    const memberRes = await login(member.username, TEST_PASSWORD);
+
+    assert.equal(adminRes.status, 403);
+    assert.equal(adminRes.body.token, undefined);
+    assert.equal(adminRes.body.needsVerification, true);
+    assert.equal(adminRes.status, memberRes.status);
+    assert.equal(adminRes.body.message, memberRes.body.message);
+  });
+
+  test("neověřený účet bez verificationToken (dřív PIN větev) → 403 needsVerification, žádný PIN", async () => {
+    const legacy = await unverifiedUser("legacy-no-token-a", "user", null);
+
+    const res = await login(legacy.username, TEST_PASSWORD);
+
+    assert.equal(res.status, 403);
+    assert.equal(res.body.needsVerification, true);
+    assert.equal(res.body.testCode, undefined);
+    const stored = await prisma.user.findUnique({ where: { id: legacy.id } });
+    assert.equal(stored?.verificationCode, null);
+  });
+
+  test("uživatel založený adminem chaty se rovnou přihlásí", async () => {
+    const created = await as(app, world.adminA).post("/api/users").send({ username: "zalozeny-adminem-a", password: NEW_PASSWORD });
+    assert.equal(created.status, 201);
+
+    const res = await login("zalozeny-adminem-a", NEW_PASSWORD);
+    assert.equal(res.status, 200);
+    assert.equal(typeof res.body.token, "string");
+    assert.equal(res.body.cabinId, world.cabinA.id);
   });
 });
 
