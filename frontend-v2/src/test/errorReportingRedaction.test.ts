@@ -53,6 +53,24 @@ describe('reportError – tokeny z URL (#481)', () => {
     )
   })
 
+  it('pozná i složené názvy parametrů (camelCase, víc předpon)', () => {
+    window.history.replaceState({}, '', `/x?resetToken=${SECRET}&apiKey=${SECRET}&password_reset_token=${SECRET}&page=2`)
+
+    reportError({ message: 'boom' })
+
+    expect(sentPayload().url).toBe(
+      `${window.location.origin}/x?resetToken=redacted&apiKey=redacted&password_reset_token=redacted&page=2`,
+    )
+  })
+
+  it('URL s tokenem uvnitř textu chyby odejde bez tokenu', () => {
+    reportError({ message: `Failed to load ${window.location.origin}/verify?token=${SECRET} and /invite/${SECRET}` })
+
+    expect(api.post.mock.calls[0][1].message).toBe(
+      `Failed to load ${window.location.origin}/verify?token=redacted and /invite/redacted`,
+    )
+  })
+
   it('odstraní token i z fragmentu za #', () => {
     window.history.replaceState({}, '', `/verify#token=${SECRET}`)
 
