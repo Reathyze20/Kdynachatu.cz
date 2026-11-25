@@ -2,7 +2,7 @@
  * features/admin/AdminPage.tsx
  * Admin panel: user management, invites and cabin settings.
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type SelectHTMLAttributes } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
@@ -22,12 +22,14 @@ import { type CabinUser, type Invite } from '@/api/admin'
 import { showToast } from '@/lib/toast'
 import { formatCount } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
-import { Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
+import { ChevronDown, Mail, Pencil, ScrollText, Search, SlidersHorizontal, TicketPlus, UserPlus } from 'lucide-react'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 import { StagingFeedbackSection } from '@/features/admin/components/StagingFeedbackSection'
@@ -176,6 +178,57 @@ function getAdminWorkspacePath(workspace: AdminWorkspace): string {
 
 // ─── EditUserModal ────────────────────────────────────────────────────────────
 
+type DangerAction = 'remove-from-cabin' | 'delete-reservations' | 'delete-user'
+
+const DANGER_ACTIONS: Array<{
+  id: DangerAction
+  label: string
+  hint: string
+  selfHint?: string
+  variant: 'ghost' | 'danger'
+  className?: string
+  testId: string
+}> = [
+  {
+    id: 'remove-from-cabin',
+    label: 'Odebrat z chaty',
+    hint: 'Ztratí přístup k této chatě, účet i data mu zůstanou.',
+    selfHint: 'Sebe z chaty odebrat nemůžeš.',
+    variant: 'ghost',
+    testId: 'edit-user-remove-from-cabin-button',
+  },
+  {
+    id: 'delete-reservations',
+    label: 'Smazat rezervace',
+    hint: 'Smaže všechny jeho rezervace, účet zůstane.',
+    variant: 'ghost',
+    className: 'text-destructive',
+    testId: 'edit-user-delete-reservations-button',
+  },
+  {
+    id: 'delete-user',
+    label: 'Smazat uživatele',
+    hint: 'Smaže účet i všechno, co v chatě vytvořil.',
+    selfHint: 'Vlastní účet smazat nemůžeš.',
+    variant: 'danger',
+    testId: 'edit-user-delete-user-button',
+  },
+]
+
+/** Výběr role s viditelnou šipkou (globální `select` v forms.css má `appearance: none`). */
+function RoleSelect({ className = '', ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select {...props} className={`min-h-(--touch-target-min)! pr-10! text-base! ${className}`}>
+        <option value="user">Člen</option>
+        <option value="admin">Admin</option>
+        <option value="guest">Host</option>
+      </select>
+      <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--text-muted)" />
+    </div>
+  )
+}
+
 interface EditUserModalProps {
   user: CabinUser
   onClose: () => void
@@ -186,7 +239,7 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
   const { user: currentUser, isAdmin } = useAuth()
   const [role, setRole] = useState(user.role)
   const [password, setPassword] = useState('')
-  const [confirmAction, setConfirmAction] = useState<'delete-user' | 'delete-reservations' | 'remove-from-cabin' | null>(null)
+  const [confirmAction, setConfirmAction] = useState<DangerAction | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [confirmError, setConfirmError] = useState<string | null>(null)
   const updateUser = useUpdateUser()
@@ -301,84 +354,33 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
         onClose={onClose}
         title="Upravit uživatele"
         footer={
-          <div className="admin-modal-actions">
-            <button
-              className="btn btn-primary"
-              onClick={handleSave}
-              disabled={updateUser.isPending}
-              data-testid="edit-user-save-button"
-            >
+          <div className="flex w-full justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={updateUser.isPending}>
+              Zrušit
+            </Button>
+            <Button type="button" onClick={handleSave} pending={updateUser.isPending} data-testid="edit-user-save-button">
               {updateUser.isPending ? 'Ukládám…' : 'Uložit'}
-            </button>
-            {isAdmin && (
-              <>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setConfirmError(null)
-                    setConfirmAction('remove-from-cabin')
-                  }}
-                  disabled={removeUserFromCabin.isPending || isSelf}
-                  title={isSelf ? 'Sebe z chaty odebrat nemůžeš' : undefined}
-                  data-testid="edit-user-remove-from-cabin-button"
-                >
-                  Odebrat z chaty
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setConfirmError(null)
-                    setConfirmAction('delete-reservations')
-                  }}
-                  disabled={deleteReservations.isPending}
-                  data-testid="edit-user-delete-reservations-button"
-                >
-                  Smazat rezervace
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => {
-                    setConfirmError(null)
-                    setConfirmAction('delete-user')
-                  }}
-                  disabled={deleteUser.isPending || isSelf}
-                  title={isSelf ? 'Vlastní účet smazat nemůžeš' : undefined}
-                  data-testid="edit-user-delete-user-button"
-                >
-                  Smazat uživatele
-                </button>
-              </>
-            )}
+            </Button>
           </div>
         }
       >
-          <div className="admin-user-detail-grid">
-            <div className="admin-user-detail-pill">
-              <span>Stav</span>
-              <strong>{statusMeta.label}</strong>
-            </div>
-            <div className="admin-user-detail-pill">
-              <span>Rezervace</span>
-              <strong>{user.reservationCount}</strong>
-            </div>
-            <div className="admin-user-detail-pill">
-              <span>Fotky</span>
-              <strong>{user.photoCount}</strong>
-            </div>
-            <div className="admin-user-detail-pill">
-              <span>Vlákna</span>
-              <strong>{user.threadCount}</strong>
-            </div>
-          </div>
+          <p className="mb-4 text-meta text-(--text-muted)">
+            {[
+              statusMeta.label,
+              formatCount(user.reservationCount, 'rezervace', 'rezervace', 'rezervací'),
+              formatCount(user.photoCount, 'fotka', 'fotky', 'fotek'),
+              formatCount(user.threadCount, 'vlákno', 'vlákna', 'vláken'),
+            ].join(' · ')}
+          </p>
 
           <div className="form-group">
-            <label>Uživatelské jméno</label>
-            <input type="text" value={user.username} disabled className="form-control" data-testid="edit-user-username-input" />
+            <label htmlFor="edit-username">Uživatelské jméno</label>
+            <Input id="edit-username" type="text" value={user.username} disabled data-testid="edit-user-username-input" />
           </div>
 
           <div className="form-group">
             <label htmlFor="edit-role">Role</label>
-            <select
+            <RoleSelect
               id="edit-role"
               value={role}
               onChange={(e) => {
@@ -387,16 +389,12 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
               }}
               disabled={!isAdmin}
               data-testid="edit-user-role-select"
-            >
-              <option value="admin">Admin</option>
-              <option value="user">Člen</option>
-              <option value="guest">Host</option>
-            </select>
+            />
           </div>
 
           <div className="form-group">
             <label htmlFor="edit-password">Nové heslo <span className="cs-optional">(nepovinné)</span></label>
-            <input
+            <Input
               id="edit-password"
               type="password"
               value={password}
@@ -414,16 +412,46 @@ function EditUserModal({ user, onClose, onDeleted }: EditUserModalProps) {
           {saveError ? (
             <div className="error-message show" role="alert" data-testid="edit-user-save-error">{saveError}</div>
           ) : null}
+
+          {isAdmin && (
+            <section aria-labelledby="edit-user-danger-zone" className="mt-6 border-t border-rule-soft pt-4">
+              <h4 id="edit-user-danger-zone" className="text-eyebrow uppercase text-(--text-muted)">Nebezpečná zóna</h4>
+              <ul className="mt-2 divide-y divide-rule-soft">
+                {DANGER_ACTIONS.map((action) => {
+                  const blocked = isSelf && action.selfHint !== undefined
+                  return (
+                    <li key={action.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between">
+                      <p className="text-label text-(--text-muted)">{blocked ? action.selfHint : action.hint}</p>
+                      <Button
+                        type="button"
+                        variant={action.variant}
+                        size="sm"
+                        className={`shrink-0 self-start md:self-auto ${action.className ?? ''}`}
+                        onClick={() => {
+                          setConfirmError(null)
+                          setConfirmAction(action.id)
+                        }}
+                        disabled={blocked}
+                        data-testid={action.testId}
+                      >
+                        {action.label}
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
       </Modal>
 
       <ConfirmDialog
         isOpen={confirmAction !== null}
         title={isDeletingUser ? 'Smazat uživatele?' : isRemovingUserFromCabin ? 'Odebrat uživatele z chaty?' : 'Smazat rezervace?'}
         message={isDeletingUser
-          ? `Opravdu smazat uživatele „${user.username}"? Budou smazány i všechny jeho rezervace, nákupní seznamy, poznámky a záznamy v deníku. Toto nelze vrátit!`
+          ? `Smazat uživatele „${user.username}“? Zmizí i všechny jeho rezervace, nákupní seznamy, poznámky a záznamy v deníku. Nejde to vrátit.`
           : isRemovingUserFromCabin
-            ? `Odebrat uživatele „${user.username}" z této chaty a zachovat jeho účet i data? Uživatel ztratí přístup k této chatě, ale nepřijde o svůj účet v systému.`
-            : `Smazat VŠECHNY rezervace uživatele „${user.username}"?`}
+            ? `Odebrat uživatele „${user.username}“ z této chaty? Ztratí do ní přístup, ale jeho účet i data zůstanou.`
+            : `Smazat všechny rezervace uživatele „${user.username}“ (${formatCount(user.reservationCount, 'rezervace', 'rezervace', 'rezervací')})? Nejde to vrátit.`}
         confirmLabel={isDeletingUser ? 'Smazat uživatele' : isRemovingUserFromCabin ? 'Odebrat z chaty' : 'Smazat rezervace'}
         danger={!isRemovingUserFromCabin}
         loading={confirmLoading}
@@ -590,7 +618,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         <div>
           <div className="admin-card-eyebrow">Pozvánky</div>
           <div className="admin-card-title-row">
-            <h2 className="admin-card-title">Dočasné přístupy</h2>
+            <h2 className="admin-card-title">Odkazy pro nové členy</h2>
             <span className="admin-card-counter">{formatCount(activeInvites.length, 'aktivní', 'aktivní', 'aktivních')}</span>
           </div>
           <p className="admin-card-description">
@@ -609,11 +637,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
       >
         <div className="form-group">
           <label htmlFor="invite-role">Role</label>
-          <select id="invite-role" name="invite-role" data-testid="invite-role-select">
-            <option value="user">Člen</option>
-            <option value="admin">Admin</option>
-            <option value="guest">Host</option>
-          </select>
+          <RoleSelect id="invite-role" name="invite-role" data-testid="invite-role-select" />
         </div>
         <div className="form-group">
           <label htmlFor="invite-days">Platnost (dní)</label>
@@ -795,13 +819,13 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                   setEmailValue(event.target.value)
                   if (emailError) setEmailError(null)
                 }}
-                placeholder="napr. rodina@example.com"
+                placeholder="např. rodina@example.com"
                 autoFocus
                 maxLength={255}
               />
             </div>
             <div className="admin-invite-share-preview">
-              <span>Krátký text pro zprávu:</span>
+              <span>Krátký text pro zprávu</span>
               <p>{buildInviteShareText(emailInvite)}</p>
             </div>
             {emailError ? <div className="error-message show admin-section-error" role="alert">{emailError}</div> : null}
@@ -878,7 +902,7 @@ export function AdminPage() {
 
   const workspaceSummary: Record<AdminWorkspace, { title: string; lead: string }> = {
     members: {
-      title: 'Správa členů, rolí a lokálních účtů',
+      title: 'Členové a jejich role',
       lead: 'Přidej člena bez e-mailu, uprav role a rychle zkontroluj, kdo má do chaty skutečně přístup.',
     },
     invites: {
@@ -1030,7 +1054,7 @@ export function AdminPage() {
                   type="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Hledat podle jména nebo e-mailu"
+                  placeholder="Hledat člena"
                   data-testid="admin-user-search-input"
                 />
               </label>
@@ -1126,7 +1150,7 @@ export function AdminPage() {
                               ) : null}
                             </div>
                             <div className="admin-user-subline">
-                              <span>{user.email || 'Lokální účet bez e-mailu'}</span>
+                              <span>{user.email || 'Bez e-mailu'}</span>
                               <span>Vytvořen {formatDateLabel(user.createdAt)}</span>
                             </div>
                             <div className="admin-user-metrics">
@@ -1167,7 +1191,7 @@ export function AdminPage() {
                 <div>
                   <div className="admin-card-eyebrow">Nový přístup</div>
                   <div className="admin-card-title-row">
-                    <h2 className="admin-card-title">Vytvořit lokální účet</h2>
+                    <h2 className="admin-card-title">Přidat člena bez e-mailu</h2>
                   </div>
                   <p className="admin-card-description">
                     Použij pro členy rodiny, kteří se přihlašují přímo jménem a heslem bez pozvánky e-mailem.
@@ -1194,11 +1218,7 @@ export function AdminPage() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-role">Role</label>
-                  <select id="new-role" name="role" data-testid="admin-create-role-select">
-                    <option value="user">Člen</option>
-                    <option value="admin">Admin</option>
-                    <option value="guest">Host</option>
-                  </select>
+                  <RoleSelect id="new-role" name="role" data-testid="admin-create-role-select" />
                 </div>
                 <button type="submit" className="btn btn-primary" disabled={createUser.isPending} data-testid="admin-create-submit-button">
                   <UserPlus size={16} />
@@ -1223,7 +1243,7 @@ export function AdminPage() {
                     <h2 className="admin-card-title">Statistiky systému</h2>
                   </div>
                   <p className="admin-card-description">
-                    Rychlý snapshot toho, kolik je v systému lidí, rezervací, fotek a zpráv. Hodí se při kontrole aktivity nebo před větší údržbou.
+                    Kolik je v aplikaci lidí, rezervací, fotek a zpráv. Hodí se při kontrole aktivity nebo před větší údržbou.
                   </p>
                 </div>
               </div>
@@ -1256,7 +1276,7 @@ export function AdminPage() {
                     <h2 className="admin-card-title">Jak člena přidat</h2>
                   </div>
                   <p className="admin-card-description">
-                    Pozvánka je nejlepší pro většinu rodiny. Lokální účet použij jen tam, kde nechceš řešit e-mail nebo onboarding přes odkaz.
+                    Pozvánka je nejlepší pro většinu rodiny. Účet bez e-mailu použij jen tam, kde se člověk nechce registrovat přes odkaz.
                   </p>
                 </div>
               </div>
@@ -1264,7 +1284,7 @@ export function AdminPage() {
               <div className="admin-task-list">
                 <button type="button" className="btn btn-secondary" onClick={() => openWorkspace('members', 'admin-create-user')}>
                   <UserPlus size={16} />
-                  Vytvořit lokální účet
+                  Přidat člena bez e-mailu
                 </button>
                 <button type="button" className="btn btn-secondary" onClick={() => openWorkspace('cabin')}>
                   <SlidersHorizontal size={16} />
@@ -1286,7 +1306,7 @@ export function AdminPage() {
                   <strong>{invitesLoading || invitesFailed ? '—' : archivedInvitesCount}</strong>
                 </div>
                 <div className="admin-focus-metric">
-                  <span>Lokální účty</span>
+                  <span>Členové bez e-mailu</span>
                   <strong>{usersLoading || usersFailed ? '—' : localAccountCount}</strong>
                 </div>
               </div>
@@ -1300,7 +1320,7 @@ export function AdminPage() {
                     <h2 className="admin-card-title">Statistiky systému</h2>
                   </div>
                   <p className="admin-card-description">
-                    Rychlý kontext, kolik je v systému lidí a jak je aplikace opravdu využívaná.
+                    Kolik je v aplikaci lidí a jak se opravdu používá.
                   </p>
                 </div>
               </div>
