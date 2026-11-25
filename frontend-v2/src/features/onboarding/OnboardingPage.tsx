@@ -2,7 +2,7 @@
  * features/onboarding/OnboardingPage.tsx
  */
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
@@ -30,7 +30,14 @@ interface RefreshTokenResponse {
   isSuperAdmin?: boolean
 }
 
+// Člen, který už chatu má, na onboardingu nemá co dělat (#500).
 export default function OnboardingPage() {
+  const { user } = useAuth()
+  if (user?.cabinId) return <Navigate to="/dashboard" replace />
+  return <CreateCabinOnboarding />
+}
+
+function CreateCabinOnboarding() {
   const { login, logout, user } = useAuth()
   const navigate = useNavigate()
   const nameRef = useRef<HTMLInputElement>(null)
@@ -45,7 +52,8 @@ export default function OnboardingPage() {
     let cancelled = false
     async function checkForAssignedCabin() {
       try {
-        const res = await apiClient.get<RefreshTokenResponse>('/auth/refresh-token')
+        // Auth routy visí přímo pod /api, tedy GET /api/refresh-token (#500).
+        const res = await apiClient.get<RefreshTokenResponse>('/refresh-token')
         if (cancelled) return
         
         if (res.data.cabinId) {
@@ -59,7 +67,7 @@ export default function OnboardingPage() {
             isSuperAdmin: res.data.isSuperAdmin,
             remember: !!localStorage.getItem('authToken'),
           })
-          showToast('Přesměrování na dashboard...', 'info')
+          showToast('Chata přiřazena.', 'info')
           navigate('/dashboard', { replace: true })
           return
         }
@@ -97,7 +105,7 @@ export default function OnboardingPage() {
         isSuperAdmin: data.isSuperAdmin,
         remember: !!localStorage.getItem('authToken'),
       })
-      showToast('Chatu jsme vytvořili!', 'success')
+      showToast('Chata vytvořena.', 'success')
       navigate('/dashboard', { replace: true })
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Chatu se nepodařilo vytvořit. Zkus to znovu.'
@@ -112,7 +120,7 @@ export default function OnboardingPage() {
       <div className="onboarding-page" data-testid="onboarding-page" data-onboarding-state="checking">
         <div className="onboarding-card card" style={{ textAlign: 'center' }}>
           <div className="spinner" />
-          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Kontroluji přiřazení k chatě...</p>
+          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Kontroluji přiřazení k chatě…</p>
         </div>
       </div>
     )
@@ -148,7 +156,7 @@ export default function OnboardingPage() {
               </div>
               {error && <p id="onboarding-error" className="error-message show" role="alert" data-testid="onboarding-error-message">{error}</p>}
               <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading} data-testid="onboarding-submit-button">
-                {loading ? 'Vytváří se...' : 'Vytvořit chatu'}
+                {loading ? 'Vytvářím…' : 'Vytvořit chatu'}
               </button>
             </form>
             <p className="onboarding-hint">Název chaty můžeš kdykoli změnit v nastavení.</p>
@@ -165,7 +173,7 @@ export default function OnboardingPage() {
 
         <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            Pozval tě někdo do existující chaty? Požádej správce o novou pozvánku, nebo zkus znovu načíst stránku.
+            Pozval tě někdo do existující chaty? Až tě správce přidá, klepni na Zkusit znovu. Jinak ho požádej o novou pozvánku.
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
