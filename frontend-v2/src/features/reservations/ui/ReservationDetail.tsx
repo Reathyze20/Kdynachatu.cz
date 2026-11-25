@@ -174,15 +174,15 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
       )}
 
       {canWatch && (
-        <div className="flex items-center justify-between gap-3 rounded-(--radius-md) bg-(--color-bg-alt) p-3" data-testid="reservation-watch">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-inset p-3" data-testid="reservation-watch">
           <div className="flex flex-col gap-0.5">
             {watchData?.watching && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <span className="inline-flex items-center gap-1.5 text-label text-foreground">
                 <Eye aria-hidden="true" className="size-4" />
                 Hlídám
               </span>
             )}
-            <p className="text-sm text-(--text-muted)">Až se termín uvolní, objeví se to na nástěnce chaty.</p>
+            <p className="text-meta text-(--text-muted)">Až se termín uvolní, objeví se to na nástěnce chaty.</p>
           </div>
           <Button
             variant="secondary"

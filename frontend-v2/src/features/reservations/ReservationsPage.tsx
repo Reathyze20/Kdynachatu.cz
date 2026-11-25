@@ -197,18 +197,10 @@ export function ReservationsPage() {
     setSelectedReservation(null);
   };
 
-  // Empty booking form (calendar header button)
-  const handleNewReservation = () => {
+  // New booking form: empty from the calendar header, from a free day picked in the calendar (#506)
+  const openNewBooking = (from = "") => {
     setEditingReservation(null);
-    setBookingFrom("");
-    setBookingTo("");
-    setBookingOpen(true);
-  };
-
-  // Free day picked in the calendar → booking form from that day (#506)
-  const handleBookFromDay = (day: string) => {
-    setEditingReservation(null);
-    setBookingFrom(day);
+    setBookingFrom(from);
     setBookingTo("");
     setBookingOpen(true);
   };
@@ -245,6 +237,8 @@ export function ReservationsPage() {
     ? monthFiltered.filter((r) => isIsoDateInRange(selectedDay, r.from, r.to))
     : monthFiltered;
 
+  const choiceNights = choiceFrom && choiceTo ? nightsBetween(choiceFrom, choiceTo) : 0;
+
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className={styles.page} data-testid="reservations-page" data-reservations-state="ready">
@@ -271,7 +265,7 @@ export function ReservationsPage() {
                   onShowDetail={showDetail}
                   selectedDay={selectedDay}
                   onClearDayFilter={() => setSelectedDay(null)}
-                  onBookFromDay={handleBookFromDay}
+                  onBookFromDay={openNewBooking}
                   hideMonthlyNote={isGuest}
                 />
               )}
@@ -302,7 +296,7 @@ export function ReservationsPage() {
             onShowDetail={showDetail}
             onDaySelect={handleDaySelect}
             onDayClear={() => setSelectedDay(null)}
-            onNewReservation={handleNewReservation}
+            onNewReservation={() => openNewBooking()}
             quickStatsNode={
               <QuickStats
                 reservations={allReservations}
@@ -340,8 +334,8 @@ export function ReservationsPage() {
       >
         <div className="space-y-4 py-2">
           {choiceFrom && choiceTo && (
-            <p className="text-base font-semibold text-foreground" data-testid="choice-range">
-              {formatDateRange(choiceFrom, choiceTo)} · {nightsBetween(choiceFrom, choiceTo)} {nightsLabel(nightsBetween(choiceFrom, choiceTo))}
+            <p className="text-card-title text-foreground">
+              {formatDateRange(choiceFrom, choiceTo)} · {choiceNights} {nightsLabel(choiceNights)}
             </p>
           )}
           <p className="text-slate-600 text-sm">
