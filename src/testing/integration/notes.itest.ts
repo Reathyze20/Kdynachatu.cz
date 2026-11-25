@@ -126,6 +126,15 @@ describe("notes: replying across cabins is rejected", () => {
   });
 });
 
+describe("notes: posting into a cabin B thread is rejected (#483)", () => {
+  test("POST /notes in A with a cabin B threadId → 404, nothing created", async () => {
+    const countBefore = await prisma.note.count();
+    const res = await as(app, world.memberA).post("/api/notes").send({ message: "Do cizího vlákna", threadId: threadB });
+    assert.equal(res.status, 404);
+    assert.equal(await prisma.note.count(), countBefore);
+  });
+});
+
 describe("note-threads: a cabin A user on a cabin B thread gets 404 and the thread is unchanged", () => {
   for (const actor of ["memberA", "adminA"] as const) {
     test(`DELETE /note-threads/:id (${actor})`, async () => {

@@ -103,7 +103,13 @@ router.post("/", protect, requireCabin, validate(createNoteSchema), async (req: 
   const { message, threadId, replyToId } = req.body;
 
   try {
-    // Validate replyToId exists if provided
+    // A thread or quoted message from another cabin is 404 and nothing is written (#483)
+    if (threadId) {
+      const thread = await prisma.noteThread.findFirst({ where: { id: threadId, cabinId: req.user!.cabinId! } });
+      if (!thread) {
+        return res.status(404).json({ message: "Vlákno nenalezeno." });
+      }
+    }
     if (replyToId) {
       const replyTarget = await prisma.note.findFirst({
         where: { id: replyToId, cabinId: req.user!.cabinId! },

@@ -95,6 +95,54 @@ describe("diary entries: creating in a cabin B folder from cabin A is rejected",
   });
 });
 
+describe("diary entries: gallery photos from cabin B are rejected (#483)", () => {
+  async function galleryPhoto(owner: TestUser, name: string): Promise<string> {
+    const folder = await prisma.galleryFolder.create({ data: { name, createdById: owner.id, cabinId: owner.cabinId } });
+    const photo = await prisma.galleryPhoto.create({ data: { folderId: folder.id, src: `/uploads/${folder.id}.webp`, uploadedById: owner.id } });
+    return photo.id;
+  }
+  const entryPhotos = (entryId: string) => prisma.diaryEntryPhoto.findMany({ where: { entryId }, orderBy: { photoId: "asc" } });
+  let photoA: string;
+  let photoB: string;
+
+  before(async () => {
+    photoA = await galleryPhoto(world.memberA, "Galerie A");
+    photoB = await galleryPhoto(world.memberB, "Tajná galerie B");
+  });
+
+  test("POST /diary/entries with a cabin B galleryPhotoId → 404, nothing created", async () => {
+    const [entries, links] = [await prisma.diaryEntry.count(), await prisma.diaryEntryPhoto.count()];
+    const res = await as(app, world.memberA)
+      .post("/api/diary/entries")
+      .send({ folderId: folderA, date: "2027-01-11", content: "S cizí fotkou", galleryPhotoIds: [photoA, photoB] });
+    assert.equal(res.status, 404);
+    assert.deepEqual([await prisma.diaryEntry.count(), await prisma.diaryEntryPhoto.count()], [entries, links]);
+  });
+
+  test("PUT /diary/entries/:id with a cabin B galleryPhotoId → 404, entry unchanged", async () => {
+    await prisma.diaryEntryPhoto.create({ data: { entryId: entryA, photoId: photoA } });
+    const [entryBefore, photosBefore] = [await entrySnapshot(entryA), await entryPhotos(entryA)];
+    const res = await as(app, world.memberA)
+      .put(`/api/diary/entries/${entryA}`)
+      .send({ content: "Přepsáno s cizí fotkou", galleryPhotoIds: [photoB] });
+    assert.equal(res.status, 404);
+    assert.deepEqual([await entrySnapshot(entryA), await entryPhotos(entryA)], [entryBefore, photosBefore]);
+    await prisma.diaryEntryPhoto.deleteMany({ where: { entryId: entryA } });
+  });
+
+  test("own cabin photos still attach on create and update (positive control)", async () => {
+    const created = await as(app, world.memberA)
+      .post("/api/diary/entries")
+      .send({ folderId: folderA, date: "2027-01-11", content: "S vlastní fotkou", galleryPhotoIds: [photoA] });
+    assert.equal(created.status, 201);
+    assert.deepEqual(created.body.galleryPhotoIds, [photoA]);
+    const updated = await as(app, world.memberA).put(`/api/diary/entries/${created.body.id}`).send({ content: "Bez fotky", galleryPhotoIds: [] });
+    assert.equal(updated.status, 200);
+    assert.deepEqual(updated.body.galleryPhotoIds, []);
+    await prisma.diaryEntry.delete({ where: { id: created.body.id } });
+  });
+});
+
 describe("diary: lists for cabin A contain nothing from cabin B", () => {
   const leaks = () => [
     folderB, entryB, world.memberB.id, world.adminB.id,
