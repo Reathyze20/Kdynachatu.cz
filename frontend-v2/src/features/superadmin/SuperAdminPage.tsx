@@ -3,6 +3,7 @@ import { Check, Copy, Search, Shield, UserPlus } from 'lucide-react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
+import { formatCount, pluralize } from '@/lib/format'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { LogsPanel } from '@/components/shared/LogsPanel'
@@ -298,7 +299,7 @@ export function SuperAdminPage() {
           <article className="admin-overview-stat admin-overview-stat--mist">
             <span className="admin-overview-stat-label">Aktivní účty</span>
             <strong className="admin-overview-stat-value">{isLoading || isError ? '—' : activeCount}</strong>
-            <p className="admin-overview-stat-meta">{pendingCount > 0 ? `${pendingCount} účtů ještě čeká na dokončení aktivace.` : 'Žádný účet momentálně nečeká na ověření.'}</p>
+            <p className="admin-overview-stat-meta">{pendingCount > 0 ? `${formatCount(pendingCount, 'účet', 'účty', 'účtů')} ještě ${pluralize(pendingCount, 'čeká', 'čekají', 'čeká')} na dokončení aktivace.` : 'Žádný účet momentálně nečeká na ověření.'}</p>
           </article>
 
           <article className="admin-overview-stat admin-overview-stat--sand">
@@ -407,7 +408,7 @@ export function SuperAdminPage() {
               <div className="admin-list-meta">
                 <span>
                   {hasFilters
-                    ? `Zobrazuji ${filteredUsers.length} účtů podle aktivních filtrů.`
+                    ? `Zobrazuji ${formatCount(filteredUsers.length, 'účet', 'účty', 'účtů')} podle aktivních filtrů.`
                     : 'Účty jsou řazené podle privilegovanosti, stavu a data vytvoření.'}
                 </span>
                 {hasFilters ? (

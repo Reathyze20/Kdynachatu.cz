@@ -17,6 +17,7 @@
  *                             posluchač by měl invalidovat query cache
  */
 import type { InternalAxiosRequestConfig } from 'axios'
+import { formatCount, pluralize } from '@/lib/format'
 import { isNetworkError } from '@/lib/networkError'
 import { showToast } from '@/lib/toast'
 import { getActiveCabinId, getStoredUserId } from '@/lib/authStorage'
@@ -230,9 +231,7 @@ export async function flushQueue(): Promise<number> {
     showToast(
       {
         title: 'Změny odeslány',
-        detail: sent === 1
-          ? 'Změna provedená offline byla uložena na server.'
-          : `${sent} změn provedených offline bylo uloženo na server.`,
+        detail: `${formatCount(sent, 'změna provedená', 'změny provedené', 'změn provedených')} offline ${pluralize(sent, 'byla uložena', 'byly uloženy', 'bylo uloženo')} na server.`,
       },
       'success',
     )
@@ -241,7 +240,7 @@ export async function flushQueue(): Promise<number> {
     showToast(
       {
         title: 'Některé změny se nepodařilo uložit',
-        detail: `${dropped} ${dropped === 1 ? 'změnu' : 'změny/změn'} server odmítl — zkontroluj prosím data.`,
+        detail: `${formatCount(dropped, 'změnu', 'změny', 'změn')} server odmítl — zkontroluj prosím data.`,
       },
       'error',
     )

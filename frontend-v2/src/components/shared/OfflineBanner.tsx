@@ -12,6 +12,7 @@ import { Clock, WifiOff } from 'lucide-react'
 import { useOnline } from '@/hooks/useOnline'
 import { useQueueLength } from '@/hooks/useOfflineQueue'
 import { STALE_AFTER_MS, formatDataTime, getLastDataAt, subscribeDataFreshness } from '@/lib/dataFreshness'
+import { formatCount, pluralize } from '@/lib/format'
 
 export function OfflineBanner() {
   const isOnline = useOnline()
@@ -42,7 +43,7 @@ export function OfflineBanner() {
       <span>
         <strong>Jsi offline</strong>{since ? ` · údaje z ${since}. ` : '. '}
         {pendingCount > 0
-          ? `${pendingCount === 1 ? '1 změna čeká' : `${pendingCount} změny/změn čeká`} na odeslání. Po obnovení připojení se uloží automaticky.`
+          ? `${formatCount(pendingCount, 'změna', 'změny', 'změn')} ${pluralize(pendingCount, 'čeká', 'čekají', 'čeká')} na odeslání. Po obnovení připojení se uloží automaticky.`
           : 'Změny provedené offline se uloží po obnovení připojení.'}
       </span>
     </div>

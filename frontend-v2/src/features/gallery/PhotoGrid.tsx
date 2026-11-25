@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Check, CheckSquare, ChevronLeft, ChevronRight, Trash2, Upload, X } from 'lucide-react'
 import type { GalleryPhoto } from '@/api/gallery'
-import { formatCount } from '@/lib/utils'
+import { formatCount } from '@/lib/format'
 
 const PAGE_SIZE = 10
 

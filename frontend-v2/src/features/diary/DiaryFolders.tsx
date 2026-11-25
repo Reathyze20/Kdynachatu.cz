@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { DiaryFolder } from '@/api/diary'
-import { formatCount } from '@/lib/utils'
+import { formatCount } from '@/lib/format'
 import { formatStayRange } from '@/lib/dateUtils'
 
 type PeriodFilter = 'all' | 'current_year' | 'last_year' | 'older'

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { DashboardGalleryData, DashboardNotesData } from "@/api/dashboard";
-import { formatCount } from "@/lib/utils";
+import { formatCount } from "@/lib/format";
 import { Camera, MessageCircle, BookOpen, ChevronRight } from "lucide-react";
 
 interface Props {

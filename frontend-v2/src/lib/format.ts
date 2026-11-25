@@ -1,5 +1,5 @@
 /**
- * Jediný formátovací modul (DESIGN.md §9, #455): data, časy, částky a procenta přes `Intl` v `cs-CZ`.
+ * Jediný formátovací modul (DESIGN.md §9, #455): data, časy, částky a procenta přes `Intl` v `cs-CZ`, plurál podle počtu (#509).
  * Mimo tento soubor se `toLocale*String`, `Intl.*Format` ani pole s názvy měsíců nepíšou (guard `localFormatter`).
  * `date-fns` zůstává jen pro aritmetiku dat.
  *
@@ -75,3 +75,18 @@ export const formatAmount = (crowns: number) => amountFormat.format(Math.round(c
 
 /** Procenta z hodnoty v procentech (12 → „12 %“), zaokrouhlená na celá čísla. */
 export const formatPercent = (percent: number) => percentFormat.format(Math.round(percent) + 0)
+
+/**
+ * Tvar slova podle počtu (#509): 1 → `one`, 2–4 → `few`, jinak (0, 5+, i 21 a 22) → `many`.
+ * Čeština po číslici nad 20 neskloňuje podle poslední cifry („21 fotek“). Bez `Intl.PluralRules`: tvary se předávají
+ * přímo a kategorie `many` je v `cs` pro desetinná čísla, ne pro „5+“. Záporný počet se skloňuje jako kladný.
+ */
+export function pluralize(count: number, one: string, few: string, many: string): string {
+  const normalized = Math.abs(count)
+  if (normalized === 1) return one
+  if (normalized >= 2 && normalized <= 4) return few
+  return many
+}
+
+/** Počet s tvarem slova „1 fotka“, „2 fotky“, „5 fotek“. */
+export const formatCount = (count: number, one: string, few: string, many: string) => `${count} ${pluralize(count, one, few, many)}`

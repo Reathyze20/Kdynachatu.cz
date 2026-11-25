@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   formatAmount,
+  formatCount,
   formatDate,
   formatDateRange,
   formatDayDate,
@@ -9,6 +10,7 @@ import {
   formatShortDate,
   formatTime,
   monthName,
+  pluralize,
   TIME_ZONE,
   weekdayName,
 } from '@/lib/format'
@@ -130,5 +132,25 @@ describe('lib/format', () => {
     expect(formatPercent(12.4)).toBe(`12${NBSP}%`)
     expect(formatPercent(0)).toBe(`0${NBSP}%`)
     expect(formatPercent(-5)).toBe(`-5${NBSP}%`)
+  })
+
+  it('plurál podle počtu: 1 / 2–4 / ostatní, i 21 a 22 jsou „5+“ (#509)', () => {
+    const fotka = (count: number) => pluralize(count, 'fotka', 'fotky', 'fotek')
+    expect(fotka(0)).toBe('fotek')
+    expect(fotka(1)).toBe('fotka')
+    expect(fotka(2)).toBe('fotky')
+    expect(fotka(4)).toBe('fotky')
+    expect(fotka(5)).toBe('fotek')
+    expect(fotka(21)).toBe('fotek')
+    expect(fotka(22)).toBe('fotek')
+    expect(fotka(-2)).toBe('fotky')
+  })
+
+  it('počet s tvarem slova „2 rezervace“ (#509)', () => {
+    const rezervace = (count: number) => formatCount(count, 'rezervace', 'rezervace', 'rezervací')
+    expect(rezervace(0)).toBe('0 rezervací')
+    expect(rezervace(1)).toBe('1 rezervace')
+    expect(rezervace(4)).toBe('4 rezervace')
+    expect(rezervace(21)).toBe('21 rezervací')
   })
 })

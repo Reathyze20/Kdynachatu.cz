@@ -15,7 +15,7 @@ import { INVENTORY_KEY } from "@/features/shopping/hooks/useInventory";
 import { formatDayMonth } from "@/lib/dateUtils";
 import { handleMutationError } from "@/lib/mutationError";
 import { isNetworkError } from "@/lib/networkError";
-import { pluralize } from "@/lib/utils";
+import { pluralize } from "@/lib/format";
 import { whatsAppMessage } from "@/lib/whatsapp";
 import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
 import { attentionKey, attentionWhatsApp, buildAttention, supplyStatus } from "./attention";

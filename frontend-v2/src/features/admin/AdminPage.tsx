@@ -20,6 +20,7 @@ import {
 } from './hooks/useAdmin'
 import { type CabinUser, type Invite } from '@/api/admin'
 import { showToast } from '@/lib/toast'
+import { formatCount } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
@@ -590,7 +591,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
           <div className="admin-card-eyebrow">Pozvánky</div>
           <div className="admin-card-title-row">
             <h2 className="admin-card-title">Dočasné přístupy</h2>
-            <span className="admin-card-counter">{activeInvites.length} aktivních</span>
+            <span className="admin-card-counter">{formatCount(activeInvites.length, 'aktivní', 'aktivní', 'aktivních')}</span>
           </div>
           <p className="admin-card-description">
             Rychlé vstupy pro rodinu, brigádníka nebo hosta. Aktivní pozvánky drž na očích, staré nech v archivu.
@@ -1087,7 +1088,7 @@ export function AdminPage() {
                 <div className="admin-list-meta">
                   <span>
                     {hasUserFilters
-                      ? `Zobrazuji ${filteredUsers.length} účtů podle aktuálního filtru.`
+                      ? `Zobrazuji ${formatCount(filteredUsers.length, 'účet', 'účty', 'účtů')} podle aktuálního filtru.`
                       : 'Účty jsou seřazené podle role, aktivity a názvu.'}
                   </span>
                   {hasUserFilters ? (
@@ -1129,9 +1130,9 @@ export function AdminPage() {
                               <span>Vytvořen {formatDateLabel(user.createdAt)}</span>
                             </div>
                             <div className="admin-user-metrics">
-                              <span className="admin-user-metric">{user.reservationCount} rezervací</span>
-                              <span className="admin-user-metric">{user.photoCount} fotek</span>
-                              <span className="admin-user-metric">{user.threadCount} vláken</span>
+                              <span className="admin-user-metric">{formatCount(user.reservationCount, 'rezervace', 'rezervace', 'rezervací')}</span>
+                              <span className="admin-user-metric">{formatCount(user.photoCount, 'fotka', 'fotky', 'fotek')}</span>
+                              <span className="admin-user-metric">{formatCount(user.threadCount, 'vlákno', 'vlákna', 'vláken')}</span>
                             </div>
                           </div>
                         </div>

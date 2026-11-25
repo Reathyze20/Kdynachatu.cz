@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { formatCount } from '@/lib/format'
 import type { LogEntry, LogQueryParams, LogResponse } from '@/api/admin'
 
 interface LogsPanelProps {
@@ -232,7 +233,7 @@ export function LogsPanel({
           <div className="admin-card-title-row">
             <h2 className="admin-card-title">{title}</h2>
             <span className="admin-card-counter">
-              {logsQuery.isLoading ? 'Načítám…' : `${logs.length} záznamů`}
+              {logsQuery.isLoading ? 'Načítám…' : formatCount(logs.length, 'záznam', 'záznamy', 'záznamů')}
             </span>
           </div>
           <p className="admin-card-description">{description}</p>

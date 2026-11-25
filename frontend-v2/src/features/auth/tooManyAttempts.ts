@@ -1,4 +1,4 @@
-import { formatCount } from '@/lib/utils'
+import { formatCount } from '@/lib/format'
 
 interface MaybeHttpError {
   response?: { status?: number; headers?: Record<string, unknown> }
