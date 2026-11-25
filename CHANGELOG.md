@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.14.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.13.0...v1.14.0) (2026-11-25)
+
+
+### Features
+
+* **dashboard:** cabin scene animation and the 'Scéna chaty' switch ([#603](https://github.com/Reathyze20/Kdynachatu.cz/issues/603)) ([cdd0516](https://github.com/Reathyze20/Kdynachatu.cz/commit/cdd05162d455d08f383ce06b7edbc3b217a84c1f)), closes [#565](https://github.com/Reathyze20/Kdynachatu.cz/issues/565)
+* **dashboard:** static cabin scene in the 'Na chatě teď' card ([#577](https://github.com/Reathyze20/Kdynachatu.cz/issues/577)) ([8f2784d](https://github.com/Reathyze20/Kdynachatu.cz/commit/8f2784d3756070bea99311b478086698a18eb7d7))
+* **dashboard:** weather and daylight in the cabin scene ([#601](https://github.com/Reathyze20/Kdynachatu.cz/issues/601)) ([cb8ea76](https://github.com/Reathyze20/Kdynachatu.cz/commit/cb8ea76d0e75c5b63e5ae6fa075a2fc424deacc2))
+* **frontend:** guest sees only own-stay sections in navigation ([#543](https://github.com/Reathyze20/Kdynachatu.cz/issues/543)) ([d746b0b](https://github.com/Reathyze20/Kdynachatu.cz/commit/d746b0bcff5f5bfccf9caaf175ee3cb149f7c9a7))
+* **nav:** log out of this device from the profile drawer ([#556](https://github.com/Reathyze20/Kdynachatu.cz/issues/556)) ([6f692c1](https://github.com/Reathyze20/Kdynachatu.cz/commit/6f692c1b39cc6fbb6b8309f48f5b669ce5ececd0))
+* **ui:** PageHeader, EmptyState, Card and ListRow ([#557](https://github.com/Reathyze20/Kdynachatu.cz/issues/557)) ([27f1887](https://github.com/Reathyze20/Kdynachatu.cz/commit/27f1887d334e297cc25ad326afd0e112a134aeed))
+
+
+### Bug Fixes
+
+* **a11y:** polite success toasts, assertive errors, toast copy per DESIGN.md ([#590](https://github.com/Reathyze20/Kdynachatu.cz/issues/590)) ([eac3c7f](https://github.com/Reathyze20/Kdynachatu.cz/commit/eac3c7f4be8506c96179a8f4d693a071c3dbfcb5))
+* **a11y:** polite success toasts, assertive errors, toast copy per DESIGN.md ([#590](https://github.com/Reathyze20/Kdynachatu.cz/issues/590)) ([e6b2eac](https://github.com/Reathyze20/Kdynachatu.cz/commit/e6b2eac0bae17025571c5cd95b8493a4d6d77ccb))
+* **auth-pages:** no dead ends on expired links, labelled invite fields, consent on sign-up ([#591](https://github.com/Reathyze20/Kdynachatu.cz/issues/591)) ([47e52e7](https://github.com/Reathyze20/Kdynachatu.cz/commit/47e52e7cc98f4c503a70b17d62d4db87391320fc))
+* **auth:** show form errors on login, forgot password, onboarding and profile ([#550](https://github.com/Reathyze20/Kdynachatu.cz/issues/550)) ([dd15ea7](https://github.com/Reathyze20/Kdynachatu.cz/commit/dd15ea74d0fdbf9d8a894fea070c5f43ce37cd08))
+* **auth:** tell the user they hit the attempt limit instead of a network error ([#553](https://github.com/Reathyze20/Kdynachatu.cz/issues/553)) ([45a497d](https://github.com/Reathyze20/Kdynachatu.cz/commit/45a497da1cbbd80652fe384c32d767f2621d3cad))
+* **build:** blank page from a vendor chunk cycle; fail the build on chunk cycles ([#593](https://github.com/Reathyze20/Kdynachatu.cz/issues/593)) ([e3af192](https://github.com/Reathyze20/Kdynachatu.cz/commit/e3af1920668095a8d0d8528b105b7d1c80ce61dd))
+* **calendar:** honest day-filter empty state, range in the choice dialog, no dead Přiřadit button ([#572](https://github.com/Reathyze20/Kdynachatu.cz/issues/572)) ([b2d89a5](https://github.com/Reathyze20/Kdynachatu.cz/commit/b2d89a507b9075543adb7a8b6c2e76e217121a46))
+* **calendar:** keep the stay detail reachable on mobile and from past-day bars ([#568](https://github.com/Reathyze20/Kdynachatu.cz/issues/568)) ([0fdee29](https://github.com/Reathyze20/Kdynachatu.cz/commit/0fdee29643c4cebb6a8ee711dcb3f42febb16672))
+* **calendar:** month grid shows the whole sixth week on short desktop windows ([#570](https://github.com/Reathyze20/Kdynachatu.cz/issues/570)) ([5a8a776](https://github.com/Reathyze20/Kdynachatu.cz/commit/5a8a7767b30e3154fc2bcbaa61a2978b2a3b24c3))
+* **chat:** mobile thread layout – own messages on the right, back button, action menu in view ([#576](https://github.com/Reathyze20/Kdynachatu.cz/issues/576)) ([0bcdf6f](https://github.com/Reathyze20/Kdynachatu.cz/commit/0bcdf6fa4a7d3650b83a0bdacbf382d54d3bf627))
+* **copy:** Czech plurals in admin counts and offline banners ([#580](https://github.com/Reathyze20/Kdynachatu.cz/issues/580)) ([f648350](https://github.com/Reathyze20/Kdynachatu.cz/commit/f648350505e249665181c1ac012103d934f8ab3f))
+* **dashboard:** cabin scene polish – dormouse look, porch placement, departure car ([#584](https://github.com/Reathyze20/Kdynachatu.cz/issues/584)) ([884c84e](https://github.com/Reathyze20/Kdynachatu.cz/commit/884c84ef1696f8213b0704c4cd031d4cd74c04d3))
+* **dashboard:** curled-up sleeping dormouse on a shorter porch ([#599](https://github.com/Reathyze20/Kdynachatu.cz/issues/599)) ([618de12](https://github.com/Reathyze20/Kdynachatu.cz/commit/618de12f7b90e1c2a6f8c19cdfd93c7b7ff97e6a)), closes [#579](https://github.com/Reathyze20/Kdynachatu.cz/issues/579)
+* **dashboard:** undo after "Koupím já" on the overview ([#586](https://github.com/Reathyze20/Kdynachatu.cz/issues/586)) ([9bbff35](https://github.com/Reathyze20/Kdynachatu.cz/commit/9bbff357b61a9db3f4806c5fbfa3b3e385b63896))
+* **diary:** browse days in the notebook without saving empty days, warn before losing unsaved text ([#567](https://github.com/Reathyze20/Kdynachatu.cz/issues/567)) ([140132a](https://github.com/Reathyze20/Kdynachatu.cz/commit/140132a04ec8ce7e4aa936b5711254a41d0ff33f))
+* **gallery:** upload photos one by one with real progress ([#596](https://github.com/Reathyze20/Kdynachatu.cz/issues/596)) ([4741e26](https://github.com/Reathyze20/Kdynachatu.cz/commit/4741e26ea922cd49b716f4e26c4a30821aed52d8))
+* **onboarding:** working membership re-check, redirect members who already have a cabin ([#555](https://github.com/Reathyze20/Kdynachatu.cz/issues/555)) ([7d46e76](https://github.com/Reathyze20/Kdynachatu.cz/commit/7d46e76d0148fd9ba90ccc636e5043d5a3eb45a2))
+* **permissions:** hide actions a member may not do, truthful bulk photo delete ([#575](https://github.com/Reathyze20/Kdynachatu.cz/issues/575)) ([791be14](https://github.com/Reathyze20/Kdynachatu.cz/commit/791be142ef1939fae01468d3033420af0245034f))
+* **privacy:** one-sentence cookie notice that does not cover the navigation ([#597](https://github.com/Reathyze20/Kdynachatu.cz/issues/597)) ([eb4d171](https://github.com/Reathyze20/Kdynachatu.cz/commit/eb4d17137cf375b2fae7aad9d1da6ac3d29bfaee))
+* **reconstruction:** scroll by touch over cards, no accidental column move on mobile ([#559](https://github.com/Reathyze20/Kdynachatu.cz/issues/559)) ([e2cdd98](https://github.com/Reathyze20/Kdynachatu.cz/commit/e2cdd9852a5d1601321550a9316ca4fa306be352))
+* **security:** ask before logout when offline changes are pending ([#560](https://github.com/Reathyze20/Kdynachatu.cz/issues/560)) ([7a00068](https://github.com/Reathyze20/Kdynachatu.cz/commit/7a00068e22b35b8c1fb1fb50896cc85157c9a293))
+* **security:** deny the guest role by default, narrow whitelist for own stay ([#542](https://github.com/Reathyze20/Kdynachatu.cz/issues/542)) ([a9c1a5d](https://github.com/Reathyze20/Kdynachatu.cz/commit/a9c1a5d0c15acb63c059331521752b326ac91f00))
+* **security:** rate limit itests incl. spoofed X-Forwarded-For, bounded client log context ([#547](https://github.com/Reathyze20/Kdynachatu.cz/issues/547)) ([b59dfe1](https://github.com/Reathyze20/Kdynachatu.cz/commit/b59dfe17862c538bfe136447cdcb67dc3cc1baad))
+* **security:** serve guests only the cabin cover photo from /uploads ([#551](https://github.com/Reathyze20/Kdynachatu.cz/issues/551)) ([098e758](https://github.com/Reathyze20/Kdynachatu.cz/commit/098e7589b206bd1ee1feaddc62aa7e60237f740d))
+* **security:** serve uploads behind an httpOnly cookie with cabin ownership check ([#545](https://github.com/Reathyze20/Kdynachatu.cz/issues/545)) ([837c4b9](https://github.com/Reathyze20/Kdynachatu.cz/commit/837c4b9e50fc5010799a8232bf6effa54ffe63dd))
+* **security:** socket handshake hydrates user from DB and disconnects on revocation ([#541](https://github.com/Reathyze20/Kdynachatu.cz/issues/541)) ([e8c6b57](https://github.com/Reathyze20/Kdynachatu.cz/commit/e8c6b57886bd16159c180483e20a46a2798c29fe))
+* **security:** upload security itests, reject SVG/spoofed files and pixel bombs ([#552](https://github.com/Reathyze20/Kdynachatu.cz/issues/552)) ([7de992d](https://github.com/Reathyze20/Kdynachatu.cz/commit/7de992d8ec416e85a4588f44977f938807d9fbca))
+* **test:** stub startup uploads-cookie sync in socketRevocation test ([#549](https://github.com/Reathyze20/Kdynachatu.cz/issues/549)) ([13cf478](https://github.com/Reathyze20/Kdynachatu.cz/commit/13cf4787db11a41f048d11243385235142ec05b0)), closes [#548](https://github.com/Reathyze20/Kdynachatu.cz/issues/548)
+* **ui:** calm error state when several sections fail to load ([#588](https://github.com/Reathyze20/Kdynachatu.cz/issues/588)) ([467d481](https://github.com/Reathyze20/Kdynachatu.cz/commit/467d481a5e7355709a7fb8d22bf18f84490b319c))
+
 ## [1.13.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.12.0...v1.13.0) (2026-11-25)
 
 
