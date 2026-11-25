@@ -1,9 +1,5 @@
-/**
- * components/shared/helpContent.tsx — texty nápovědy (#510)
- * Klíč je cíl položky navigace (`NavItem.to`), takže Kalendář a Předávka mají každý svou nápovědu,
- * i když vedou na stejnou stránku. Stránky mimo navigaci (administrativa) mají klíč podle cesty.
- * Názvy obrazovek a tlačítek musí sedět s UI; hlas textů podle DESIGN.md §8.
- */
+/** Texty nápovědy (#510). Klíč = cíl položky navigace (Kalendář a Předávka sdílejí stránku), mimo navigaci cesta.
+ *  Názvy obrazovek a tlačítek musí sedět s UI; hlas textů podle DESIGN.md §8. */
 import type { ReactNode } from 'react'
 import { findActiveNavItem, MORE_NAV, PRIMARY_NAV } from '@/lib/navRoutes'
 
@@ -55,7 +51,6 @@ export const HELP_PAGES: Record<string, ReactNode> = {
         <li><strong>Nákupní seznamy</strong> – vyber seznam a přidej položky. Klepnutím na položku ji označíš jako koupenou.</li>
         <li><strong>Přivezu z domova</strong> – ikona domečku dá ostatním vědět, že věc vezeš ty. Hvězdička ji označí jako důležitou.</li>
         <li><strong>Zásoby na chatě</strong> – u každé věci vidíš, jestli je jí dost, málo, nebo došla. Co chybí, přidáš do nákupu jedním klepnutím, nebo všechno najednou přes „Vše do nákupu“.</li>
-        <li>Seznamy i zásoby vidí všichni členové chaty.</li>
       </ul>
     </>
   ),
@@ -78,7 +73,6 @@ export const HELP_PAGES: Record<string, ReactNode> = {
         <li><strong>Alba</strong> – nové založíš tlačítkem „Nové album“. Alba můžeš hledat a řadit od nejnovějších.</li>
         <li><strong>Nahrávání</strong> – otevři album a klepni na „Nahrát“.</li>
         <li><strong>Prohlížení</strong> – klepni na fotku a ukáže se přes celou obrazovku. Odtud ji stáhneš nebo k ní připíšeš vzpomínku.</li>
-        <li><strong>Výběr</strong> – přes „Vybrat“ smažeš víc fotek najednou.</li>
       </ul>
     </>
   ),
@@ -101,7 +95,6 @@ export const HELP_PAGES: Record<string, ReactNode> = {
         <li><strong>Nápady</strong> – inspirace s odkazem, obrázkem a odhadovanou cenou. Tlačítkem „Chci to“ dáš nápadu hlas, nápady s nejvíc hlasy jsou nahoře.</li>
         <li><strong>Firmy</strong> – kontakty na řemeslníky a jestli jste je už oslovili.</li>
         <li><strong>Úkoly</strong> – konkrétní práce s termínem a cenou.</li>
-        <li><strong>Celkový rozpočet</strong> – součet cen úkolů a kolik z toho už je hotové.</li>
       </ul>
     </>
   ),

@@ -4,7 +4,6 @@
  * Na mobilu plovoucí tlačítko nad dolní lištou; na desktopu (#205) položka „Nápověda“
  * dole v sidebaru (`variant="sidebar"`), aby tlačítko nepřekrývalo obsah ani nebylo oříznuté.
  * Která varianta je vidět, rozhoduje CSS podle šířky (help.css, nav.css).
- * Texty nápovědy jsou v helpContent.tsx.
  */
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -40,7 +39,6 @@ export function HelpFab({ variant = 'fab' }: HelpFabProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [variant])
 
-  // Nápověda podle aktivní položky navigace (Kalendář a Předávka sdílejí stránku, #510)
   const helpContent = helpForLocation(location)
 
   return (

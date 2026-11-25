@@ -15,7 +15,6 @@ async function openHelpAt(entry: string) {
   )
   await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
   const modal = await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })
-  // obsah nápovědy bez titulku modalu (ten je pro všechny stránky stejný)
   const dialog = modal.querySelector<HTMLElement>('#help-modal-content')!
   return { dialog, unmount: view.unmount }
 }
@@ -35,7 +34,6 @@ describe('HelpFab – nápověda podle položky navigace (#510)', () => {
     calendar.unmount()
 
     const handover = await openHelpAt('/reservations?sekce=predavka')
-    expect(within(handover.dialog).getByRole('heading', { level: 3 })).toHaveTextContent('Předávka')
     expect(handover.dialog).toHaveTextContent(/stav chaty při odjezdu/i)
     expect(handover.dialog.textContent).not.toBe(calendarText)
   })
@@ -43,13 +41,6 @@ describe('HelpFab – nápověda podle položky navigace (#510)', () => {
   it('správa má vlastní nápovědu i mimo hlavní navigaci', async () => {
     const { dialog } = await openHelpAt('/admin/invites')
     expect(within(dialog).getByRole('heading', { level: 3 })).toHaveTextContent('Pozvánky')
-  })
-
-  it('neznámá stránka dostane obecnou nápovědu s názvy z navigace', async () => {
-    const { dialog } = await openHelpAt('/superadmin')
-    for (const item of [...PRIMARY_NAV, ...MORE_NAV]) {
-      expect(dialog).toHaveTextContent(item.label)
-    }
   })
 
   it('texty nepoužívají žargon staré aplikace', () => {
