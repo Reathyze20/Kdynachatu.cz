@@ -1,46 +1,18 @@
 /**
- * FeatureErrorFallback.tsx — Kompaktní chybové UI pro feature-level Error Boundaries.
- * Vykreslí se uvnitř glass-card widgetu místo spadlé komponenty.
+ * FeatureErrorFallback.tsx — Klidná chybová karta sekce, která se nenačetla (DESIGN.md §7 „Stavy“, #512).
+ * Co se stalo + „Zkus to znovu.“, jedno tlačítko a technické údaje sbalené pod „Podrobnosti pro podporu“.
  * Zbytek stránky funguje normálně.
- *
- * Obsahuje:
- * - Přátelský quip pro zákazníka
- * - Support info panel (kód chyby, endpoint, status) s copy-to-clipboard
- * - Dev-only expandable stack trace
- * - Framer Motion entrance animace
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RefreshCw, Copy, Check, ChevronDown, AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/shared/Card'
 import type { FallbackProps } from 'react-error-boundary'
 import { reportError } from '@/lib/errorReporting'
-import {
-  extractSupportErrorDetails,
-  formatSupportBlock,
-  getUserFriendlyMessage,
-} from '@/lib/errorDetails'
-
-const FEATURE_ERROR_QUIPS = [
-  'Tahle část si vzala neplánovanou dovolenou.',
-  'Server se zrovna díval z okna. Zkus to znovu.',
-  'Tohle by se stát nemělo. Ale stalo se.',
-  'Pokud problém přetrvává, viníkem je pravděpodobně WiFi.',
-  'Část aplikace odešla na procházku do lesa.',
-  'Chyba č. 500: příliš mnoho sušenek v systému.',
-  'Programátor na tenhle případ nemyslel. Omluva.',
-  'Někde v kódu je šotek. Hledáme ho.',
-  'Les zavolal a chce svou chybu zpět.',
-]
+import { extractSupportErrorDetails, formatSupportBlock } from '@/lib/errorDetails'
 
 type ErrorWithMessage = { message?: string; stack?: string }
-
-function pickStableQuip(seed: string, quips: string[]): string {
-  let hash = 0
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0
-  }
-  return quips[hash % quips.length]
-}
 
 function CopyAllButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -78,23 +50,25 @@ function CopyAllButton({ text }: { text: string }) {
   )
 }
 
+function Frame({ bare, children }: { bare: boolean; children: ReactNode }) {
+  return bare ? <div role="alert">{children}</div> : <Card flush role="alert">{children}</Card>
+}
+
 interface FeatureErrorFallbackProps extends FallbackProps {
-  /** Volitelný přepis titulku (default: "Tato část se momentálně nenačítá") */
+  /** Co se stalo, např. „Zásoby se nepodařilo načíst“ (default: „Tato část se momentálně nenačítá“) */
   title?: string
+  /** Bez vlastní karty, když chyba leží uvnitř jiné karty (Deník). */
+  bare?: boolean
 }
 
 export function FeatureErrorFallback({
   error,
   resetErrorBoundary,
   title,
+  bare = false,
 }: FeatureErrorFallbackProps) {
   const err = error as ErrorWithMessage
-  const quip = pickStableQuip(
-    `${title ?? 'FeatureErrorFallback'}|${err?.message ?? 'unknown'}`,
-    FEATURE_ERROR_QUIPS,
-  )
   const supportDetails = extractSupportErrorDetails(error)
-  const friendlyMessage = getUserFriendlyMessage(supportDetails.status)
   const supportBlock = formatSupportBlock(supportDetails)
   const [devExpanded, setDevExpanded] = useState(false)
 
@@ -110,15 +84,8 @@ export function FeatureErrorFallback({
   }, [err, supportDetails.errorId, supportDetails.requestId, title])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="glass-card"
-      style={{ minHeight: 160, overflow: 'hidden' }}
-    >
+    <Frame bare={bare}>
       <div
-        className="card-body-full"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -168,24 +135,17 @@ export function FeatureErrorFallback({
             maxWidth: 380,
           }}
         >
-          {friendlyMessage}
+          Zkus to znovu.
         </p>
 
-        {/* Quip */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--text-placeholder)',
-            fontStyle: 'italic',
-          }}
-        >
-          „{quip}"
-        </p>
+        <Button type="button" variant="secondary" onClick={resetErrorBoundary}>
+          <RefreshCw aria-hidden="true" />
+          Zkusit znovu
+        </Button>
 
         {/* ── Support info panel ──────────────────────────────────────── */}
         {supportDetails.supportCode && (
-          <div
+          <details
             style={{
               width: '100%',
               maxWidth: 360,
@@ -197,27 +157,9 @@ export function FeatureErrorFallback({
               textAlign: 'left',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 'var(--space-sm)',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                Pro podporu
-              </span>
-              <CopyAllButton text={supportBlock} />
-            </div>
+            <summary style={{ cursor: 'pointer', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
+              Podrobnosti pro podporu
+            </summary>
 
             <div
               style={{
@@ -246,25 +188,9 @@ export function FeatureErrorFallback({
                 </span>
               )}
             </div>
-          </div>
+            <CopyAllButton text={supportBlock} />
+          </details>
         )}
-
-        {/* Retry tlačítko */}
-        <button
-          className="button-primary"
-          style={{
-            marginTop: 'var(--space-xs)',
-            fontSize: 'var(--font-size-sm)',
-            padding: '8px 20px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-          onClick={resetErrorBoundary}
-        >
-          <RefreshCw style={{ width: 14, height: 14 }} />
-          Zkusit znovu
-        </button>
 
         {/* ── Dev-only expandable stack trace ─────────────────────────── */}
         {import.meta.env.DEV && err?.message && (
@@ -325,6 +251,6 @@ export function FeatureErrorFallback({
           </div>
         )}
       </div>
-    </motion.div>
+    </Frame>
   )
 }

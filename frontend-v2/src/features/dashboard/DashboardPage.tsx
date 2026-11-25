@@ -182,7 +182,11 @@ export function DashboardPage() {
     }
   }, [notesQuery.data]);
 
-  const cabinError = cabinQuery.isError;
+  // Výpadek víc sekcí najednou (slabý signál na chatě) = jedna souhrnná hláška místo řady chybových karet (#512)
+  const failedQueries = [cabinQuery, reservationsQuery, shoppingQuery, notesQuery].filter((query) => query.isError);
+  const manyFailed = failedQueries.length > 1;
+  const retryFailed = () => failedQueries.forEach((query) => void query.refetch());
+  const cabinError = cabinQuery.isError && !manyFailed;
   const isWinterized = !!cabinQuery.data?.isWinterized;
   const departureChecklist = cabinQuery.data?.departureChecklist ?? [];
   // Počasí na pobyt (#326): nejbližší pobyt v okně 7 dní před příjezdem, vlastní má přednost
@@ -194,7 +198,7 @@ export function DashboardPage() {
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const nudges = <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />;
   const attention = shoppingQuery.isError ? (
-    <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
+    manyFailed ? null : <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
   ) : shoppingQuery.data ? (
     <AttentionCard shopping={shoppingQuery.data} fault={reservationsQuery.data?.lastFault} />
   ) : null;
@@ -215,6 +219,10 @@ export function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {manyFailed && (
+        <FeatureErrorFallback title="Část přehledu se nepodařilo načíst" error={failedQueries[0].error as Error} resetErrorBoundary={retryFailed} />
       )}
 
       {/* Cabin error banner */}
@@ -252,7 +260,7 @@ export function DashboardPage() {
           {reservationsQuery.isLoading ? (
             <StatusCardSkeleton />
           ) : reservationsQuery.isError ? (
-            <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Rezervace se nepodařilo načíst" />}>
+            manyFailed ? null : <ErrorBoundary FallbackComponent={(props) => <FeatureErrorFallback {...props} title="Rezervace se nepodařilo načíst" />}>
               <FeatureErrorFallback title="Rezervace se nepodařilo načíst" error={reservationsQuery.error as Error} resetErrorBoundary={() => reservationsQuery.refetch()} />
             </ErrorBoundary>
           ) : reservationsQuery.data ? (
@@ -296,7 +304,7 @@ export function DashboardPage() {
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />
         ) : notesQuery.isError ? (
-          <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
+          manyFailed ? null : <FeatureErrorFallback title="Nástěnku se nepodařilo načíst" error={notesQuery.error as Error} resetErrorBoundary={() => notesQuery.refetch()} />
         ) : notesQuery.data ? (
           <PinnedNote
             note={pinnedNote}

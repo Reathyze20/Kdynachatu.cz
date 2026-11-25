@@ -258,6 +258,7 @@ export function DiaryPage() {
                 void refetchFolders()
               }}
               title="Pobyty se nepodařilo načíst"
+              bare
             />
           ) : (
             <DiaryFolders
@@ -289,6 +290,7 @@ export function DiaryPage() {
                   void refetchEntries()
                 }}
                 title="Zápisky se nepodařilo načíst"
+                bare
               />
             ) : (
               <DiaryCalendar
