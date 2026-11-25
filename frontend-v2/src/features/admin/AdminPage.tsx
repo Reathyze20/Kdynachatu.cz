@@ -102,6 +102,14 @@ function isInviteArchived(invite: Pick<Invite, 'expiresAt' | 'maxUses' | 'usedCo
   return isInviteExpired(invite.expiresAt) || isInviteExhausted(invite)
 }
 
+/** Texty potvrzení: aktivní pozvánka se ruší, archivní se odstraňuje. */
+const REVOKE_COPY = {
+  active: { title: 'Zrušit pozvánku?', confirmLabel: 'Zrušit pozvánku', cancelLabel: 'Nechat platit', verb: 'zrušit', toast: 'Pozvánka zrušena.' },
+  archived: { title: 'Odstranit pozvánku z archivu?', confirmLabel: 'Odstranit', cancelLabel: 'Nechat', verb: 'odstranit', toast: 'Pozvánka odstraněna.' },
+}
+
+const getRevokeCopy = (invite: Invite) => REVOKE_COPY[isInviteArchived(invite) ? 'archived' : 'active']
+
 function isInviteAccepted(invite: Pick<Invite, 'maxUses' | 'usedCount'>): boolean {
   return invite.usedCount > 0 && invite.maxUses !== null && invite.usedCount >= invite.maxUses
 }
@@ -603,12 +611,12 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
   }
 
   function handleRevoke(invite: Invite) {
-    const verb = isInviteArchived(invite) ? 'odstranit' : 'zrušit'
+    const { verb, toast } = getRevokeCopy(invite)
     setActionError(null)
     setRevokeError(null)
     revokeInvite.mutate(invite.id, {
       onSuccess: () => {
-        showToast(isInviteArchived(invite) ? 'Pozvánka odstraněna.' : 'Pozvánka zrušena.', 'success')
+        showToast(toast, 'success')
         setRevokeTarget(null)
       },
       onError: (error) => {
@@ -672,7 +680,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
 
   const activeInvites = invites.filter((invite) => !isInviteArchived(invite))
   const inactiveInvites = invites.filter(isInviteArchived)
-  const revokeArchived = revokeTarget !== null && isInviteArchived(revokeTarget)
+  const revokeCopy = revokeTarget ? getRevokeCopy(revokeTarget) : REVOKE_COPY.active
 
   return (
     <Card as="section" className="space-y-4" id="admin-invites" data-testid="admin-invites-section">
@@ -811,10 +819,10 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
 
       <ConfirmDialog
         isOpen={revokeTarget !== null}
-        title={revokeArchived ? 'Odstranit pozvánku z archivu?' : 'Zrušit pozvánku?'}
+        title={revokeCopy.title}
         message={revokeTarget ? buildRevokeConfirmMessage(revokeTarget) : ''}
-        confirmLabel={revokeArchived ? 'Odstranit' : 'Zrušit pozvánku'}
-        cancelLabel={revokeArchived ? 'Nechat' : 'Nechat platit'}
+        confirmLabel={revokeCopy.confirmLabel}
+        cancelLabel={revokeCopy.cancelLabel}
         danger
         loading={revokeInvite.isPending}
         errorMessage={revokeError}
@@ -1231,10 +1239,10 @@ export function AdminPage() {
 
               <dl className="grid gap-2">
                 {[
-                  ['Aktivní pozvánky', invitesLoading || invitesFailed ? '—' : activeInvitesCount],
-                  ['Archiv', invitesLoading || invitesFailed ? '—' : archivedInvitesCount],
-                  ['Členové bez e-mailu', usersLoading || usersFailed ? '—' : localAccountCount],
-                ].map(([label, value]) => (
+                  { label: 'Aktivní pozvánky', value: invitesLoading || invitesFailed ? '—' : activeInvitesCount },
+                  { label: 'Archiv', value: invitesLoading || invitesFailed ? '—' : archivedInvitesCount },
+                  { label: 'Členové bez e-mailu', value: usersLoading || usersFailed ? '—' : localAccountCount },
+                ].map(({ label, value }) => (
                   <div key={label} className="flex items-baseline justify-between gap-3 rounded-xl bg-inset px-3 py-2">
                     <dt className="text-label text-(--text-muted)">{label}</dt>
                     <dd className="text-card-title tabular-nums text-(--text-main)">{value}</dd>
