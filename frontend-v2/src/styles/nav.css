@@ -463,7 +463,7 @@
     background: rgb(var(--sheet));
     /* Stejná linka jako spodní navigace nahoře; dřív zubatá silueta hor v ::after (#438) */
     border-bottom: 1px solid rgb(var(--rule-soft));
-    z-index: 2000;
+    z-index: var(--z-header); /* pod pozadím modálu a šuplíku (#453) */
     box-sizing: border-box;
   }
 
