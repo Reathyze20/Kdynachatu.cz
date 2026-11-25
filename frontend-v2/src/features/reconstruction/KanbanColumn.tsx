@@ -233,24 +233,30 @@ function TaskCard({ item, currentUserId, isGuest = false, onEdit }: TaskCardProp
           />
         )}
         {(item.phone || item.email || item.link) && (
-          <div className="company-contact-row">
+          <div className="flex flex-wrap gap-2 border-t border-rule-soft pt-2">
             {item.phone && (
-              <a href={`tel:${item.phone}`} className="company-action-btn">
-                <Phone aria-hidden="true" className="size-4" />
-                Zavolat
-              </a>
+              <Button asChild variant="secondary" size="sm">
+                <a href={`tel:${item.phone}`}>
+                  <Phone aria-hidden="true" />
+                  Zavolat
+                </a>
+              </Button>
             )}
             {item.email && (
-              <a href={`mailto:${item.email}`} className="company-action-btn">
-                <Mail aria-hidden="true" className="size-4" />
-                Napsat
-              </a>
+              <Button asChild variant="secondary" size="sm">
+                <a href={`mailto:${item.email}`}>
+                  <Mail aria-hidden="true" />
+                  Napsat
+                </a>
+              </Button>
             )}
             {item.link && (
-              <a href={item.link} target="_blank" rel="noopener noreferrer" className="company-action-btn">
-                <Globe aria-hidden="true" className="size-4" />
-                Web
-              </a>
+              <Button asChild variant="secondary" size="sm">
+                <a href={item.link} target="_blank" rel="noopener noreferrer">
+                  <Globe aria-hidden="true" />
+                  Web
+                </a>
+              </Button>
             )}
           </div>
         )}
