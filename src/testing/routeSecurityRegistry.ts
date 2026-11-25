@@ -7,6 +7,9 @@
  *    parserem (TypeScript compiler API), prefixy routerů dává `findRouterMounts`.
  *  - `integration/roleMatrix.itest.ts`: pro každou routu a principála, kterému ji registr nepovoluje,
  *    ověří, že odpověď není úspěšná (401/403/404); host mimo whitelist musí dostat 403.
+ * Soubory `/uploads/*` nejsou API routy (handler `backend/uploadsAccess.ts`), whitelist hosta ale platí
+ * i pro ně: host dostane jen titulní fotku chaty (obě varianty), tedy to, co mu vrací `GET /api/cabin`.
+ * Galerie, deník, náhledy `thumbs/` a tapety mu vrátí 404 (#546), hlídá `uploadsAccess.itest.ts`.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -51,7 +54,7 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   // admin.ts
   "GET /api/admin/system": ADMIN,
   // cabin.ts
-  "GET /api/cabin": MEMBERS,
+  "GET /api/cabin": MEMBERS, // host: i soubor `coverPhotoUrl` z /uploads, nic jiného odtud (#546)
   "PATCH /api/cabin": ADMIN,
   "PUT /api/cabin/cover-photo": ADMIN,
   "DELETE /api/cabin/cover-photo": ADMIN,
@@ -223,7 +226,7 @@ export function findRouteDefinitions(source: string, mountPrefix: string, object
 /**
  * Všechny API routy aplikace: přímo v `app.ts` (jen `/api/…`) a v namountovaných souborech rout.
  * Routy mimo `/api` (`/uploads` přes `app.use`, SPA fallback) guard nevidí; přístup k uploadům
- * hlídá `uploadsAccess.itest.ts` (#487).
+ * hlídá `uploadsAccess.itest.ts` (#487, host jen titulní fotka #546).
  */
 export function findAppRoutes(): { routes: string[]; unmountedFiles: string[] } {
   const appSource = fs.readFileSync(path.join(PROJECT_ROOT, "src/backend/app.ts"), "utf8");

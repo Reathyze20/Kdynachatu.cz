@@ -10,13 +10,13 @@ import prisma from "../../utils/prisma";
 import { UPLOADS_PATH } from "../../config/config";
 import { hashPassword } from "../../utils/password";
 import { UPLOADS_COOKIE } from "../../utils/uploadsCookie";
-import { as, setupIntegrationFile, teardownIntegrationFile, tokenFor, TEST_PASSWORD, type TestUser, type TestWorld } from "./harness";
+import { addGuests, as, setupIntegrationFile, teardownIntegrationFile, tokenFor, TEST_PASSWORD, type TestUser, type TestWorldWithGuests } from "./harness";
 
 // Fotky za httpOnly cookie (#487): `/uploads/*` vydá soubor jen přihlášenému členovi chaty, které patří.
 // Soubory leží v dočasném UPLOADS_PATH testovacího běhu, cesty v DB jsou stejné jako z rout.
 
 let app: Express;
-let world: TestWorld;
+let world: TestWorldWithGuests;
 type CabinFiles = { gallery: string; thumb: string; wallpaper: string; cover: string; coverNarrow: string };
 let filesA: CabinFiles;
 let filesB: CabinFiles;
@@ -64,7 +64,9 @@ function uploadsSetCookie(res: request.Response): string {
 }
 
 before(async () => {
-  ({ app, world } = await setupIntegrationFile());
+  const setup = await setupIntegrationFile();
+  app = setup.app;
+  world = await addGuests(setup.world);
   filesA = await seedCabinFiles(world.memberA);
   filesB = await seedCabinFiles(world.memberB);
 });
@@ -111,6 +113,30 @@ describe("GET /uploads/* checks the cabin of the file", () => {
     const cacheControl = String((await fetchUpload(filesA.gallery, cookieFor(world.memberA))).headers["cache-control"]);
     assert.match(cacheControl, /private/);
     assert.doesNotMatch(cacheControl, /immutable/);
+  });
+});
+
+describe("GET /uploads/* for a guest: only the cabin cover photo (#546)", () => {
+  // Whitelist hosta (#484): z uploadů jen `coverPhotoUrl` z `GET /api/cabin`, zbytek 404 jako cizí soubor.
+  for (const kind of ["gallery", "thumb", "wallpaper"] as const) {
+    test(`guest A does not get own cabin's ${kind} (404)`, async () => {
+      assert.equal((await fetchUpload(filesA[kind], cookieFor(world.guestA))).status, 404);
+    });
+  }
+
+  for (const kind of ["cover", "coverNarrow"] as const) {
+    test(`guest A gets own cabin's ${kind}, but not cabin B's (404)`, async () => {
+      const own = await fetchUpload(filesA[kind], cookieFor(world.guestA));
+      assert.equal(own.status, 200);
+      assert.equal(own.body.toString(), `obsah ${filesA[kind]}`);
+      assert.equal((await fetchUpload(filesB[kind], cookieFor(world.guestA))).status, 404);
+    });
+  }
+
+  test("member (user) still gets the gallery photo and the wallpaper", async () => {
+    assert.equal(world.memberA.role, "user");
+    assert.equal((await fetchUpload(filesA.gallery, cookieFor(world.memberA))).status, 200);
+    assert.equal((await fetchUpload(filesA.wallpaper, cookieFor(world.memberA))).status, 200);
   });
 });
 
