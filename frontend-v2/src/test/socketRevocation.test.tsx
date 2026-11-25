@@ -2,6 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { authApi } from '@/api/auth'
 import apiClient from '@/api/client'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { useSocket } from '@/hooks/useSocket'
@@ -65,6 +66,9 @@ describe('socket odpojený kvůli zneplatnění přihlášení (#486)', () => {
     Object.entries({ authToken: 'stary-token', username: 'jana', userId: 'u-1', role: 'user', cabinId: 'cabin-1' }).forEach(
       ([key, value]) => localStorage.setItem(key, value),
     )
+    // Cookie pro fotky (#487) si appka vyžádá při startu, dokud je relace platná; zneplatnění přijde až potom.
+    // Že se volá, ověřuje uploadsCookie.test.tsx; tady by jen přidal request mimo ověření relace.
+    vi.spyOn(authApi, 'syncUploadsCookie').mockResolvedValue()
     // Server přihlášení odmítá: každý požadavek dostane 401.
     apiClient.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
       requests.push({ url: config.url, token: String(config.headers.Authorization).replace('Bearer ', '') })
@@ -75,6 +79,7 @@ describe('socket odpojený kvůli zneplatnění přihlášení (#486)', () => {
 
   afterEach(() => {
     apiClient.defaults.adapter = originalAdapter
+    vi.restoreAllMocks()
     vi.useRealTimers()
   })
 
