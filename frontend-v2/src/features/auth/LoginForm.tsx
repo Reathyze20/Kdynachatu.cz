@@ -9,6 +9,7 @@ import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { Eye, EyeOff } from 'lucide-react'
 import type { DemoAccount } from '@/api/auth'
+import { AuthLayout } from '@/components/layout/AuthLayout'
 import { tooManyAttemptsMessage } from './tooManyAttempts'
 
 interface LoginFormProps {
@@ -108,13 +109,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
   }
 
   return (
-    <div id="login-section" className="login-container card" data-testid="login-form-view">
-      <div className="auth-brand">
-        <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
-        <h1 className="auth-brand-text">Kdy na chatu</h1>
-      </div>
-      <p className="auth-subtitle">Přihlas se ke svému účtu</p>
-
+    <AuthLayout id="login-section" subtitle="Přihlas se ke svému účtu" data-testid="login-form-view">
       {/* Nad formulářem: po kliknutí na jméno je tlačítko „Přihlásit se“ hned pod ním (staging tester na mobilu). */}
       {demoAccounts.length > 0 && (
         <div className="demo-accounts" data-testid="login-demo-accounts">
@@ -141,7 +136,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
 
       <form id="login-form" noValidate onSubmit={handleSubmit} data-testid="login-form">
         <div className="form-group">
-          <label htmlFor="username">Uživatelské jméno:</label>
+          <label htmlFor="username">Uživatelské jméno</label>
           <input
             type="text"
             id="username"
@@ -164,7 +159,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
         </div>
 
         <div className="form-group">
-          <label htmlFor="login-password">Heslo:</label>
+          <label htmlFor="login-password">Heslo</label>
           <div className="input-eye-wrapper">
             <input
               type={showPassword ? 'text' : 'password'}
@@ -188,7 +183,7 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
               aria-pressed={showPassword}
               onClick={() => setShowPassword((v) => !v)}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
             </button>
           </div>
           {fieldErrors.password && (
@@ -251,6 +246,6 @@ export function LoginForm({ onShowForgotPassword, onShowRegister, demoAccounts =
           </a>
         </p>
       )}
-    </div>
+    </AuthLayout>
   )
 }

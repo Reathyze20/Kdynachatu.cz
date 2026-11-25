@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
+import { AuthLayout } from '@/components/layout/AuthLayout'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { tooManyAttemptsMessage } from './tooManyAttempts'
@@ -50,12 +52,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
   }
 
   return (
-    <div id="forgot-password-section" className="login-container card" data-testid="forgot-password-form-view">
-      <div className="auth-brand">
-        <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
-        <h1 className="auth-brand-text">Kdy na chatu</h1>
-      </div>
-      <p className="auth-subtitle">Obnova hesla</p>
+    <AuthLayout id="forgot-password-section" subtitle="Obnova hesla" data-testid="forgot-password-form-view">
 
       <form noValidate onSubmit={handleSubmit} data-testid="forgot-password-form">
         <div className="form-group">
@@ -75,7 +72,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
           />
         </div>
 
-        <p style={{ color: 'var(--color-text-light)', fontSize: '0.95rem', lineHeight: 1.5, marginTop: 0 }}>
+        <p className="mb-4 text-label text-(--text-muted)">
           Obnova funguje jen pro účty, které mají nastavený e-mail. Pokud e-mail u účtu není, požádej správce chaty o změnu hesla.
         </p>
 
@@ -92,7 +89,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
           <p
             className="message"
             role="status"
-            style={{ marginTop: '.75rem', color: 'var(--color-success)' }}
+            style={{ marginTop: '.75rem', color: 'var(--status-success)' }}
             data-testid="forgot-password-message"
           >
             {message.text}
@@ -101,10 +98,11 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
       </form>
 
       <p className="toggle-form-text">
-        <a href="#" onClick={(e) => { e.preventDefault(); onShowLogin() }} data-testid="forgot-password-back-link">
-          ← Zpět na přihlášení
+        <a href="#" className="inline-flex items-center gap-2" onClick={(e) => { e.preventDefault(); onShowLogin() }} data-testid="forgot-password-back-link">
+          <ArrowLeft size={16} aria-hidden="true" />
+          Zpět na přihlášení
         </a>
       </p>
-    </div>
+    </AuthLayout>
   )
 }

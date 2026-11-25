@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
-import { Eye, EyeOff, Mail } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Mail } from 'lucide-react'
+import { AuthLayout } from '@/components/layout/AuthLayout'
 import { MEMBER_PALETTE } from '@/lib/memberPalette'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
@@ -103,34 +104,28 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
   // E-mail byl odeslán — zobrazíme potvrzovací screen (stejné jako v originálu)
   if (emailSent) {
     return (
-      <div id="register-section" className="login-container card" data-testid="register-email-sent-screen">
-        <div style={{ textAlign: 'center', padding: '40px 24px' }}>
-          <Mail size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 16px', color: 'var(--color-primary)' }} />
-          <h2 style={{ margin: '0 0 12px', color: 'var(--text-main, #1a2721)' }}>Zkontroluj svůj e-mail</h2>
-          <p style={{ color: 'var(--text-muted, #6b7280)', lineHeight: 1.6, margin: '0 0 24px' }}>
-            Děkujeme za registraci!<br />
-            Poslali jsme ti e-mail s odkazem pro aktivaci účtu na adresu <strong>{emailSent}</strong>.
-          </p>
-          <a
-            href="#"
-            style={{ color: 'var(--brand-primary, #3f7b63)', textDecoration: 'underline', cursor: 'pointer' }}
-            onClick={(e) => { e.preventDefault(); onShowLogin() }}
-            data-testid="register-back-to-login-link"
-          >
-            ← Vrátit se na přihlášení
-          </a>
-        </div>
-      </div>
+      <AuthLayout id="register-section" className="text-center" data-testid="register-email-sent-screen">
+        <Mail size={24} aria-hidden="true" className="mx-auto mb-3 text-primary" />
+        <h2 className="mb-2 text-card-title">Zkontroluj svůj e-mail</h2>
+        <p className="mb-6 text-body text-(--text-muted)">
+          Děkujeme za registraci.<br />
+          Poslali jsme ti e-mail s odkazem pro aktivaci účtu na adresu <strong>{emailSent}</strong>.
+        </p>
+        <a
+          href="#"
+          className="inline-flex items-center gap-2 font-semibold text-primary underline"
+          onClick={(e) => { e.preventDefault(); onShowLogin() }}
+          data-testid="register-back-to-login-link"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          Zpět na přihlášení
+        </a>
+      </AuthLayout>
     )
   }
 
   return (
-    <div id="register-section" className="login-container card" data-testid="register-form-view">
-      <div className="auth-brand">
-        <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
-        <h1 className="auth-brand-text">Kdy na chatu</h1>
-      </div>
-      <p className="auth-subtitle">Vytvoř prostor pro svou chatu</p>
+    <AuthLayout id="register-section" subtitle="Vytvoř prostor pro svou chatu" data-testid="register-form-view">
 
       <form id="register-form" noValidate onSubmit={handleSubmit} data-testid="register-form">
         <div className="form-section-label">Tvoje chata</div>
@@ -190,7 +185,7 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
               aria-pressed={showPassword}
               onClick={() => setShowPassword((v) => !v)}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -233,10 +228,10 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
             style={{
               marginTop: '.5rem',
               color: message.type === 'error'
-                ? 'var(--color-danger)'
+                ? 'var(--status-error)'
                 : message.type === 'warning'
-                  ? 'var(--color-warning)'
-                  : 'var(--color-success)',
+                  ? 'var(--status-warning)'
+                  : 'var(--status-success)',
               display: 'block',
             }}
             data-testid="register-message"
@@ -257,6 +252,6 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
           Přihlas se
         </a>
       </p>
-    </div>
+    </AuthLayout>
   )
 }
