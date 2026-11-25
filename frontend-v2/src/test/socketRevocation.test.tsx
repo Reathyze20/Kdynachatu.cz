@@ -16,6 +16,7 @@ const fake = vi.hoisted(() => {
     on: (event: string, handler: (...args: unknown[]) => void) => (handlers.set(event, handler), socket),
     off: () => socket,
     emit: () => socket,
+    connect: vi.fn(),
     disconnect: () => socket,
     io: { on: () => undefined },
   }
@@ -59,6 +60,7 @@ describe('socket odpojený kvůli zneplatnění přihlášení (#486)', () => {
     vi.useFakeTimers()
     requests.length = 0
     fake.socket.active = true
+    fake.socket.connect.mockClear()
     localStorage.clear()
     Object.entries({ authToken: 'stary-token', username: 'jana', userId: 'u-1', role: 'user', cabinId: 'cabin-1' }).forEach(
       ([key, value]) => localStorage.setItem(key, value),
@@ -76,33 +78,36 @@ describe('socket odpojený kvůli zneplatnění přihlášení (#486)', () => {
     vi.useRealTimers()
   })
 
-  it('server spojení ukončil → ověří relaci a přejde na přihlášení', async () => {
+  it.each([
+    ['server spojení ukončil', () => fake.fire('disconnect', 'io server disconnect')],
+    ['handshake odmítnutý serverem', () => { fake.socket.active = false; fake.fire('connect_error', new Error('Neplatný token')) }],
+  ])('%s → ověří relaci a přejde na přihlášení', async (_name, trigger) => {
     renderScreen()
-    fake.fire('disconnect', 'io server disconnect')
-    await advance(2000)
+    trigger()
+    await advance(4000)
 
     expect(requests).toEqual([{ url: '/users/me', token: 'stary-token' }])
     expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
     expect(localStorage.getItem('authToken')).toBeNull()
   })
 
-  it('handshake odmítnutý serverem → přejde na přihlášení', async () => {
-    renderScreen()
-    fake.socket.active = false
-    fake.fire('connect_error', new Error('Neplatný token'))
-    await advance(2000)
-
-    expect(requests).toHaveLength(1)
-    expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
-  })
-
   it('výpadek sítě relaci neověřuje, Socket.IO se připojí samo', async () => {
     renderScreen()
     fake.fire('disconnect', 'transport close')
     fake.fire('connect_error', new Error('xhr poll error'))
-    await advance(2000)
+    await advance(4000)
 
     expect(requests).toEqual([])
+    expect(screen.getByTestId('path')).toHaveTextContent('/prehled')
+  })
+
+  it('platná relace (např. po opuštění chaty) → socket se připojí znovu', async () => {
+    apiClient.defaults.adapter = async (config: InternalAxiosRequestConfig) => ({ data: {}, status: 200, statusText: 'OK', headers: {}, config })
+    renderScreen()
+    fake.fire('disconnect', 'io server disconnect')
+    await advance(4000)
+
+    expect(fake.socket.connect).toHaveBeenCalledOnce()
     expect(screen.getByTestId('path')).toHaveTextContent('/prehled')
   })
 
@@ -111,7 +116,7 @@ describe('socket odpojený kvůli zneplatnění přihlášení (#486)', () => {
     fake.fire('disconnect', 'io server disconnect')
     await advance(200)
     act(() => screen.getByTestId('new-token').click())
-    await advance(2000)
+    await advance(4000)
 
     expect(requests).toEqual([])
     expect(screen.getByTestId('token')).toHaveTextContent('novy-token')

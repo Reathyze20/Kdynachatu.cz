@@ -113,46 +113,37 @@ describe("socket handshake loads the user from the DB (#486)", () => {
 });
 
 describe("revoking sessions disconnects live sockets (#486)", () => {
-  /** Oběť má živý socket; po události ho server odpojí, události už nedostane a starý token se nepřipojí. */
-  async function assertEventDisconnects(revoke: (victim: TestUser) => Promise<{ status: number }>) {
-    const victim = await createMember();
-    const oldToken = tokenFor(victim);
-    const control = await listen(tokenFor(world.adminA));
-    const bystander = await connect(tokenFor(world.memberA));
-    const victimSocket = await connect(oldToken);
-    const received = record(victimSocket);
-    let reason: string | null = null;
-    victimSocket.on("disconnect", (r) => (reason = r));
+  type Revoke = (victim: TestUser) => Promise<{ status: number }>;
+  const events: [string, Revoke, tokenStaysValid?: boolean][] = [
+    ["ban by the superadmin", async (victim) => as(app, await createMember(true)).patch(`/api/superadmin/users/${victim.id}/ban`)],
+    ["removal from the cabin", (victim) => as(app, world.adminA).patch(`/api/users/${victim.id}/remove-from-cabin`).send({ deleteData: false })],
+    ["own password change", (victim) => as(app, victim).patch("/api/users/me/password").send({ oldPassword: TEST_PASSWORD, newPassword: "nove-heslo-486-abc" })],
+    ["log out everywhere", (victim) => as(app, victim).post("/api/users/me/logout-all").send({})],
+    // Odchod z chaty relace neruší (token zůstává platný), socket ale nesmí zůstat v roomu chaty.
+    ["leaving the cabin", (victim) => as(app, victim).post("/api/users/me/leave-cabin"), true],
+  ];
 
-    const res = await revoke(victim);
-    assert.ok(res.status >= 200 && res.status < 300, `událost selhala se stavem ${res.status}`);
+  for (const [name, revoke, tokenStaysValid] of events) {
+    test(name, async () => {
+      const victim = await createMember();
+      const oldToken = tokenFor(victim);
+      const control = await listen(tokenFor(world.adminA));
+      const bystander = await connect(tokenFor(world.memberA));
+      const victimSocket = await connect(oldToken);
+      const received = record(victimSocket);
+      let reason: string | null = null;
+      victimSocket.on("disconnect", (r) => (reason = r));
 
-    await waitFor(() => reason !== null, "server odpojil socket oběti");
-    assert.equal(reason, "io server disconnect");
-    await postMessageAndWait(world.memberA, control);
-    assert.deepEqual(received, [], "po odpojení oběť nedostane události chaty");
-    await assert.rejects(connect(oldToken), "starý token se po události nepřipojí");
-    assert.equal(bystander.connected, true, "ostatní uživatelé zůstanou připojení");
+      const res = await revoke(victim);
+      assert.ok(res.status >= 200 && res.status < 300, `událost selhala se stavem ${res.status}`);
+
+      await waitFor(() => reason !== null, "server odpojil socket oběti");
+      assert.equal(reason, "io server disconnect");
+      const reconnected = tokenStaysValid ? record(await connect(oldToken)) : [];
+      await postMessageAndWait(world.memberA, control);
+      assert.deepEqual([...received, ...reconnected], [], "oběť už nedostane události chaty");
+      if (!tokenStaysValid) await assert.rejects(connect(oldToken), "starý token se nepřipojí");
+      assert.equal(bystander.connected, true, "ostatní uživatelé zůstanou připojení");
+    });
   }
-
-  test("ban by the superadmin", async () => {
-    const superadmin = await createMember(true);
-    await assertEventDisconnects((victim) => as(app, superadmin).patch(`/api/superadmin/users/${victim.id}/ban`));
-  });
-
-  test("removal from the cabin", async () => {
-    await assertEventDisconnects((victim) =>
-      as(app, world.adminA).patch(`/api/users/${victim.id}/remove-from-cabin`).send({ deleteData: false }),
-    );
-  });
-
-  test("own password change", async () => {
-    await assertEventDisconnects((victim) =>
-      as(app, victim).patch("/api/users/me/password").send({ oldPassword: TEST_PASSWORD, newPassword: "nove-heslo-486-abc" }),
-    );
-  });
-
-  test("log out everywhere", async () => {
-    await assertEventDisconnects((victim) => as(app, victim).post("/api/users/me/logout-all").send({}));
-  });
 });

@@ -4,9 +4,12 @@ import { disconnectUserSockets } from "./socket";
 
 /**
  * Zneplatní všechna přihlášení uživatele (#485): zvýší `User.tokenVersion`, takže auth middleware
- * i socket handshake odmítnou každý dříve vydaný token. Volá se při změně a resetu hesla, banu, odebrání z chaty,
- * změně role, smazání účtu a z „Odhlásit všude“. Exportované funkce po commitu odpojí sockety uživatele (#486);
+ * odmítne každý dříve vydaný token (401). Volá se při změně a resetu hesla, banu, odebrání z chaty,
+ * změně role, smazání účtu a z „Odhlásit všude“. Exportované funkce po commitu odpojí i sockety (#486);
  * až po commitu, protože klient se hned připojuje znovu a handshake už musí vidět novou verzi.
+ *
+ * `db` = transakční klient, aby se verze zvedla atomicky se změnou, která relace ruší.
+ * Vrací novou verzi (pro nový token aktuálního zařízení po změně vlastního hesla).
  */
 async function bumpTokenVersion(userId: string, db: Prisma.TransactionClient): Promise<number> {
   const { tokenVersion } = await db.user.update({
@@ -17,7 +20,6 @@ async function bumpTokenVersion(userId: string, db: Prisma.TransactionClient): P
   return tokenVersion;
 }
 
-/** Zneplatní relace a odpojí sockety. Vrací novou verzi (pro nový token aktuálního zařízení). */
 export async function revokeUserSessions(userId: string): Promise<number> {
   const tokenVersion = await bumpTokenVersion(userId, prisma);
   disconnectUserSockets(userId);

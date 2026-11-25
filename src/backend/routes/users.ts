@@ -11,6 +11,7 @@ import logger from "../../utils/logger";
 import { signAuthToken } from "../../utils/authToken";
 import { sendEmailChangedNotice } from "../../utils/email";
 import { deleteUserAndRevokeSessions, revokeUserSessions, updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
+import { disconnectUserSockets } from "../../utils/socket";
 import type { JwtPayload } from "../../types";
 
 const router = Router();
@@ -564,6 +565,8 @@ router.post("/me/leave-cabin", protect, requireCabin, async (req: Request, res: 
       where: { id: req.user.userId },
       data: { cabinId: null, role: "user" },
     });
+    // Živé sockety by zůstaly v roomu chaty; po odpojení se klient připojí znovu už bez něj (#486).
+    disconnectUserSockets(req.user.userId);
 
     logger.info("USERS", "User left cabin voluntarily", {
       userId: req.user.userId,

@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext'
 import { markDataReceived } from '@/lib/dataFreshness'
 
 /** Prodleva před ověřením relace: změna vlastního hesla odpojí i tohle zařízení a nový token z odpovědi ověření zruší. */
-const SESSION_CHECK_DELAY_MS = 1500
+const SESSION_CHECK_DELAY_MS = 3000
 
 /**
  * Connect to the Socket.io server, authenticated via JWT.
@@ -35,12 +35,13 @@ export function useSocket() {
     })
 
     // Server spojení ukončil nebo handshake odmítl (zneplatněné přihlášení, #486): Socket.IO se samo nepřipojí.
-    // Rozhodne REST – 401/403 zpracuje interceptor apiClient a pošle na přihlášení. Výpadek sítě řeší reconnect.
+    // Rozhodne REST – 401/403 zpracuje interceptor apiClient a pošle na přihlášení; platná relace = připojit znovu.
     let sessionCheck: ReturnType<typeof setTimeout> | undefined
+    let closed = false
     const verifySessionSoon = () => {
       clearTimeout(sessionCheck)
       sessionCheck = setTimeout(() => {
-        apiClient.get('/users/me').catch(() => undefined)
+        apiClient.get('/users/me').then(() => !closed && socket.connect(), () => undefined)
       }, SESSION_CHECK_DELAY_MS)
     }
     socket.on('disconnect', (reason) => {
@@ -56,6 +57,7 @@ export function useSocket() {
     setSocketGeneration((g) => g + 1)
 
     return () => {
+      closed = true
       clearTimeout(sessionCheck)
       socket.disconnect()
       socketRef.current = null

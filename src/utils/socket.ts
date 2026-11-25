@@ -13,34 +13,13 @@ import logger from "./logger";
 
 let io: Server | null = null;
 
-interface SocketUser {
-  userId: string;
-  username: string;
-  role: string;
-  cabinId: string | null;
-}
+/** Socket user as loaded from the DB at handshake time (#486), not as claimed by the token. */
+type SocketUser = JwtPayload;
 
-/** Role, které smí číst data chaty, a tedy dostávat její události. Host ne (#486). */
-const CABIN_READER_ROLES: readonly CabinRole[] = ["admin", "user"];
+/** Roles allowed to read cabin data and therefore receive cabin events. Guests are not (#486). */
+const CABIN_READER_ROLES: readonly string[] = ["admin", "user"] satisfies CabinRole[];
 
 const userRoom = (userId: string) => `user:${userId}`;
-
-/** Token + uživatel z DB jako u HTTP `protect` (#486): smazaný, zabanovaný a stará `tokenVersion` → null. */
-async function authenticateHandshake(token: string): Promise<SocketUser | null> {
-  let decoded: JwtPayload;
-  try {
-    decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-  } catch {
-    return null;
-  }
-  if (!isValidJwtPayload(decoded)) return null;
-
-  const hydrated = await hydrateAuthenticatedUser(decoded);
-  if (hydrated.status !== "ok") return null;
-
-  const { userId, username, role, cabinId } = hydrated.user;
-  return { userId, username, role, cabinId };
-}
 
 /**
  * Initialize Socket.io server on the existing HTTP server.
@@ -62,10 +41,18 @@ export function initSocketServer(httpServer: HttpServer): Server {
       return next(new Error("Chybí autentizační token"));
     }
 
+    let decoded: JwtPayload;
     try {
-      const user = await authenticateHandshake(token);
-      if (!user) return next(new Error("Neplatný token"));
-      (socket as Socket & { user: SocketUser }).user = user;
+      decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    } catch {
+      return next(new Error("Neplatný token"));
+    }
+
+    // Same DB check as HTTP `protect`: missing, banned and stale-tokenVersion users are rejected.
+    try {
+      const hydrated = isValidJwtPayload(decoded) ? await hydrateAuthenticatedUser(decoded) : null;
+      if (hydrated?.status !== "ok") return next(new Error("Neplatný token"));
+      (socket as Socket & { user: SocketUser }).user = hydrated.user;
       next();
     } catch (error) {
       logger.error("SOCKET", "Handshake user hydration failed", { error: String(error) });
@@ -81,12 +68,16 @@ export function initSocketServer(httpServer: HttpServer): Server {
       return;
     }
 
-    // Room uživatele: zneplatnění relací přes něj odpojí všechna jeho spojení.
+    // User room: revoking sessions disconnects every connection of the user through it.
     socket.join(userRoom(user.userId));
-    // Join cabin-specific room for tenant isolation – jen role, které smí data chaty číst
-    if (user.cabinId && (CABIN_READER_ROLES as readonly string[]).includes(user.role)) {
+    // Join cabin-specific room for tenant isolation, only for roles that may read the cabin
+    if (user.cabinId && CABIN_READER_ROLES.includes(user.role)) {
       socket.join(`cabin:${user.cabinId}`);
     }
+    // A revocation committed between the handshake read and the join above missed this socket: re-check.
+    hydrateAuthenticatedUser(user)
+      .then((current) => { if (current.status !== "ok") socket.disconnect(true); })
+      .catch(() => socket.disconnect(true));
 
     logger.info("SOCKET", "Client connected", {
       userId: user.userId,
@@ -121,7 +112,7 @@ export function emitToCabin(cabinId: string, event: string, data: unknown): void
   io.to(`cabin:${cabinId}`).emit(event, data);
 }
 
-/** Ukončí všechna živá spojení uživatele (#486). Volá ji zneplatnění relací po commitu. */
+/** Disconnects every live connection of the user (#486). Called by session revocation after the commit. */
 export function disconnectUserSockets(userId: string): void {
   if (!io) return;
   io.in(userRoom(userId)).disconnectSockets(true);
