@@ -119,7 +119,7 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | `PageHeader` | `shared/` | Hlavička každé stránky (viz vzor Hlavička). `title` (vždy jediné `h1`), `subtitle`, `backTo` (cesta pro odkaz „Zpět“ nad titulkem), `primaryAction` (jedna akce: `label`, `icon`, a `onClick` nebo `to`), `secondaryActions` (`label`, `icon`, `onSelect`, `variant="danger"`) v kebab menu „Další akce“. Smazat patří na konec, menu ho oddělí od předchozích akcí. | existuje (#454) |
 | `EmptyState` | `shared/` | Prázdná sekce: `icon` (lucide, vykreslí se 24 px), `message` (jedna věta), volitelná `action` (stejný tvar jako `primaryAction`, primární tlačítko). | existuje (#454) |
 | `Card` | `shared/` | Papírová karta `bg-sheet` + `border-rule-soft` + `shadow-lift`, `rounded-2xl`, uvnitř `p-4 md:p-6`. `as` (`div`, `section`, `article`, `li`), `flush` bez vnitřního odsazení pro kartu se seznamem `ListRow`. | existuje (#454) |
-| `ListRow` | `shared/` | Řádek seznamu, výška aspoň 48 px, `children` = obsah, `action` = slot vpravo (kebab menu nebo jedna ikona lehké položky). `as="li"` uvnitř `<ul>`. Odsazení `px-4 md:px-6` sedí s `Card`, oddělovače dá rodič (`divide-y divide-rule-soft`). | existuje (#454) |
+| `ListRow` | `shared/` | Řádek seznamu, výška aspoň 48 px, `children` = obsah, `action` = slot vpravo (kebab menu nebo jedna ikona lehké položky). `as="li"` uvnitř `<ul>`. Odsazení `px-4 md:px-6` sedí s `Card`, oddělovače dá rodič (`divide-y divide-rule-soft`). Řádek, který je celý odkazem nebo tlačítkem (menu Víc, šuplík profilu), dostane `listRowLinkClass`: ikona 20 px vlevo, text vlevo. | existuje (#454) |
 | `FeatureErrorFallback` | `shared/` | Selhání načtení sekce: `title` (co se stalo) + „Zkus to znovu.“, jedno tlačítko „Zkusit znovu“, technické údaje sbalené pod „Podrobnosti pro podporu“. `bare` bez vlastní karty, když leží uvnitř jiné karty. | existuje (#512) |
 | `AuthLayout` | `layout/` | Rám veřejných obrazovek mimo landing page: fotka chaty pod závojem, papírová karta, logo a název appky na střed (jediné `h1`), volitelně `subtitle`. Karta má víc vzduchu než běžná (`px-6 py-8 md:p-8`). Na mobilu karta začíná pod horním okrajem, od `md` je svisle na střed. Pohled přihlášení / registrace / obnova hesla je v URL (`?view=`). Výsledek nebo slepou uličku (odkaz vypršel, účet ověřen, 404) ukáže `AuthStatus`: ikona 24 px, nadpis `h2`, věta a tlačítka s cestou dál. | existuje pro přihlášení, registraci, obnovu hesla, ověření e-mailu a 404; reset hesla, pozvánka a onboarding **Cíl** #525 |
 | `TwoColumnLayout` | `layout/` | Hlavní sloupec + boční panel na desktopu. Master-detail seznamy jsou výjimka. | existuje |
@@ -185,7 +185,7 @@ Každá obrazovka s daty řeší čtyři stavy:
 | Selhání načtení sekce | `FeatureErrorFallback` s tlačítkem znovu, zbytek stránky funguje. Selže-li víc sekcí najednou, jedna souhrnná hláška s jedním „Zkusit znovu“, které načte všechny |
 | Data | obsah |
 
-- Toast jen potvrzuje výsledek akce („Rezervace uložena.“). Chyby pole patří k poli.
+- Toast jen potvrzuje výsledek akce („Rezervace uložena.“). Chyby pole patří k poli. Výjimka: přesměrování kvůli oprávnění řekne proč („Tohle může jen správce chaty.“, #524).
 - Offline a zastaralá data appka přizná a ukáže, odkdy jsou. Co čeká na odeslání, má viditelný stav „Čeká na odeslání“.
 
 ## 8. Hlas textů

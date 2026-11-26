@@ -15,6 +15,7 @@ import { PrivacyPage } from '@/features/legal/PrivacyPage'
 import { TermsPage } from '@/features/legal/TermsPage'
 import { CookieConsent } from '@/components/shared/CookieConsent'
 import { AppShell } from '@/components/layout/AppShell'
+import { AdminRoute } from '@/components/layout/AdminRoute'
 import { Toast } from '@/components/shared/Toast'
 import { GlobalFallback } from '@/components/shared/GlobalFallback'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
@@ -73,13 +74,6 @@ function GuestGuard({ children }: { children: ReactNode }) {
   if (isGuest && !isGuestAllowedPath(location.pathname)) return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
-// ─── Guard pro admin-only routy (zabrání lazy-load chunků pro ne-adminy) ─────────
-function AdminRoute({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth()
-  if (!isAdmin) return <Navigate to="/dashboard" replace />
-  return <>{children}</>
-}
-
 function SuperAdminRoute({ children }: { children: ReactNode }) {
   const { isSuperAdmin, user } = useAuth()
   if (!isSuperAdmin) return <Navigate to={user?.cabinId ? '/dashboard' : '/onboarding'} replace />
