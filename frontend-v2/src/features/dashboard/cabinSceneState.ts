@@ -66,19 +66,20 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
 }
 
 /** Plch na chatě bydlí pod střechou a chová se jako plch: přes zimu (zazimovaná chata nebo sníh) spí schovaný, v noci
- * slézá dolů a u chaty hryže oříšek, ve dne spí na střeše, a když u chaty někdo je nebo přijelo auto, vykukuje
- * zpoza hřebene střechy. */
+ * slézá dolů a u chaty hryže oříšek, ve dne spí na střeše. Na auto je zvědavý i v noci: vykukuje zpoza hřebene
+ * střechy, stejně jako ve dne, když je někdo na chatě. */
 export function mascotPose(s: CabinSceneState): MascotPose {
   if (s.winterized || s.snowCover) return "hibernate";
+  if (s.carParked) return "peek";
   if (s.night) return "nibble";
-  return s.occupied || s.carParked ? "peek" : "sleep";
+  return s.occupied ? "peek" : "sleep";
 }
 
 const POSE_TEXT: Record<MascotPose, string> = {
   sleep: "Plch spí stočený na střeše.",
   peek: "Plch vykukuje zpoza střechy.",
   nibble: "Plch v noci hryže u chaty oříšek.",
-  hibernate: "Plch přes zimu spí pod střechou.",
+  hibernate: "Plch přes zimu spí schovaný pod střechou.",
 };
 
 /** Přístupný název scény: každá část odpovídá jedné vrstvě obrázku, nic nepřebíjí jen v textu. */

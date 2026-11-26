@@ -131,20 +131,22 @@ function snowfall(moving: boolean): Layer {
   return flakes;
 }
 
-/** Plch na střeše je kreslený před chatou, takže jeho spodek schová střecha a nad hřebenem je vidět jen to, co z něj
+/** Plch na střeše se kreslí dřív než chata, takže jeho spodek schová střecha a nad hřebenem je vidět jen to, co z něj
  * vykoukne. `y` je horní okraj snímku: spící leží stočený za hřebenem, vykukující se vynoří po krk a zase zmizí
- * (`animate-scene-peek`). V noci sleze k chatě a na zemi hryže oříšek (`ground`, kreslí se přes chatu). Přes zimu spí
+ * (`animate-scene-peek`). V noci sleze k chatě a na zemi hryže oříšek (místo `ground`, kreslí se až po chatě). Přes zimu spí
  * schovaný pod střechou, vidět je jen zZz. */
-const MASCOT: Record<Exclude<MascotPose, "hibernate">, { href: string; frames: number; ms: number; x: number; y: number; motion?: string; ground?: boolean }> = {
-  sleep: { href: dormouseSleep, frames: 6, ms: 420, x: MASCOT_X, y: -12 },
-  peek: { href: dormousePeek, frames: 11, ms: 160, x: MASCOT_X, y: -6, motion: "animate-scene-peek" },
-  nibble: { href: dormouseNibble, frames: 12, ms: 130, x: CABIN.x + CABIN.w - 6, y: GROUND - FEET, ground: true },
+type MascotPlace = "roof" | "ground";
+interface MascotStrip { href: string; frames: number; ms: number; x: number; y: number; motion?: string; place: MascotPlace }
+const MASCOT: Record<Exclude<MascotPose, "hibernate">, MascotStrip> = {
+  sleep: { href: dormouseSleep, frames: 6, ms: 420, x: MASCOT_X, y: -12, place: "roof" },
+  peek: { href: dormousePeek, frames: 11, ms: 160, x: MASCOT_X, y: -6, motion: "animate-scene-peek", place: "roof" },
+  nibble: { href: dormouseNibble, frames: 12, ms: 130, x: CABIN.x + CABIN.w - 6, y: GROUND - FEET, place: "ground" },
 };
 
-/** Plch na střeše (`ground` false, kreslí se před chatou), nebo na zemi u chaty (`ground` true, kreslí se po ní). */
-function mascot(state: CabinSceneState, ground: boolean): Layer[] {
+/** Vrstva plcha, když je v daném místě: na střeše (kreslí se dřív než chata), nebo na zemi u chaty (kreslí se po ní). */
+function mascot(state: CabinSceneState, place: MascotPlace): Layer[] {
   const pose = mascotPose(state);
-  if (pose === "hibernate" || !!MASCOT[pose].ground !== ground) return [];
+  if (pose === "hibernate" || MASCOT[pose].place !== place) return [];
   const { href, frames, ms, x, y, motion } = MASCOT[pose];
   return [{ ...layer("mascot", motion), strip: { href, x, y, w: FRAME, h: FRAME, frames, ms } }];
 }
@@ -170,12 +172,12 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
   const { occupied, winterized, night, snowCover } = state;
   const layers = [
     ...landscape(state),
-    ...mascot(state, false),
+    ...mascot(state, "roof"),
     image("cabin", { href: snowCover ? cabinSnow : cabinBare, x: CABIN.x, y: CABIN_Y, w: CABIN.w, h: CABIN.h }),
     windows(state),
   ];
   if (state.carParked) layers.push(image("car", { href: carImg, x: CAR.x, y: GROUND - CAR.h + 1, w: CAR.w, h: CAR.h }));
-  layers.push(...mascot(state, true));
+  layers.push(...mascot(state, "ground"));
   // Občasný drobný detail: ve dne přeletí ptáček zleva doprava (start i cíl jsou mimo scénu). U zazimované chaty se nic neděje.
   if (moving && !night && !winterized) layers.push(bird());
   if (night) {

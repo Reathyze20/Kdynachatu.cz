@@ -149,7 +149,7 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     })
     renderOverview(data, { isWinterized: true })
 
-    expect(await screen.findByRole('img', { name: /zazimovaná, okenice jsou zavřené/i })).toHaveAccessibleName(/plch přes zimu spí pod střechou/i)
+    expect(await screen.findByRole('img', { name: /zazimovaná, okenice jsou zavřené/i })).toHaveAccessibleName(/plch přes zimu spí schovaný pod střechou/i)
     const img = await scene()
     expect(img).not.toHaveAccessibleName(/někdo je na chatě|auto|vykukuje/i)
   })
@@ -168,6 +168,17 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     cleanup()
     renderOverview(reservations(), { time: '07:00' })
     expect(await scene()).not.toHaveAccessibleName(/noc/i)
+  })
+
+  it('v noci je plch vzhůru i u obsazené chaty, na auto ale vykukuje i po setmění', async () => {
+    renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }), { time: '22:00' })
+    expect(await scene()).toHaveAccessibleName(/někdo je na chatě.*plch v noci hryže u chaty oříšek/i)
+
+    cleanup()
+    renderOverview(reservations({ upcomingReservations: [stay('r-new', 'Svobodovi', TODAY, '2026-12-13')] }), { time: '22:00' })
+    const img = await scene()
+    expect(img).toHaveAccessibleName(/u chaty stojí auto\. plch vykukuje zpoza střechy/i)
+    expect(img).not.toHaveAccessibleName(/oříšek/i)
   })
 
   it('host: z dat omezených na jeho pobyt scéna cizí obsazenost neukáže', async () => {
@@ -240,7 +251,7 @@ describe('Počasí a denní doba ve scéně chaty (#564)', () => {
     renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
 
     const img = await screen.findByRole('img', { name: /leží sníh/i })
-    expect(img).toHaveAccessibleName(/plch přes zimu spí pod střechou/i)
+    expect(img).toHaveAccessibleName(/plch přes zimu spí schovaný pod střechou/i)
     expect(img).not.toHaveAccessibleName(/vykukuje|oříšek/i)
   })
 
