@@ -1,31 +1,17 @@
 /* ============================================================================
-   cabin-settings.css — Cabin configuration page styles
-   Layout follows admin-page-card pattern: opaque white card, CSS variables
+   cabin-settings.css — Nastavení chaty (CabinSettingsPanel, #523)
+   Vzhled obrazovky nesou utility Tailwindu v TSX. Tady zbývají jen třídy, které
+   přes `?raw` hlídají testy (lišta s uložením, nápovědy a počítadla pod poli,
+   záložky) a štítek „(nepovinné)“. Vše na tokenech z variables.css.
    ============================================================================ */
 
-/* ── Back button ─────────────────────────────────────────────────────── */
-
-.cabin-settings-back {
-  background: var(--color-bg-card, #fff);
-  border: 1.5px solid var(--color-border, #e5e7eb);
-  border-radius: var(--radius-md, 10px);
-  padding: 8px 14px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--color-text, #1a2721);
-  transition: all 0.2s;
-}
-
-.cabin-settings-back:hover {
-  background: var(--color-bg-secondary, #f4f7f5);
-  border-color: var(--color-primary, #3f7b63);
-}
-
-/* ── Tab pane visibility (driven by .active class toggled in React) ── */
+/* ── Záložky: viditelnost řídí třída .active z Reactu, přepnutí krátce prolne ── */
 
 .cs-tab-pane {
   display: none;
-  animation: fadeInTab 0.3s ease;
+  animation: fadeInTab var(--transition-slow);
+  /* vstup easeOut (DESIGN.md §5), token nese jen trvání */
+  animation-timing-function: ease-out;
 }
 
 .cs-tab-pane.active {
@@ -35,7 +21,7 @@
 @keyframes fadeInTab {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(var(--space-xs));
   }
 
   to {
@@ -44,22 +30,25 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .cs-tab-pane {
+    animation: none;
+  }
+}
+
+/* ── Štítek „(nepovinné)“ u popisku pole (i heslo v AdminPage) ── */
+
 .cs-optional {
   font-weight: 400;
-  color: var(--color-text-secondary, #6b7280);
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .cs-hint {
   display: block;
   font-size: var(--font-size-sm);
   color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.cs-hint a {
-  color: var(--color-primary, #3f7b63);
-  text-decoration: underline;
+  margin-top: var(--space-xs);
 }
 
 .cs-counter {
@@ -67,7 +56,7 @@
   font-size: var(--font-size-sm);
   color: var(--text-muted);
   text-align: right;
-  margin-top: 4px;
+  margin-top: var(--space-xs);
 }
 
 /* ── Save button: vzhled nese <Button size="lg">, tady jen hlavní akce 56 px ── */
@@ -102,74 +91,16 @@
   color: var(--text-main);
 }
 
-/* Sticky: obal panelu ve správě nesmí být scroll kontejner */
-.admin-settings-shell .main-content-settings,
-.admin-settings-shell .settings-page-card {
-  overflow: visible;
-}
-
-/* Ve správě je karta panelu zarovnaná s hlavičkou správy, bez odsazení samostatné stránky */
-.admin-settings-shell .main-content-settings {
-  padding: 0;
-}
-
-/* Mobil scrolluje oknem, sticky by neudržel: pevně nad spodní navigací a bezpečnou zónou (nav.css) */
+/* Mobil scrolluje oknem, sticky by neudržel: pevně nad spodní navigací a bezpečnou zónou (nav.css).
+   Místo pod posledním polem drží `max-md:pb-24` v CabinSettingsPanel. */
 @media (max-width: 767px) {
   .cs-save-bar {
     position: fixed;
     left: 0;
     right: 0;
     bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
-    padding: 8px 12px;
+    padding: var(--space-sm) var(--space-md);
     border-radius: 0;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-  }
-
-  /* Poslední pole nesmí zůstat pod lištou; specificita přebije 600px blok níže */
-  .settings-page-card .cs-body {
-    padding-bottom: calc(var(--touch-target-primary) + 40px);
-  }
-}
-
-/* ── Responsive ──────────────────────────────────────────────────────── */
-
-@media (max-width: 600px) {
-  .main-content-settings {
-    padding: 12px;
-  }
-
-  .settings-page-card {
-    border-radius: var(--radius-lg, 14px);
-  }
-
-  .cs-header {
-    padding: 18px 18px 14px;
-    flex-wrap: wrap;
-  }
-
-  .cs-tabs {
-    padding: 0 18px;
-  }
-
-  .cs-tab {
-    padding: 8px 12px 10px;
-    font-size: 0.82rem;
-  }
-
-  .cs-body {
-    padding: 18px 18px 24px;
-  }
-
-  .cs-section {
-    padding: 18px 16px;
-    border-radius: var(--radius-md, 10px);
-  }
-
-  .cs-title {
-    font-size: 1.2rem;
-  }
-
-  .cs-btn-save {
-    padding: 0 20px;
+    box-shadow: var(--shadow-up);
   }
 }
