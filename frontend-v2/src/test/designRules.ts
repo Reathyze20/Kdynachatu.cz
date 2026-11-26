@@ -146,8 +146,8 @@ export const DESIGN_RULES: DesignRule[] = [
   {
     name: 'loopAnimation',
     hint: 'smyčková animace (infinite, repeat: Infinity, animate-spin/pulse/ping/bounce, animate-scene-*) jen ve Scéně chaty a maskotovi (DESIGN.md §5); jinde pohyb jen krátce po akci',
-    // Trvalá výjimka „Scéna chaty a maskot“ (#565): scéna a její keyframes v Tailwind @theme.
-    scope: (file) => !['features/dashboard/CabinScene.tsx', 'styles/shadcn-tokens.css'].includes(file),
+    // Trvalá výjimka „Scéna chaty a maskot“ (#565, #566): scéna, maskot na mobilní liště a jejich keyframes v Tailwind @theme.
+    scope: (file) => !['features/dashboard/CabinScene.tsx', 'features/dashboard/NavMascot.tsx', 'styles/shadcn-tokens.css'].includes(file),
     match: /animation(?:-iteration-count)?\s*:[^;{}]*\binfinite\b|repeat:\s*Infinity\b|\banimate-(?:spin|pulse|ping|bounce|scene-[\w-]+)\b/g,
   },
   {

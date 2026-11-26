@@ -2,6 +2,7 @@
  * components/layout/MobileNav.tsx
  * Spodní lišta podle cyklu turnusu (redesign #0, issue #171): Přehled · Kalendář · Předávka · Zásoby · Víc.
  * Doplňky (Chat, Galerie, Deník, Rekonstrukce) a „Přidat na plochu“ (#277) jsou pod „Víc“.
+ * Po horní hraně lišty jednou za otevření appky přejde maskot ze scény chaty (#566).
  */
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
@@ -12,6 +13,7 @@ import { useAuth } from '@/context/AuthContext'
 import { Modal } from '@/components/shared/Modal'
 import { InstallMenuItem } from '@/components/shared/InstallCard'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
+import { NavMascot } from '@/features/dashboard/NavMascot'
 
 export function MobileNav() {
   const { user, isGuest } = useAuth()
@@ -63,6 +65,8 @@ export function MobileNav() {
             <span>Víc</span>
           </button>
         ) : null}
+
+        <NavMascot />
       </nav>
 
       <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} title="Víc">

@@ -167,6 +167,8 @@
   --animate-scene-lightning: scene-lightning 8.3s infinite;
   --animate-scene-bird: scene-bird 47s steps(42) infinite;
   --animate-scene-peek: scene-peek 13s steps(7) infinite;
+  /* Maskot na mobilní liště (#566): jediný průchod, ne smyčka; délka sedí s WALK_MS v NavMascot.tsx. */
+  --animate-scene-mascot-walk: scene-mascot-walk 10s steps(3) forwards;
 
   /* Obláček stoupá, lehce se vlní do stran a cestou řídne. */
   @keyframes scene-smoke {
@@ -205,6 +207,32 @@
     0%, 30% { transform: translateY(14px); }
     38%, 72% { transform: translateY(0); }
     80%, 100% { transform: translateY(14px); }
+  }
+  /* Maskot (snímek 60 px) přihopká zleva po 21 px, zastaví se, dvakrát poskočí (zamává), otočí se a odhopká zpět
+     doleva. Nejdál dojde na 96 px od levého okraje, k nápovědě vpravo nikdy (hlídá navMascot.test.tsx). Každý
+     keyframe má stejný seznam funkcí, ať se otočení (scaleX) neprolíná. */
+  @keyframes scene-mascot-walk {
+    0% { transform: translate(-60px, 0) scaleX(1); }
+    4% { transform: translate(-39px, -3px) scaleX(1); }
+    8% { transform: translate(-18px, 0) scaleX(1); }
+    12% { transform: translate(3px, -3px) scaleX(1); }
+    16% { transform: translate(24px, 0) scaleX(1); }
+    20% { transform: translate(45px, -3px) scaleX(1); }
+    24% { transform: translate(66px, 0) scaleX(1); }
+    28% { transform: translate(87px, -3px) scaleX(1); }
+    30%, 40% { transform: translate(96px, 0) scaleX(1); }
+    43% { transform: translate(96px, -6px) scaleX(1); }
+    46% { transform: translate(96px, 0) scaleX(1); }
+    49% { transform: translate(96px, -6px) scaleX(1); }
+    52%, 60% { transform: translate(96px, 0) scaleX(1); }
+    60.1% { transform: translate(96px, 0) scaleX(-1); }
+    64% { transform: translate(75px, -3px) scaleX(-1); }
+    68% { transform: translate(54px, 0) scaleX(-1); }
+    72% { transform: translate(33px, -3px) scaleX(-1); }
+    76% { transform: translate(12px, 0) scaleX(-1); }
+    80% { transform: translate(-9px, -3px) scaleX(-1); }
+    84% { transform: translate(-30px, 0) scaleX(-1); }
+    88%, 100% { transform: translate(-60px, 0) scaleX(-1); }
   }
   /* Přelet trvá pětinu smyčky (asi 9 s) po dvou jednotkách po vlnovce nahoru a dolů, zbytek čeká za pravým okrajem.
      Křídly mává pás snímků (`scene-frames`) uvnitř. */

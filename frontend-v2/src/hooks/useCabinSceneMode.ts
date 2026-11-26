@@ -1,6 +1,6 @@
 /**
- * Volba „Scéna chaty“ (#565): Animovaná / Statická / Skrytá. Platí pro scénu na Přehledu (maskot na liště z navazujícího
- * ticketu #558 bude číst stejnou volbu) a ukládá se jen v tomto zařízení (localStorage), nic se neposílá na server. Bez uložené volby je scéna statická,
+ * Volba „Scéna chaty“ (#565): Animovaná / Statická / Skrytá. Platí pro scénu na Přehledu i maskota na mobilní liště
+ * (#566) a ukládá se jen v tomto zařízení (localStorage), nic se neposílá na server. Bez uložené volby je scéna statická,
  * když zařízení hlásí `prefers-reduced-motion: reduce`, jinak animovaná. Změna se projeví hned ve všech
  * komponentách, které hook používají, i v ostatních oknech appky.
  */
