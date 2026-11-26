@@ -152,6 +152,10 @@
   --animate-scene-smoke: scene-smoke 4.2s steps(3) infinite;
   --animate-scene-zzz: scene-zzz 4s steps(3) infinite;
   --animate-scene-snow: scene-snow 11s steps(76) infinite;
+  /* Déšť (#609) padá stejně jako vločky, jen rychleji a po dvou jednotkách; mrholení pomaleji. */
+  --animate-scene-rain: scene-snow 1.3s steps(38) infinite;
+  --animate-scene-drizzle: scene-snow 3.1s steps(38) infinite;
+  --animate-scene-lightning: scene-lightning 8.3s infinite;
   --animate-scene-bird: scene-bird 47s steps(42) infinite;
   --animate-scene-peek: scene-peek 13s steps(7) infinite;
 
@@ -170,6 +174,13 @@
   }
   /* O výšku scény (76 jednotek), po jedné jednotce: vločky nad scénou navážou přesně na start smyčky. */
   @keyframes scene-snow { to { transform: translateY(76px); } }
+  /* Blesk (#609): jednou za smyčku zesvětlí scénu asi o čtvrtinu na ~2 snímky (≈ 35 ms) a hned zhasne. Jediný
+     záblesk ve scéně, hluboko pod prahem WCAG 2.3.1 (3 záblesky za sekundu). */
+  @keyframes scene-lightning {
+    0%, 60% { opacity: 0; }
+    60.1%, 60.5% { opacity: 0.25; }
+    60.6%, 100% { opacity: 0; }
+  }
   /* Plch se zpoza hřebene vynoří po dvou jednotkách, chvíli se rozhlíží a zase zaleze; většinu smyčky je schovaný. */
   @keyframes scene-peek {
     0%, 30% { transform: translateY(14px); }

@@ -230,6 +230,10 @@
   --scene-smoke: #cdc2b1;
   /* Počasí ve scéně (#564): sníh */
   --scene-snow: #ffffff;
+  /* Déšť a bouřka (#609): kapky a šplouchání, šedý závoj zatažené oblohy, blesk */
+  --scene-rain: #7f9bb3;
+  --scene-flash: #f5f8ff;
+  --scene-overcast: #7d848c;
 
   /* ── Fotka krajiny — jen přihlášení (.photo-backdrop), ne po přihlášení (C5a) ── */
   --bg-image: url("/bg-hero.jpg");
