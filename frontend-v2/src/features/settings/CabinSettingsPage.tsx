@@ -2,10 +2,16 @@
  * features/settings/CabinSettingsPage.tsx
  * Admin-only cabin configuration: name, description, checklist, features.
  */
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, GripVertical, X } from 'lucide-react'
+import { ChevronLeft, Plus, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/shared/Card'
+import { ListRow } from '@/components/shared/ListRow'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { cn } from '@/lib/utils'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 import { useCabinSettings, useRemoveCoverPhoto, useUpdateCabinSettings } from './hooks/useCabinSettings'
@@ -78,10 +84,24 @@ function savedSnapshot(settings: CabinConfig): string {
 }
 
 interface CabinSettingsPanelProps {
+  /** Vlastní hlavička panelu. Ve správě ji nemá, tam stránku nese hlavička správy (jediné `h1`). */
   title?: string
   subtitle?: string
   showBackButton?: boolean
   onBack?: () => void
+}
+
+/** Část formuláře: nadpis karty a popisek, mezi částmi jen čára, žádná vnořená karta (DESIGN.md §6). */
+function FormSection({ title, description, children, ...props }: { title: string; description: string; children: ReactNode; 'data-testid'?: string }) {
+  return (
+    <section className="py-6 first:pt-0 last:pb-0" {...props}>
+      <div className="mb-4">
+        <h2 className="text-card-title text-(--text-main)">{title}</h2>
+        <p className="text-label text-(--text-muted)">{description}</p>
+      </div>
+      {children}
+    </section>
+  )
 }
 
 // ─── ChecklistEditor ──────────────────────────────────────────────────────────
@@ -112,35 +132,36 @@ function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
 
   return (
     <div data-testid="cabin-settings-checklist">
-      <div id="cs-checklist-container" className="cs-checklist" data-testid="cabin-settings-checklist-list">
+      <ul id="cs-checklist-container" className="mb-3 grid gap-2" data-testid="cabin-settings-checklist-list">
         {items.map((item, i) => (
-          <div key={i} className="cs-checklist-item" data-index={i} data-testid="cabin-settings-checklist-item">
-            <span className="cs-checklist-drag" aria-hidden="true"><GripVertical className="w-4 h-4" /></span>
-            <input
+          <li key={i} className="flex items-center gap-2" data-index={i} data-testid="cabin-settings-checklist-item">
+            <Input
               type="text"
-              className="cs-checklist-input"
               value={item}
               onChange={(e) => update(i, e.target.value)}
               maxLength={100}
               placeholder="Položka checklistu"
+              aria-label={`Položka checklistu ${i + 1}`}
               data-testid="cabin-settings-checklist-input"
             />
-            <button
+            <Button
               type="button"
-              className="cs-checklist-remove"
-              title="Odebrat"
+              variant="ghost"
+              size="icon"
+              className="shrink-0"
               aria-label="Odebrat"
               onClick={() => remove(i)}
               data-testid="cabin-settings-checklist-remove-button"
             >
-              <X className="w-4 h-4 inline-block align-middle" aria-hidden="true" />
-            </button>
-          </div>
+              <X aria-hidden="true" />
+            </Button>
+          </li>
         ))}
-      </div>
-      <button type="button" className="cs-btn-add" id="cs-add-checklist-item" onClick={add} data-testid="cabin-settings-checklist-add-button">
-        + Přidat položku
-      </button>
+      </ul>
+      <Button type="button" variant="secondary" id="cs-add-checklist-item" onClick={add} data-testid="cabin-settings-checklist-add-button">
+        <Plus aria-hidden="true" />
+        Přidat položku
+      </Button>
     </div>
   )
 }
@@ -157,25 +178,28 @@ function FeatureToggles({ features, onChange }: FeatureTogglesProps) {
     onChange({ ...features, [key]: enabled })
   }
 
+  // Řádky přes celou šířku karty (ListRow má odsazení karty sám), celý řádek je popisek přepínače.
   return (
-    <div className="cs-features-list" data-testid="cabin-settings-feature-toggles">
+    <ul className="-mx-4 divide-y divide-rule-soft md:-mx-6" data-testid="cabin-settings-feature-toggles">
       {AVAILABLE_FEATURES.map((f) => (
-        <label key={f.key} className="cs-feature-item" data-testid="cabin-settings-feature-toggle-row" data-feature={f.key}>
-          <div className="cs-feature-info">
-            <strong>{f.label}</strong>
-            <span>{f.description}</span>
-          </div>
-          <input
-            type="checkbox"
-            className="cs-feature-toggle"
-            data-feature={f.key}
-            checked={features[f.key] !== false}
-            onChange={(e) => toggle(f.key, e.target.checked)}
-            data-testid="cabin-settings-feature-toggle"
-          />
-        </label>
+        <ListRow as="li" key={f.key} data-testid="cabin-settings-feature-toggle-row" data-feature={f.key}>
+          <label className="flex cursor-pointer items-center gap-3">
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">{f.label}</span>
+              <span className="block text-label text-(--text-muted)">{f.description}</span>
+            </span>
+            <input
+              type="checkbox"
+              className="size-5 shrink-0 cursor-pointer accent-(--brand-primary)"
+              data-feature={f.key}
+              checked={features[f.key] !== false}
+              onChange={(e) => toggle(f.key, e.target.checked)}
+              data-testid="cabin-settings-feature-toggle"
+            />
+          </label>
+        </ListRow>
       ))}
-    </div>
+    </ul>
   )
 }
 
@@ -186,7 +210,7 @@ function CharCounter({ value, max }: { value: string; max: number }) {
   const isNear = len > max * 0.9
   return (
     <span className="cs-counter">
-      <span style={{ color: isNear ? 'var(--color-danger, #ef4444)' : undefined }}>{len}</span>/{max}
+      <span className={cn(isNear && 'text-(--status-error)')}>{len}</span>/{max}
     </span>
   )
 }
@@ -194,8 +218,8 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 // ─── CabinSettingsPanel ───────────────────────────────────────────────────────
 
 export function CabinSettingsPanel({
-  title = 'Nastavení chaty',
-  subtitle = 'Přizpůsob si svou chatu podle sebe',
+  title,
+  subtitle,
   showBackButton = false,
   onBack,
 }: CabinSettingsPanelProps) {
@@ -329,12 +353,9 @@ export function CabinSettingsPanel({
   // Guard: admin only
   if (!isAdmin) {
     return (
-      <div className="main-content-settings">
-        <div className="page-card settings-page-card" style={{ padding: '28px' }}>
-          <h1 className="cs-title">Přístup odepřen</h1>
-          <p className="cs-subtitle">Tato stránka je dostupná pouze pro administrátory.</p>
-        </div>
-      </div>
+      <Card>
+        <PageHeader title="Přístup odepřen" subtitle="Tato stránka je dostupná pouze pro administrátory." />
+      </Card>
     )
   }
 
@@ -344,62 +365,67 @@ export function CabinSettingsPanel({
     'tab-modules': 'Moduly',
   }
   const panelState = isLoading ? 'loading' : isError ? 'error' : 'ready'
+  const tabPane = (tab: TabId) => ({ role: 'tabpanel', id: tab, 'aria-labelledby': `${tab}-button`, hidden: activeTab !== tab })
 
   const saveBtnText = updateSettings.isPending ? 'Ukládám…' : saveSuccess ? 'Uloženo' : 'Uložit změny'
 
   return (
-    <div className="main-content-settings" data-testid="cabin-settings-panel" data-cabin-settings-state={panelState}>
-      <div className="page-card settings-page-card">
-
-        {/* ── Header ── */}
-        <div className="cs-header">
-          <div className="cs-header-left">
-            {showBackButton ? (
-              <button
-                className="cabin-settings-back"
-                title="Zpět na správu chaty"
-                aria-label="Zpět na správu chaty"
-                onClick={onBack}
-                data-testid="cabin-settings-back-button"
-              >
-                <ArrowLeft className="w-5 h-5 inline-block align-middle" aria-hidden="true" />
-              </button>
-            ) : null}
-            <div>
-              <h1 className="cs-title">{title}</h1>
-              <p className="cs-subtitle">{subtitle}</p>
-            </div>
-          </div>
-        </div>
-        {saveError ? (
-          <div className="error-message show" role="alert" data-testid="cabin-settings-save-error">{saveError}</div>
-        ) : null}
-
-        {/* ── Tabs ── */}
-        <div className="cs-tabs" data-testid="cabin-settings-tab-nav">
-          {(['tab-basic', 'tab-operations', 'tab-modules'] as TabId[]).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              className={`cs-tab${activeTab === tab ? ' active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-              data-testid="cabin-settings-tab-button"
-              data-tab-id={tab}
+    <div className="grid gap-4 md:gap-6" data-testid="cabin-settings-panel" data-cabin-settings-state={panelState}>
+      {title ? (
+        <Card as="section">
+          {showBackButton ? (
+            <Button
+              variant="ghost"
+              className="-ml-2 px-2 text-primary"
+              aria-label="Zpět na správu chaty"
+              onClick={onBack}
+              data-testid="cabin-settings-back-button"
             >
-              {TAB_LABELS[tab]}
-            </button>
-          ))}
-        </div>
+              <ChevronLeft aria-hidden="true" />
+              Zpět
+            </Button>
+          ) : null}
+          <PageHeader title={title} subtitle={subtitle} />
+        </Card>
+      ) : null}
 
-        {/* ── Body ── */}
-        <div className="cs-body">
+      <Card as="section" flush aria-label="Nastavení chaty">
+        {/* Na mobilu je lišta s uložením pevně dole, poslední pole pod ní nesmí zůstat. */}
+        <div className="p-4 max-md:pb-24 md:p-6">
+          {saveError ? (
+            <div className="error-message show mb-4" role="alert" data-testid="cabin-settings-save-error">{saveError}</div>
+          ) : null}
+
+          {/* Segmentový přepínač: tři záložky v jedné řadě i na 360 px, vybraná je papír na vnořené ploše. */}
+          <div className="mb-6 flex gap-1 overflow-x-auto rounded-xl bg-inset p-1 md:w-fit" role="tablist" aria-label="Části nastavení" data-testid="cabin-settings-tab-nav">
+            {(['tab-basic', 'tab-operations', 'tab-modules'] as TabId[]).map((tab) => (
+              <Button
+                key={tab}
+                type="button"
+                variant="ghost"
+                size="sm"
+                role="tab"
+                id={`${tab}-button`}
+                aria-selected={activeTab === tab}
+                aria-controls={tab}
+                className={cn('flex-auto px-2 text-(--text-muted)', activeTab === tab && 'bg-sheet text-(--text-main) shadow-xs hover:bg-sheet')}
+                onClick={() => setActiveTab(tab)}
+                data-testid="cabin-settings-tab-button"
+                data-tab-id={tab}
+              >
+                {TAB_LABELS[tab]}
+              </Button>
+            ))}
+          </div>
+
           {isLoading ? (
-            <div className="cabin-settings-loading">
-              <div className="spinner" />
-              <p>Načítám nastavení…</p>
+            <div className="grid gap-4" aria-busy="true">
+              <span className="sr-only">Načítám nastavení…</span>
+              {[0, 1, 2].map((i) => <div key={i} className="h-12 rounded-xl bg-inset" />)}
             </div>
           ) : isError ? (
             <FeatureErrorFallback
+              bare
               error={settingsError instanceof Error ? settingsError : new Error('Nepodařilo se načíst nastavení chaty')}
               resetErrorBoundary={() => {
                 void refetchSettings()
@@ -407,14 +433,10 @@ export function CabinSettingsPanel({
               title="Nastavení chaty se nepodařilo načíst"
             />
           ) : (
-            <form id="cs-form" className="cabin-settings-form" noValidate onSubmit={handleSubmit} onChangeCapture={clearSaveFeedback} data-testid="cabin-settings-form">
+            <form id="cs-form" noValidate onSubmit={handleSubmit} onChangeCapture={clearSaveFeedback} data-testid="cabin-settings-form">
               {/* Tab 1: Basic */}
-              <div className={`cs-tab-pane${activeTab === 'tab-basic' ? ' active' : ''}`} id="tab-basic" data-testid="cabin-settings-basic-tab">
-                <section className="cs-section" data-testid="cabin-settings-cover-photo">
-                  <div className="cs-section-header">
-                    <h2>Titulní fotka</h2>
-                    <p>Fotka chaty, kterou uvidí všichni členové</p>
-                  </div>
+              <div {...tabPane('tab-basic')} data-testid="cabin-settings-basic-tab">
+                <FormSection title="Titulní fotka" description="Fotka chaty, kterou uvidí všichni členové" data-testid="cabin-settings-cover-photo">
                   {settings?.coverPhotoUrl ? (
                     <div className="flex flex-col items-start gap-3">
                       <img
@@ -426,31 +448,26 @@ export function CabinSettingsPanel({
                         className="w-full max-w-md h-auto aspect-[16/10] object-cover object-center rounded-xl"
                         data-testid="cabin-settings-cover-photo-preview"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="btn btn-secondary"
-                        disabled={removeCoverPhoto.isPending}
+                        variant="secondary"
+                        pending={removeCoverPhoto.isPending}
                         aria-label="Odebrat titulní fotku"
                         onClick={() => removeCoverPhoto.mutate(undefined, { onSuccess: () => showToast('Titulní fotka odebrána.', 'success') })}
                         data-testid="cabin-settings-cover-photo-remove-button"
                       >
                         {removeCoverPhoto.isPending ? 'Odebírám…' : 'Odebrat'}
-                      </button>
+                      </Button>
                     </div>
                   ) : (
-                    <p className="m-0 text-sm text-muted-foreground">V Galerii u fotky zvol Nastavit jako titulní.</p>
+                    <p className="text-body text-(--text-muted)">V Galerii u fotky zvol Nastavit jako titulní.</p>
                   )}
-                </section>
+                </FormSection>
 
-                <section className="cs-section">
-                  <div className="cs-section-header">
-                    <h2>Základní informace</h2>
-                    <p>Jak se chata jmenuje a kde se nachází</p>
-                  </div>
-
-                  <div className="cs-field">
+                <FormSection title="Základní informace" description="Jak se chata jmenuje a kde se nachází">
+                  <div className="form-group">
                     <label htmlFor="cs-name">Název chaty</label>
-                    <input
+                    <Input
                       type="text"
                       id="cs-name"
                       maxLength={100}
@@ -463,7 +480,7 @@ export function CabinSettingsPanel({
                     <span className="cs-hint">Zobrazuje se v navigaci a pozvánkách</span>
                   </div>
 
-                  <div className="cs-field">
+                  <div className="form-group">
                     <label htmlFor="cs-description">
                       Popis <span className="cs-optional">(nepovinné)</span>
                     </label>
@@ -479,7 +496,7 @@ export function CabinSettingsPanel({
                     <CharCounter value={description} max={2000} />
                   </div>
 
-                  <div className="cs-field">
+                  <div className="form-group mb-0">
                     <label htmlFor="cs-municipality">
                       Nejbližší obec (pro počasí){' '}
                       <span className="cs-optional">(nepovinné)</span>
@@ -496,38 +513,35 @@ export function CabinSettingsPanel({
                       <span className="cs-hint" data-testid="cabin-settings-legacy-location">
                         Teď je uložená jen jako text: „{settings.weatherLocation}“. Vyber obec ze seznamu, ať počasí
                         chodí ze správného místa.{' '}
-                        <button type="button" className="min-h-11 underline" onClick={() => setLegacyLocationRemoved(true)}>
+                        <Button type="button" variant="ghost" size="sm" className="-ml-3 text-primary underline" onClick={() => setLegacyLocationRemoved(true)}>
                           Odebrat starou lokalitu
-                        </button>
+                        </Button>
                       </span>
                     )}
                     <span className="cs-hint">
                       Z bezpečnostních důvodů neukládáme přesnou adresu ani GPS chaty, jen nejbližší obec.
                     </span>
                   </div>
-                </section>
+                </FormSection>
 
-                <section className="cs-section">
-                  <div className="cs-section-header">
-                    <h2>Uvítání a pravidla</h2>
-                    <p>Nastav tón komunikace chaty</p>
-                  </div>
-
-                  <div className="cs-field">
-                    <label htmlFor="cs-welcome">Uvítací zpráva / motto</label>
-                    <input
-                      type="text"
+                <FormSection title="Uvítání a pravidla" description="Nastav tón komunikace chaty">
+                  <div className="form-group">
+                    <label htmlFor="cs-welcome">
+                      Uvítací zpráva nebo motto <span className="cs-optional">(nepovinné)</span>
+                    </label>
+                    <textarea
                       id="cs-welcome"
                       maxLength={300}
+                      rows={2}
                       value={welcomeMessage}
                       onChange={(e) => setWelcomeMessage(e.target.value)}
-                      placeholder="např. U nás je vždy příjemně — ať prší nebo svítí"
+                      placeholder="např. U nás je vždy příjemně, ať prší nebo svítí"
                       data-testid="cabin-settings-welcome-message-input"
                     />
                     <span className="cs-hint">Zobrazí se novým členům v pozvánce a na přehledu</span>
                   </div>
 
-                  <div className="cs-field">
+                  <div className="form-group mb-0">
                     <label htmlFor="cs-rules">
                       Domácí řád <span className="cs-optional">(nepovinné)</span>
                     </label>
@@ -542,16 +556,12 @@ export function CabinSettingsPanel({
                     />
                     <CharCounter value={rules} max={5000} />
                   </div>
-                </section>
+                </FormSection>
               </div>
 
               {/* Tab 2: Operations */}
-              <div className={`cs-tab-pane${activeTab === 'tab-operations' ? ' active' : ''}`} id="tab-operations" data-testid="cabin-settings-operations-tab">
-                <section className="cs-section">
-                  <div className="cs-section-header">
-                    <h2>Odjezdový checklist</h2>
-                    <p>Co zkontrolovat před uzamčením chaty</p>
-                  </div>
+              <div {...tabPane('tab-operations')} data-testid="cabin-settings-operations-tab">
+                <FormSection title="Odjezdový checklist" description="Co zkontrolovat před uzamčením chaty">
                   <ChecklistEditor
                     items={checklist}
                     onChange={(items) => {
@@ -559,36 +569,29 @@ export function CabinSettingsPanel({
                       setChecklist(items)
                     }}
                   />
-                </section>
+                </FormSection>
 
-                <section className="cs-section">
-                  <div className="cs-section-header">
-                    <h2>Zazimování</h2>
-                    <p>Stav chaty v zimním období</p>
-                  </div>
-                  <label className="cs-toggle-row">
+                <FormSection title="Zazimování" description="Stav chaty v zimním období">
+                  <label className="flex min-h-(--touch-target-min) cursor-pointer items-start gap-3 py-2">
                     <input
                       type="checkbox"
                       id="cs-winterized"
+                      className="mt-0.5 size-5 shrink-0 cursor-pointer accent-(--brand-primary)"
                       checked={isWinterized}
                       onChange={(e) => setIsWinterized(e.target.checked)}
                       data-testid="cabin-settings-winterized-toggle"
                     />
-                    <span className="cs-toggle-label">Chata je zazimovaná</span>
-                    <span className="cs-hint" style={{ margin: 0 }}>
-                      Zapojí mrazové výstrahy a speciální režim
+                    <span>
+                      <span className="block font-semibold">Chata je zazimovaná</span>
+                      <span className="cs-hint">Zapojí mrazové výstrahy a speciální režim</span>
                     </span>
                   </label>
-                </section>
+                </FormSection>
               </div>
 
               {/* Tab 3: Modules */}
-              <div className={`cs-tab-pane${activeTab === 'tab-modules' ? ' active' : ''}`} id="tab-modules" data-testid="cabin-settings-modules-tab">
-                <section className="cs-section">
-                  <div className="cs-section-header">
-                    <h2>Aktivní moduly</h2>
-                    <p>Zapni nebo vypni funkce podle potřeb rodiny</p>
-                  </div>
+              <div {...tabPane('tab-modules')} data-testid="cabin-settings-modules-tab">
+                <FormSection title="Aktivní moduly" description="Zapni nebo vypni funkce podle potřeb rodiny">
                   <FeatureToggles
                     features={features}
                     onChange={(nextFeatures) => {
@@ -596,7 +599,7 @@ export function CabinSettingsPanel({
                       setFeatures(nextFeatures)
                     }}
                   />
-                </section>
+                </FormSection>
               </div>
             </form>
           )}
@@ -608,19 +611,19 @@ export function CabinSettingsPanel({
             <span className="cs-save-status" role="status">
               {isDirty ? 'Máš neuložené změny.' : ''}
             </span>
-            <button
+            <Button
               type="button"
-              className={`cs-btn-save${saveSuccess ? ' cs-btn-save--success' : ''}`}
+              size="lg"
+              className="cs-btn-save"
               onClick={doSave}
-              disabled={updateSettings.isPending}
+              pending={updateSettings.isPending}
               data-testid="cabin-settings-save-button"
             >
               {saveBtnText}
-            </button>
+            </Button>
           </div>
         ) : null}
-
-      </div>
+      </Card>
 
       <ConfirmDialog
         isOpen={leaveGuard.isBlocked}
@@ -643,13 +646,13 @@ export function CabinSettingsPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="main-content-settings" data-testid="cabin-settings-page">
-      <div className="page-card settings-page-card">
-        <CabinSettingsPanel
-          showBackButton={true}
-          onBack={() => navigate('/admin')}
-        />
-      </div>
+    <div className="p-3 md:p-0" data-testid="cabin-settings-page">
+      <CabinSettingsPanel
+        title="Nastavení chaty"
+        subtitle="Přizpůsob si svou chatu podle sebe"
+        showBackButton={true}
+        onBack={() => navigate('/admin')}
+      />
     </div>
   )
 }

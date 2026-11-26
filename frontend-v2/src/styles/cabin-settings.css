@@ -434,42 +434,12 @@
   flex-shrink: 0;
 }
 
-/* ── Save button ─────────────────────────────────────────────────────── */
+/* ── Save button: vzhled nese <Button size="lg">, tady jen hlavní akce 56 px ── */
 
 .cs-btn-save {
   flex-shrink: 0;
   min-height: var(--touch-target-primary);
-  padding: 0 28px;
-  background: var(--color-primary, #3f7b63);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-full);
   font-size: var(--font-size-base);
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(63, 123, 99, 0.25);
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cs-btn-save:hover:not(:disabled) {
-  background: var(--color-primary-hover, #357a5a);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(63, 123, 99, 0.35);
-}
-
-.cs-btn-save:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.cs-btn-save--success {
-  background: var(--color-success, #16a34a);
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 /* ── Lišta s uložením (#260): „Uložit změny“ po ruce na každé záložce ── */
@@ -481,10 +451,11 @@
   display: flex;
   align-items: center;
   gap: var(--touch-target-gap);
-  padding: 12px 28px;
+  padding: var(--space-md) var(--space-xl);
   background: rgb(var(--sheet));
-  border-top: 1px solid var(--color-border-light, #f0f0f0);
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-top: 1px solid rgb(var(--rule-soft));
+  /* sedí s rohy karty (Card, rounded-2xl) */
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
 }
 
 .cs-save-status {
@@ -492,7 +463,7 @@
   min-width: 0;
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-warning-text);
+  color: var(--text-main);
 }
 
 /* Sticky: obal panelu ve správě nesmí být scroll kontejner */
@@ -507,7 +478,7 @@
 }
 
 /* Mobil scrolluje oknem, sticky by neudržel: pevně nad spodní navigací a bezpečnou zónou (nav.css) */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .cs-save-bar {
     position: fixed;
     left: 0;

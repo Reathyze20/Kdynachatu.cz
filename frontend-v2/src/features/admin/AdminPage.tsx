@@ -1260,12 +1260,9 @@ export function AdminPage() {
       ) : null}
 
       {activeWorkspace === 'cabin' ? (
-        // Bez vlastní karty: CabinSettingsPanel je karta sám, karta v kartě by byla navíc (DESIGN.md §6)
+        // Bez vlastní karty ani titulku: CabinSettingsPanel je karta sám a stránku pojmenuje hlavička správy (DESIGN.md §6, §7)
         <section className="admin-settings-shell" id="admin-cabin-settings" data-testid="admin-cabin-settings-section">
-          <CabinSettingsPanel
-            title="Společné nastavení chaty"
-            subtitle="Všechno sdílené na jednom místě: údaje chaty, pravidla, odjezdový checklist i zapnuté moduly."
-          />
+          <CabinSettingsPanel />
         </section>
       ) : null}
 

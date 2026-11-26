@@ -11,7 +11,7 @@
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
       "components/shared/GlobalFallback.tsx", "features/auth/ResetPasswordPage.tsx",
       "features/auth/VerifyEmailPage.tsx", "features/gallery/FolderGrid.tsx", "features/invite/InvitePage.tsx",
-      "features/landing/LandingPage.tsx", "features/reservations/ui/CheckoutSection.tsx", "features/settings/CabinSettingsPage.tsx"
+      "features/landing/LandingPage.tsx", "features/reservations/ui/CheckoutSection.tsx"
     ],
     "Barva člena a avatara je uložená data (#271), převod hex → rgba a paleta zatím mimo tokeny": [
       "components/shared/AnimalAvatar.tsx", "features/reservations/calendar/CalendarCell.tsx", "lib/avatars.ts", "lib/memberPalette.ts"
@@ -35,7 +35,7 @@
       "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
       "features/reservations/ui/CheckoutSection.tsx", "features/reservations/ui/ReservationDetail.tsx",
-      "features/settings/CabinSettingsPage.tsx", "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
+      "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
     ]
   },
   "coldPalette": {
@@ -68,7 +68,7 @@
       "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx", "features/notes/ThreadList.tsx",
       "features/reservations/calendar/CalendarGrid.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
-      "features/reservations/ui/InventoryNotifyDialog.tsx", "features/settings/CabinSettingsPage.tsx",
+      "features/reservations/ui/InventoryNotifyDialog.tsx",
       "features/shopping/EditInventoryModal.tsx", "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx"
     ]
   },
@@ -79,8 +79,7 @@
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
-      "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/onboarding/OnboardingPage.tsx",
-      "features/settings/CabinSettingsPage.tsx"
+      "features/diary/DiaryPage.tsx", "features/gallery/GalleryPage.tsx", "features/onboarding/OnboardingPage.tsx"
     ]
   },
   "legacyEmptyState": {
