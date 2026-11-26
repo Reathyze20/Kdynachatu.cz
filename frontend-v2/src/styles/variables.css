@@ -217,9 +217,9 @@
   --empty: 180 35 35;
 
   /* ── Scéna chaty (#563, spec #558) ───────────────────────────────────────
-     Sépiová paleta pixel artu v kartě „Na chatě teď“ (picker docs/design/10-scena-chaty.html,
-     varianta B). Jen pro features/dashboard/CabinScene; mřížky spritů znak → token mapuje
-     cabinSceneSprites.ts. */
+     Krajina, chata a plch jsou PNG z PixelLabu (features/dashboard/scene/). Tyto tokeny barví jen
+     vektorové doplňky (kouř, zZz, ptáček, měsíc, hvězdy, sníh, okna, noční clona). Jen pro
+     features/dashboard/CabinScene; znak spritu → token mapuje cabinSceneSprites.ts. */
   --scene-ink: #26211c;
   --scene-night-veil: #1c1712;
   --scene-light: #fef3c7;

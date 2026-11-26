@@ -56,7 +56,7 @@ const PINES: [number, boolean][] = [
  * `motion` jsou třídy animace vrstvy, platí jen ve stavu Animovaná; pás snímků se v ní přepíná sám. */
 interface Img { href: string; x: number; y: number; w: number; h: number }
 /** Pás snímků vedle sebe (obrázek, nebo vektorové sprity v `paths`), vidět je vždy jeden snímek `w` × `h`. */
-interface Strip { x: number; y: number; w: number; h: number; frames: number; ms: number; href?: string; paths?: Map<string, string> }
+interface Strip { x: number; y: number; w: number; h: number; frames: number; ms: number; href?: string; paths?: Map<string, string>; still?: boolean }
 interface Layer { name: string; paths: Map<string, string>; images: Img[]; strip?: Strip; opacity?: number; motion?: string }
 
 function layer(name: string, motion?: string): Layer {
@@ -134,7 +134,8 @@ function snowfall(moving: boolean): Layer {
 }
 
 /** Pás snímků plcha podle pózy: spí vedle chaty, u špalku štípe dříví (nápřah za hlavu, úder), u auta mává, u zazimované
- * chaty jen stojí. V mrazu má plch šálu: vlastní pásy téže postavičky (`scarf`), jiný počet snímků u spánku. */
+ * chaty stojí bez pohybu (tam se nic nehýbe). V mrazu má plch šálu: vlastní pásy téže postavičky (`scarf`), u spánku
+ * s jiným počtem snímků. */
 type StripFrames = { href: string; frames: number };
 const MASCOT: Record<MascotPose, StripFrames & { scarf: StripFrames; ms: number; x: number }> = {
   sleep: { href: dormouseSleep, frames: 6, scarf: { href: dormouseSleepScarf, frames: 8 }, ms: 420, x: CABIN.x + CABIN.w - 6 },
@@ -149,7 +150,7 @@ function mascot(state: CabinSceneState): Layer[] {
   const { href, frames } = state.frost ? scarf : bare;
   const y = GROUND - FEET;
   const props = pose === "chop" ? [image("stump", { href: stumpImg, x: STUMP.x, y: GROUND - STUMP.h + 1, w: STUMP.w, h: STUMP.h })] : [];
-  const layers: Layer[] = [...props, { ...layer("mascot"), strip: { href, x, y, w: FRAME, h: FRAME, frames, ms } }];
+  const layers: Layer[] = [...props, { ...layer("mascot"), strip: { href, x, y, w: FRAME, h: FRAME, frames, ms, still: state.winterized } }];
   if (pose === "sleep") layers.push(drawSprite(layer("zzz", "animate-scene-zzz"), ZZZ, x + 26, y + 6, state.night ? { o: "light" } : {}));
   return layers;
 }
@@ -221,14 +222,16 @@ interface Props {
   weather?: WeatherResult;
 }
 
-const PIXELATED: CSSProperties = { imageRendering: "pixelated" };
+/** Pixel art se při zvětšení nerozmaže. */
+const PIXELATED = "[image-rendering:pixelated]";
 
 /** Okno velikosti jednoho snímku, pás za ním se posouvá po snímcích (`steps`); bez animace je vidět první snímek. */
 function FrameStrip({ strip: { href, paths, x, y, w, h, frames, ms }, className }: { strip: Strip; className?: string }) {
-  const style = { animationDuration: `${frames * ms}ms`, animationTimingFunction: `steps(${frames})`, "--scene-strip-end": `${-frames * w}px` } as CSSProperties;
+  // Délku smyčky, počet kroků a cíl posunu bere `--animate-scene-frames` z proměnných pásu.
+  const style = { "--scene-strip-ms": `${frames * ms}ms`, "--scene-strip-frames": frames, "--scene-strip-end": `${-frames * w}px` } as CSSProperties;
   return (
     <svg x={x} y={y} width={w} height={h} viewBox={`0 0 ${w} ${h}`} overflow="hidden">
-      {href && <image href={href} width={frames * w} height={h} className={className} style={{ ...PIXELATED, ...style }} />}
+      {href && <image href={href} width={frames * w} height={h} className={cn(PIXELATED, className)} style={style} />}
       {paths && (
         <g className={className} style={style}>
           {[...paths].map(([token, d]) => <path key={token} d={d} style={{ fill: `var(--scene-${token})` }} />)}
@@ -256,9 +259,9 @@ export function CabinScene({ data, winterized, weather }: Props) {
           const animate = moving && l.motion ? cn(l.motion, pause) : undefined;
           return (
             <g key={l.name} opacity={l.opacity} className={animate}>
-              {l.images.map((i) => <image key={`${i.href}-${i.x}`} href={i.href} x={i.x} y={i.y} width={i.w} height={i.h} style={PIXELATED} />)}
+              {l.images.map((i) => <image key={`${i.href}-${i.x}`} href={i.href} x={i.x} y={i.y} width={i.w} height={i.h} className={PIXELATED} />)}
               {[...l.paths].map(([token, d]) => <path key={token} d={d} style={{ fill: `var(--scene-${token})` }} />)}
-              {l.strip && <FrameStrip strip={l.strip} className={moving ? cn("animate-scene-frames", pause) : undefined} />}
+              {l.strip && <FrameStrip strip={l.strip} className={moving && !l.strip.still ? cn("animate-scene-frames", pause) : undefined} />}
             </g>
           );
         })}

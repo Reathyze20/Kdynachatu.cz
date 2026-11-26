@@ -25,7 +25,7 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 | Sémantické tokeny | `--text-*`, `--bg-*`, `--brand-*`, `--status-*`, `--border-*`, `--space-*`, `--radius-*`, `--shadow-*`, `--font-*`, `--transition-*`, `--z-*`, `--touch-target-*` | všechny komponenty |
 | Povrchy redesignu | `--page`, `--sheet`, `--sheet-alt`, `--inset`, `--rule`, `--rule-soft`, `--glow`, `--lift`, `--ok`/`--low`/`--empty` a jejich `-bg` | všechny komponenty. Jsou to RGB trojice, s alfou `rgb(var(--sheet) / .96)` |
 | Most shadcn | `--primary`, `--muted-foreground`, `--border`, `--input`, `--ring` … (`shadcn-tokens.css`) | primitiva `ui/` a utility z `@theme` |
-| Scéna chaty | `--scene-*` (sépiová paleta pixel artu, #563) | jen `features/dashboard/CabinScene.tsx` |
+| Scéna chaty | PNG z PixelLabu v `features/dashboard/scene/`, `--scene-*` jen pro vektorové doplňky (kouř, okna, noc, sníh, #563) | jen `features/dashboard/CabinScene.tsx` |
 | Legacy aliasy | `--color-*` | **deprecated**. Nový kód je nepoužívá, stávající výskyty jsou v allowlistu (#450) |
 
 ### Jak token použít

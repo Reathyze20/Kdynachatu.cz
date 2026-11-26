@@ -153,8 +153,6 @@
   --animate-scene-zzz: scene-zzz 4s steps(3) infinite;
   --animate-scene-snow: scene-snow 11s steps(76) infinite;
   --animate-scene-bird: scene-bird 47s steps(42) infinite;
-  /* Pás snímků (plch z PixelLabu, mávání křídel ptáčka); délku a steps(počet snímků) určuje vrstva inline, cíl posunu --scene-strip-end. */
-  --animate-scene-frames: scene-frames 1.8s steps(9) infinite;
 
   /* Obláček stoupá, lehce se vlní do stran a cestou řídne. */
   @keyframes scene-smoke {
@@ -169,7 +167,6 @@
     60% { transform: translate(1px, -4px); opacity: 0.8; }
     100% { transform: translate(2px, -7px); opacity: 0; }
   }
-  @keyframes scene-frames { to { transform: translateX(var(--scene-strip-end)); } }
   /* O výšku scény (76 jednotek), po jedné jednotce: vločky nad scénou navážou přesně na start smyčky. */
   @keyframes scene-snow { to { transform: translateY(76px); } }
   /* Přelet trvá pětinu smyčky (asi 9 s) po dvou jednotkách po vlnovce nahoru a dolů, zbytek čeká za pravým okrajem.
@@ -185,4 +182,11 @@
     17.5% { transform: translate(587px, -2px); }
     20%, 100% { transform: translate(670px, 0); }
   }
+}
+@theme inline {
+  /* Pás snímků (plch z PixelLabu, mávání křídel ptáčka): délku, počet snímků a cíl posunu nastaví pás v proměnných
+     --scene-strip-ms, --scene-strip-frames a --scene-strip-end. `inline`, aby se proměnné
+     dosadily až na prvku pásu, ne v :root. */
+  --animate-scene-frames: scene-frames var(--scene-strip-ms) steps(var(--scene-strip-frames)) infinite;
+  @keyframes scene-frames { to { transform: translateX(var(--scene-strip-end)); } }
 }
