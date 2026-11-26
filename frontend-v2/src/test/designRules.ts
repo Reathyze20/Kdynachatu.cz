@@ -1,6 +1,6 @@
 import type { DesignRule } from './designGuard'
 
-/** Strojově ověřitelná pravidla z DESIGN.md (§2–§4, §9, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
+/** Strojově ověřitelná pravidla z DESIGN.md (§1–§4, §9, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
 
 /** Soubory s definicí tokenů: jediné místo, kde smí být surové barvy, `--raw-*` a `--color-*`. */
 export const TOKEN_FILES = ['styles/variables.css', 'styles/shadcn-tokens.css']
@@ -162,5 +162,25 @@ export const DESIGN_RULES: DesignRule[] = [
     scope: (file) => /\.tsx?$/.test(file) && file !== 'lib/format.ts',
     // Český název měsíce jako samostatný řetězec (1., 2. i 6. pád) = lokální pole měsíců.
     match: /\.toLocale(?:Date|Time)?String\(|\bIntl\.(?:DateTimeFormat|NumberFormat)\b|(['"`])(?:led(?:en|n[au])|únor[au]?|břez(?:en|n[au])|dub(?:en|n[au])|květ(?:en|n[au])|červ(?:en(?:ec|c[ei])?|n[au])|srp(?:en|n[au])|září|říj(?:en|n[au])|listopadu?|prosin(?:ec|c[ei]))\1/giu,
+  },
+  {
+    name: 'themeVariant',
+    hint: 'jen světlý režim a jedno téma (DESIGN.md §1, #458): žádný selektor .dark, varianta dark:, [data-theme], prefers-color-scheme ani next-themes',
+    // Platí i pro soubory s definicí tokenů. `.dark` jako selektor (i `html.dark`, `:root.dark`), ne vlastnost objektu (`theme.dark`),
+    // spread `{...dark}` ani token `--status-error-dark`; v TS i přepínač `classList.add('dark')` a `dataset.theme`.
+    match: new RegExp(
+      [
+        String.raw`(?:(?<![\w$)\]?!.])|(?<=(?:html|body|:root)))\.dark(?![\w-])`,
+        String.raw`@(?:custom-)?variant\s+dark\b`,
+        String.raw`(?<=^|[\s"'\`{:])dark:(?=[\w[(!-])`,
+        String.raw`\bdata-(?:theme|\[theme)(?![\w-])`,
+        String.raw`\bdataset\.theme\b`,
+        String.raw`classList\.\w+\(\s*["'\`]dark["'\`]`,
+        String.raw`prefers-color-scheme`,
+        String.raw`color-scheme\s*:[^;{}]*\bdark\b`,
+        String.raw`\bnext-themes\b`,
+      ].join('|'),
+      'g',
+    ),
   },
 ]

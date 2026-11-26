@@ -10,7 +10,7 @@ Moderní rodinná SPA/PWA aplikace pro správu rekreačních objektů — rezerv
 - 📸 Galerie s albums a lighboxem
 - 📖 Deník pobytů
 - 🏗️ Evidance rekonstrukcí a hlasování
-- 🎨 Frosted-glass design, dark mode, PWA offline support
+- 🎨 Frosted-glass design, PWA offline support
 
 ## Stack
 

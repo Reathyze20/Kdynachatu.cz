@@ -11,7 +11,7 @@ import legacyCssRaw from '@/styles/variables.css?raw'
  *
  * Primitiva v `components/ui/*` odkazují na sémantické tokeny (`--primary`,
  * `--background`, `--border` …), které vznikají jen díky tomuto mostu.
- * Tyto testy hlídají, že most zůstane kompletní (light i dark) a aditivní.
+ * Tyto testy hlídají, že most zůstane kompletní a aditivní. Appka má jen světlý režim (#458).
  */
 
 // Komentáře odstraníme, ať parser nenarazí na tokeny zmíněné v popisu.
@@ -49,7 +49,7 @@ const SEMANTIC_TOKENS = [
 
 /**
  * Vrátí tělo prvního CSS bloku, jehož prelude začíná na začátku řádku daným
- * selektorem (`:root {`, `.dark {`, `@theme inline {`). Vnořené bloky nepodporuje.
+ * selektorem (`:root {`, `@theme inline {`). Vnořené bloky nepodporuje.
  */
 function firstBlockBody(css: string, selector: string): string {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -59,14 +59,12 @@ function firstBlockBody(css: string, selector: string): string {
   return css.slice(open, css.indexOf('}', open))
 }
 
-describe('theme bridge — sémantické tokeny (light i dark)', () => {
+describe('theme bridge — sémantické tokeny', () => {
   const root = firstBlockBody(bridgeCss, ':root')
-  const dark = firstBlockBody(bridgeCss, '.dark')
 
   for (const token of SEMANTIC_TOKENS) {
-    it(`definuje --${token} pro light i dark`, () => {
+    it(`definuje --${token}`, () => {
       expect(root).toMatch(new RegExp(`--${token}\\s*:`))
-      expect(dark).toMatch(new RegExp(`--${token}\\s*:`))
     })
   }
 
@@ -95,11 +93,11 @@ describe('theme bridge — Tailwind utility most (@theme inline)', () => {
     expect(bridgeCss).toMatch(/@theme\s+inline/)
   })
 
-  it('je aditivní — :root ani .dark nepředefinují žádnou proměnnou z variables.css', () => {
+  it('je aditivní — :root nepředefinuje žádnou proměnnou z variables.css', () => {
     // @theme inline blok se záměrně nepočítá: jeho --color-* jdou do @layer theme,
     // kde je nevrstvené aliasy z variables.css přebijí.
     const legacy = declaredProps(legacyCss)
-    const emitted = declaredProps(firstBlockBody(bridgeCss, ':root') + firstBlockBody(bridgeCss, '.dark'))
+    const emitted = declaredProps(firstBlockBody(bridgeCss, ':root'))
     const overlap = [...emitted].filter((p) => legacy.has(p))
     expect(overlap).toEqual([])
   })

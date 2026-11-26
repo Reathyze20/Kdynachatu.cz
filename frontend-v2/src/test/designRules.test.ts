@@ -2,6 +2,7 @@ import { afterAll, describe, it, expect } from 'vitest'
 import { assertRule, evaluateRule, SOURCES, type Allowlist } from './designGuard'
 import { DESIGN_RULES, TOKEN_FILES } from './designRules'
 import allowlistRaw from './designAllowlist.json?raw'
+import packageJsonRaw from '../../package.json?raw'
 
 /**
  * Guard tokenů, barev (#450), písma a ikon (#451) z DESIGN.md. Stávající porušení jsou v designAllowlist.json
@@ -45,6 +46,19 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
     ],
   },
   diaryFont: { bad: ['font-family: var(--font-diary);', "fontFamily: 'Kalam, cursive'"], good: ['font-family: var(--font-family);'] },
+  themeVariant: {
+    bad: [
+      '.dark { --page: 24 20 17; }', '.dark .card { color: red; }', '@custom-variant dark (&:where(.x));', 'className="bg-sheet dark:bg-black"',
+      'className="hover:dark:flex"', '[data-theme="lake"] { --brand-primary: blue; }', "root.setAttribute('data-theme', 'mountain')",
+      '@media (prefers-color-scheme: dark) {', "import { ThemeProvider } from 'next-themes'", 'html.dark { color: red; }', ':root.dark {',
+      '@variant dark {', 'color-scheme: light dark;', "document.documentElement.classList.toggle('dark')", "el.dataset.theme = 'lake'",
+      'className="data-[theme=lake]:bg-sheet"',
+    ],
+    good: [
+      '--status-error-dark: var(--raw-danger-dark);', 'color: var(--color-primary-dark);', 'const c = theme.dark', 'const d = settings?.dark',
+      'className="text-(--text-main)"', '<p>Venku je tma</p>', "label: 'Tmavé dřevo'", '<Row {...dark} />', 'data-theme-color="x"', 'color-scheme: light;',
+    ],
+  },
   localFormatter: {
     bad: [
       "d.toLocaleDateString('cs-CZ')", "d.toLocaleTimeString('cs-CZ', { hour: '2-digit' })", "cost.toLocaleString('cs-CZ')",
@@ -137,6 +151,11 @@ describe('pravidla DESIGN.md rozpoznají porušení', () => {
 describe('zdrojáky dodržují DESIGN.md, výjimky jen z allowlistu', () => {
   const remaining: string[] = []
   afterAll(() => console.info(`Zbývající výjimky v designAllowlist.json (Krok 6 v #69):\n  ${remaining.join('\n  ')}`))
+
+  it('next-themes není v závislostech, appka má jen světlý režim (#458)', () => {
+    const pkg = JSON.parse(packageJsonRaw) as Record<string, Record<string, string> | undefined>
+    expect(Object.keys({ ...pkg.dependencies, ...pkg.devDependencies })).not.toContain('next-themes')
+  })
 
   it('allowlist má klíč jen pro existující pravidla', () => {
     expect(Object.keys(ALLOWLIST).filter((name) => !DESIGN_RULES.some((r) => r.name === name))).toEqual([])

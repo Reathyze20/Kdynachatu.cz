@@ -8,7 +8,7 @@ import shoppingCssRaw from '@/styles/shopping.css?raw'
  *
  * Text v barvě stavu leží na podbarvení ze stejné barvy. Barvy jsou jen v tokenech
  * `variables.css` a kontrast textu vůči podbarvení musí být ≥ 4,5 : 1 ve světlém
- * i tmavém režimu. jsdom kaskádu nepočítá, proto se kontrast počítá z tokenů vzorcem WCAG.
+ * režimu (appka jiný nemá, #458). jsdom kaskádu nepočítá, proto se kontrast počítá z tokenů vzorcem WCAG.
  */
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -57,8 +57,8 @@ const VARIABLES = stripComments(variablesCssRaw)
 const STATES = ['ok', 'low', 'empty'] as const
 
 describe('Stavové štítky: kontrast ≥ 4,5 : 1 z design tokenů (#269)', () => {
-  for (const theme of [':root', '.dark'] as const) {
-    describe(theme === ':root' ? 'světlý režim' : 'tmavý režim', () => {
+  for (const theme of [':root'] as const) {
+    describe('světlý režim', () => {
       const themeBodies = bodiesFor(VARIABLES, theme)
 
       for (const state of STATES) {

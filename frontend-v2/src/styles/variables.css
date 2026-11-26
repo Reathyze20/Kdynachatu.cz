@@ -305,68 +305,12 @@
 }
 
 
-/* Tmavý teplý papír podle mocku 07-teplo-atomy (#320); třídu `.dark` appka zatím nenastavuje
-   (viz shadcn-tokens.css). --ok je zároveň zelený odkaz redesignu (v mocku --accent). */
-.dark {
-  --page: 24 20 17;
-  --sheet: 37 32 27;
-  --sheet-alt: 47 40 33;
-  --inset: 44 38 32;
-  --rule: 66 57 48;
-  --rule-soft: 52 45 38;
-  --glow: 58 42 28;
-  --under-top: 24 20 17;
-  --under-bottom: 18 15 12;
-  --lift: 0 1px 0 rgb(255 255 255 / .03) inset, 0 14px 34px -18px rgb(0 0 0 / .72);
-  --ok: 110 191 144;
-  --low: 234 179 8;
-  --empty: 248 113 113;
-}
-
 /* Podbarvení stavových štítků: 14 % barvy stavu (bylo 16 %, na papírové kartě #339 by --ok a --empty
    spadly pod 4,5 : 1), neprůhledně na ploše karty, aby kontrast
-   textu (≥ 4,5 : 1, G1) nezávisel na hoveru řádku pod štítkem. V `.dark` znovu, protože
-   custom property se dědí už spočítaná. Stejně podklad pod kartami --bg-app-backdrop (#339). */
-:root,
-.dark {
+   textu (≥ 4,5 : 1, G1) nezávisel na hoveru řádku pod štítkem. Stejně podklad pod kartami --bg-app-backdrop (#339). */
+:root {
   --bg-app-backdrop: radial-gradient(1200px 700px at 85% -10%, rgb(var(--glow)), transparent 60%), linear-gradient(180deg, rgb(var(--under-top)), rgb(var(--under-bottom)));
   --ok-bg: color-mix(in srgb, rgb(var(--ok)) 14%, rgb(var(--sheet)));
   --low-bg: color-mix(in srgb, rgb(var(--low)) 14%, rgb(var(--sheet)));
   --empty-bg: color-mix(in srgb, rgb(var(--empty)) 14%, rgb(var(--sheet)));
-}
-
-/* =============================================================================
-   MULTI-TENANT THEMING — Swap raw palette per tenant via [data-theme]
-   All semantic tokens cascade automatically because they reference raw-* vars.
-   Usage: document.documentElement.setAttribute('data-theme', 'mountain');
-   ============================================================================= */
-
-/* ── Příklad: Tema "Horský dům" ──────────────────────────────────────── */
-[data-theme="mountain"] {
-  --raw-color-1: #2c1810;
-  --raw-color-2: #8b4513;
-  --raw-color-3: #6b7280;
-  --raw-color-4: #e8ddd3;
-  --raw-color-5: #faf6f1;
-  --raw-off-white: #faf6f1;
-  --raw-ink: #2c1810;
-  --raw-paper: #faf6f1;
-  --brand-primary: #8b4513;
-  --brand-primary-hover: #6d350f;
-  --brand-primary-light: #f3e8dc;
-}
-
-/* ── Příklad: Tema "Modrá chalupa" ───────────────────────────────────── */
-[data-theme="lake"] {
-  --raw-color-1: #0c1b33;
-  --raw-color-2: #1a5276;
-  --raw-color-3: #5b7fa5;
-  --raw-color-4: #c6ddf0;
-  --raw-color-5: #eef4fa;
-  --raw-off-white: #eef4fa;
-  --raw-ink: #0c1b33;
-  --raw-paper: #eef4fa;
-  --brand-primary: #1a5276;
-  --brand-primary-hover: #154360;
-  --brand-primary-light: #d6eaf8;
 }
