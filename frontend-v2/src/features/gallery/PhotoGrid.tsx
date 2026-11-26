@@ -189,9 +189,9 @@ export function PhotoGrid({
           {Array.from({ length: totalPages }, (_, i) => (
             <Button
               key={i}
-              variant={i === page ? 'primary' : 'ghost'}
+              variant="ghost"
               size="sm"
-              className="min-w-(--touch-target-min)"
+              className={cn('min-w-(--touch-target-min)', i === page && 'bg-accent text-primary')}
               onClick={() => goToPage(i)}
               aria-current={i === page ? 'page' : undefined}
             >
