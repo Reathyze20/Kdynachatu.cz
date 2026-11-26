@@ -221,43 +221,15 @@
      varianta B). Jen pro features/dashboard/CabinScene; mřížky spritů znak → token mapuje
      cabinSceneSprites.ts. */
   --scene-ink: #26211c;
-  --scene-sky: #f6f0e6;
   --scene-night-veil: #1c1712;
   --scene-light: #fef3c7;
-  --scene-paper: #efe6d6;
-  --scene-mist: #e6ddcf;
-  --scene-hill: #d8ccb8;
-  --scene-grass: #b8a582;
-  --scene-grass-dark: #9c8a6a;
-  --scene-log: #c9a77f;
   --scene-log-dark: #a58660;
-  --scene-wood-cut: #d9b98a;
-  --scene-roof: #8b6f57;
   --scene-roof-dark: #5e5246;
-  --scene-chimney: #94785e;
-  --scene-stone: #a89c8a;
-  --scene-handle: #7a5230;
-  --scene-brass: #d97706;
   --scene-lamp: #e8a948;
   --scene-glass-night: #3a332c;
   --scene-smoke: #cdc2b1;
-  --scene-pine: #5e7a5f;
-  --scene-pine-dark: #2f4636;
-  --scene-car: #3e5c47;
-  --scene-taillight: #b23a2e;
-  --scene-steel: #b8bec5;
-  --scene-fur: #9a8673;
-  --scene-fur-dark: #6e5e4f;
-  --scene-belly: #ece1cc;
-  --scene-nose: #c98b86;
-  --scene-paw: #c9a99a;
-  /* Počasí ve scéně (#564): zatažená obloha při sněžení, sníh, jinovatka, šála plcha v mrazu */
-  --scene-sky-snow: #ddd5c8;
+  /* Počasí ve scéně (#564): sníh */
   --scene-snow: #ffffff;
-  --scene-snow-shade: #e5e7eb;
-  --scene-rime: #dfe9ee;
-  --scene-scarf: #b23a2e;
-  --scene-scarf-dark: #7f2a22;
 
   /* ── Fotka krajiny — jen přihlášení (.photo-backdrop), ne po přihlášení (C5a) ── */
   --bg-image: url("/bg-hero.jpg");
