@@ -137,6 +137,8 @@
   --shadow-lg: 0 8px 24px rgba(26, 39, 33, 0.1);
   --shadow-hover: 0 10px 20px rgba(26, 39, 33, 0.12);
   --shadow-xl: 0 16px 40px rgba(26, 39, 33, 0.14);
+  /* lišta přichycená ke spodku obrazovky vrhá stín nahoru */
+  --shadow-up: 0 -4px 20px rgba(26, 39, 33, 0.06);
 
   /* ── Spacing ────────────────────────────────────────────────────────── */
   --space-xs: 4px;
