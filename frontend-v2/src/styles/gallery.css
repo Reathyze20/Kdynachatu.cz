@@ -559,7 +559,8 @@ button.folder-context-item.folder-context-item--danger:hover {
   pointer-events: none;
 }
 
-.photo-masonry-item:hover .photo-masonry-desc {
+.photo-masonry-item:hover .photo-masonry-desc,
+.photo-masonry-item:focus-visible .photo-masonry-desc {
   opacity: 1;
 }
 

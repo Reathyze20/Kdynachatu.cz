@@ -5,7 +5,7 @@
  */
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Plus, FolderOpen, MoreVertical, Pencil, Trash2, Image } from 'lucide-react'
+import { Search, Plus, FolderOpen, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import type { GalleryFolder } from '@/api/gallery'
 import { formatCount, formatDate } from '@/lib/format'
 
@@ -105,10 +105,6 @@ export function FolderGrid({
     <>
       {/* Header */}
       <div className="gallery-header">
-        <h2 className="gallery-title">
-          <Image size={22} style={{ color: 'var(--brand-primary)' }} />
-          Galerie
-        </h2>
         <div className="gallery-toolbar">
           <div className="gallery-search-wrapper">
             <Search size={16} className="gallery-search-icon" />
@@ -256,7 +252,6 @@ export function FolderGridSkeleton() {
   return (
     <>
       <div className="gallery-header">
-        <div className="skeleton" style={{ width: 120, height: 28, borderRadius: 8 }} />
         <div style={{ display: 'flex', gap: 10 }}>
           <div className="skeleton" style={{ width: 180, height: 36, borderRadius: 20 }} />
           <div className="skeleton" style={{ width: 100, height: 36, borderRadius: 20 }} />
