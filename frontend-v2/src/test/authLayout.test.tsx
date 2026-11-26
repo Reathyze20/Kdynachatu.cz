@@ -6,6 +6,7 @@ import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router-d
 import type { ReactNode } from 'react'
 import { apiClient } from '@/api/client'
 import { AuthPage } from '@/features/auth/AuthPage'
+import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '@/features/auth/VerifyEmailPage'
 import { NotFoundPage } from '@/features/not-found/NotFoundPage'
 
@@ -84,11 +85,39 @@ describe('jeden rám veřejných obrazovek (#525)', () => {
 describe('samostatné veřejné obrazovky ve stejném rámu (#525)', () => {
   it.each<[string, string, ReactNode, string]>([
     ['ověření e-mailu bez odkazu', '/verify', <VerifyEmailPage />, 'Chybí ověřovací odkaz'],
+    ['reset hesla bez odkazu', '/reset-password', <ResetPasswordPage />, 'Chybí resetovací odkaz'],
     ['404', '/neexistuje', <NotFoundPage />, 'Stránka nenalezena'],
   ])('%s: jedno h1 s názvem appky v rámu s fotkou, stav jako h2', (_name, url, page, title) => {
     render(<MemoryRouter initialEntries={[url]}>{page}</MemoryRouter>)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Kdy na chatu' }).closest('.photo-backdrop')).not.toBeNull()
     expect(screen.getByRole('heading', { level: 2, name: title })).toBeInTheDocument()
+  })
+})
+
+describe('reset hesla v rámu (#525)', () => {
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('formulář nového hesla je v rámu s fotkou pod jediným h1, nadpis formuláře je h2', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({ data: {} } as Awaited<ReturnType<typeof apiClient.get>>)
+    render(<MemoryRouter initialEntries={['/reset-password?token=platny-token-123456789']}><ResetPasswordPage /></MemoryRouter>)
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Nastavení nového hesla' })).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(screen.getByTestId('reset-password-form').closest('.photo-backdrop')).not.toBeNull()
+  })
+
+  it('po uložení hesla ukáže výsledek jako h2 a tlačítko na přihlášení', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({ data: {} } as Awaited<ReturnType<typeof apiClient.get>>)
+    vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { message: 'Heslo bylo změněno.' } } as Awaited<ReturnType<typeof apiClient.post>>)
+    render(<MemoryRouter initialEntries={['/reset-password?token=platny-token-123456789']}><ResetPasswordPage /></MemoryRouter>)
+
+    await userEvent.type(await screen.findByLabelText('Nové heslo'), 'Heslo-123456')
+    await userEvent.type(screen.getByLabelText('Potvrzení nového hesla'), 'Heslo-123456')
+    await userEvent.click(screen.getByRole('button', { name: 'Uložit nové heslo' }))
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Heslo změněno' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Přihlásit se' })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: 'Přihlásit se' }).closest('.photo-backdrop')).not.toBeNull()
   })
 })
