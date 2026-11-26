@@ -34,7 +34,7 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
     ...(isSuperAdmin ? [{ to: '/superadmin', label: 'Backoffice', icon: Shield, testId: 'superadmin' }] : []),
     ...(isAdmin
       ? [
-          { to: ADMIN_NAV.to, label: ADMIN_NAV.label, icon: ADMIN_NAV.icon, testId: 'admin' },
+          { ...ADMIN_NAV, testId: 'admin' },
           { to: '/admin/invites', label: 'Pozvat člena', icon: UserPlus, testId: 'invites' },
           { to: '/admin/diagnostics', label: 'Diagnostika', icon: ScrollText, testId: 'diagnostics' },
         ]
