@@ -40,8 +40,7 @@
   },
   "coldPalette": {
     "Rezervace mají vlastní studený jazyk slate/bg-white, převod obrazovky #460–#462": [
-      "features/reservations/ReservationsPage.tsx", "features/reservations/ui/BookingForm.tsx",
-      "features/reservations/ui/ReservationDetail.tsx", "features/reservations/ui/ReservationList.tsx"
+      "features/reservations/ui/BookingForm.tsx", "features/reservations/ui/ReservationDetail.tsx"
     ],
     "Studené slate/bg-white z doby před Jedlí, převede se s komponentou": [
       "components/shared/MunicipalityPicker.tsx", "components/shared/RouteTransitionSkeleton.tsx",
@@ -66,7 +65,6 @@
       "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx", "features/not-found/NotFoundPage.tsx",
       "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx", "features/notes/ThreadList.tsx",
-      "features/reservations/calendar/CalendarGrid.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",
       "features/shopping/EditInventoryModal.tsx", "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx"
@@ -115,8 +113,7 @@
       "components/shared/Toast.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
       "features/notes/MessageBubble.tsx",
-      "features/reservations/ui/BookingForm.tsx",
-      "features/reservations/ui/ReservationList.tsx", "features/weather/StayWeatherCard.tsx"
+      "features/reservations/ui/BookingForm.tsx", "features/weather/StayWeatherCard.tsx"
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
       "features/auth/ResetPasswordPage.tsx", "features/auth/VerifyEmailPage.tsx",

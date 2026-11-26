@@ -1,15 +1,16 @@
 /**
- * ReservationsPage.tsx — Refactored: CSS Modules + Skeletons + Empty States + Ethical Friction
+ * ReservationsPage.tsx — stránka rezervací podle DESIGN.md (#460)
  *
+ * Hlavička: PageHeader „Rezervace“ s primární akcí „Nová rezervace“ (jediné h1).
  * Layout (TwoColumnLayout, #209):
- *   Main  — CalendarGrid + QuickStats + „Nová rezervace"
+ *   Main  — CalendarGrid + QuickStats
  *   Aside — ReservationList | ReservationDetail (landmark „Rezervace")
  */
 import { useState, useEffect, useRef } from "react";
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery';
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Umbrella, Home } from "lucide-react";
+import { Umbrella, Home, Plus } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useReservationsData, fetchMissingSummary, useDeleteReservation } from "./hooks/useReservations";
 import { useCalendar } from "./hooks/useCalendar";
@@ -26,6 +27,9 @@ import { showToast } from "@/lib/toast";
 import { useAuth } from "@/context/AuthContext";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { Modal } from "@/components/shared/Modal";
+import { Card } from "@/components/shared/Card";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import styles from "./Reservations.module.css";
 import { isIsoDateInRange, nightsBetween, nightsLabel } from "@/lib/dateUtils";
@@ -58,11 +62,15 @@ function filterFuture(reservations: Reservation[]) {
   });
 }
 
+/** Volba v dialogu „Vybraný termín“: velká dlaždice s ikonou a dvěma řádky textu. */
+const CHOICE_CLASS = "h-auto w-full justify-start gap-3 whitespace-normal rounded-xl p-4 text-left";
+const CHOICE_ICON_CLASS = "flex size-10 shrink-0 items-center justify-center rounded-full";
+
 export function ReservationsPage() {
   useDocumentTitle('Rezervace');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, isAdmin } = useAuth();
   const cal = useCalendar();
 
   const { data, isLoading, isError, error, refetch } = useReservationsData();
@@ -191,13 +199,16 @@ export function ReservationsPage() {
     setBookingOpen(true);
   };
 
-  // Delete reservation (called from detail — ethical friction is handled there)
+  // Upravit a smazat smí autor pobytu nebo admin, stejně jako v detailu.
+  const canManage = (r: Reservation) => r.userId === user?.userId || isAdmin;
+
+  // Delete reservation (called from detail or the list row menu, both confirm first)
   const handleDelete = async (id: string) => {
     await del.mutateAsync(id);
     setSelectedReservation(null);
   };
 
-  // New booking form: empty from the calendar header, from a free day picked in the calendar (#506)
+  // New booking form: empty from the page header, from a free day picked in the calendar (#506)
   const openNewBooking = (from = "") => {
     setEditingReservation(null);
     setBookingFrom(from);
@@ -205,10 +216,19 @@ export function ReservationsPage() {
     setBookingOpen(true);
   };
 
+  // Hlavička je ve všech stavech, ať má stránka vždy jediné h1 (DESIGN.md §7).
+  const header = (
+    <Card className="shrink-0">
+      <PageHeader title="Rezervace" primaryAction={{ label: "Nová rezervace", icon: Plus, onClick: () => openNewBooking() }} />
+    </Card>
+  );
+  const pageClass = `${styles.page} gap-4 md:gap-6`;
+
   // ── Skeleton while loading ────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className={styles.page} data-testid="reservations-page" data-reservations-state="loading">
+      <div className={pageClass} data-testid="reservations-page" data-reservations-state="loading">
+        {header}
         <ReservationsSkeleton />
       </div>
     );
@@ -216,7 +236,8 @@ export function ReservationsPage() {
 
   if (isError) {
     return (
-      <div className={styles.page} data-testid="reservations-page" data-reservations-state="error">
+      <div className={pageClass} data-testid="reservations-page" data-reservations-state="error">
+        {header}
         <FeatureErrorFallback
           error={error as Error}
           resetErrorBoundary={() => {
@@ -241,7 +262,8 @@ export function ReservationsPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className={styles.page} data-testid="reservations-page" data-reservations-state="ready">
+    <div className={pageClass} data-testid="reservations-page" data-reservations-state="ready">
+      {header}
       <TwoColumnLayout
         asideLabel="Rezervace"
         aside={
@@ -267,6 +289,9 @@ export function ReservationsPage() {
                   onClearDayFilter={() => setSelectedDay(null)}
                   onBookFromDay={openNewBooking}
                   hideMonthlyNote={isGuest}
+                  canManage={canManage}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
                 />
               )}
             </div>
@@ -296,7 +321,6 @@ export function ReservationsPage() {
             onShowDetail={showDetail}
             onDaySelect={handleDaySelect}
             onDayClear={() => setSelectedDay(null)}
-            onNewReservation={() => openNewBooking()}
             quickStatsNode={
               <QuickStats
                 reservations={allReservations}
@@ -338,34 +362,24 @@ export function ReservationsPage() {
               {formatDateRange(choiceFrom, choiceTo)} · {choiceNights} {nightsLabel(choiceNights)}
             </p>
           )}
-          <p className="text-slate-600 text-sm">
+          <p className="text-body text-(--text-muted)">
             Co chceš v tomto termínu naplánovat?
           </p>
           <div className="grid grid-cols-1 gap-3">
-            <button
-              onClick={handleCreateReservation}
-              className="flex items-center gap-3 p-4 rounded-xl border border-primary/40 bg-accent hover:border-primary transition-colors text-left"
-            >
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                <Home size={20} />
-              </div>
-              <div>
-                <div className="font-semibold text-foreground">Rezervovat chatu</div>
-                <div className="text-xs text-muted-foreground">Vytvořit pevnou rezervaci pro pobyt</div>
-              </div>
-            </button>
-            <button
-              onClick={handleCreateAvailability}
-              className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
-            >
-              <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-700">
-                <Umbrella size={20} />
-              </div>
-              <div>
-                <div className="font-semibold text-slate-800">Označit jako mou dovolenou</div>
-                <div className="text-xs text-slate-500">Dát ostatním vědět, že mám volno</div>
-              </div>
-            </button>
+            <Button variant="secondary" onClick={handleCreateReservation} className={`${CHOICE_CLASS} border-primary/40 bg-accent hover:bg-accent hover:border-primary`}>
+              <span className={`${CHOICE_ICON_CLASS} bg-sheet text-primary`}><Home aria-hidden="true" /></span>
+              <span>
+                <span className="block text-body font-semibold">Rezervovat chatu</span>
+                <span className="block text-label text-(--text-muted)">Vytvořit pevnou rezervaci pro pobyt</span>
+              </span>
+            </Button>
+            <Button variant="secondary" onClick={handleCreateAvailability} className={CHOICE_CLASS}>
+              <span className={`${CHOICE_ICON_CLASS} bg-inset text-(--text-muted)`}><Umbrella aria-hidden="true" /></span>
+              <span>
+                <span className="block text-body font-semibold">Označit jako mou dovolenou</span>
+                <span className="block text-label text-(--text-muted)">Dát ostatním vědět, že mám volno</span>
+              </span>
+            </Button>
           </div>
         </div>
       </Modal>
