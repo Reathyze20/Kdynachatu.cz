@@ -3,9 +3,11 @@ import { useState } from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '@/api/client'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
+import { PrivacyPage } from '@/features/legal/PrivacyPage'
 
 const TREBENICE: MunicipalityOption[] = [
   { code: 565768, name: 'Třebenice', district: 'Litoměřice', region: 'Ústecký kraj' },
@@ -141,9 +143,10 @@ describe('MunicipalityPicker', () => {
     expect(await screen.findByText(/Žádná obec/)).toBeInTheDocument()
   })
 
+  // Uvedení zdroje se přesunulo z nápovědy pole do Ochrany soukromí (#523, rozhodnutí uživatele).
   it('credits ČÚZK as the source of the list', () => {
-    renderPicker()
-    expect(screen.getByText(/ČÚZK/)).toBeInTheDocument()
+    render(<MemoryRouter><PrivacyPage /></MemoryRouter>)
+    expect(screen.getByText(/ČÚZK \(RÚIAN\), CC BY 4\.0/)).toBeInTheDocument()
   })
 
   it('keeps the listbox closed until results arrive', async () => {
