@@ -183,7 +183,7 @@ export function SuperAdminPage() {
     { value: 'active', label: 'Aktivní', count: activeCount },
     { value: 'pending', label: 'Čekají', count: pendingCount },
     { value: 'banned', label: 'Zablokovaní', count: bannedCount },
-    { value: 'superadmin', label: 'Super Admini', count: superAdminCount },
+    { value: 'superadmin', label: 'Superadmini', count: superAdminCount },
   ]
 
   const overviewStats = [
@@ -196,7 +196,7 @@ export function SuperAdminPage() {
         : 'Žádný účet momentálně nečeká na ověření.',
     },
     { label: 'Zablokované účty', value: bannedCount, meta: 'Okamžitý přehled účtů, které mají zablokovaný přístup.' },
-    { label: 'Super Admini', value: superAdminCount, meta: 'Počet globálních správců s přístupem do backoffice.' },
+    { label: 'Superadmini', value: superAdminCount, meta: 'Počet globálních správců s přístupem do backoffice.' },
   ]
 
   function scrollToSection(sectionId: string) {
@@ -297,7 +297,7 @@ export function SuperAdminPage() {
     return (
       <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="denied">
         <Card>
-          <PageHeader title="Přístup odepřen" subtitle="Tato sekce je vyhrazená pouze pro Super Adminy." />
+          <PageHeader title="Přístup odepřen" subtitle="Tato sekce je vyhrazená pouze pro superadminy." />
         </Card>
       </div>
     )
@@ -409,7 +409,7 @@ export function SuperAdminPage() {
                             isSelf
                               ? 'Nelze měnit stav vlastního účtu.'
                               : user.isSuperAdmin
-                                ? 'Nelze blokovat jiného Super Admina.'
+                                ? 'Nelze blokovat jiného superadmina.'
                                 : undefined
                           }
                           data-testid="superadmin-toggle-ban-button"
@@ -426,7 +426,7 @@ export function SuperAdminPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-semibold wrap-anywhere">{user.username}</span>
                             {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
-                            {user.isSuperAdmin ? <span className="admin-role-badge admin-role-badge--superadmin">Super Admin</span> : null}
+                            {user.isSuperAdmin ? <span className="admin-role-badge admin-role-badge--superadmin">Superadmin</span> : null}
                             <span className={`admin-role-badge admin-role-badge--${user.role === 'admin' ? 'admin' : user.role === 'guest' ? 'guest' : 'member'}`}>
                               {getRoleLabel(user.role)}
                             </span>
