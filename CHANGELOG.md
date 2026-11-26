@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.15.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.14.0...v1.15.0) (2026-11-26)
+
+
+### Features
+
+* **dashboard:** cabin scene on PixelLab pixel art, flapping bird ([#605](https://github.com/Reathyze20/Kdynachatu.cz/issues/605)) ([6f23ee2](https://github.com/Reathyze20/Kdynachatu.cz/commit/6f23ee208e21617fe4123d2b3deb97dc64c35aa3))
+* **dashboard:** rain, drizzle, storm and overcast sky in the cabin scene ([#611](https://github.com/Reathyze20/Kdynachatu.cz/issues/611)) ([70c096b](https://github.com/Reathyze20/Kdynachatu.cz/commit/70c096bd97d4a98c52baae51b10e90d208cf712c))
+* **dashboard:** the dormouse lives under the cabin roof ([#607](https://github.com/Reathyze20/Kdynachatu.cz/issues/607)) ([697eb28](https://github.com/Reathyze20/Kdynachatu.cz/commit/697eb288852adaa60c3215a4e1018eb46b8b5445))
+* **dashboard:** wind, fog and dusk/dawn in the cabin scene ([#612](https://github.com/Reathyze20/Kdynachatu.cz/issues/612)) ([865706f](https://github.com/Reathyze20/Kdynachatu.cz/commit/865706f2425950e39754c6be86175b4ce2cb4452))
+
 ## [1.14.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.13.0...v1.14.0) (2026-11-25)
 
 
