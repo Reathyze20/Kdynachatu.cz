@@ -89,22 +89,6 @@
   flex-wrap: wrap;
 }
 
-/* „Nová rezervace" v hlavičce kalendáře (barvy z .btn-primary); na mobilu jen ikona,
-   text zůstává pro čtečku. */
-button.newReservationButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 var(--space-lg);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 /* Stav výběru v hlavičce — nahrazuje statistiky, dokud je aktivní výběr.
    Zpětná vazba tak zůstává u prstu (v mřížce), ne až pod kalendářem. */
 .selectionChip {
@@ -1002,50 +986,16 @@ button.btnReset {
   color: var(--text-muted);
 }
 
-/* ── Card List ─────────────────────────────────────────────────────── */
-
-.cardList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 /* ── Reservation Card ──────────────────────────────────────────────── */
-/* Karta turnusu v bočním panelu (#209): avatar, účel + typ, termín, kdo.
-   Je to <button>, takže se otevře i klávesnicí. Barvy a písmo jen z tokenů. */
-
-.card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  min-height: var(--touch-target-min);
-  padding: 16px 18px;
-  border: 1px solid rgb(var(--rule-soft));
-  border-radius: 16px;
-  background: rgb(var(--sheet));
-  color: var(--text-main);
-  font: inherit;
-  text-align: left;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
-  cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08), 0 2px 4px rgb(0 0 0 / 0.04);
-}
-
-/* Proběhlý pobyt: ztlumí se avatar a stín, text si drží kontrast ≥ 4,5 : 1. */
-.cardPast {
-  box-shadow: none;
-}
+/* Obsah řádku turnusu v bočním panelu (#209): avatar, účel + typ, termín, kdo.
+   Řádek sám je ListRow; barvy a písmo jen z tokenů. */
 
 .cardAvatar {
   display: flex;
   flex-shrink: 0;
 }
 
+/* Proběhlý pobyt: ztlumí se avatar, text si drží kontrast ≥ 4,5 : 1. */
 .cardPast .cardAvatar {
   opacity: 0.5;
   filter: grayscale(1);
@@ -1090,13 +1040,8 @@ button.btnReset {
   text-overflow: ellipsis;
 }
 
-/* Širší boční panel na desktopu (#209): větší karta a titulek. */
+/* Širší boční panel na desktopu (#209): větší titulek. */
 @media (min-width: 1024px) {
-  .card {
-    gap: 18px;
-    padding: 18px 20px;
-  }
-
   .cardTitle {
     font-size: var(--font-size-lg);
   }
@@ -1133,48 +1078,6 @@ button.btnReset {
   border: 1px solid transparent;
   background-color: var(--low-bg);
   color: rgb(var(--low));
-}
-
-/* ── Empty State ───────────────────────────────────────────────────── */
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0;
-  padding: 4px 0 8px;
-}
-
-.emptyIllustration {
-  width: 100%;
-  max-height: 200px;
-  object-fit: contain;
-  border-radius: 18px;
-  filter: drop-shadow(0 4px 16px rgba(30, 58, 40, 0.13));
-}
-
-.emptyTextBlock {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 12px 4px;
-}
-
-.emptyTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1e3a28;
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.emptyText {
-  font-size: 0.8rem;
-  color: #6b8f78;
-  margin: 0;
-  line-height: 1.5;
 }
 
 /* ── Monthly Note Section ──────────────────────────────────────────── */
@@ -1764,58 +1667,6 @@ button.btnReset {
   background: var(--brand-primary-light);
   color: var(--brand-primary);
   border-color: var(--brand-primary);
-}
-
-/* ── Empty State ───────────────────────────────────────────────────── */
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  height: 100%;
-  text-align: center;
-  gap: var(--space-md);
-  padding: var(--space-2xl) var(--space-lg);
-}
-
-.emptyIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.35;
-  color: var(--brand-primary);
-}
-
-.emptyTitle {
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.emptySub {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.emptyAction {
-  margin-top: var(--space-sm);
-  padding: var(--space-sm) var(--space-xl);
-  background: var(--brand-primary);
-  color: var(--text-on-primary);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-
-.emptyAction:hover {
-  background: var(--brand-primary-hover);
 }
 
 /* ── Skeleton Screens ──────────────────────────────────────────────── */

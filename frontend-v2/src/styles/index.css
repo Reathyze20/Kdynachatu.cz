@@ -22,9 +22,6 @@
 @import './dialogs.css';
 @import './skeleton.css';
 
-/* Calendar (flatpickr overrides) */
-@import './calendar.css';
-
 /* Page-specific styles */
 @import './dashboard.css';
 @import './reservations.css';

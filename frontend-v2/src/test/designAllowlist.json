@@ -2,7 +2,7 @@
   "rawColour": {
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
-      "styles/cabin-settings.css", "styles/calendar.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
+      "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/toast.css"
@@ -25,7 +25,7 @@
   "legacyColorAlias": {
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
-      "styles/cabin-settings.css", "styles/calendar.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
+      "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reservations.css",
       "styles/shopping.css", "styles/skeleton.css", "styles/status-header.css"
@@ -49,7 +49,7 @@
   "breakpoint": {
     "Legacy media query (páry 768/769 px a další šířky), sjednotí se při převodu obrazovky": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/cabin-settings.css",
-      "styles/calendar.css", "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
+      "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
       "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/onboarding.css", "styles/reconstruction.css",
       "styles/reservations.css", "styles/shopping.css", "styles/status-header.css", "styles/toast.css"
@@ -89,7 +89,7 @@
   "newCssFile": {
     "Stávající legacy CSS, zmizí, až se jeho obrazovky převedou na utility (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
-      "styles/cabin-settings.css", "styles/calendar.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
+      "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/onboarding.css", "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",

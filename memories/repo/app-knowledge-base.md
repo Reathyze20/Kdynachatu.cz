@@ -432,7 +432,7 @@ Legacy frontend (`src/frontend/`) obsahuje:
 | [invite/](frontend-v2/src/features/invite/) | 1 (InvitePage) | 0 | invites API | invite.css | ✅ Complete |
 | [onboarding/](frontend-v2/src/features/onboarding/) | 1 (OnboardingPage) | 0 | cabin API | onboarding.css | ✅ Complete |
 | [dashboard/](frontend-v2/src/features/dashboard/) | 7 (DashboardPage, ActiveReservation, DepartureBanner, EssentialWarning, HandoverNote, ShoppingWidget, WeatherCard) | 0 (inline queries) | dashboard.ts (3 queries + weather) | dashboard.css | ✅ Complete |
-| [reservations/](frontend-v2/src/features/reservations/) | 12 (ReservationsPage + calendar/2 + ui/8 + hooks/2) | 2 (useCalendar, useReservations) | reservations.ts | reservations.css, calendar.css, Reservations.module.css | ✅ Complete |
+| [reservations/](frontend-v2/src/features/reservations/) | 12 (ReservationsPage + calendar/2 + ui/8 + hooks/2) | 2 (useCalendar, useReservations) | reservations.ts | reservations.css, Reservations.module.css | ✅ Complete |
 | [notes/](frontend-v2/src/features/notes/) | 10 (NotesPage, ChatView, MessageBubble, MessageInput, MessageContextMenu, ReactionBar, ThreadList, AddToShoppingDialog, CreateRepairDialog) | 2 (useNotes, useThreads) | notes.ts | notes.css | ✅ Complete |
 | [shopping/](frontend-v2/src/features/shopping/) | 13 (ShoppingPage, ListMaster, ListDetail, ItemRow, ViewSwitcher, PantryView, InventoryRow, EditInventoryModal, AddToCartModal, BulkAddToCartModal, ShareListDialog) | 2 (useShoppingLists, useInventory) | shopping.ts | shopping.css | ✅ Complete |
 | [gallery/](frontend-v2/src/features/gallery/) | 6 (GalleryPage, FolderGrid, PhotoGrid, Lightbox, UploadModal) | 1 (useGallery) | gallery.ts | gallery.css, lightbox.css | ✅ Complete |
