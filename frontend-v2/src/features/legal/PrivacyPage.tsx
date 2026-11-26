@@ -170,7 +170,7 @@ export function PrivacyPage() {
           </ul>
         </section>
 
-        <section id="zdroje-dat">
+        <section>
           <h2>Odkud bereme veřejná data</h2>
           <p>Seznam obcí pro výběr nejbližší obce chaty: ČÚZK (RÚIAN), CC BY 4.0.</p>
         </section>
