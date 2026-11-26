@@ -141,11 +141,6 @@ describe('MunicipalityPicker', () => {
     expect(await screen.findByText(/Žádná obec/)).toBeInTheDocument()
   })
 
-  it('credits ČÚZK as the source of the list', () => {
-    renderPicker()
-    expect(screen.getByText(/ČÚZK/)).toBeInTheDocument()
-  })
-
   it('keeps the listbox closed until results arrive', async () => {
     mockSearch(TREBENICE)
     renderPicker()

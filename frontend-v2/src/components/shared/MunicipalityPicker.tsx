@@ -138,7 +138,7 @@ export function MunicipalityPicker({ id, value, onChange, onPendingChange, place
         {showEmpty ? 'Žádná obec tomu neodpovídá. Zkus jiný začátek názvu.' : ''}
       </p>
       <span id={hintId} className="mt-1 block text-xs text-slate-600">
-        Vyber obec ze seznamu, za názvem můžeš napsat i okres. Seznam obcí: ČÚZK (RÚIAN), CC BY 4.0.
+        Vyber obec ze seznamu, za názvem můžeš napsat i okres.
       </span>
     </div>
   )
