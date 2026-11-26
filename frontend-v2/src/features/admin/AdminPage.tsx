@@ -35,7 +35,7 @@ import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import { ChevronDown, Mail, Pencil, ScrollText, Search, SearchX, SlidersHorizontal, Ticket, TicketPlus, UserPlus, Users } from 'lucide-react'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
-import { ADMIN_LAYOUT_GRID_CLASS, ADMIN_PANEL_STACK_CLASS, ADMIN_SIDEBAR_STACK_CLASS } from '@/features/admin/components/adminLayout'
+import { ADMIN_COLUMN_STACK_CLASS, ADMIN_LAYOUT_GRID_CLASS } from '@/features/admin/components/adminLayout'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 import { StagingFeedbackSection } from '@/features/admin/components/StagingFeedbackSection'
@@ -1146,7 +1146,7 @@ export function AdminPage() {
             )}
           </Card>
 
-          <aside className={ADMIN_SIDEBAR_STACK_CLASS}>
+          <aside className={ADMIN_COLUMN_STACK_CLASS}>
             <Card as="section" className="space-y-4" id="admin-create-user" data-testid="admin-create-user-section">
               <AdminCardHeading
                 eyebrow="Nový přístup"
@@ -1156,7 +1156,7 @@ export function AdminPage() {
 
               <form
                 id="add-user-form"
-                className="admin-compact-form admin-user-create-form"
+                className="admin-compact-form"
                 onSubmit={handleCreateUser}
                 onChange={() => {
                   if (createUserError) setCreateUserError(null)
@@ -1206,7 +1206,7 @@ export function AdminPage() {
 
       {activeWorkspace === 'invites' ? (
         <div className={ADMIN_LAYOUT_GRID_CLASS}>
-          <div className={ADMIN_PANEL_STACK_CLASS}>
+          <div className={ADMIN_COLUMN_STACK_CLASS}>
             <InvitesSection
               invites={invites}
               isLoading={invitesLoading}
@@ -1218,7 +1218,7 @@ export function AdminPage() {
             />
           </div>
 
-          <aside className={ADMIN_SIDEBAR_STACK_CLASS}>
+          <aside className={ADMIN_COLUMN_STACK_CLASS}>
             <Card as="section" className="space-y-4" data-testid="admin-invite-guidance-section">
               <AdminCardHeading
                 eyebrow="Rychlé rozhodnutí"
