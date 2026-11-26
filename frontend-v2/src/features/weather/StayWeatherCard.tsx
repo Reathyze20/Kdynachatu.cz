@@ -9,8 +9,8 @@ import {
 import type { StayForecastDay } from "@/api/stayWeather";
 import { useAuth } from "@/context/AuthContext";
 import { useCabinSettings } from "@/features/settings/hooks/useCabinSettings";
-import { formatShortDayDate, isoDateToLocalNoon } from "@/lib/dateUtils";
-import { DAY_NAMES_FULL } from "@/lib/utils";
+import { capitalize, formatShortDayDate } from "@/lib/dateUtils";
+import { formatShortDate, weekdayName } from "@/lib/format";
 import { useStayForecast } from "./hooks/useStayForecast";
 import { StayHourlyChart } from "./StayHourlyChart";
 
@@ -20,8 +20,7 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const deg = (t: number) => `${Math.round(t) < 0 ? "−" : ""}${Math.abs(Math.round(t))}`;
-const fullDayName = (iso: string) => DAY_NAMES_FULL[(isoDateToLocalNoon(iso).getDay() + 6) % 7];
-const dayMonth = (iso: string) => `${Number(iso.slice(8, 10))}. ${Number(iso.slice(5, 7))}.`;
+const fullDayName = (iso: string) => capitalize(weekdayName(iso, "long"));
 const uvLabel = (uv: number) => (uv < 3 ? "nízký" : uv < 6 ? "střední" : uv < 8 ? "vysoký" : "velmi vysoký");
 /** Délka dne z východu a západu „HH:MM“, např. „8 h 39 min“. */
 function dayLength(sunrise: string | null, sunset: string | null): string | null {
@@ -33,7 +32,7 @@ function dayLength(sunrise: string | null, sunset: string | null): string | null
 
 function DayCell({ day, selected, onSelect }: { day: StayForecastDay; selected: boolean; onSelect: () => void }) {
   const Icon = ICONS[day.icon] ?? Cloud;
-  const label = `${fullDayName(day.date)} ${dayMonth(day.date)}: ${day.description}, ${deg(day.tempMax)} až ${deg(day.tempMin)} °C, srážky ${day.precipProbability} %${day.tentative ? ", orientační" : ""}`;
+  const label = `${fullDayName(day.date)} ${formatShortDate(day.date)}: ${day.description}, ${deg(day.tempMax)} až ${deg(day.tempMin)} °C, srážky ${day.precipProbability} %${day.tentative ? ", orientační" : ""}`;
   return (
     <li><button
       type="button" aria-pressed={selected} onClick={onSelect}
@@ -58,7 +57,7 @@ function Alert({ icon: Icon, day, text }: { icon: LucideIcon; day: StayForecastD
   return (
     <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-base text-amber-900">
       <Icon aria-hidden="true" className="mt-0.5 w-5 h-5 shrink-0" />
-      <span><b>{day.dayName} {dayMonth(day.date)}:</b> {text}</span>
+      <span><b>{day.dayName} {formatShortDate(day.date)}:</b> {text}</span>
     </p>
   );
 }

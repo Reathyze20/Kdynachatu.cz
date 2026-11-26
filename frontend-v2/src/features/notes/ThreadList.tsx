@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import type { NoteThread } from "@/api/notes";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
-import { formatShortDate, formatTime } from "@/lib/format";
+import { formatDate, formatShortDate, formatTime } from "@/lib/format";
 
 interface UserMap {
   [username: string]: { color?: string; animalIcon?: string | null };
@@ -40,10 +40,9 @@ function stripMarkdown(text: string): string {
     .trim()
 }
 
+/** Dnes „9:40“, jindy „21. 3.“; den v pražském čase jako formátování. */
 function formatThreadTime(isoStr: string): string {
-  const d = new Date(isoStr);
-  const today = new Date();
-  return d.toDateString() === today.toDateString() ? formatTime(d) : formatShortDate(d);
+  return formatDate(isoStr) === formatDate(Date.now()) ? formatTime(isoStr) : formatShortDate(isoStr);
 }
 
 export function ThreadList({

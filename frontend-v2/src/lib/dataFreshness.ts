@@ -8,7 +8,7 @@
  * Event na window: 'data-freshness:changed'
  */
 
-import { formatShortDate, formatTime } from './format'
+import { formatDate, formatShortDate, formatTime } from './format'
 
 /** Data starší než hodina mají upozornění i online. */
 export const STALE_AFTER_MS = 60 * 60 * 1000
@@ -33,5 +33,5 @@ export function subscribeDataFreshness(callback: () => void): () => void {
 /** „9:40“ pro dnešek, „21. 11. 18:05“ pro jiný den. */
 export function formatDataTime(at: number, now: number): string {
   const time = formatTime(at)
-  return new Date(at).toDateString() === new Date(now).toDateString() ? time : `${formatShortDate(at)} ${time}`
+  return formatDate(at) === formatDate(now) ? time : `${formatShortDate(at)} ${time}`
 }

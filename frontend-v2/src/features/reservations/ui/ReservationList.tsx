@@ -415,7 +415,7 @@ function ReservationCard({
 }) {
   const isPast = new Date(r.to + "T00:00:00") < new Date();
   const nights = nightsBetween(r.from, r.to);
-  // Tvar „14. 6. – 19. 6.“ drží test reservationCards; formatDateRange by dal „14.–19. 6.“ (DESIGN.md §9, rozhodnutí v #456).
+  // Tvar „14. 6. – 19. 6.“ drží test reservationCards; formatDateRange by dal „14.–19. 6.“ (DESIGN.md §9); změnu tvaru i testu rozhodne člověk, viz PR k #456.
   const dateLabel = `${formatShortDate(r.from)} – ${formatShortDate(r.to)}`;
   const status = r.status ?? "primary";
 

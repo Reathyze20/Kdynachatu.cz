@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   formatAmount,
   formatCount,
@@ -42,6 +42,22 @@ describe('lib/format', () => {
     expect(formatDate(new Date(Date.UTC(2026, 11, 31, 23, 30)))).toBe('1. 1. 2027')
     expect(formatShortDate(Date.UTC(2026, 6, 14, 22, 30))).toBe('15. 7.') // léto +2 h
     expect(formatShortDate(Date.UTC(2026, 0, 14, 22, 30))).toBe('14. 1.') // zima +1 h
+  })
+
+  it('výsledek nezávisí na zóně zařízení (testy jinak běží v Europe/Prague, #456)', () => {
+    const midnightUtcHour = { UTC: 0, 'America/Los_Angeles': 16, 'Pacific/Kiritimati': 14 }
+    for (const [zone, hour] of Object.entries(midnightUtcHour)) {
+      vi.stubEnv('TZ', zone)
+      try {
+        expect(new Date(Date.UTC(2026, 0, 1)).getHours()).toBe(hour) // zóna zařízení se opravdu přepnula
+        expect(formatDate('2026-12-31T23:30:00.000Z')).toBe('1. 1. 2027')
+        expect(formatTime(Date.UTC(2026, 2, 21, 8, 40))).toBe('9:40')
+        expect(formatDate('2026-03-21')).toBe('21. 3. 2026')
+        expect(weekdayName('2026-03-23')).toBe('po')
+      } finally {
+        vi.unstubAllEnvs()
+      }
+    }
   })
 
   it('čas 24 h včetně půlnoci a přechodu na letní a zimní čas', () => {

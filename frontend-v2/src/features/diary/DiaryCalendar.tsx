@@ -3,14 +3,14 @@
  * Loop od startDate do endDate, každý den = .diary-day-card
  */
 import type { DiaryEntry, DiaryFolder } from '@/api/diary'
+import { capitalize, toIsoDate } from '@/lib/dateUtils'
+import { weekdayName } from '@/lib/format'
 
 interface Props {
   folder: DiaryFolder
   entries: DiaryEntry[]
   onOpenNotebook: (dateObj: Date, entry: DiaryEntry | undefined) => void
 }
-
-const WEEKDAY_SHORT = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So']
 
 export function DiaryCalendar({ folder, entries, onOpenNotebook }: Props) {
   // Generuj pole dnů od startDate do endDate
@@ -59,7 +59,7 @@ export function DiaryCalendar({ folder, entries, onOpenNotebook }: Props) {
               data-date={key}
             >
               <div className="day-header-row">
-                <span className="day-weekday">{WEEKDAY_SHORT[day.getDay()]}</span>
+                <span className="day-weekday">{capitalize(weekdayName(toIsoDate(day)))}</span>
               </div>
               <div className="day-number">{day.getDate()}</div>
               {preview && (

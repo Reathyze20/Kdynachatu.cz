@@ -14,10 +14,7 @@ export function cn(...inputs: ClassValue[]): string {
 
 const MONTH_NAMES = Array.from({ length: 12 }, (_, i) => monthName(i).replace(/^./, (c) => c.toUpperCase()))
 
-const DAY_NAMES = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']
-const DAY_NAMES_FULL = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
-
-export { MONTH_NAMES, DAY_NAMES, DAY_NAMES_FULL }
+export { MONTH_NAMES }
 
 /** Formats ISO date "YYYY-MM-DD" → "21. 3. 2026" (lib/format.ts, DESIGN.md §9) */
 export function formatDate(iso: string): string {
