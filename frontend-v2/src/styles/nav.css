@@ -29,35 +29,6 @@
   opacity: 1;
 }
 
-/* ── Auth Brand (Login/Register screens) ─────────────────────── */
-.auth-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.auth-logo-icon {
-  height: 48px;
-  width: auto;
-}
-
-.auth-brand-text {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-main, #1f2937);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.auth-subtitle {
-  text-align: center;
-  color: var(--color-text-light, #6b7280);
-  font-size: 0.95rem;
-  margin: 0 0 1.5rem 0;
-  font-weight: 500;
-}
-
 /* ── Shared icon button base ─────────────────────────────────── */
 .nav-icon-btn {
   display: flex;
