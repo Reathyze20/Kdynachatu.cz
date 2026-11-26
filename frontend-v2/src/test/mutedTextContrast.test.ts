@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 // `?raw` místo node:fs (není v typech tsconfig.app).
 import variablesCssRaw from '@/styles/variables.css?raw'
-import shadcnTokensCssRaw from '@/styles/shadcn-tokens.css?raw'
 import cabinSettingsCssRaw from '@/styles/cabin-settings.css?raw'
 import notesCssRaw from '@/styles/notes.css?raw'
 import reconstructionCssRaw from '@/styles/reconstruction.css?raw'
@@ -13,10 +12,6 @@ import reservationsModuleCssRaw from '@/features/reservations/Reservations.modul
  * Tlumený text jde přes sémantický token `--text-muted`, ne přes lokální hex nebo
  * poloprůhlednou černou. jsdom kaskádu nepočítá, proto se kontrast počítá z hodnot tokenů
  * vzorcem WCAG a u míst z ticketu se hlídá, že token berou.
- *
- * Tmavý režim: `.dark` zatím mění jen plochy redesignu (`--sheet`, `--page`); tlumený text na nich
- * je `--muted-foreground` mostu shadcn (kontrast hlídá lightSurfaces.test.tsx). Místa z ticketu
- * leží na světlých plochách, které `.dark` nemění, takže `--text-muted` se v `.dark` přepsat nesmí.
  */
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -43,8 +38,6 @@ function decl(bodies: string[], prop: string): string | undefined {
 type Rgb = [number, number, number]
 
 const ROOT = bodiesFor(variablesCssRaw, ':root')
-const DARK = bodiesFor(variablesCssRaw, '.dark')
-const BRIDGE_DARK = bodiesFor(shadcnTokensCssRaw, '.dark')
 
 /** Barvy `rgba(r, g, b, a)` z hodnoty (třeba z gradientu) složené na plochu `bg`. */
 const rgbaOver = (value: string | undefined, bg: Rgb): Rgb[] =>
@@ -96,16 +89,6 @@ describe('Token tlumeného textu --text-muted má kontrast ≥ 4,5 : 1 (#257)', 
 
   it('podklad hotového úkolu se z CSS opravdu načetl', () => {
     expect(lightSurfaces.filter(([name]) => name.startsWith('podklad hotového úkolu')).length).toBeGreaterThan(0)
-  })
-
-  it('tmavý režim: .dark nepřepisuje --text-muted ani světlé plochy míst z ticketu, kontrast zůstává jako ve světlém', () => {
-    for (const name of ['--text-muted', '--bg-card', '--bg-app', '--bg-hover']) {
-      expect(decl(DARK, name), name).toBeUndefined()
-    }
-  })
-
-  it('tmavý režim: plochy redesignu mají vlastní tlumený text (--muted-foreground mostu shadcn)', () => {
-    expect(contrast(token(BRIDGE_DARK, '--muted-foreground'), token(DARK, '--sheet'))).toBeGreaterThanOrEqual(4.5)
   })
 })
 

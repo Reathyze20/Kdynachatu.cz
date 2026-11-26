@@ -37,8 +37,7 @@ const VENDOR_GROUPS: ReadonlyArray<[chunk: string, matches: (pkg: string) => boo
       pkg === 'date-fns' ||
       pkg === 'clsx' ||
       pkg === 'class-variance-authority' ||
-      pkg === 'tailwind-merge' ||
-      pkg === 'next-themes',
+      pkg === 'tailwind-merge',
   ],
 ]
 

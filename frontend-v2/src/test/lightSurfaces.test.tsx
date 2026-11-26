@@ -87,14 +87,12 @@ describe('Design tokeny povrchů z mocku (C1)', () => {
     '--rule': '230 221 207', '--rule-soft': '230 221 207', '--under-top': '230 218 198', '--under-bottom': '220 205 181',
   }
 
-  it.each(Object.entries(LIGHT))('světlý režim: %s = %s, tmavý (.dark) ho definuje taky', (token, value) => {
+  it.each(Object.entries(LIGHT))('světlý režim: %s = %s', (token, value) => {
     expect(lastDecl(tokensIn(':root'), token)).toBe(value)
-    expect(lastDecl(tokensIn('.dark'), token)).toBeTruthy()
   })
 
-  it('výraznější stín --lift podle pickeru 08 (plný papír), tmavý ho definuje taky', () => {
+  it('výraznější stín --lift podle pickeru 08 (plný papír)', () => {
     expect(lastDecl(tokensIn(':root'), '--lift')).toBe('0 1px 2px rgb(0 0 0 / .06), 0 14px 32px -16px rgb(30 20 10 / .45)')
-    expect(lastDecl(tokensIn('.dark'), '--lift')).toBeTruthy()
   })
 
   it('podklad pod kartami je varianta D: gradient --under-top → --under-bottom se září --glow vpravo nahoře', () => {
@@ -119,41 +117,24 @@ function rgbOf(rules: Rule[], name: string): number[] {
 
 describe('Teplý papír (D4, #320): hodnoty tokenů podle specu #319', () => {
   const root = fileRules('variables.css').filter((r) => r.selectors.includes(':root'))
-  const dark = fileRules('variables.css').filter((r) => r.selectors.includes('.dark'))
-  const bridgeDark = fileRules('shadcn-tokens.css').filter((r) => r.selectors.includes('.dark'))
 
-  it.each([
-    ['--page', '24 20 17'], ['--sheet', '37 32 27'], ['--sheet-alt', '47 40 33'],
-    ['--rule', '66 57 48'], ['--rule-soft', '52 45 38'],
-    // Plný papír (#339): vnořené pole o kousek světlejší než karta, podklad tmavší než karta.
-    ['--inset', '44 38 32'], ['--under-top', '24 20 17'], ['--under-bottom', '18 15 12'],
-  ])('tmavý režim: %s = %s', (token, value) => {
-    expect(lastDecl(dark, token)).toBe(value)
-  })
-
-  it('světlo v rohu pozadí --glow: světle 252 232 204, tmavě 58 42 28', () => {
+  it('světlo v rohu pozadí --glow: světle 252 232 204', () => {
     expect(lastDecl(root, '--glow')).toBe('252 232 204')
-    expect(lastDecl(dark, '--glow')).toBe('58 42 28')
   })
 
-  it('hlavní a vedlejší text: světle --text-main / --text-muted, tmavě --foreground / --muted-foreground mostu shadcn', () => {
+  it('hlavní a vedlejší text: světle --text-main / --text-muted', () => {
     expect(rgbOf(root, '--text-main')).toEqual([38, 33, 28])
     expect(rgbOf(root, '--text-muted')).toEqual([94, 82, 70])
-    expect(rgbOf(bridgeDark, '--foreground')).toEqual([242, 236, 227])
-    expect(rgbOf(bridgeDark, '--muted-foreground')).toEqual([190, 177, 162])
   })
 
   it('legacy pozadí stránky --bg-app je stejné teplé jako --page', () => {
     expect(rgbOf(root, '--bg-app')).toEqual(rgbOf(root, '--page'))
   })
 
-  it('stavové barvy: světle beze změny, tmavě je --ok (zelený odkaz i Dostatek) 110 191 144', () => {
+  it('stavové barvy: světle beze změny', () => {
     expect(lastDecl(root, '--ok')).toBe('47 107 82')
     expect(lastDecl(root, '--low')).toBe('138 75 6')
     expect(lastDecl(root, '--empty')).toBe('180 35 35')
-    expect(lastDecl(dark, '--ok')).toBe('110 191 144')
-    expect(lastDecl(dark, '--low')).toBe('234 179 8')
-    expect(lastDecl(dark, '--empty')).toBe('248 113 113')
   })
 })
 
@@ -277,8 +258,6 @@ const triplet = (t: string) => t.split(/\s+/).map(Number)
 
 describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
   const root = fileRules('variables.css').filter((r) => r.selectors.includes(':root'))
-  const dark = fileRules('variables.css').filter((r) => r.selectors.includes('.dark'))
-  const bridgeDark = fileRules('shadcn-tokens.css').filter((r) => r.selectors.includes('.dark'))
   const tok = (rules: Rule[], name: string) => lastDecl(rules, name) ?? ''
 
   it.each(['--text-main', '--text-muted', '--brand-primary'])('světlý: %s na --sheet i --page', (token) => {
@@ -288,21 +267,10 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
     expect(contrast(color, triplet(tok(root, '--page')))).toBeGreaterThanOrEqual(4.5)
   })
 
-  it.each(['--foreground', '--muted-foreground'])('tmavý: %s na tmavém --sheet i --page', (token) => {
-    const color = hex(tok(bridgeDark, token))
-    expect(contrast(color, triplet(tok(dark, '--sheet')))).toBeGreaterThanOrEqual(4.5)
-    expect(contrast(color, triplet(tok(dark, '--page')))).toBeGreaterThanOrEqual(4.5)
-  })
-
   // Další dvojice z tabulky kontrastu v pickeru D4 (PR #318). Štítky Dochází/Došlo hlídá statusBadgeContrast.test.ts.
   it('světlý: vybraný den (--text-main na --sheet-alt) a zelený odkaz --ok na kartě', () => {
     expect(contrast(rgbOf(root, '--text-main'), rgbOf(root, '--sheet-alt'))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(rgbOf(root, '--ok'), rgbOf(root, '--sheet'))).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it('tmavý: vybraný den (--foreground na --sheet-alt) a zelený odkaz --ok na kartě', () => {
-    expect(contrast(rgbOf(bridgeDark, '--foreground'), rgbOf(dark, '--sheet-alt'))).toBeGreaterThanOrEqual(4.5)
-    expect(contrast(rgbOf(dark, '--ok'), rgbOf(dark, '--sheet'))).toBeGreaterThanOrEqual(4.5)
   })
 
   // Tabulka kontrastu ve specu #337 (plný papír, D3): karta = 246 240 230, vnořené pole = 238 230 217.
@@ -315,19 +283,10 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
     expect(contrast(rgbOf(root, text), rgbOf(root, surface))).toBeGreaterThanOrEqual(min)
   })
 
-  it.each(['--foreground', '--muted-foreground'])('tmavý: %s na vnořeném poli --inset', (token) => {
-    expect(contrast(rgbOf(bridgeDark, token), rgbOf(dark, '--inset'))).toBeGreaterThanOrEqual(4.5)
-  })
-
   // Text mimo karty (nadpis stránky, prázdný stav) leží na podkladu D; i na jeho tmavším konci musí být čitelný.
   it.each(['--under-top', '--under-bottom'])('světlý: hlavní i vedlejší text na podkladu %s', (surface) => {
     expect(contrast(rgbOf(root, '--text-main'), rgbOf(root, surface))).toBeGreaterThanOrEqual(4.5)
     expect(contrast(rgbOf(root, '--text-muted'), rgbOf(root, surface))).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it.each(['--under-top', '--under-bottom'])('tmavý: hlavní i vedlejší text na podkladu %s', (surface) => {
-    expect(contrast(rgbOf(bridgeDark, '--foreground'), rgbOf(dark, surface))).toBeGreaterThanOrEqual(4.5)
-    expect(contrast(rgbOf(bridgeDark, '--muted-foreground'), rgbOf(dark, surface))).toBeGreaterThanOrEqual(4.5)
   })
 })
 

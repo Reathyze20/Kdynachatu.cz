@@ -163,4 +163,10 @@ export const DESIGN_RULES: DesignRule[] = [
     // Český název měsíce jako samostatný řetězec (1., 2. i 6. pád) = lokální pole měsíců.
     match: /\.toLocale(?:Date|Time)?String\(|\bIntl\.(?:DateTimeFormat|NumberFormat)\b|(['"`])(?:led(?:en|n[au])|únor[au]?|břez(?:en|n[au])|dub(?:en|n[au])|květ(?:en|n[au])|červ(?:en(?:ec|c[ei])?|n[au])|srp(?:en|n[au])|září|říj(?:en|n[au])|listopadu?|prosin(?:ec|c[ei]))\1/giu,
   },
+  {
+    name: 'themeVariant',
+    hint: 'jen světlý režim a jedno téma (DESIGN.md §1, #458): žádný selektor .dark, varianta dark:, [data-theme], prefers-color-scheme ani next-themes',
+    // Platí i pro soubory s definicí tokenů. `.dark` jen jako selektor, ne vlastnost objektu (`theme.dark`) ani token `--status-error-dark`.
+    match: /(?<![\w$)\]?!])\.dark(?![\w-])|@custom-variant\s+dark\b|(?<=^|[\s"'`{:])dark:(?=[\w[(!-])|\bdata-theme\b|prefers-color-scheme|\bnext-themes\b/g,
+  },
 ]

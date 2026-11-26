@@ -11,7 +11,7 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 - **Jeden akcent.** Zelená Jedle (`--brand-primary`) patří hlavní akci, aktivní položce navigace a odkazům. Všechno ostatní je inkoust, tlumená hnědá a papír.
 - **Tichý tón.** Varování a stavy nese tónovaná ikona, krátký štítek nebo jemné pozadí z tokenů. Hlasitý banner ani barevný proužek vlevo (#355) se nepoužívá.
 - **Mobil první.** Navrhuje se pro 360–430 px (`docs/PRODUCT.md`). Obrazovka musí fungovat od 320 px. Desktop má boční panel `DesktopSidebar` a obsah do 1440 px.
-- **Jen světlý režim a jedno téma.** Tmavý režim (`.dark`), tenant témata (`[data-theme]`) a `next-themes` jsou mrtvý kód a odstraní je #458. Nový kód je nepodporuje a nepíše varianty `dark:`.
+- **Jen světlý režim a jedno téma.** Tmavý režim, tenant témata a `next-themes` #458 odstranil. Nový kód je nepřidává: žádný selektor `.dark`, varianty `dark:`, `[data-theme]` ani `prefers-color-scheme` (guard `themeVariant`).
 - **Přístupnost od začátku.** Kontrast textu ≥ 4,5 : 1, prvků UI ≥ 3 : 1. Viditelný focus, ovládání z klávesnice, respekt k `prefers-reduced-motion`. Barva člena nikdy nestojí sama, vždy s iniciálou nebo avatarem a jménem.
 - **Nová barva nebo písmo je rozhodnutí uživatele.** Agent udělá picker v `docs/design/` (vzor `10-zelena-atomy.html`) a nechá vybrat.
 
@@ -245,6 +245,7 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `legacyButton` | třída `btn` nebo `btn-*` v TS/TSX (zmrazený legacy systém tlačítek, místo něj `Button`) |
 | `legacyCard` | třída `page-card`, `glass-card`, `admin-card` v TS/TSX, holé `card` v `className`, `cn()`/`clsx()` nebo selektoru (místo nich `Card`) |
 | `legacyEmptyState` | třída `<něco>-empty-<něco>` v TS/TSX (místo ní `EmptyState`) |
+| `themeVariant` | selektor `.dark`, varianta `dark:`, `@custom-variant dark`, `[data-theme]`, `prefers-color-scheme` nebo `next-themes`, i v souborech s definicí tokenů (kapitola 1) |
 | `loopAnimation` | smyčková animace (`infinite`, `repeat: Infinity`, `animate-spin`/`pulse`/`ping`/`bounce`, `animate-scene-*`) mimo Scénu chaty a maskota (kapitola 5) |
 
 ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.

@@ -7,12 +7,12 @@
    z tokenů neexistoval a theming shadcn komponent byl rozbitý.
 
    JAK: Níže definujeme sémantické shadcn tokeny (`--primary`, `--background`,
-   `--border` …). Light (`:root`) odkazuje přímo na sémantické tokeny palety
-   „Jedle na papíře" z `variables.css`, takže přepnutí palety přes
-   `[data-theme]` se propíše i do shadcn primitiv. Dark (`.dark`) má vlastní
-   hodnoty. Blok `@theme inline` je pak zpřístupní jako Tailwind utility.
+   `--border` …). `:root` odkazuje přímo na sémantické tokeny palety
+   „Jedle na papíře" z `variables.css`. Appka má jen světlý režim a jedno
+   téma (DESIGN.md §1, #458). Blok `@theme inline` je pak zpřístupní jako
+   Tailwind utility.
 
-   ADITIVNÍ: `:root`/`.dark` používají nová jména bez prefixu `--color-*`,
+   ADITIVNÍ: `:root` používá nová jména bez prefixu `--color-*`,
    takže zpětně kompatibilní aliasy `--color-*` z `variables.css` zůstávají
    nedotčené a legacy obrazovky se vizuálně nemění. Viz poznámka u `@theme`.
    ============================================================================ */
@@ -45,40 +45,6 @@
   /* Rámečky, inputy, focus ring */
   --border: var(--border-strong);
   --input: var(--border-input);
-  --ring: var(--primary);
-}
-
-/* Dark varianta: variables.css zatím tmavou paletu nemá, proto vlastní hodnoty
-   v tmavých zelených a slate tónech. Aplikuje se třídou `.dark` (zatím ji appka
-   nikde nenastavuje, takže na legacy obrazovky nemá vliv). `dark:` utility se
-   řídí stejnou třídou, ne `prefers-color-scheme` (žádná je zatím nepoužívá). */
-@custom-variant dark (&:where(.dark, .dark *));
-
-.dark {
-  --background: #141c18;
-  /* Text v teplých tónech podle mocku 07-teplo-atomy (#320): 242 236 227 a 190 177 162 */
-  --foreground: #f2ece3;
-  --card: #1b2621;
-  --card-foreground: var(--foreground);
-  --popover: var(--card);
-  --popover-foreground: var(--foreground);
-
-  --primary: #4f9e7f;
-  --primary-foreground: #08140e;
-
-  --secondary: #273530;
-  --secondary-foreground: var(--foreground);
-  --muted: #222e29;
-  --muted-foreground: #beb1a2;
-  --accent: #2a3a33;
-  --accent-foreground: var(--foreground);
-
-  /* red-500 místo red-600: na tmavém pozadí potřebuje víc světlosti */
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-
-  --border: #2c3a34;
-  --input: #33433c;
   --ring: var(--primary);
 }
 
