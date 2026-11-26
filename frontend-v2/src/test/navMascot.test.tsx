@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 import tokensCss from '@/styles/shadcn-tokens.css?raw'
 import helpCss from '@/styles/help.css?raw'
 
@@ -9,8 +11,13 @@ import helpCss from '@/styles/help.css?raw'
 // Animovaná, ne přes otevřené okno ani klávesnici. Testy přes lištu, jak ji vidí uživatel; falešné hodiny, proto
 // fireEvent místo userEvent. Fiktivní účet.
 
+const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
+vi.mock('@/api/client', () => ({ default: api }))
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ user: { cabinId: 'c-1' }, isAdmin: false, isSuperAdmin: false, isGuest: false, logout: vi.fn() }),
+  useAuth: () => ({
+    logout: vi.fn(), login: vi.fn(), updateAnimalIcon: vi.fn(), isAdmin: false, isSuperAdmin: false, isGuest: false, token: 'token',
+    user: { userId: 'u-1', username: 'Jana', role: 'user', animalIcon: null, cabinId: 'c-1', isSuperAdmin: false },
+  }),
 }))
 vi.mock('@/hooks/useCabinFeatures', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/hooks/useCabinFeatures')>()),
@@ -34,14 +41,26 @@ function Path() {
   return <output data-testid="path">{useLocation().pathname}</output>
 }
 
-function renderNav() {
+function renderNav({ drawerOpen = false } = {}) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter initialEntries={['/dashboard']}>
-      <input aria-label="Poznámka" />
-      <MobileNav />
-      <Path />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <input aria-label="Poznámka" />
+        <MobileNav />
+        <ProfileDrawer isOpen={drawerOpen} onClose={vi.fn()} />
+        <Path />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
+}
+
+/** Volba „Scéna chaty“ změněná v jiném okně appky (stejná cesta jako přepnutí v profilu: localStorage + událost). */
+function switchSceneMode(mode: string) {
+  act(() => {
+    localStorage.setItem('cabinSceneMode', mode)
+    window.dispatchEvent(new StorageEvent('storage', { key: 'cabinSceneMode' }))
+  })
 }
 
 const mascot = () => screen.queryByTestId('nav-mascot')
@@ -61,6 +80,7 @@ describe('maskot na mobilní liště (#566)', () => {
     vi.useFakeTimers()
     localStorage.clear()
     sessionStorage.clear()
+    api.get.mockReset().mockResolvedValue({ data: { email: 'jana@example.test', color: '#5d9b62', animalIcon: null } })
   })
   afterEach(() => {
     vi.useRealTimers()
@@ -133,6 +153,26 @@ describe('maskot na mobilní liště (#566)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Víc/ }))
     expect(screen.getByRole('dialog', { name: 'Víc' })).toBeInTheDocument()
 
+    expect(waitForMascot()).toBeNull()
+  })
+
+  it('neobjeví se, dokud je otevřený šuplík profilu', () => {
+    device()
+    renderNav({ drawerOpen: true })
+    expect(screen.getByRole('heading', { name: 'Můj profil' })).toBeInTheDocument()
+
+    expect(waitForMascot()).toBeNull()
+  })
+
+  it('přepnutí na Statickou během průchodu ho hned schová a po návratu na Animovanou už nevyjde', () => {
+    device()
+    renderNav()
+    expect(waitForMascot()).toBeInTheDocument()
+
+    switchSceneMode('static')
+    expect(mascot()).not.toBeInTheDocument()
+
+    switchSceneMode('animated')
     expect(waitForMascot()).toBeNull()
   })
 

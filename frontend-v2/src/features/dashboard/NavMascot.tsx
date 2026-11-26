@@ -1,24 +1,23 @@
 import { useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { useCabinSceneMode } from "@/hooks/useCabinSceneMode";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { MOBILE_QUERY, useMediaQuery } from "@/hooks/useMediaQuery";
 import dormousePeek from "./scene/dormouse-peek.png";
 
 /**
- * Maskot na mobilnĂ­ liĹˇtÄ› (#566): plch ze scĂ©ny chaty jednou za otevĹ™enĂ­ appky pĹ™ijde zleva po hornĂ­ hranÄ› spodnĂ­
- * liĹˇty, zastavĂ­ se, rozhlĂ©dne, dvakrĂˇt poskoÄŤĂ­ (zamĂˇvĂˇ) a odejde zpÄ›t doleva, takĹľe nikdy nedojde k tlaÄŤĂ­tku
- * nĂˇpovÄ›dy vpravo. Jen na mobilu a ve stavu â€žScĂ©na chatyâ€ś AnimovanĂˇ. Nevyjde, dokud je otevĹ™enĂ© okno, ĹˇuplĂ­k
- * profilu nebo klĂˇvesnice (fokus v textovĂ©m poli) nebo je appka na pozadĂ­; kdyĹľ se nÄ›co z toho stane bÄ›hem
- * prĹŻchodu, zmizĂ­ a uĹľ se nevrĂˇtĂ­. DekorativnĂ­: `aria-hidden`, `pointer-events: none`. ChĹŻzi nese keyframe
- * `scene-mascot-walk` v `shadcn-tokens.css`, rozhlĂ­ĹľenĂ­ pĂˇs snĂ­mkĹŻ vykukovĂˇnĂ­ ze scĂ©ny (`animate-scene-frames`).
+ * Maskot na mobilní liště (#566): plch ze scény chaty jednou za otevření appky přijde zleva po horní hraně spodní
+ * lišty, zastaví se, rozhlédne, dvakrát poskočí (zamává) a odejde zpět doleva, takže nikdy nedojde k tlačítku
+ * nápovědy vpravo. Jen na mobilu a ve stavu „Scéna chaty“ Animovaná. Nevyjde, dokud je otevřené okno, šuplík
+ * profilu nebo klávesnice (fokus v textovém poli) nebo je appka na pozadí; když se něco z toho stane během
+ * průchodu, zmizí a už se nevrátí. Dekorativní: `aria-hidden`, `pointer-events: none`. Chůzi nese keyframe
+ * `scene-mascot-walk` v `shadcn-tokens.css`, rozhlížení pás snímků vykukování ze scény (`animate-scene-frames`).
  */
 
-/** Po otevĹ™enĂ­ appky chvĂ­li poÄŤkĂˇ, aĹĄ nepĹ™ekĂˇĹľĂ­ prvnĂ­mu pohledu. PrĹŻchod trvĂˇ jako `--animate-scene-mascot-walk`. */
+/** Po otevření appky chvíli počká, ať nepřekáží prvnímu pohledu. Průchod trvá jako `--animate-scene-mascot-walk`. */
 const START_DELAY_MS = 4000;
 const WALK_MS = 10_000;
-const MOBILE_QUERY = "(max-width: 767px)";
-/** â€žJednou za otevĹ™enĂ­ appkyâ€ś: pĹ™eĹľije navigaci i novĂ© vykreslenĂ­ liĹˇty, ne zavĹ™enĂ­ appky. */
+/** „Jednou za otevření appky“: přežije navigaci i nové vykreslení lišty, ne zavření appky. */
 const WALKED_KEY = "navMascotWalked";
-/** SnĂ­mek plcha je 40 Ă— 40 jednotek po 1,5 CSS px jako ve scĂ©nÄ›; pod tlapkami (Ĺ™Ăˇdek 31) je 8 prĂˇzdnĂ˝ch Ĺ™ĂˇdkĹŻ. */
+/** Snímek plcha je 40 × 40 jednotek po 1,5 CSS px jako ve scéně; pod tlapkami (řádek 31) je 8 prázdných řádků. */
 const FRAME_PX = 60;
 const PEEK = { frames: 11, ms: 160 };
 
@@ -35,16 +34,17 @@ function markWalked() {
   try {
     sessionStorage.setItem(WALKED_KEY, "1");
   } catch {
-    // sessionStorage nedostupnĂ©: platĂ­ pamÄ›ĹĄ do zavĹ™enĂ­ appky
+    // sessionStorage nedostupné: platí paměť do zavření appky
   }
 }
 
-/** ModĂˇlnĂ­ okno (`Modal`, `ConfirmDialog`, lightbox) a ĹˇuplĂ­k profilu. */
+/** Modální okno (`Modal`, `ConfirmDialog`, lightbox) a šuplík profilu. */
 const OVERLAY = '[role="dialog"], [role="alertdialog"], [aria-modal="true"], .drawer-overlay';
-/** Pole, kterĂ© na telefonu otevĹ™e klĂˇvesnici. */
+/** Pole, které na telefonu otevře klávesnici. */
 const TYPING = 'textarea, select, input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="range"], [type="file"], [type="color"])';
 
-function blocked(): boolean {
+/** Maskot by překážel: píše se, je otevřené okno nebo šuplík, nebo je appka na pozadí. */
+function mascotSuppressed(): boolean {
   const focused = document.activeElement;
   const typing = focused instanceof HTMLElement && (focused.matches(TYPING) || focused.isContentEditable);
   return typing || document.visibilityState === "hidden" || document.querySelector(OVERLAY) !== null;
@@ -74,7 +74,7 @@ export function NavMascot() {
   }, []);
   const finish = useCallback(() => setPhase("done"), []);
 
-  // PĹ™epnutĂ­ na Statickou / Skrytou nebo na desktop bÄ›hem prĹŻchodu ho ukonÄŤĂ­, po nĂˇvratu uĹľ nevyjde.
+  // Přepnutí na Statickou / Skrytou nebo na desktop během průchodu ho ukončí, po návratu už nevyjde.
   useEffect(() => {
     if (phase === "walking" && !allowed) finish();
   }, [phase, allowed, finish]);
@@ -83,19 +83,20 @@ export function NavMascot() {
   return <Walk walking={phase === "walking"} onStart={start} onDone={finish} />;
 }
 
+/** Naplánuje start průchodu, pak ho vykreslí a po `WALK_MS` ukončí; když maskot začne překážet, průchod skončí. */
 function Walk({ walking, onStart, onDone }: { walking: boolean; onStart: () => void; onDone: () => void }) {
-  const isBlocked = useSyncExternalStore(subscribeBlockers, blocked, () => true);
+  const suppressed = useSyncExternalStore(subscribeBlockers, mascotSuppressed, () => true);
 
   useEffect(() => {
-    if (isBlocked) {
+    if (suppressed) {
       if (walking) onDone();
       return;
     }
     const timer = window.setTimeout(walking ? onDone : onStart, walking ? WALK_MS : START_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [isBlocked, walking, onStart, onDone]);
+  }, [suppressed, walking, onStart, onDone]);
 
-  if (!walking || isBlocked) return null;
+  if (!walking || suppressed) return null;
   const strip = {
     "--scene-strip-ms": `${PEEK.frames * PEEK.ms}ms`,
     "--scene-strip-frames": PEEK.frames,
