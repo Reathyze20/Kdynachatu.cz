@@ -3,7 +3,7 @@
  * `/dashboard/reservations`, zazimování z nastavení chaty a dnešní počasí obce chaty (#564). Hostovi backend posílá jen jeho pobyt,
  * scéna tedy cizí obsazenost neukáže. Jak stav vypadá, řeší `CabinScene` a sprity v `cabinSceneSprites`.
  */
-import type { DashboardReservationsData, WeatherResult } from "@/api/dashboard";
+import type { DashboardReservationsData, WeatherData, WeatherResult } from "@/api/dashboard";
 import { toIsoDate } from "@/lib/dateUtils";
 
 /** V den odjezdu je odjíždějící po této hodině pryč, stejně jako v kartě „Na chatě teď“. */
@@ -58,6 +58,16 @@ function precipitationOf(code: number): Precipitation {
 const minutesOf = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
+const windOf = (kmh: number): Wind => (kmh >= STRONG_WIND_KMH ? "strong" : kmh >= WIND_KMH ? "wind" : "none");
+
+/** Soumrak nebo svítání podle hodin „HH:MM“; bez obou časů slunce žádné. */
+function twilightOf(clock: string, { sunriseTime, sunsetTime }: WeatherData): Twilight {
+  if (!sunriseTime || !sunsetTime) return "none";
+  const [now, rise, set] = [minutesOf(clock), minutesOf(sunriseTime), minutesOf(sunsetTime)];
+  if (set - DUSK_MIN <= now && now < set) return "dusk";
+  return rise <= now && now < rise + DAWN_MIN ? "dawn" : "none";
+}
+
 /** `weather` je výsledek sdíleného dotazu na dnešní počasí; bez obce, při chybě nebo před načtením je scéna bez počasí. */
 export function deriveCabinScene(data: DashboardReservationsData, winterized: boolean, now: Date, weather?: WeatherResult): CabinSceneState {
   const today = toIsoDate(now);
@@ -80,12 +90,7 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
   const fog = !!forecast && (forecast.weatherCode === 45 || forecast.weatherCode === 48);
   const snowing = !!forecast && isSnowCode(forecast.weatherCode);
   const overcast = precipitation !== "none" || fog;
-  let twilight: Twilight = "none";
-  if (forecast?.sunriseTime && forecast.sunsetTime && !overcast && !snowing) {
-    const [nowMin, rise, set] = [minutesOf(clock), minutesOf(forecast.sunriseTime), minutesOf(forecast.sunsetTime)];
-    if (set - DUSK_MIN <= nowMin && nowMin < set) twilight = "dusk";
-    else if (rise <= nowMin && nowMin < rise + DAWN_MIN) twilight = "dawn";
-  }
+  const twilight = forecast && !overcast && !snowing ? twilightOf(clock, forecast) : "none";
   return {
     occupied: !winterized && present,
     arriving,
@@ -101,7 +106,7 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
     fog,
     overcast,
     twilight,
-    wind: !forecast ? "none" : forecast.windSpeed >= STRONG_WIND_KMH ? "strong" : forecast.windSpeed >= WIND_KMH ? "wind" : "none",
+    wind: forecast ? windOf(forecast.windSpeed) : "none",
   };
 }
 
@@ -139,6 +144,7 @@ const POSE_TEXT: Record<MascotPose, string> = {
 };
 
 const PRECIPITATION_TEXT: Record<Precipitation, string> = { none: "", drizzle: "Mrholí.", rain: "Prší.", storm: "Bouřka." };
+const TWILIGHT_TEXT: Record<Twilight, string> = { none: "", dusk: "Zapadá slunce.", dawn: "Svítá." };
 
 /** Přístupný název scény: každá část odpovídá jedné vrstvě obrázku, nic nepřebíjí jen v textu. */
 export function cabinSceneLabel(s: CabinSceneState): string {
@@ -153,7 +159,7 @@ export function cabinSceneLabel(s: CabinSceneState): string {
     s.snowCover ? "Leží sníh, střecha je bílá." : "",
     // Při sněžení, srážkách a mlze je zataženo: noc bez hvězd.
     !s.night ? "" : s.snowing || s.overcast ? "Je noc." : "Je noc, na nebi svítí hvězdy.",
-    s.twilight === "dusk" ? "Zapadá slunce." : s.twilight === "dawn" ? "Svítá." : "",
+    TWILIGHT_TEXT[s.twilight],
     s.fog ? "Je mlha." : "",
     s.snowing ? "Sněží." : "",
     PRECIPITATION_TEXT[s.precipitation],

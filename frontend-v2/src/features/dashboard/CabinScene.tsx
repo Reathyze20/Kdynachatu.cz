@@ -180,7 +180,8 @@ function snowfall(slanted: boolean, moving: boolean): Layer {
 /** Kapky: mrholení řídké a pomalejší, déšť a bouřka husté. */
 function rainfall(precipitation: CabinSceneState["precipitation"], slanted: boolean, moving: boolean): Layer {
   const drizzle = precipitation === "drizzle";
-  const motion = `animate-scene-${drizzle ? "drizzle" : "rain"}${slanted ? "-wind" : ""}`;
+  // Celá jména tříd, ať je Tailwind najde ve zdrojácích a utility vygeneruje.
+  const motion = drizzle ? (slanted ? "animate-scene-drizzle-wind" : "animate-scene-drizzle") : (slanted ? "animate-scene-rain-wind" : "animate-scene-rain");
   const speck = (n: number): Speck => {
     const len = n % 3 ? 2 : 3;
     return slanted ? [[0, 0, 1, 2], [1, 2, 1, len - 2]] : [[0, 0, 1, len]];
