@@ -51,7 +51,7 @@
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css",
       "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
       "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
-      "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/onboarding.css", "styles/reconstruction.css",
+      "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
       "styles/reservations.css", "styles/shopping.css", "styles/status-header.css", "styles/toast.css"
     ],
     "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"],
@@ -75,7 +75,7 @@
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
-      "features/diary/DiaryPage.tsx", "features/onboarding/OnboardingPage.tsx"
+      "features/diary/DiaryPage.tsx"
     ]
   },
   "legacyEmptyState": {
@@ -91,7 +91,7 @@
       "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
-      "styles/onboarding.css", "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",
+      "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",
       "styles/status-header.css", "styles/toast.css", "styles/view-transitions.css"
     ],
     "Duplicitní import hub, který nic neimportuje (vstup je src/index.css), smazat": ["styles/index.css"]

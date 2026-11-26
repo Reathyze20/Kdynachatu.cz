@@ -9,7 +9,8 @@ import { LogoutPendingChangesDialog } from '@/components/layout/LogoutPendingCha
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
 import { useCabinSignup } from '@/features/auth/hooks/useCabinSignup'
-import '@/styles/onboarding.css'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { Button } from '@/components/ui/button'
 
 interface CreateCabinResponse {
   token: string
@@ -120,12 +121,9 @@ function CreateCabinOnboarding() {
 
   if (checking || signupLoading) {
     return (
-      <div className="onboarding-page" data-testid="onboarding-page" data-onboarding-state="checking">
-        <div className="onboarding-card card" style={{ textAlign: 'center' }}>
-          <div className="spinner" />
-          <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Kontroluji přiřazení k chatě…</p>
-        </div>
-      </div>
+      <AuthLayout data-testid="onboarding-page" data-onboarding-state="checking">
+        <p role="status" className="text-center text-body text-(--text-muted)">Kontroluji přiřazení k chatě…</p>
+      </AuthLayout>
     )
   }
 
@@ -134,68 +132,49 @@ function CreateCabinOnboarding() {
     setRetryCount((c) => c + 1)
   }
 
-  return (
-    <div className="onboarding-page" data-testid="onboarding-page" data-onboarding-state="ready">
-      <div className="onboarding-card card">
-        <div className="auth-brand">
-          <img src="/logo-icon.svg" alt="Logo" className="auth-logo-icon" />
-          <h1 className="auth-brand-text">Kdy na chatu</h1>
-        </div>
-        {signupEnabled ? (
-          <>
-            <h2 className="onboarding-title">Vytvoř svůj prostor</h2>
-            <p className="auth-subtitle">
-              Vítej{user?.username ? `, ${user.username}` : ''}! Pojmenuj svou chatu.
-            </p>
-            <form onSubmit={handleSubmit} noValidate data-testid="onboarding-form">
-              <div className="form-group">
-                <label htmlFor="cabin-name">Název chaty</label>
-                <input ref={nameRef} id="cabin-name" type="text" placeholder="např. Chata U Lesa" maxLength={100} autoFocus autoComplete="off" required aria-invalid={nameInvalid || undefined} aria-describedby={error ? 'onboarding-error' : undefined} data-testid="onboarding-cabin-name-input" />
-              </div>
-              {error && <p id="onboarding-error" className="error-message show" role="alert" data-testid="onboarding-error-message">{error}</p>}
-              <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading} data-testid="onboarding-submit-button">
-                {loading ? 'Vytvářím…' : 'Vytvořit chatu'}
-              </button>
-            </form>
-            <p className="onboarding-hint">Název chaty můžeš kdykoli změnit v nastavení.</p>
-          </>
-        ) : (
-          <div data-testid="onboarding-invite-only">
-            <h2 className="onboarding-title">Do chaty se vstupuje přes pozvánku</h2>
-            <p className="auth-subtitle">
-              Vítej{user?.username ? `, ${user.username}` : ''}! Nové chaty teď zakládat nejde,
-              do chaty tě přidá její správce pozvánkou.
-            </p>
-          </div>
-        )}
+  const welcome = `Vítej${user?.username ? `, ${user.username}` : ''}!`
 
-        <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            Pozval tě někdo do existující chaty? Až tě správce přidá, klepni na Zkusit znovu. Jinak ho požádej o novou pozvánku.
+  return (
+    <AuthLayout data-testid="onboarding-page" data-onboarding-state="ready">
+      {signupEnabled ? (
+        <>
+          <h2 className="mb-2 text-center text-card-title text-(--text-main)">Vytvoř svůj prostor</h2>
+          <p className="mb-6 text-center text-body text-(--text-muted)">{welcome} Pojmenuj svou chatu.</p>
+          <form onSubmit={handleSubmit} noValidate data-testid="onboarding-form">
+            <div className="form-group">
+              <label htmlFor="cabin-name">Název chaty</label>
+              <input ref={nameRef} id="cabin-name" type="text" placeholder="např. Chata U Lesa" maxLength={100} autoFocus autoComplete="off" required aria-invalid={nameInvalid || undefined} aria-describedby={error ? 'onboarding-error' : undefined} data-testid="onboarding-cabin-name-input" />
+            </div>
+            {error && <p id="onboarding-error" className="error-message show" role="alert" data-testid="onboarding-error-message">{error}</p>}
+            <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading} data-testid="onboarding-submit-button">
+              {loading ? 'Vytvářím…' : 'Vytvořit chatu'}
+            </button>
+          </form>
+          <p className="mt-4 text-center text-label text-(--text-muted)">Název chaty můžeš kdykoli změnit v nastavení.</p>
+        </>
+      ) : (
+        <div className="text-center" data-testid="onboarding-invite-only">
+          <h2 className="mb-2 text-card-title text-(--text-main)">Do chaty se vstupuje přes pozvánku</h2>
+          <p className="text-body text-(--text-muted)">
+            {welcome} Nové chaty teď zakládat nejde, do chaty tě přidá její správce pozvánkou.
           </p>
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button 
-              type="button" 
-              onClick={handleRetryCheck}
-              className="button-secondary"
-              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-              data-testid="onboarding-retry-button"
-            >
-              Zkusit znovu
-            </button>
-            <button 
-              type="button" 
-              onClick={requestLogout}
-              className="button-secondary"
-              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-              data-testid="onboarding-logout-button"
-            >
-              Odhlásit se
-            </button>
-          </div>
-          <LogoutPendingChangesDialog {...pendingDialog} />
         </div>
+      )}
+
+      <div className="mt-6 border-t border-rule-soft pt-6 text-center">
+        <p className="mb-4 text-label text-(--text-muted)">
+          Pozval tě někdo do existující chaty? Až tě správce přidá, klepni na Zkusit znovu. Jinak ho požádej o novou pozvánku.
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button type="button" variant="secondary" onClick={handleRetryCheck} data-testid="onboarding-retry-button">
+            Zkusit znovu
+          </Button>
+          <Button type="button" variant="secondary" onClick={requestLogout} data-testid="onboarding-logout-button">
+            Odhlásit se
+          </Button>
+        </div>
+        <LogoutPendingChangesDialog {...pendingDialog} />
       </div>
-    </div>
+    </AuthLayout>
   )
 }
