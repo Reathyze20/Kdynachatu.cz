@@ -407,3 +407,189 @@ describe('Vypínač „Scéna chaty“ na Přehledu (#565)', () => {
     expect(img).toHaveAttribute('data-motion', 'animated')
   })
 })
+
+// Srážky ve scéně (#609): popis říká, co obraz ukazuje; vrstvy, které popis nezmiňuje (šplouchání, blesk, šedý závoj),
+// se ověřují přes `data-layer` skupiny vrstvy.
+const layer = (img: HTMLElement, name: string) => img.querySelector(`[data-layer="${name}"]`)
+
+describe('Déšť, mrholení a bouřka ve scéně chaty (#609)', () => {
+  afterEach(() => {
+    vi.mocked(fetchWeather).mockImplementation(() => Promise.resolve(null))
+  })
+
+  it('při mrholení (WMO 51–57) padají řídké kapky, na louce nešplouchá', async () => {
+    for (const weatherCode of [51, 53, 55, 56, 57]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations())
+
+      const img = await screen.findByRole('img', { name: /mrholí\./i })
+      expect(img).not.toHaveAccessibleName(/prší|bouřka|sněží/i)
+      expect(layer(img, 'rain')).not.toBeNull()
+      expect(layer(img, 'splash')).toBeNull()
+      cleanup()
+    }
+  })
+
+  it('při dešti, mrznoucím dešti a přeháňkách (WMO 61–67, 80–82) padají husté kapky a na louce šplouchá', async () => {
+    for (const weatherCode of [61, 63, 65, 66, 67, 80, 81, 82]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations())
+
+      const img = await screen.findByRole('img', { name: /prší\./i })
+      expect(img).not.toHaveAccessibleName(/mrholí|bouřka|sněží/i)
+      expect(layer(img, 'rain')).not.toBeNull()
+      expect(layer(img, 'splash')).not.toBeNull()
+      cleanup()
+    }
+  })
+
+  it('při bouřce (WMO 95–99) padají husté kapky, šplouchá a obloha jednou za čas zesvětlá bleskem', async () => {
+    for (const weatherCode of [95, 96, 99]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations())
+
+      const img = await screen.findByRole('img', { name: /bouřka\./i })
+      expect(img).not.toHaveAccessibleName(/mrholí|prší|sněží/i)
+      expect(img).toHaveAttribute('data-motion', 'animated')
+      for (const name of ['rain', 'splash', 'lightning']) expect(layer(img, name)).not.toBeNull()
+      cleanup()
+    }
+  })
+
+  it('statická scéna i prefers-reduced-motion bez volby: kapky a několik šplouchanců stojí, blesk se nekreslí', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 95 }))
+    const setups = [
+      () => localStorage.setItem('cabinSceneMode', 'static'),
+      () => vi.stubGlobal('matchMedia', (query: string) => ({
+        matches: query === '(prefers-reduced-motion: reduce)', media: query, addEventListener: vi.fn(), removeEventListener: vi.fn(),
+      })),
+    ]
+    for (const setup of setups) {
+      setup()
+      renderOverview(reservations())
+
+      const img = await screen.findByRole('img', { name: /bouřka\./i })
+      expect(img).toHaveAttribute('data-motion', 'static')
+      expect(layer(img, 'rain')).not.toBeNull()
+      expect(layer(img, 'splash')).not.toBeNull()
+      expect(layer(img, 'lightning')).toBeNull()
+      cleanup()
+      localStorage.clear()
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('Skrytá: v bouřce se nic nekreslí', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 95 }))
+    localStorage.setItem('cabinSceneMode', 'hidden')
+    renderOverview(reservations())
+
+    await weatherLoaded()
+    expect(screen.queryByRole('img', { name: /^Scéna chaty/ })).not.toBeInTheDocument()
+  })
+
+  it('při srážkách je zataženo: ve dne šedý závoj přes oblohu, v noci bez měsíce a hvězd', async () => {
+    for (const weatherCode of [51, 61, 95]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations(), { time: '10:00' })
+      const day = await screen.findByRole('img', { name: /mrholí|prší|bouřka/i })
+      expect(layer(day, 'overcast')).not.toBeNull()
+      cleanup()
+
+      renderOverview(reservations(), { time: '21:30' })
+      const night = await screen.findByRole('img', { name: /mrholí|prší|bouřka/i })
+      expect(night).toHaveAccessibleName(/je noc\./i)
+      expect(night).not.toHaveAccessibleName(/hvězd/i)
+      expect(layer(night, 'stars')).toBeNull()
+      cleanup()
+    }
+  })
+
+  it('bez srážek je obloha jasná: žádný závoj, v noci svítí hvězdy', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 3 }))
+    renderOverview(reservations(), { time: '10:00' })
+    await weatherLoaded()
+    expect(layer(await scene(), 'overcast')).toBeNull()
+    cleanup()
+
+    renderOverview(reservations(), { time: '21:30' })
+    await weatherLoaded()
+    expect(await scene()).toHaveAccessibleName(/je noc, na nebi svítí hvězdy/i)
+  })
+
+  it('při srážkách se plch schová pod střechu, i u obsazené chaty a i v noci (nehryže oříšek)', async () => {
+    const occupied = reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) })
+    for (const [weatherCode, data, time] of [[51, reservations(), '10:00'], [61, occupied, '10:00'], [95, reservations(), '21:30'], [80, occupied, '22:00']] as const) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(data, { time })
+
+      const img = await screen.findByRole('img', { name: /mrholí|prší|bouřka/i })
+      expect(img).toHaveAccessibleName(/plch se schoval před deštěm pod střechu\./i)
+      expect(img).not.toHaveAccessibleName(/vykukuje|oříšek|na střeše/i)
+      expect(layer(img, 'mascot')).toBeNull()
+      expect(layer(img, 'zzz')).not.toBeNull()
+      cleanup()
+    }
+  })
+
+  it('na auto u chaty plch vykoukne i v dešti, ve dne i v noci', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 63 }))
+    for (const time of ['10:00', '22:00']) {
+      renderOverview(reservations({ upcomingReservations: [stay('r-new', 'Svobodovi', TODAY, '2026-12-13')] }), { time })
+
+      const img = await screen.findByRole('img', { name: /prší/i })
+      expect(img).toHaveAccessibleName(/u chaty stojí auto\. plch vykukuje zpoza střechy/i)
+      expect(img).not.toHaveAccessibleName(/schoval/i)
+      cleanup()
+    }
+  })
+
+  it('zazimování nebo sníh přebíjí déšť: plch spí zimním spánkem', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 61 }))
+    renderOverview(reservations(), { isWinterized: true })
+    expect(await screen.findByRole('img', { name: /prší/i })).toHaveAccessibleName(/plch přes zimu spí schovaný pod střechou/i)
+    cleanup()
+
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 66, snowDepth: 0.05 }))
+    renderOverview(reservations({ upcomingReservations: [stay('r-new', 'Svobodovi', TODAY, '2026-12-13')] }))
+    const img = await screen.findByRole('img', { name: /prší/i })
+    expect(img).toHaveAccessibleName(/plch přes zimu spí schovaný pod střechou/i)
+    expect(img).not.toHaveAccessibleName(/schoval před deštěm|vykukuje/i)
+  })
+
+  it('sněhové kódy se nemění: sněží, žádné kapky ani šplouchání a plch se před deštěm neschovává', async () => {
+    for (const weatherCode of [71, 75, 77, 85, 86]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations())
+
+      const img = await screen.findByRole('img', { name: /sněží\./i })
+      expect(img).not.toHaveAccessibleName(/mrholí|prší|bouřka|schoval/i)
+      for (const name of ['rain', 'splash', 'overcast']) expect(layer(img, name)).toBeNull()
+      cleanup()
+    }
+  })
+
+  it('host vidí déšť stejně jako ostatní', async () => {
+    auth.isGuest = true
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 61 }))
+    renderOverview(reservations({
+      upcomingReservations: [stay('r-guest', 'Eva', '2026-12-17', '2026-12-19')],
+      myNextReservation: { from: '2026-12-17', to: '2026-12-19', purpose: 'Víkend' },
+    }))
+
+    const img = await screen.findByRole('img', { name: /prší\./i })
+    expect(img).toHaveAccessibleName(/plch se schoval před deštěm/i)
+  })
+
+  it('bouřka stojí, když je stránka na pozadí', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 95 }))
+    renderOverview(reservations())
+    const img = await screen.findByRole('img', { name: /bouřka/i })
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    expect(img).toHaveAttribute('data-motion', 'paused')
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+  })
+})

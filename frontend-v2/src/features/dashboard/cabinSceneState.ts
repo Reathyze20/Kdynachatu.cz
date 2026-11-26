@@ -12,7 +12,9 @@ export const DEPARTURE_HOUR = 14;
 const NIGHT_FROM_HOUR = 20;
 const NIGHT_UNTIL_HOUR = 6;
 
-export type MascotPose = "sleep" | "peek" | "nibble" | "hibernate";
+export type MascotPose = "sleep" | "peek" | "nibble" | "hibernate" | "shelter";
+/** Srážky kromě sněhu (#609): mrholení WMO 51–57, déšť 61–67 a 80–82 (i mrznoucí déšť a přeháňky), bouřka 95–99. */
+export type Precipitation = "none" | "drizzle" | "rain" | "storm";
 
 export interface CabinSceneState {
   occupied: boolean;
@@ -28,9 +30,17 @@ export interface CabinSceneState {
   snowCover: boolean;
   /** Mrzne: aktuální teplota ≤ 0 °C. */
   frost: boolean;
+  precipitation: Precipitation;
+  /** Zataženo: při mrholení, dešti a bouřce. Ve dne šedý závoj přes oblohu, v noci bez měsíce a hvězd. */
+  overcast: boolean;
 }
 
 const isSnowCode = (code: number) => (code >= 71 && code <= 77) || code === 85 || code === 86;
+function precipitationOf(code: number): Precipitation {
+  if (code >= 51 && code <= 57) return "drizzle";
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+  return code >= 95 && code <= 99 ? "storm" : "none";
+}
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
 /** `weather` je výsledek sdíleného dotazu na dnešní počasí; bez obce, při chybě nebo před načtením je scéna bez počasí. */
@@ -51,6 +61,7 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
   const night = forecast?.sunriseTime && forecast.sunsetTime
     ? clock < forecast.sunriseTime || clock >= forecast.sunsetTime
     : hour >= NIGHT_FROM_HOUR || hour < NIGHT_UNTIL_HOUR;
+  const precipitation = forecast ? precipitationOf(forecast.weatherCode) : "none";
   return {
     occupied: !winterized && present,
     arriving,
@@ -62,15 +73,18 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
     snowing: !!forecast && isSnowCode(forecast.weatherCode),
     snowCover: !!forecast && forecast.snowDepth > 0,
     frost: !!forecast && forecast.temp <= 0,
+    precipitation,
+    overcast: precipitation !== "none",
   };
 }
 
 /** Plch na chatě bydlí pod střechou a chová se jako plch: přes zimu (zazimovaná chata nebo sníh) spí schovaný, v noci
- * slézá dolů a u chaty hryže oříšek, ve dne spí na střeše. Na auto je zvědavý i v noci: vykukuje zpoza hřebene
- * střechy, stejně jako ve dne, když je někdo na chatě. */
+ * slézá dolů a u chaty hryže oříšek, ve dne spí na střeše. Na auto je zvědavý i v noci a i v dešti: vykukuje zpoza
+ * hřebene střechy, stejně jako ve dne, když je někdo na chatě. Jinak se před deštěm schová pod střechu (#609). */
 export function mascotPose(s: CabinSceneState): MascotPose {
   if (s.winterized || s.snowCover) return "hibernate";
   if (s.carParked) return "peek";
+  if (s.precipitation !== "none") return "shelter";
   if (s.night) return "nibble";
   return s.occupied ? "peek" : "sleep";
 }
@@ -80,7 +94,10 @@ const POSE_TEXT: Record<MascotPose, string> = {
   peek: "Plch vykukuje zpoza střechy.",
   nibble: "Plch v noci hryže u chaty oříšek.",
   hibernate: "Plch přes zimu spí schovaný pod střechou.",
+  shelter: "Plch se schoval před deštěm pod střechu.",
 };
+
+const PRECIPITATION_TEXT: Record<Precipitation, string> = { none: "", drizzle: "Mrholí.", rain: "Prší.", storm: "Bouřka." };
 
 /** Přístupný název scény: každá část odpovídá jedné vrstvě obrázku, nic nepřebíjí jen v textu. */
 export function cabinSceneLabel(s: CabinSceneState): string {
@@ -93,9 +110,10 @@ export function cabinSceneLabel(s: CabinSceneState): string {
     POSE_TEXT[mascotPose(s)],
     !s.frost ? "" : "Mrzne a stromy pokrývá jinovatka.",
     s.snowCover ? "Leží sníh, střecha je bílá." : "",
-    // Při sněžení je zataženo: noc bez hvězd.
-    !s.night ? "" : s.snowing ? "Je noc." : "Je noc, na nebi svítí hvězdy.",
+    // Při sněžení a srážkách je zataženo: noc bez hvězd.
+    !s.night ? "" : s.snowing || s.overcast ? "Je noc." : "Je noc, na nebi svítí hvězdy.",
     s.snowing ? "Sněží." : "",
+    PRECIPITATION_TEXT[s.precipitation],
   ];
   return `Scéna chaty. ${parts.filter(Boolean).join(" ")}`;
 }
