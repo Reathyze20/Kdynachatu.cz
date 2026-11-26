@@ -53,7 +53,7 @@ interface AuthStatusProps {
   /** Co se stalo, jako `h2` pod názvem appky. */
   title: string
   /** Jedna nebo dvě věty: proč a co dělat dál. */
-  children?: ReactNode
+  children: ReactNode
   /** Tlačítka pod textem, hlavní akce první. */
   actions: ReactNode
 }
@@ -64,7 +64,7 @@ export function AuthStatus({ icon: Icon, tone, title, children, actions }: AuthS
     <div className="flex flex-col items-center gap-3 text-center">
       <Icon size={24} aria-hidden="true" className={STATUS_TONE[tone]} />
       <h2 className="text-card-title text-(--text-main)">{title}</h2>
-      {children && <p className="text-body text-(--text-muted)">{children}</p>}
+      <p className="text-body text-(--text-muted)">{children}</p>
       <div className="mt-3 flex w-full flex-col items-center gap-2">{actions}</div>
     </div>
   )
