@@ -2,9 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider, createMemoryRouter } from 'react-router-dom'
+import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import { apiClient } from '@/api/client'
 import { AuthPage } from '@/features/auth/AuthPage'
+import { VerifyEmailPage } from '@/features/auth/VerifyEmailPage'
+import { NotFoundPage } from '@/features/not-found/NotFoundPage'
 
 // #525: veřejné obrazovky mají jeden rám (fotka, papírová karta, logo s názvem appky na střed)
 // a pohled přihlášení / registrace / zapomenuté heslo je v URL, takže Zpět v telefonu vrací o krok.
@@ -75,5 +78,17 @@ describe('jeden rám veřejných obrazovek (#525)', () => {
     expect(await screen.findByLabelText('Uživatelské jméno')).toBeInTheDocument()
     expect(screen.getByLabelText('Heslo')).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Zapamatovat si mě' })).toBeInTheDocument()
+  })
+})
+
+describe('samostatné veřejné obrazovky ve stejném rámu (#525)', () => {
+  it.each<[string, string, ReactNode, string]>([
+    ['ověření e-mailu bez odkazu', '/verify', <VerifyEmailPage />, 'Chybí ověřovací odkaz'],
+    ['404', '/neexistuje', <NotFoundPage />, 'Stránka nenalezena'],
+  ])('%s: jedno h1 s názvem appky v rámu s fotkou, stav jako h2', (_name, url, page, title) => {
+    render(<MemoryRouter initialEntries={[url]}>{page}</MemoryRouter>)
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(screen.getByRole('heading', { level: 1, name: 'Kdy na chatu' }).closest('.photo-backdrop')).not.toBeNull()
+    expect(screen.getByRole('heading', { level: 2, name: title })).toBeInTheDocument()
   })
 })

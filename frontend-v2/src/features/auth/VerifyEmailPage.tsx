@@ -5,8 +5,10 @@
  */
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { CircleCheck, CircleX } from 'lucide-react'
+import { CircleCheck, CircleHelp, CircleX } from 'lucide-react'
 import { apiClient } from '@/api/client'
+import { AuthLayout, AuthStatus } from '@/components/layout/AuthLayout'
+import { Button } from '@/components/ui/button'
 
 type VerifyState = 'loading' | 'success' | 'error' | 'no-token'
 
@@ -33,7 +35,7 @@ export function VerifyEmailPage() {
         })
 
         setState('success')
-        setMessage(data.message || 'Účet je ověřený!')
+        setMessage(data.message || 'Účet je ověřený.')
       } catch (err) {
         if ((err as Error).name === 'AbortError') return
         const data = (err as { response?: { data?: VerifyTokenResponse } }).response?.data
@@ -46,119 +48,35 @@ export function VerifyEmailPage() {
     return () => controller.abort()
   }, [token])
 
+  const loginLink = (label: string) => (
+    <Button asChild size="lg" className="w-full">
+      <Link to="/login" data-testid="verify-email-login-link">{label}</Link>
+    </Button>
+  )
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--color-bg, #f5f5f5)',
-      padding: '1rem',
-    }} data-testid="verify-email-page" data-verify-state={state}>
-      <div style={{
-        maxWidth: 420,
-        width: '100%',
-        background: 'white',
-        borderRadius: 16,
-        padding: '2.5rem 2rem',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        textAlign: 'center',
-      }}>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <img src="/logo-icon.svg" alt="Logo" style={{ width: 48, height: 48 }} />
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.5rem' }}>
-            Kdy na chatu
-          </h1>
-        </div>
+    <AuthLayout data-testid="verify-email-page" data-verify-state={state}>
+      {state === 'loading' && (
+        <p role="status" className="text-center text-body text-(--text-muted)">Ověřuji tvůj účet…</p>
+      )}
 
-        {state === 'loading' && (
-          <>
-            <div className="spinner" style={{ margin: '2rem auto' }} />
-            <p style={{ color: 'var(--color-text-light)' }}>Ověřuji tvůj účet…</p>
-          </>
-        )}
+      {state === 'success' && (
+        <AuthStatus icon={CircleCheck} tone="success" title="Ověření úspěšné" actions={loginLink('Přihlásit se')}>
+          {message}
+        </AuthStatus>
+      )}
 
-        {state === 'success' && (
-          <>
-            <CircleCheck size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-success)' }} />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Ověření úspěšné
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              {message}
-            </p>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 2rem',
-                background: 'var(--color-primary, #2563eb)',
-                color: 'white',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-              data-testid="verify-email-login-link"
-            >
-              Přihlásit se
-            </Link>
-          </>
-        )}
+      {state === 'error' && (
+        <AuthStatus icon={CircleX} tone="error" title="Ověření selhalo" actions={loginLink('Zpět na přihlášení')}>
+          {message}
+        </AuthStatus>
+      )}
 
-        {state === 'error' && (
-          <>
-            <CircleX size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-error)' }} />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-danger, #dc2626)' }}>
-              Ověření selhalo
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              {message}
-            </p>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 2rem',
-                background: 'var(--color-primary, #2563eb)',
-                color: 'white',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-              data-testid="verify-email-login-link"
-            >
-              Zpět na přihlášení
-            </Link>
-          </>
-        )}
-
-        {state === 'no-token' && (
-          <>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>?</div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Chybí ověřovací odkaz
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Ověřovací odkaz je neplatný nebo chybí token. Zkontroluj svůj e-mail a klikni na správný odkaz.
-            </p>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 2rem',
-                background: 'var(--color-primary, #2563eb)',
-                color: 'white',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-              data-testid="verify-email-login-link"
-            >
-              Zpět na přihlášení
-            </Link>
-          </>
-        )}
-      </div>
-    </div>
+      {state === 'no-token' && (
+        <AuthStatus icon={CircleHelp} tone="neutral" title="Chybí ověřovací odkaz" actions={loginLink('Zpět na přihlášení')}>
+          Ověřovací odkaz je neplatný nebo chybí token. Zkontroluj svůj e-mail a klikni na správný odkaz.
+        </AuthStatus>
+      )}
+    </AuthLayout>
   )
 }

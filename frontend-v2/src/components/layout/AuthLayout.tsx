@@ -1,4 +1,5 @@
 import { createContext, useContext, type HTMLAttributes, type ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import { Card } from '@/components/shared/Card'
 import { cn } from '@/lib/utils'
 
@@ -38,4 +39,33 @@ export function AuthLayout({ subtitle, className, children, ...props }: AuthLayo
     </Card>
   )
   return useContext(InsideBackdrop) ? sheet : <AuthBackdrop>{sheet}</AuthBackdrop>
+}
+
+const STATUS_TONE = {
+  success: 'text-(--status-success)',
+  error: 'text-(--status-error)',
+  neutral: 'text-(--text-muted)',
+}
+
+interface AuthStatusProps {
+  icon: LucideIcon
+  tone: keyof typeof STATUS_TONE
+  /** Co se stalo, jako `h2` pod názvem appky. */
+  title: string
+  /** Jedna nebo dvě věty: proč a co dělat dál. */
+  children?: ReactNode
+  /** Tlačítka pod textem, hlavní akce první. */
+  actions: ReactNode
+}
+
+/** Výsledek nebo slepá ulička v rámu (odkaz vypršel, účet ověřen, stránka neexistuje): ikona, nadpis, text, cesta dál. */
+export function AuthStatus({ icon: Icon, tone, title, children, actions }: AuthStatusProps) {
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <Icon size={24} aria-hidden="true" className={STATUS_TONE[tone]} />
+      <h2 className="text-card-title text-(--text-main)">{title}</h2>
+      {children && <p className="text-body text-(--text-muted)">{children}</p>}
+      <div className="mt-3 flex w-full flex-col items-center gap-2">{actions}</div>
+    </div>
+  )
 }

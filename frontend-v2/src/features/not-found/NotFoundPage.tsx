@@ -1,26 +1,28 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { MapPinOff } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { AuthLayout, AuthStatus } from '@/components/layout/AuthLayout'
+import { Button } from '@/components/ui/button'
 
 export function NotFoundPage() {
-  const navigate = useNavigate()
   const { isLoggedIn } = useAuth()
 
   return (
-    <div className="not-found-page" data-testid="not-found-page">
-      <div className="not-found-content">
-        <div className="not-found-icon">404</div>
-        <h1 className="not-found-title">Stránka nenalezena</h1>
-        <p className="not-found-text">
-          Tato stránka neexistuje nebo jsme ji přesunuli. Zkontroluj adresu a zkus to znovu.
-        </p>
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate(isLoggedIn ? '/dashboard' : '/')}
-          data-testid="not-found-home-button"
-        >
-          {isLoggedIn ? 'Zpět na přehled' : 'Zpět na úvod'}
-        </button>
-      </div>
-    </div>
+    <AuthLayout data-testid="not-found-page">
+      <AuthStatus
+        icon={MapPinOff}
+        tone="neutral"
+        title="Stránka nenalezena"
+        actions={(
+          <Button asChild size="lg" className="w-full">
+            <Link to={isLoggedIn ? '/dashboard' : '/'} data-testid="not-found-home-button">
+              {isLoggedIn ? 'Zpět na přehled' : 'Zpět na úvod'}
+            </Link>
+          </Button>
+        )}
+      >
+        Tato stránka neexistuje nebo jsme ji přesunuli. Zkontroluj adresu a zkus to znovu.
+      </AuthStatus>
+    </AuthLayout>
   )
 }
