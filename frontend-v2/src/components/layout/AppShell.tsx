@@ -115,7 +115,7 @@ export function AppShell() {
         </div>
 
         {/* Mobile bottom navigation */}
-        <MobileNav />
+        <MobileNav onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
       </div>
 
       {/* Profile Drawer (global overlay) */}

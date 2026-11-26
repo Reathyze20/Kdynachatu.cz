@@ -249,8 +249,6 @@
 
 .drawer-header h2 {
   margin: 0;
-  font-size: 1.5rem;
-  color: var(--color-text-dark);
 }
 
 .close-drawer {
@@ -315,23 +313,6 @@
 .drawer-section h3 {
   margin-top: 0;
   margin-bottom: var(--space-md);
-  font-size: 1.1rem;
-  color: var(--color-text-dark);
-}
-
-.drawer-quicklinks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.drawer-quicklink {
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  min-height: var(--touch-target-min);
 }
 
 /* Avatar and Color grids */

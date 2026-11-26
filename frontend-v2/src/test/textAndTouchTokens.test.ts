@@ -59,8 +59,8 @@ const countPerFile = (files: Record<string, string>, count: (source: string) => 
  * Smí jen klesat. Když soubor převedeš, sniž číslo (nebo řádek smaž); nový soubor sem nepatří.
  */
 const G3_DEBT: Record<string, number> = {
-  '../features/reservations/Reservations.module.css': 27,
-  '../styles/admin.css': 13,
+  '../features/reservations/Reservations.module.css': 26,
+  '../styles/admin.css': 10,
   '../styles/cabin-settings.css': 2,
   '../styles/diary.css': 3,
   '../styles/gallery.css': 12,
@@ -74,7 +74,6 @@ const G3_DEBT: Record<string, number> = {
 
 /** Totéž pro TSX (Tailwind a inline styly). */
 const G3_DEBT_TSX: Record<string, number> = {
-  '../components/layout/ProfileDrawer.tsx': 3,
   '../components/shared/FeatureErrorFallback.tsx': 4,
   '../components/shared/GlobalFallback.tsx': 5,
   '../features/gallery/UploadModal.tsx': 1,

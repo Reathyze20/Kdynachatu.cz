@@ -157,10 +157,8 @@ body {
   overflow: hidden;
 }
 
-/* Ensure images and broad containers never exceed viewport */
-img,
-.calendar-container,
-.flatpickr-calendar {
+/* Ensure images never exceed viewport */
+img {
   max-width: 100%;
 }
 

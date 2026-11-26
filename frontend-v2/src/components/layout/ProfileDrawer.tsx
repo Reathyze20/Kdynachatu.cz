@@ -1,7 +1,7 @@
 /**
  * components/layout/ProfileDrawer.tsx
- * Překlad: #profile-drawer-overlay z index.html + initProfileDrawer() z main.ts
- * Na mobilu nabízí nápovědu (#524): menu Víc chybí hostovi a chatě bez doplňků, plovoucí tlačítko appka nemá.
+ * Šuplík profilu: osobní údaje, zabezpečení a pro správce rychlé odkazy do správy (#524).
+ * Na mobilu nabízí i nápovědu, protože menu Víc chybí hostovi a chatě bez doplňků.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +20,7 @@ import { AVATARS } from '@/lib/avatars'
 import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { HelpDialog } from '@/components/shared/HelpDialog'
+import { listRowLinkClass } from '@/components/shared/ListRow'
 import { useNavigate } from 'react-router-dom'
 import { CircleHelp, LogOut, ScrollText, Settings, Shield } from 'lucide-react'
 import { useCabinSceneMode, type CabinSceneMode } from '@/hooks/useCabinSceneMode'
@@ -345,7 +346,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     >
       <div id="profile-drawer" className="drawer-content right-drawer" data-testid="profile-drawer">
         <div className="drawer-header">
-          <h2>Můj profil</h2>
+          <h2 className="text-page-title text-(--text-main)">Můj profil</h2>
           <button
             className="close-drawer"
             id="close-profile-drawer"
@@ -360,37 +361,25 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         <div className="drawer-body">
           {(isAdmin || isSuperAdmin) && (
             <div className="drawer-section">
-              <h3>Správa a diagnostika</h3>
-              <div className="drawer-quicklinks">
+              <h3 className="text-card-title text-(--text-main)">Správa</h3>
+              <div className="-mx-4 flex flex-col md:-mx-6">
                 {isAdmin ? (
-                  <button
-                    type="button"
-                    className="button-secondary drawer-quicklink"
-                    onClick={() => handleNavigate('/admin')}
-                  >
-                    <Settings size={16} />
-                    <span>Administrativa</span>
+                  <button type="button" className={listRowLinkClass} onClick={() => handleNavigate('/admin')}>
+                    <Settings size={20} aria-hidden="true" />
+                    <span>Správa chaty</span>
                   </button>
                 ) : null}
 
                 {isAdmin ? (
-                  <button
-                    type="button"
-                    className="button-secondary drawer-quicklink"
-                    onClick={() => handleNavigate('/admin/diagnostics#system-info')}
-                  >
-                    <ScrollText size={16} />
-                    <span>Statistiky a logy</span>
+                  <button type="button" className={listRowLinkClass} onClick={() => handleNavigate('/admin/diagnostics#system-info')}>
+                    <ScrollText size={20} aria-hidden="true" />
+                    <span>Diagnostika</span>
                   </button>
                 ) : null}
 
                 {isSuperAdmin ? (
-                  <button
-                    type="button"
-                    className="button-secondary drawer-quicklink"
-                    onClick={() => handleNavigate('/superadmin')}
-                  >
-                    <Shield size={16} />
+                  <button type="button" className={listRowLinkClass} onClick={() => handleNavigate('/superadmin')}>
+                    <Shield size={20} aria-hidden="true" />
                     <span>Backoffice</span>
                   </button>
                 ) : null}
@@ -398,10 +387,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             </div>
           )}
 
-          {/* Desktop má nápovědu v sidebaru */}
-          <div className="md:hidden">
-            <button type="button" className="button-secondary drawer-quicklink" onClick={() => setHelpOpen(true)}>
-              <CircleHelp size={16} aria-hidden="true" />
+          {/* Desktop má nápovědu v sidebaru; skrývá ji nav.css na zlomu sidebaru (769 px), ne md:hidden */}
+          <div className="drawer-help -mx-4 flex flex-col md:-mx-6">
+            <button type="button" className={listRowLinkClass} onClick={() => setHelpOpen(true)}>
+              <CircleHelp size={20} aria-hidden="true" />
               <span>Nápověda</span>
             </button>
           </div>
@@ -434,15 +423,15 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             data-testid="profile-tab-personal"
           >
             <div className="drawer-section">
-              <h3>Kontaktní údaje</h3>
+              <h3 className="text-card-title text-(--text-main)">Kontaktní údaje</h3>
               <div className="form-group">
-                <label htmlFor="profile-email">E-mailová adresa:</label>
+                <label htmlFor="profile-email">E-mailová adresa</label>
                 <div className="drawer-email-row" style={{ display: 'flex', gap: '10px' }}>
                   <input
                     type="email"
                     id="profile-email"
                     name="email"
-                    className="form-control"
+                    className={`form-control${emailError ? ' is-invalid' : ''}`}
                     maxLength={255}
                     placeholder="neco@neco.cz"
                     value={email}
@@ -450,7 +439,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                     onBlur={handleEmailBlur}
                     aria-invalid={emailError || undefined}
                     aria-describedby={emailError ? 'profile-email-error' : emailMessage ? 'profile-email-message' : undefined}
-                    style={emailError ? { borderColor: 'var(--color-danger)' } : undefined}
                     data-testid="profile-email-input"
                   />
                   <button
@@ -496,10 +484,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             </div>
 
             <div className="drawer-section">
-              <h3>Vzhled profilu</h3>
+              <h3 className="text-card-title text-(--text-main)">Vzhled profilu</h3>
               <div className="form-group">
-                <label>Vyber si barvu:</label>
-                <div id="profile-color-grid" className="swatch-grid">
+                <p id="profile-color-label" className="text-label text-(--text-muted)">Barva</p>
+                <div id="profile-color-grid" className="swatch-grid" role="group" aria-labelledby="profile-color-label">
                   {MEMBER_PALETTE.map(({ hex, name }) => (
                     <div
                       key={hex}
@@ -519,8 +507,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               </div>
 
               <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                <label>Tvůj avatar:</label>
-                <div id="profile-avatar-grid" className="avatar-grid">
+                <p id="profile-avatar-label" className="text-label text-(--text-muted)">Avatar</p>
+                <div id="profile-avatar-grid" className="avatar-grid" role="group" aria-labelledby="profile-avatar-label">
                   {AVATARS.map((avatar) => (
                     <div
                       key={avatar.id}
@@ -540,7 +528,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             </div>
 
             <div className="drawer-section">
-              <h3 id={sceneHeadingId}>Scéna chaty</h3>
+              <h3 id={sceneHeadingId} className="text-card-title text-(--text-main)">Scéna chaty</h3>
               <div role="group" aria-labelledby={sceneHeadingId} className="flex flex-wrap gap-2">
                 {SCENE_MODES.map(({ value, label }) => (
                   <Button key={value} size="sm" variant={sceneMode === value ? 'primary' : 'secondary'} aria-pressed={sceneMode === value} onClick={() => setSceneMode(value)}>
@@ -559,7 +547,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             data-testid="profile-tab-security"
           >
             <div className="drawer-section">
-              <h3>Zabezpečení účtu</h3>
+              <h3 className="text-card-title text-(--text-main)">Zabezpečení účtu</h3>
               <form
                 id="profile-security-form"
                 style={{ marginTop: '1.5rem' }}
@@ -567,15 +555,15 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 data-testid="profile-security-form"
               >
                 <div className="form-group">
-                  <label htmlFor="profile-old-password">Staré heslo:</label>
+                  <label htmlFor="profile-old-password">Staré heslo</label>
                   <input type="password" id="profile-old-password" name="oldPassword" className="form-control" maxLength={100} required ref={oldPasswordRef} data-testid="profile-old-password-input" />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="profile-new-password">Nové heslo:</label>
+                  <label htmlFor="profile-new-password">Nové heslo</label>
                   <input type="password" id="profile-new-password" name="newPassword" className="form-control" minLength={8} maxLength={100} required ref={newPasswordRef} data-testid="profile-new-password-input" />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="profile-new-password-confirm">Potvrdit nové heslo:</label>
+                  <label htmlFor="profile-new-password-confirm">Potvrdit nové heslo</label>
                   <input type="password" id="profile-new-password-confirm" name="newPasswordConfirm" className="form-control" minLength={8} maxLength={100} required ref={newPasswordConfirmRef} data-testid="profile-new-password-confirm-input" />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
@@ -584,8 +572,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 {securityMessage && (
                   <p
                     id="profile-security-message"
-                    className="message"
-                    style={{ color: securityError ? 'var(--color-danger)' : 'var(--color-success)' }}
+                    className={`message ${securityError ? 'text-(--status-error)' : 'text-(--status-success)'}`}
                   >
                     {securityMessage}
                   </p>
@@ -594,7 +581,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             </div>
 
             <div className="drawer-section mt-8">
-              <h3>Přihlášená zařízení</h3>
+              <h3 className="text-card-title text-(--text-main)">Přihlášená zařízení</h3>
               <p id={logoutHintId} className="mt-2 mb-4 text-label text-(--text-muted)">
                 Odhlásí tě jen na tomhle zařízení. Hodí se, když telefon nebo tablet předáváš dalšímu z rodiny.
               </p>
@@ -651,11 +638,11 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             </div>
 
             <div className="drawer-section" style={{ marginTop: '2rem' }}>
-              <h3>Členství v chatě</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0 1rem' }}>
+              <h3 className="text-card-title text-(--text-main)">Členství v chatě</h3>
+              <p className="mt-2 mb-4 text-label text-(--text-muted)">
                 Opustíš aktuální chatu, ale účet ti zůstane. Potom můžeš přijmout novou pozvánku nebo založit vlastní chatu.
               </p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 1rem' }}>
+              <p className="mb-4 text-label text-(--text-muted)">
                 Pokud jsi poslední admin, nejdřív předej roli admina jinému členovi.
               </p>
 
@@ -694,8 +681,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
             {/* GDPR — Export & Delete */}
             <div className="drawer-section" style={{ marginTop: '2rem' }}>
-              <h3>Tvoje data (GDPR)</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0 1rem' }}>
+              <h3 className="text-card-title text-(--text-main)">Tvoje data (GDPR)</h3>
+              <p className="mt-2 mb-4 text-label text-(--text-muted)">
                 Máš právo si stáhnout svá data nebo smazat svůj účet.
               </p>
 

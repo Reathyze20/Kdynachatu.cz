@@ -259,6 +259,11 @@
 }
 
 @media (min-width: 769px) {
+  /* Nápovědu tu nese sidebar; šuplík ji skryje na stejném zlomu, ať v 768 px nezmizí z obou míst (#524) */
+  .drawer-help {
+    display: none;
+  }
+
   .app-sidebar {
     display: flex;
     flex-direction: column;
@@ -438,9 +443,8 @@
   display: none !important;
 }
 
-/* Focus z klávesnice stejným prstencem jako tlačítka (buttons.css), i u odkazů v liště a ve „Víc“ (G2) */
-.mobile-nav-link:focus-visible,
-.drawer-quicklink:focus-visible {
+/* Focus z klávesnice stejným prstencem jako tlačítka (buttons.css), i u odkazů v liště (G2) */
+.mobile-nav-link:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }

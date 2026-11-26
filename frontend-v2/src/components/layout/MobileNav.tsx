@@ -1,35 +1,49 @@
 /**
  * components/layout/MobileNav.tsx
  * Spodní lišta podle cyklu turnusu (redesign #0, issue #171): Přehled · Kalendář · Předávka · Zásoby · Víc.
- * Doplňky (Chat, Galerie, Deník, Rekonstrukce), „Přidat na plochu“ (#277) a nápověda (#524) jsou pod „Víc“.
+ * Doplňky (Chat, Galerie, Deník, Rekonstrukce) a „Přidat na plochu“ (#277) jsou pod „Víc“, pod oddělovačem
+ * Můj profil, Správa (jen správce), Nápověda a Odhlásit (#524). Víc se ukáže, jen když nabízí sekci nebo
+ * instalaci; účet a nápověda bez nich zůstávají v šuplíku profilu pod avatarem v hlavičce.
  * Po horní hraně lišty jednou za otevření appky přejde maskot ze scény chaty (#566).
  */
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { CircleHelp, MoreHorizontal } from 'lucide-react'
-import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
+import { CircleHelp, LogOut, MoreHorizontal, UserRound } from 'lucide-react'
+import { ADMIN_NAV, MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
+import { useLogout } from '@/hooks/useLogout'
 import { Modal } from '@/components/shared/Modal'
 import { HelpDialog } from '@/components/shared/HelpDialog'
+import { listRowLinkClass } from '@/components/shared/ListRow'
 import { InstallMenuItem } from '@/components/shared/InstallCard'
+import { LogoutPendingChangesDialog } from './LogoutPendingChangesDialog'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { NavMascot } from '@/features/dashboard/NavMascot'
 
-export function MobileNav() {
-  const { user, isGuest } = useAuth()
+interface MobileNavProps {
+  /** Otevře šuplík profilu (drží ho AppShell). Bez něj Víc položku „Můj profil“ nenabízí. */
+  onOpenProfileDrawer?: () => void
+}
+
+export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
+  const { user, isGuest, isAdmin } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const { canInstall } = usePwaInstall()
+  const closeMore = () => setMoreOpen(false)
+  // Menu se zavře až při odhlášení, jinak by s ním zmizel i dotaz na neodeslané změny (#537)
+  const { requestLogout, pendingDialog } = useLogout(closeMore)
 
   if (!user?.cabinId) return null
 
   const tabs = visibleNavItems(PRIMARY_NAV, cabin?.features, isGuest)
   const more = visibleNavItems(MORE_NAV, cabin?.features, isGuest)
-  const active = findActiveNavItem([...tabs, ...more], location)
-  const activeMore = active && more.includes(active) ? active : undefined
+  const underMore = isAdmin ? [...more, ADMIN_NAV] : more
+  const active = findActiveNavItem([...tabs, ...underMore], location)
+  const activeMore = active && underMore.includes(active) ? active : undefined
   // V sekci schované pod „Víc“ má záložka ikonu té sekce, popisek zůstává „Víc“ (úzké displeje).
   const MoreIcon = activeMore?.icon ?? MoreHorizontal
 
@@ -71,18 +85,33 @@ export function MobileNav() {
         <NavMascot />
       </nav>
 
-      <Modal isOpen={moreOpen} onClose={() => setMoreOpen(false)} title="Víc">
-        <div className="drawer-quicklinks" data-testid="mobile-nav-more-sheet">
-          {more.map((item) => renderNavLink(item, 'button-secondary drawer-quicklink', () => setMoreOpen(false)))}
-          <InstallMenuItem className="button-secondary drawer-quicklink" />
-          <button type="button" className="button-secondary drawer-quicklink" onClick={() => { setMoreOpen(false); setHelpOpen(true) }}>
+      <Modal isOpen={moreOpen} onClose={closeMore} title="Víc">
+        <div className="-mx-4 flex flex-col" data-testid="mobile-nav-more-sheet">
+          {more.map((item) => renderNavLink(item, listRowLinkClass, closeMore))}
+          <InstallMenuItem className={listRowLinkClass} />
+
+          <hr className="mx-4 my-2 border-rule-soft" />
+
+          {onOpenProfileDrawer ? (
+            <button type="button" className={listRowLinkClass} onClick={() => { closeMore(); onOpenProfileDrawer() }}>
+              <UserRound size={20} aria-hidden="true" />
+              <span>Můj profil</span>
+            </button>
+          ) : null}
+          {isAdmin ? renderNavLink(ADMIN_NAV, listRowLinkClass, closeMore) : null}
+          <button type="button" className={listRowLinkClass} onClick={() => { closeMore(); setHelpOpen(true) }}>
             <CircleHelp size={20} aria-hidden="true" />
             <span>Nápověda</span>
+          </button>
+          <button type="button" className={listRowLinkClass} onClick={requestLogout}>
+            <LogOut size={20} aria-hidden="true" />
+            <span>Odhlásit</span>
           </button>
         </div>
       </Modal>
 
       <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+      <LogoutPendingChangesDialog {...pendingDialog} />
     </>
   )
 }
