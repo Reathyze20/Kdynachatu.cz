@@ -234,6 +234,10 @@
   --scene-rain: #7f9bb3;
   --scene-flash: #f5f8ff;
   --scene-overcast: #7d848c;
+  /* Mlha a soumrak se svítáním (#610) */
+  --scene-fog: #eef0ef;
+  --scene-dusk: #f0812f;
+  --scene-dawn: #f19aae;
 
   /* ── Fotka krajiny — jen přihlášení (.photo-backdrop), ne po přihlášení (C5a) ── */
   --bg-image: url("/bg-hero.jpg");

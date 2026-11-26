@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, 
 import type { DashboardReservationsData, WeatherResult } from "@/api/dashboard";
 import { useCabinSceneMode } from "@/hooks/useCabinSceneMode";
 import { cn } from "@/lib/utils";
-import { cabinSceneLabel, deriveCabinScene, mascotPose, type CabinSceneState, type MascotPose } from "./cabinSceneState";
-import { BIRD_FLAP, MOON, SCENE_PALETTE, SMOKE, ZZZ, type Sprite } from "./cabinSceneSprites";
+import { cabinSceneLabel, deriveCabinScene, fallsSlanted, mascotPose, smokeCurls, type CabinSceneState, type MascotPose } from "./cabinSceneState";
+import { BIRD_FLAP, MOON, SCENE_PALETTE, SMOKE, SMOKE_WIND, ZZZ, type Sprite } from "./cabinSceneSprites";
 import bgBare from "./scene/bg-bare.png";
 import bgSnow from "./scene/bg-snow.png";
 import cabinBare from "./scene/cabin-bare.png";
@@ -98,8 +98,9 @@ function seededRandom(seed: number) {
 }
 
 /** Sníh přebarví louku, střechu i stromy; v mrazu mají stromy zasněžené jehličí jako námrazu. Za zataženého dne leží
- * přes pozadí šedý závoj (stromy a chata před ním zůstanou syté); v noci ho nahradí noční clona. */
-function landscape({ snowCover, frost, overcast, night }: CabinSceneState): Layer[] {
+ * přes pozadí šedý závoj (stromy a chata před ním zůstanou syté); v noci ho nahradí noční clona. Mlha je před stromy. */
+function landscape(state: CabinSceneState): Layer[] {
+  const { snowCover, frost, overcast, night } = state;
   const white = snowCover || frost;
   const trees = PINES.map(([x, big]): Img => {
     const [w, h] = big ? [31, 58] : [23, 43];
@@ -108,7 +109,27 @@ function landscape({ snowCover, frost, overcast, night }: CabinSceneState): Laye
   });
   const sky = [image("sky", { href: snowCover ? bgSnow : bgBare, x: 0, y: 0, w: W, h: H })];
   if (overcast && !night) sky.push(veil("overcast", "overcast", 0.35));
-  return [...sky, image("trees", ...trees)];
+  // Mlha leží ve dvou pásech přes stromy a louku, každý pluje jinou rychlostí; noční clona ji v noci ztmaví.
+  const fog = state.fog ? [fogBand("fog-trees", 29, 36, "animate-scene-fog-slow", 0.5), fogBand("fog-meadow", 31, GROUND - 7, "animate-scene-fog", 0.6)] : [];
+  return [...sky, image("trees", ...trees), ...fog];
+}
+
+/** Pás mlhy (#610): chuchvalce s periodou `FOG_PERIOD` skládané za sebou od jedné periody vlevo mimo scénu. Při animaci
+ * pluje doprava o jednu periodu (`animate-scene-fog-*`), smyčka tak navazuje bez skoku. */
+const FOG_PERIOD = 160;
+function fogBand(name: string, seed: number, top: number, motion: string, opacity: number): Layer {
+  const rnd = seededRandom(seed);
+  const band = { ...layer(name, motion), opacity };
+  // Chuchvalec je zaoblený: nad a pod jádrem užší řádek.
+  const puffs = Array.from({ length: 7 }, () => [Math.floor(rnd() * FOG_PERIOD), top + 1 + Math.floor(rnd() * 3), 20 + Math.floor(rnd() * 28), 1 + Math.floor(rnd() * 2)]);
+  for (let offset = -FOG_PERIOD; offset < W; offset += FOG_PERIOD) {
+    for (const [x, y, w, h] of puffs) {
+      add(band, "fog", box(offset + x + 4, y - 1, w - 8, 1));
+      add(band, "fog", box(offset + x, y, w, h));
+      add(band, "fog", box(offset + x + 3, y + h, w - 6, 1));
+    }
+  }
+  return band;
 }
 
 /** Okna chaty: svítí (obsazeno), v noci tmavnou, u zazimované chaty jsou zavřené okenice. */
@@ -127,26 +148,45 @@ function windows({ occupied, winterized, night }: CabinSceneState, name = "windo
   return panes;
 }
 
-/** Částice přes celou scénu, `size(n)` = šířka a výška n-té. Při animaci padají: kopie nad scénou se posouvá o výšku
- * scény, smyčka tak navazuje bez skoku. */
-function falling(l: Layer, token: string, seed: number, count: number, moving: boolean, size: (n: number) => [number, number]): Layer {
+/** Jedna částice jako obdélníky [dx, dy, w, h] od svého počátku. */
+type Speck = readonly (readonly [number, number, number, number])[];
+
+/** Částice přes celou scénu, `count` na šířku scény. Při animaci padají: kopie nad scénou se posouvá o výšku scény
+ * (a o `drift` doprava, když je fouká vítr), smyčka tak navazuje bez skoku. S driftem začínají částice i vlevo mimo
+ * scénu, aby levý okraj za pohybu nezůstal prázdný. */
+function falling(l: Layer, token: string, seed: number, count: number, moving: boolean, speck: (n: number) => Speck, drift = 0): Layer {
   const rnd = seededRandom(seed);
-  for (let n = 0; n < count; n++) {
-    const [x, y, [w, h]] = [Math.floor(rnd() * W), Math.floor(rnd() * H), size(n)];
-    add(l, token, box(x, y, w, h));
-    if (moving) add(l, token, box(x, y - H, w, h));
+  for (let n = 0; n < Math.round((count * (W + drift)) / W); n++) {
+    const [x, y] = [Math.floor(rnd() * (W + drift)) - drift, Math.floor(rnd() * H)];
+    for (const [dx, dy, w, h] of speck(n)) {
+      add(l, token, box(x + dx, y + dy, w, h));
+      if (moving) add(l, token, box(x + dx - drift, y + dy - H, w, h));
+    }
   }
   return l;
 }
 
-const snowfall = (moving: boolean) =>
-  falling(layer("snowfall", "animate-scene-snow"), "snow", 13, (W * H) / 90, moving, (n) => (n % 3 ? [1, 1] : [2, 2]));
+/** Silný vítr (#610) žene vločky úhlopříčně (o výšku scény doprava) a kapky o polovinu výšky; šikmé jsou i částice
+ * samotné, takže směr je vidět i ve statické scéně. */
+const SNOW_DRIFT = H;
+const RAIN_DRIFT = H / 2;
+
+function snowfall(slanted: boolean, moving: boolean): Layer {
+  const flakes = layer("snowfall", slanted ? "animate-scene-snow-wind" : "animate-scene-snow");
+  const speck = (n: number): Speck => (n % 3 ? (slanted ? [[0, 0, 1, 1], [1, 1, 1, 1]] : [[0, 0, 1, 1]]) : [[0, 0, 2, 2]]);
+  return falling(flakes, "snow", 13, (W * H) / 90, moving, speck, slanted ? SNOW_DRIFT : 0);
+}
 
 /** Kapky: mrholení řídké a pomalejší, déšť a bouřka husté. */
-function rainfall(precipitation: CabinSceneState["precipitation"], moving: boolean): Layer {
+function rainfall(precipitation: CabinSceneState["precipitation"], slanted: boolean, moving: boolean): Layer {
   const drizzle = precipitation === "drizzle";
-  const drops = layer("rain", drizzle ? "animate-scene-drizzle" : "animate-scene-rain");
-  return falling(drops, "rain", 17, (W * H) / (drizzle ? 320 : 80), moving, (n) => [1, n % 3 ? 2 : 3]);
+  // Celá jména tříd, ať je Tailwind najde ve zdrojácích a utility vygeneruje.
+  const motion = drizzle ? (slanted ? "animate-scene-drizzle-wind" : "animate-scene-drizzle") : (slanted ? "animate-scene-rain-wind" : "animate-scene-rain");
+  const speck = (n: number): Speck => {
+    const len = n % 3 ? 2 : 3;
+    return slanted ? [[0, 0, 1, 2], [1, 2, 1, len - 2]] : [[0, 0, 1, len]];
+  };
+  return falling(layer("rain", motion), "rain", 17, (W * H) / (drizzle ? 320 : 80), moving, speck, slanted ? RAIN_DRIFT : 0);
 }
 
 /** Šplouchání na louce při dešti a bouřce: čárky 1–3 jednotky, každá skupina svítí dva snímky pásu za sebou, pak zhasne.
@@ -211,16 +251,18 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
     ...landscape(state),
     ...mascot(state, "roof"),
     image("cabin", { href: snowCover ? cabinSnow : cabinBare, x: CABIN.x, y: CABIN_Y, w: CABIN.w, h: CABIN.h }),
-    windows(state),
   ];
   if (state.carParked) layers.push(image("car", { href: carImg, x: CAR.x, y: GROUND - CAR.h + 1, w: CAR.w, h: CAR.h }));
   layers.push(...mascot(state, "ground"));
+  // Soumrak a svítání (#610): teplý závoj přes krajinu, okna a kouř zůstanou nad ním.
+  if (state.twilight !== "none") layers.push(veil(state.twilight, state.twilight, 0.22));
+  layers.push(windows(state));
   // Občasný drobný detail: ve dne přeletí ptáček zleva doprava (start i cíl jsou mimo scénu). U zazimované chaty se nic neděje.
   if (moving && !night && !winterized) layers.push(bird());
   if (night) {
     const rnd = seededRandom(11);
     layers.push(veil("night", "night-veil", 0.5));
-    // Při sněžení a srážkách je zataženo: bez měsíce a hvězd.
+    // Při sněžení, srážkách a mlze je zataženo: bez měsíce a hvězd.
     if (!state.snowing && !state.overcast) {
       const sky = drawSprite(layer("stars"), MOON, W / 2 + 64, 4);
       for (let n = 0; n < W / 5; n++) add(sky, "light", box(Math.floor(rnd() * W), Math.floor(rnd() * 30), 1, 1));
@@ -233,9 +275,14 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
   if (moving && state.precipitation === "storm") layers.push(veil("lightning", "flash", undefined, "animate-scene-lightning"));
   // zZz až přes noční clonu, ať je v noci vidět.
   layers.push(...snoring(state));
-  if (occupied) layers.push(drawSprite(layer("smoke", "animate-scene-smoke"), SMOKE, CABIN.x + CHIMNEY_X, CABIN_Y - SMOKE.length - 1));
-  if (state.snowing) layers.push(snowfall(moving));
-  if (state.precipitation !== "none") layers.push(rainfall(state.precipitation, moving));
+  if (occupied) {
+    // Ve větru (#610) se kouř stáčí zleva doprava.
+    const [smoke, motion] = smokeCurls(state) ? [SMOKE_WIND, "animate-scene-smoke-wind"] : [SMOKE, "animate-scene-smoke"];
+    layers.push(drawSprite(layer("smoke", motion), smoke, CABIN.x + CHIMNEY_X, CABIN_Y - smoke.length - 1));
+  }
+  const slanted = fallsSlanted(state);
+  if (state.snowing) layers.push(snowfall(slanted, moving));
+  if (state.precipitation !== "none") layers.push(rainfall(state.precipitation, slanted, moving));
   if (state.precipitation === "rain" || state.precipitation === "storm") layers.push(splashes());
   return layers;
 }
