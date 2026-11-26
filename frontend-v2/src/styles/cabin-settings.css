@@ -10,6 +10,8 @@
 .cs-tab-pane {
   display: none;
   animation: fadeInTab var(--transition-slow);
+  /* vstup easeOut (DESIGN.md §5), token nese jen trvání */
+  animation-timing-function: ease-out;
 }
 
 .cs-tab-pane.active {
