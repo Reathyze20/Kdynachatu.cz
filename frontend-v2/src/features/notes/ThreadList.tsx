@@ -1,7 +1,9 @@
-import { Search, SearchX } from "lucide-react";
+import { MessageCircle, Search, SearchX } from "lucide-react";
 import type { NoteThread } from "@/api/notes";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
+import { listRowLinkClass } from "@/components/shared/ListRow";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatShortDate, formatTime } from "@/lib/format";
 
@@ -16,6 +18,11 @@ interface Props {
   userMap: UserMap;
   onSearchChange: (q: string) => void;
   onSelectThread: (id: string | null) => void;
+  /** Témata se načítají: skeleton ve tvaru seznamu, hledání zůstává na místě. */
+  isLoading: boolean;
+  /** Načtení témat selhalo: chyba s „Zkusit znovu“ místo seznamu. */
+  loadError: Error | null;
+  onRetry: () => void;
 }
 
 /**
@@ -52,6 +59,9 @@ export function ThreadList({
   userMap,
   onSearchChange,
   onSelectThread,
+  isLoading,
+  loadError,
+  onRetry,
 }: Props) {
   // Hlavní (id null) je připnuté nahoře, ostatní témata podle poslední zprávy.
   const filtered = threads
@@ -83,14 +93,35 @@ export function ThreadList({
         />
       </div>
 
-      {filtered.length === 0 ? (
-        <EmptyState icon={SearchX} message="Žádné téma neodpovídá hledání." />
+      {isLoading ? (
+        <div className="mt-4" aria-busy="true">
+          <p className="sr-only">Načítám témata…</p>
+          <ul className="flex flex-col gap-4" aria-hidden="true">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <li key={i} className="flex items-center gap-3">
+                <div className="skeleton size-10 shrink-0 rounded-full" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="skeleton skeleton-text medium" />
+                  <div className="skeleton skeleton-text short" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : loadError ? (
+        <FeatureErrorFallback bare error={loadError} resetErrorBoundary={onRetry} title="Témata se nepodařilo načíst" />
+      ) : filtered.length === 0 ? (
+        searchQuery
+          ? <EmptyState icon={SearchX} message="Žádné téma neodpovídá hledání." />
+          : <EmptyState icon={MessageCircle} message="Zatím tu nejsou žádná témata." />
       ) : (
-        <ul className="-mx-2 mt-2 min-h-0 flex-1 overflow-y-auto" data-testid="notes-thread-list">
+        <ul className="-mx-4 mt-2 min-h-0 flex-1 overflow-y-auto" data-testid="notes-thread-list">
           {filtered.map((t) => {
             const isActive = activeThreadId === t.id;
             const isUnread = !isActive && !!t.hasUnread;
-            const lastText = t.lastMessage ? stripMarkdown(t.lastMessage) : "Žádné zprávy";
+            // Náhled se zkracuje i v textu, ne jen vizuálně: celý by čtečka četla ve jménu tlačítka.
+            const preview = t.lastMessage ? stripMarkdown(t.lastMessage) : "Žádné zprávy";
+            const lastText = preview.length > 80 ? `${preview.slice(0, 80)}…` : preview;
             const lastTime = t.lastMessage && t.lastMessageAt ? formatThreadTime(t.lastMessageAt) : "";
             const lastAuthor = t.lastMessageBy ?? null;
             const authorInfo = lastAuthor ? userMap[lastAuthor] : undefined;
@@ -99,8 +130,8 @@ export function ThreadList({
               <li key={t.id ?? "__main__"}>
                 <button
                   type="button"
-                  className="flex min-h-(--touch-target-min) w-full items-center gap-3 rounded-(--radius-md) px-2 py-3 text-left hover:bg-(--bg-hover) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring aria-[current=true]:bg-accent"
-                  aria-current={isActive || undefined}
+                  className={`${listRowLinkClass} py-3`}
+                  aria-current={isActive ? "page" : undefined}
                   onClick={() => onSelectThread(t.id ?? null)}
                   data-testid="notes-thread-item"
                   data-thread-id={t.id ?? "__main__"}

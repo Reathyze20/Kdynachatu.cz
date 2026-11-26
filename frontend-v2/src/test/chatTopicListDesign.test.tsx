@@ -56,6 +56,8 @@ describe('chat topic list per DESIGN.md (#518)', () => {
     expect(rest).toHaveLength(0)
     expect(h1).toHaveTextContent('Chat')
     expect(within(h1.closest('header') as HTMLElement).getByRole('button', { name: 'Nové téma' })).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Hledat téma' })).toBeInTheDocument()
+    expect(screen.getByText('Načítám témata…')).toBeInTheDocument()
   })
 
   it('topics are buttons reachable from the keyboard and Hlavní is pinned on top', async () => {
@@ -68,7 +70,7 @@ describe('chat topic list per DESIGN.md (#518)', () => {
     items[1].focus()
     await user.keyboard('{Enter}')
     expect(await screen.findByRole('heading', { name: 'Kamna' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Kamna/, current: true })).toBe(items[1])
+    expect(screen.getByRole('button', { name: /Kamna/, current: 'page' })).toBe(items[1])
   })
 
   it('an unread topic says so in words, not only with a dot', async () => {

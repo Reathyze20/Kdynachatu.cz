@@ -199,45 +199,27 @@ export function NotesPage() {
 
           {/* ── Left: hlavička stránky a seznam témat ── */}
           {showSidebar ? (
-            <aside className="notes-sidebar" aria-label="Témata" data-testid="notes-thread-sidebar">
+            <div className="notes-sidebar" data-testid="notes-thread-sidebar">
               {/* Název jako položka navigace (#263), „Nové téma“ jediná primární akce (DESIGN.md §7) */}
               <PageHeader
                 title="Chat"
                 className="shrink-0"
                 primaryAction={{ label: "Nové téma", icon: Plus, onClick: handleCreateThread }}
               />
-              {threadsLoading ? (
-                <ul className="mt-4 flex flex-col gap-4" aria-hidden="true">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <div className="skeleton size-10 shrink-0 rounded-full" />
-                      <div className="flex flex-1 flex-col gap-2">
-                        <div className="skeleton skeleton-text medium" />
-                        <div className="skeleton skeleton-text short" />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : threadsFailed ? (
-                <FeatureErrorFallback
-                  bare
-                  error={threadsError as Error}
-                  resetErrorBoundary={() => {
-                    void refetchThreads();
-                  }}
-                  title="Témata se nepodařilo načíst"
-                />
-              ) : (
-                <ThreadList
-                  threads={threads}
-                  activeThreadId={activeThreadId}
-                  searchQuery={searchQuery}
-                  userMap={userMap}
-                  onSearchChange={setSearchQuery}
-                  onSelectThread={handleSelectThread}
-                />
-              )}
-            </aside>
+              <ThreadList
+                threads={threads}
+                activeThreadId={activeThreadId}
+                searchQuery={searchQuery}
+                userMap={userMap}
+                onSearchChange={setSearchQuery}
+                onSelectThread={handleSelectThread}
+                isLoading={threadsLoading}
+                loadError={threadsFailed ? (threadsError as Error) : null}
+                onRetry={() => {
+                  void refetchThreads();
+                }}
+              />
+            </div>
           ) : (
             // Mobil s otevřeným vláknem: titulek stránky schovaný, ale pořád jediné h1 (DESIGN.md §7)
             <h1 className="sr-only">Chat</h1>
