@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Copy, Inbox, Search, SearchX, Shield, UserPlus, Users } from 'lucide-react'
+import { Check, ChevronDown, Copy, Inbox, Search, SearchX, Shield, UserPlus, Users } from 'lucide-react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/context/AuthContext'
 import { showToast } from '@/lib/toast'
@@ -15,6 +15,7 @@ import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { LogsPanel } from '@/components/shared/LogsPanel'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
+import { ADMIN_COLUMN_STACK_CLASS, ADMIN_LAYOUT_GRID_CLASS } from '@/features/admin/components/adminLayout'
 import { superadminApi, type SuperadminCreateUserResponse, type SystemUser } from '@/api/superadmin'
 import {
   useSuperadminCreateUser,
@@ -324,7 +325,7 @@ export function SuperAdminPage() {
         </div>
       </Card>
 
-      <div className="admin-layout-grid">
+      <div className={ADMIN_LAYOUT_GRID_CLASS}>
         <Card as="section" className="space-y-4" id="superadmin-users" data-testid="superadmin-users-section">
           <AdminCardHeading
             eyebrow="Systémové účty"
@@ -447,7 +448,7 @@ export function SuperAdminPage() {
           )}
         </Card>
 
-        <aside className="admin-sidebar-stack">
+        <aside className={ADMIN_COLUMN_STACK_CLASS}>
           <Card as="section" className="space-y-4" id="superadmin-create-user" data-testid="superadmin-create-user-section">
             <AdminCardHeading
               eyebrow="Ruční založení"
@@ -456,7 +457,7 @@ export function SuperAdminPage() {
             />
 
             <form
-              className="admin-compact-form admin-user-create-form"
+              className="admin-compact-form"
               onSubmit={handleCreateUser}
               onChange={() => {
                 if (createError) setCreateError(null)
@@ -473,11 +474,14 @@ export function SuperAdminPage() {
               </div>
               <div className="form-group">
                 <label htmlFor="superadmin-role">Výchozí role</label>
-                <select id="superadmin-role" name="role" defaultValue="user" data-testid="superadmin-create-role-select">
-                  <option value="user">Člen</option>
-                  <option value="admin">Admin</option>
-                  <option value="guest">Host</option>
-                </select>
+                <div className="relative">
+                  <select id="superadmin-role" name="role" defaultValue="user" className="min-h-(--touch-target-min)! pr-10! text-base!" data-testid="superadmin-create-role-select">
+                    <option value="user">Člen</option>
+                    <option value="admin">Admin</option>
+                    <option value="guest">Host</option>
+                  </select>
+                  <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--text-muted)" />
+                </div>
               </div>
               <Button type="submit" className="w-full" pending={createUser.isPending} data-testid="superadmin-create-submit-button">
                 {createUser.isPending ? null : <UserPlus aria-hidden="true" />}

@@ -39,26 +39,6 @@
   font-size: 16px;
 }
 
-.admin-layout-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.95fr);
-  gap: clamp(1rem, 2vw, 1.35rem);
-  align-items: start;
-}
-
-.admin-sidebar-stack {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1rem, 2vw, 1.35rem);
-}
-
-.admin-panel-stack {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1rem, 2vw, 1.35rem);
-  min-width: 0;
-}
-
 .admin-kicker {
   display: inline-flex;
   align-items: center;
@@ -193,85 +173,6 @@
   font-size: 0.92rem;
 }
 
-.admin-members-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.admin-user-card {
-  display: grid;
-  /* Štítky pod jménem, akce vpravo: ve třech sloupcích se jméno lámalo po písmenech. */
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.9rem;
-  align-items: center;
-  padding: 1rem 1.05rem;
-  border-radius: 18px;
-  border: 1px solid rgba(63, 123, 99, 0.1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 248, 0.92));
-  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.05);
-}
-
-.admin-user-card.is-current-user {
-  border-color: rgba(63, 123, 99, 0.26);
-  box-shadow: 0 14px 30px rgba(63, 123, 99, 0.12);
-}
-
-.admin-user-main {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  min-width: 0;
-}
-
-.admin-user-identity {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.admin-user-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.admin-user-name {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-main, #1a2721);
-  overflow-wrap: anywhere;
-}
-
-.admin-user-subline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.8rem;
-  color: var(--text-muted, #6b7280);
-  font-size: 0.84rem;
-}
-
-.admin-user-subline span {
-  display: inline-flex;
-  align-items: center;
-}
-
-.admin-user-subline span + span::before {
-  content: '•';
-  margin-right: 0.45rem;
-  color: rgba(107, 114, 128, 0.7);
-}
-
-.admin-user-tags {
-  grid-column: 1;
-  grid-row: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 /* Štítky role a stavu: typografie stavového štítku (DESIGN.md §3 Eyebrow), barvy z rolí §2.
    Kontrast textu na podbarvení ≥ 4,5 : 1. Stav nese barvu z --ok / --low / --empty, role je tichá
    na --inset, vlastní účet a superadmin jsou zvýrazněná plocha (--brand-primary-light). */
@@ -321,18 +222,6 @@
   color: rgb(var(--empty));
 }
 
-.admin-user-actions {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.admin-user-actions .btn {
-  min-width: 9.75rem;
-  min-height: 44px;
-}
-
 .admin-compact-form {
   display: grid;
   gap: 0.95rem;
@@ -340,11 +229,6 @@
 
 .admin-compact-form .form-group {
   margin-bottom: 0;
-}
-
-.admin-user-create-form .btn {
-  width: 100%;
-  min-height: 46px;
 }
 
 .admin-form-note {
@@ -492,52 +376,6 @@
   background: rgb(var(--inset));
   color: var(--text-muted);
   font-size: var(--font-size-sm);
-}
-
-.admin-user-avatar-skeleton {
-  width: 48px;
-  height: 48px;
-  border-radius: 999px;
-}
-
-.admin-user-skeleton-copy {
-  display: grid;
-  gap: 0.45rem;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.admin-skeleton-line,
-.admin-skeleton-pill,
-.admin-skeleton-button {
-  border-radius: 999px;
-}
-
-.admin-skeleton-line--lg {
-  width: 10rem;
-  max-width: 100%;
-  height: 1rem;
-}
-
-.admin-skeleton-line--sm {
-  width: 13rem;
-  max-width: 100%;
-  height: 0.8rem;
-}
-
-.admin-skeleton-pill {
-  width: 5rem;
-  height: 1.65rem;
-}
-
-.admin-skeleton-pill--muted {
-  width: 5.75rem;
-}
-
-.admin-skeleton-button {
-  width: 8rem;
-  height: 2.55rem;
-  border-radius: 12px;
 }
 
 .admin-logs-card {
@@ -719,22 +557,7 @@
   word-break: break-word;
 }
 
-@media (max-width: 1040px) {
-  .admin-layout-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-sidebar-stack {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 900px) {
-  .admin-sidebar-stack {
-    grid-template-columns: 1fr;
-  }
-
   .admin-log-toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -777,27 +600,6 @@
     align-items: flex-start;
   }
 
-  .admin-user-card,
-  .admin-user-card--skeleton {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-user-tags,
-  .admin-user-actions {
-    grid-column: auto;
-    grid-row: auto;
-    justify-content: flex-start;
-  }
-
-  .admin-user-actions .btn {
-    min-width: 0;
-  }
-
-  .main-content-admin .btn-sm {
-    width: 100%;
-    min-height: 44px;
-  }
-
   .admin-log-toolbar {
     grid-template-columns: 1fr;
   }
@@ -810,20 +612,6 @@
 @media (max-width: 480px) {
   .admin-section-link-meta {
     display: none;
-  }
-
-  .admin-user-subline {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .admin-user-subline span + span::before {
-    content: none;
-    margin-right: 0;
-  }
-
-  .admin-user-actions .btn {
-    width: 100%;
   }
 }
 
