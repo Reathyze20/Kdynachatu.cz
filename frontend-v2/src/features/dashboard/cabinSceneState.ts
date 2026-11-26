@@ -12,7 +12,7 @@ export const DEPARTURE_HOUR = 14;
 const NIGHT_FROM_HOUR = 20;
 const NIGHT_UNTIL_HOUR = 6;
 
-export type MascotPose = "sleep" | "chop" | "wave" | "idle";
+export type MascotPose = "sleep" | "peek" | "nibble" | "hibernate";
 
 export interface CabinSceneState {
   occupied: boolean;
@@ -65,18 +65,20 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
   };
 }
 
-/** Auto má přednost před štípáním: když u chaty stojí auto, plch mává, i když je někdo na chatě. */
+/** Plch na chatě bydlí pod střechou a chová se jako plch: přes zimu (zazimovaná chata nebo sníh) spí schovaný, v noci
+ * slézá dolů a u chaty hryže oříšek, ve dne spí na střeše, a když u chaty někdo je nebo přijelo auto, vykukuje
+ * zpoza hřebene střechy. */
 export function mascotPose(s: CabinSceneState): MascotPose {
-  if (s.winterized) return "idle";
-  if (s.carParked) return "wave";
-  return s.occupied ? "chop" : "sleep";
+  if (s.winterized || s.snowCover) return "hibernate";
+  if (s.night) return "nibble";
+  return s.occupied || s.carParked ? "peek" : "sleep";
 }
 
 const POSE_TEXT: Record<MascotPose, string> = {
-  sleep: "Plch spí na zápraží.",
-  chop: "Plch štípe dříví.",
-  wave: "Plch mává.",
-  idle: "Plch odpočívá.",
+  sleep: "Plch spí stočený na střeše.",
+  peek: "Plch vykukuje zpoza střechy.",
+  nibble: "Plch v noci hryže u chaty oříšek.",
+  hibernate: "Plch přes zimu spí pod střechou.",
 };
 
 /** Přístupný název scény: každá část odpovídá jedné vrstvě obrázku, nic nepřebíjí jen v textu. */
@@ -88,8 +90,7 @@ export function cabinSceneLabel(s: CabinSceneState): string {
       s.arriving && s.departing ? "Dnes se na chatě střídají, u chaty stojí auto." :
       s.arriving ? "Dnes někdo přijíždí, u chaty stojí auto." : "Dnes někdo odjíždí, u chaty stojí auto.",
     POSE_TEXT[mascotPose(s)],
-    // Pod sněhem je jinovatka vidět jen na stromech.
-    !s.frost ? "" : "Mrzne, plch má šálu a stromy pokrývá jinovatka.",
+    !s.frost ? "" : "Mrzne a stromy pokrývá jinovatka.",
     s.snowCover ? "Leží sníh, střecha je bílá." : "",
     // Při sněžení je zataženo: noc bez hvězd.
     !s.night ? "" : s.snowing ? "Je noc." : "Je noc, na nebi svítí hvězdy.",

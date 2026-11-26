@@ -9,28 +9,23 @@ import bgSnow from "./scene/bg-snow.png";
 import cabinBare from "./scene/cabin-bare.png";
 import cabinSnow from "./scene/cabin-snow.png";
 import carImg from "./scene/car.png";
-import dormouseChopScarf from "./scene/dormouse-chop-scarf.png";
-import dormouseChop from "./scene/dormouse-chop.png";
-import dormouseIdleScarf from "./scene/dormouse-idle-scarf.png";
-import dormouseIdle from "./scene/dormouse-idle.png";
-import dormouseSleepScarf from "./scene/dormouse-sleep-scarf.png";
+import dormouseNibble from "./scene/dormouse-nibble.png";
+import dormousePeek from "./scene/dormouse-peek.png";
 import dormouseSleep from "./scene/dormouse-sleep.png";
-import dormouseWaveScarf from "./scene/dormouse-wave-scarf.png";
-import dormouseWave from "./scene/dormouse-wave.png";
 import pineBareLg from "./scene/pine-bare-lg.png";
 import pineBareSm from "./scene/pine-bare-sm.png";
 import pineSnowLg from "./scene/pine-snow-lg.png";
 import pineSnowSm from "./scene/pine-snow-sm.png";
-import stumpImg from "./scene/stump.png";
 
 /**
  * Scéna chaty nahoře v kartě „Na chatě teď“ (#563). Obrázek stavu chaty: stav z `cabinSceneState.ts`; krajina, chata,
- * stromy, auto, špalek a plch jsou pixel art z PixelLabu (PNG v `scene/`, 1 px obrázku = 1 jednotka mřížky); kouř,
+ * stromy, auto a plch jsou pixel art z PixelLabu (PNG v `scene/`, 1 px obrázku = 1 jednotka mřížky); kouř,
  * vločky, ptáček, měsíc a hvězdy jsou vektorové sprity z `cabinSceneSprites.ts`. Počasí ze sdíleného dotazu Přehledu
  * na dnešní počasí (#564). Jednotka mřížky je 1,5 CSS px (pruh 114 px = 76 řádků). Široký viewBox se na užší kartě
  * ořízne po stranách, chata s maskotem zůstane uprostřed. Podle volby „Scéna chaty“ (#565) je animovaná, statická,
  * nebo se nevykreslí; animace (`--animate-scene-*` v `shadcn-tokens.css`) stojí, když je stránka na pozadí nebo
- * scéna mimo obrazovku. Plch se hýbe přepínáním snímků z pásu (sprite sheet) po krocích.
+ * scéna mimo obrazovku. Plch na chatě bydlí pod střechou, je vidět za hřebenem střechy a hýbe se přepínáním snímků
+ * z pásu (sprite sheet) po krocích.
  */
 const W = 640;
 const H = 76;
@@ -40,12 +35,15 @@ const CABIN_Y = GROUND - CABIN.h;
 /** Okna v souřadnicích obrázku chaty (svítí, v noci tmavnou, zavírají se okenice) a ústí komína. */
 const WINDOWS = [[16, 41, 5, 9], [28, 42, 7, 9]] as const;
 const CHIMNEY_X = 19;
-/** Vpravo od chaty je místo buď pro auto, nebo pro špalek, u kterého plch štípe; obojí najednou nenastane. */
+/** Vpravo od chaty parkuje auto. */
 const CAR = { x: 374, w: 62, h: 19 };
-const STUMP = { x: CABIN.x + CABIN.w + 28, w: 34, h: 32 };
-/** Snímek plcha je 40 × 40, postavička v něm stojí na řádku 33. */
+/** Rovný hřeben střechy (mezi komínem a štítem) je v obrázku chaty na řádku 9. */
+const RIDGE_Y = CABIN_Y + 9;
+/** Snímek plcha je 40 × 40, postavička v něm sahá od řádku 8 (hlava) po řádek 31 (tlapky). Na hřebeni stojí snímek
+ * od sloupce 28 obrázku chaty, postavička pak sedí mezi komínem a štítem. */
 const FRAME = 40;
-const FEET = 33;
+const FEET = 31;
+const MASCOT_X = CABIN.x + 28;
 /** Smrky vlevo a vpravo od chaty: [x, velký]. */
 const PINES: [number, boolean][] = [
   [14, false], [40, true], [78, false], [104, true], [146, false], [176, true],
@@ -56,7 +54,7 @@ const PINES: [number, boolean][] = [
  * `motion` jsou třídy animace vrstvy, platí jen ve stavu Animovaná; pás snímků se v ní přepíná sám. */
 interface Img { href: string; x: number; y: number; w: number; h: number }
 /** Pás snímků vedle sebe (obrázek, nebo vektorové sprity v `paths`), vidět je vždy jeden snímek `w` × `h`. */
-interface Strip { x: number; y: number; w: number; h: number; frames: number; ms: number; href?: string; paths?: Map<string, string>; still?: boolean }
+interface Strip { x: number; y: number; w: number; h: number; frames: number; ms: number; href?: string; paths?: Map<string, string> }
 interface Layer { name: string; paths: Map<string, string>; images: Img[]; strip?: Strip; opacity?: number; motion?: string }
 
 function layer(name: string, motion?: string): Layer {
@@ -133,26 +131,30 @@ function snowfall(moving: boolean): Layer {
   return flakes;
 }
 
-/** Pás snímků plcha podle pózy: spí vedle chaty, u špalku štípe dříví (nápřah za hlavu, úder), u auta mává, u zazimované
- * chaty stojí bez pohybu (tam se nic nehýbe). V mrazu má plch šálu: vlastní pásy téže postavičky (`scarf`), u spánku
- * s jiným počtem snímků. */
-type StripFrames = { href: string; frames: number };
-const MASCOT: Record<MascotPose, StripFrames & { scarf: StripFrames; ms: number; x: number }> = {
-  sleep: { href: dormouseSleep, frames: 6, scarf: { href: dormouseSleepScarf, frames: 8 }, ms: 420, x: CABIN.x + CABIN.w - 6 },
-  chop: { href: dormouseChop, frames: 10, scarf: { href: dormouseChopScarf, frames: 10 }, ms: 120, x: STUMP.x - 26 },
-  wave: { href: dormouseWave, frames: 13, scarf: { href: dormouseWaveScarf, frames: 13 }, ms: 150, x: CAR.x - 30 },
-  idle: { href: dormouseIdle, frames: 9, scarf: { href: dormouseIdleScarf, frames: 9 }, ms: 200, x: CABIN.x + CABIN.w - 6 },
+/** Plch na střeše je kreslený před chatou, takže jeho spodek schová střecha a nad hřebenem je vidět jen to, co z něj
+ * vykoukne. `y` je horní okraj snímku: spící leží stočený za hřebenem, vykukující se vynoří po krk a zase zmizí
+ * (`animate-scene-peek`). V noci sleze k chatě a na zemi hryže oříšek (`ground`, kreslí se přes chatu). Přes zimu spí
+ * schovaný pod střechou, vidět je jen zZz. */
+const MASCOT: Record<Exclude<MascotPose, "hibernate">, { href: string; frames: number; ms: number; x: number; y: number; motion?: string; ground?: boolean }> = {
+  sleep: { href: dormouseSleep, frames: 6, ms: 420, x: MASCOT_X, y: -12 },
+  peek: { href: dormousePeek, frames: 11, ms: 160, x: MASCOT_X, y: -6, motion: "animate-scene-peek" },
+  nibble: { href: dormouseNibble, frames: 12, ms: 130, x: CABIN.x + CABIN.w - 6, y: GROUND - FEET, ground: true },
 };
 
-function mascot(state: CabinSceneState): Layer[] {
+/** Plch na střeše (`ground` false, kreslí se před chatou), nebo na zemi u chaty (`ground` true, kreslí se po ní). */
+function mascot(state: CabinSceneState, ground: boolean): Layer[] {
   const pose = mascotPose(state);
-  const { ms, x, scarf, ...bare } = MASCOT[pose];
-  const { href, frames } = state.frost ? scarf : bare;
-  const y = GROUND - FEET;
-  const props = pose === "chop" ? [image("stump", { href: stumpImg, x: STUMP.x, y: GROUND - STUMP.h + 1, w: STUMP.w, h: STUMP.h })] : [];
-  const layers: Layer[] = [...props, { ...layer("mascot"), strip: { href, x, y, w: FRAME, h: FRAME, frames, ms, still: state.winterized } }];
-  if (pose === "sleep") layers.push(drawSprite(layer("zzz", "animate-scene-zzz"), ZZZ, x + 26, y + 6, state.night ? { o: "light" } : {}));
-  return layers;
+  if (pose === "hibernate" || !!MASCOT[pose].ground !== ground) return [];
+  const { href, frames, ms, x, y, motion } = MASCOT[pose];
+  return [{ ...layer("mascot", motion), strip: { href, x, y, w: FRAME, h: FRAME, frames, ms } }];
+}
+
+/** zZz nad spícím plchem (kreslí se až po chatě). U zazimované chaty stojí, protože tam se nic nehýbe. */
+function snoring(state: CabinSceneState): Layer[] {
+  const pose = mascotPose(state);
+  if (pose !== "sleep" && pose !== "hibernate") return [];
+  const [x, y] = pose === "sleep" ? [MASCOT_X + 31, 2] : [CABIN.x + 44, RIDGE_Y - ZZZ.length - 1];
+  return [drawSprite(layer("zzz", state.winterized ? undefined : "animate-scene-zzz"), ZZZ, x, y, state.night ? { o: "light" } : {})];
 }
 
 /** Ptáček letí po vlnovce (`animate-scene-bird`) a za letu mává křídly: snímky z `BIRD_FLAP` vedle sebe jako pás. */
@@ -168,11 +170,12 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
   const { occupied, winterized, night, snowCover } = state;
   const layers = [
     ...landscape(state),
+    ...mascot(state, false),
     image("cabin", { href: snowCover ? cabinSnow : cabinBare, x: CABIN.x, y: CABIN_Y, w: CABIN.w, h: CABIN.h }),
     windows(state),
   ];
   if (state.carParked) layers.push(image("car", { href: carImg, x: CAR.x, y: GROUND - CAR.h + 1, w: CAR.w, h: CAR.h }));
-  layers.push(...mascot(state));
+  layers.push(...mascot(state, true));
   // Občasný drobný detail: ve dne přeletí ptáček zleva doprava (start i cíl jsou mimo scénu). U zazimované chaty se nic neděje.
   if (moving && !night && !winterized) layers.push(bird());
   if (night) {
@@ -190,6 +193,8 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
     // Rozsvícená okna prosvítají noční clonou.
     if (occupied) layers.push(windows(state, "window-glow"));
   }
+  // zZz až přes noční clonu, ať je v noci vidět.
+  layers.push(...snoring(state));
   if (occupied) layers.push(drawSprite(layer("smoke", "animate-scene-smoke"), SMOKE, CABIN.x + CHIMNEY_X, CABIN_Y - SMOKE.length - 1));
   if (state.snowing) layers.push(snowfall(moving));
   return layers;
@@ -261,7 +266,7 @@ export function CabinScene({ data, winterized, weather }: Props) {
             <g key={l.name} opacity={l.opacity} className={animate}>
               {l.images.map((i) => <image key={`${i.href}-${i.x}`} href={i.href} x={i.x} y={i.y} width={i.w} height={i.h} className={PIXELATED} />)}
               {[...l.paths].map(([token, d]) => <path key={token} d={d} style={{ fill: `var(--scene-${token})` }} />)}
-              {l.strip && <FrameStrip strip={l.strip} className={moving && !l.strip.still ? cn("animate-scene-frames", pause) : undefined} />}
+              {l.strip && <FrameStrip strip={l.strip} className={moving ? cn("animate-scene-frames", pause) : undefined} />}
             </g>
           );
         })}

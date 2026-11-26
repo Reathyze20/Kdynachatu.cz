@@ -63,33 +63,33 @@ afterEach(() => {
 })
 
 describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
-  it('prázdná chata: plch spí na zápraží, i v prázdném stavu karty', async () => {
+  it('prázdná chata: plch ve dne spí stočený na střeše, i v prázdném stavu karty', async () => {
     renderOverview(reservations())
 
     await screen.findByText('Chata zatím čeká')
     const img = await scene()
     expect(img).toHaveAccessibleName(/chata je prázdná/i)
-    expect(img).toHaveAccessibleName(/plch spí na zápraží/i)
+    expect(img).toHaveAccessibleName(/plch spí stočený na střeše/i)
     expect(img).not.toHaveAccessibleName(/auto|noc/i)
   })
 
-  it('někdo je na chatě: kouř z komína, svítí okno, plch štípe dříví; scéna není fokusovatelná', async () => {
+  it('někdo je na chatě: kouř z komína, svítí okno, plch vykukuje zpoza střechy; scéna není fokusovatelná', async () => {
     renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
 
     const header = await screen.findByRole('region', { name: 'Na chatě teď' })
     const img = within(header).getByRole('img', { name: /^Scéna chaty/ })
     expect(img).toHaveAccessibleName(/někdo je na chatě, z komína jde kouř a svítí okno/i)
-    expect(img).toHaveAccessibleName(/plch štípe dříví/i)
+    expect(img).toHaveAccessibleName(/plch vykukuje zpoza střechy/i)
     expect(img).not.toHaveAttribute('tabindex')
     expect(img.closest('a, button, [tabindex]')).toBeNull()
   })
 
-  it('v den příjezdu stojí u chaty auto a plch mává', async () => {
+  it('v den příjezdu stojí u chaty auto a plch vykukuje', async () => {
     renderOverview(reservations({ upcomingReservations: [stay('r-new', 'Svobodovi', TODAY, '2026-12-13')] }))
 
     const img = await scene()
     expect(img).toHaveAccessibleName(/dnes někdo přijíždí, u chaty stojí auto/i)
-    expect(img).toHaveAccessibleName(/plch mává/i)
+    expect(img).toHaveAccessibleName(/plch vykukuje/i)
   })
 
   it('v den odjezdu stojí u chaty auto a odjíždějící je do 14:00 ještě na chatě', async () => {
@@ -105,14 +105,14 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
 
     const img = await scene()
     expect(img).toHaveAccessibleName(/chata je prázdná/i)
-    expect(img).not.toHaveAccessibleName(/auto|mává/i)
-    expect(img).toHaveAccessibleName(/plch spí na zápraží/i)
+    expect(img).not.toHaveAccessibleName(/auto|vykukuje/i)
+    expect(img).toHaveAccessibleName(/plch spí stočený na střeše/i)
   })
 
-  it('v den odjezdu bez příjezdu plch do 14:00 u auta mává (#579)', async () => {
+  it('v den odjezdu bez příjezdu u chaty do 14:00 stojí auto a plch vykukuje (#579)', async () => {
     renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-07', TODAY)) }), { time: '13:59' })
 
-    expect(await scene()).toHaveAccessibleName(/u chaty stojí auto\. plch mává/i)
+    expect(await scene()).toHaveAccessibleName(/u chaty stojí auto\. plch vykukuje/i)
   })
 
   it('v den příjezdu stojí auto i po 14:00 (#579)', async () => {
@@ -120,7 +120,7 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
 
     const img = await scene()
     expect(img).toHaveAccessibleName(/dnes někdo přijíždí, u chaty stojí auto/i)
-    expect(img).toHaveAccessibleName(/plch mává/i)
+    expect(img).toHaveAccessibleName(/plch vykukuje/i)
   })
 
   it('předávka ve stejný den: obsazeno i auto; po 14:00 jako karta „Chata je volná“, auto zůstává', async () => {
@@ -149,14 +149,17 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     })
     renderOverview(data, { isWinterized: true })
 
-    expect(await screen.findByRole('img', { name: /zazimovaná, okenice jsou zavřené/i })).toHaveAccessibleName(/plch odpočívá/i)
+    expect(await screen.findByRole('img', { name: /zazimovaná, okenice jsou zavřené/i })).toHaveAccessibleName(/plch přes zimu spí pod střechou/i)
     const img = await scene()
-    expect(img).not.toHaveAccessibleName(/někdo je na chatě|auto|mává/i)
+    expect(img).not.toHaveAccessibleName(/někdo je na chatě|auto|vykukuje/i)
   })
 
   it('noc podle místního času zařízení: tmavá obloha s hvězdami', async () => {
     renderOverview(reservations(), { time: '21:30' })
-    expect(await scene()).toHaveAccessibleName(/je noc, na nebi svítí hvězdy/i)
+    const img = await scene()
+    expect(img).toHaveAccessibleName(/je noc, na nebi svítí hvězdy/i)
+    // Plch je tvor noční: v noci je vzhůru.
+    expect(img).toHaveAccessibleName(/plch v noci hryže u chaty oříšek/i)
 
     cleanup()
     renderOverview(reservations(), { time: '05:30' })
@@ -232,6 +235,15 @@ describe('Počasí a denní doba ve scéně chaty (#564)', () => {
     expect(img).not.toHaveAccessibleName(/sněží/i)
   })
 
+  it('při sněhové pokrývce plch přes zimu spí pod střechou, i když je někdo na chatě', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ snowDepth: 0.12 }))
+    renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
+
+    const img = await screen.findByRole('img', { name: /leží sníh/i })
+    expect(img).toHaveAccessibleName(/plch přes zimu spí pod střechou/i)
+    expect(img).not.toHaveAccessibleName(/vykukuje|oříšek/i)
+  })
+
   it('bez sněhové pokrývky střecha bílá není', async () => {
     vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ snowDepth: 0 }))
     renderOverview(reservations())
@@ -240,13 +252,12 @@ describe('Počasí a denní doba ve scéně chaty (#564)', () => {
     expect(await scene()).not.toHaveAccessibleName(/sníh|bílá/i)
   })
 
-  it('při teplotě 0 °C a nižší mrzne: plch má šálu a je vidět jinovatka', async () => {
+  it('při teplotě 0 °C a nižší mrzne: je vidět jinovatka', async () => {
     for (const temp of [0, -7]) {
       vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ temp }))
       renderOverview(reservations())
 
       const img = await screen.findByRole('img', { name: /mrzne/i })
-      expect(img).toHaveAccessibleName(/plch má šálu/i)
       expect(img).toHaveAccessibleName(/jinovatka/i)
       cleanup()
     }
