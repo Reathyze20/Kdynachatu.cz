@@ -1,9 +1,11 @@
 /**
  * GalleryPage.tsx — Hlavní stránka Galerie
- * View: 'folders' → výběr alba | 'photos' → fotky v albu s lightboxem
+ * View: 'folders' → výběr alba | 'photos' → fotky v albu s lightboxem.
+ * Hlavička přes PageHeader (jediné h1) ve všech stavech, obsah v papírové Card (DESIGN.md, #519).
  */
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Upload } from 'lucide-react'
 import {
   useGalleryFolders,
   useGalleryPhotos,
@@ -17,11 +19,14 @@ import { PhotoGrid, PhotoGridSkeleton } from './PhotoGrid'
 import { Lightbox } from './Lightbox'
 import { UploadModal } from './UploadModal'
 import { showToast } from '@/lib/toast'
+import { Card } from '@/components/shared/Card'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { PromptDialog } from '@/components/shared/PromptDialog'
 import { useAuth } from '@/context/AuthContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { formatCount } from '@/lib/format'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import { isAuthorOrAdmin } from '@/lib/permissions'
 import type { GalleryFolder, GalleryPhoto } from '@/api/gallery'
@@ -230,8 +235,20 @@ export function GalleryPage() {
   }
 
   return (
-    <div className="gallery-page-wrapper" data-testid="gallery-page">
-      <div className="page-card gallery-glass-card">
+    <div className="flex flex-col gap-4 p-3 md:gap-6 md:p-0" data-testid="gallery-page">
+      <Card className="shrink-0">
+        {view === 'folders' ? (
+          <PageHeader title="Galerie" />
+        ) : (
+          <PageHeader
+            title={currentFolderName}
+            onBack={backToFolders}
+            subtitle={photosLoading || photosFailed ? undefined : formatCount(photos.length, 'fotka', 'fotky', 'fotek')}
+            primaryAction={isGuest ? undefined : { label: 'Nahrát', icon: Upload, onClick: () => setShowUploadModal(true) }}
+          />
+        )}
+      </Card>
+      <Card flush={view === 'folders'}>
         <AnimatePresence mode="wait">
           {view === 'folders' ? (
             <motion.div
@@ -240,12 +257,12 @@ export function GalleryPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="gallery-view-container"
             >
               {foldersLoading ? (
                 <FolderGridSkeleton />
               ) : foldersFailed ? (
                 <FeatureErrorFallback
+                  bare
                   error={foldersError as Error}
                   resetErrorBoundary={() => {
                     void refetchFolders()
@@ -275,12 +292,12 @@ export function GalleryPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="gallery-view-container"
             >
               {photosLoading ? (
                 <PhotoGridSkeleton />
               ) : photosFailed ? (
                 <FeatureErrorFallback
+                  bare
                   error={photosError as Error}
                   resetErrorBoundary={() => {
                     void refetchPhotos()
@@ -301,14 +318,13 @@ export function GalleryPage() {
                   onDeleteSelected={handleDeleteSelected}
                   onUpload={() => setShowUploadModal(true)}
                   folderName={currentFolderName}
-                  onBack={backToFolders}
                   canDeletePhoto={canDeletePhoto}
                 />
               )}
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </Card>
 
       <PromptDialog
         isOpen={showCreateModal}
