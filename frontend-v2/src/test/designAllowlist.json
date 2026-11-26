@@ -63,7 +63,7 @@
       "components/shared/LogsPanel.tsx", "components/shared/PromptDialog.tsx",
       "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/PhotoGrid.tsx", "features/gallery/UploadModal.tsx",
-      "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx", "features/notes/ThreadList.tsx",
+      "features/notes/ChatView.tsx", "features/notes/MessageInput.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",
       "features/shopping/EditInventoryModal.tsx", "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx"
