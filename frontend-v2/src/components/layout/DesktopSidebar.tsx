@@ -2,16 +2,17 @@
  * components/layout/DesktopSidebar.tsx
  * Levý sidebar desktopového rámu (redesign #1b, issue #171): ikona + popisek, stejný model jako dolní lišta.
  * Na desktopu je místa dost, takže doplňky z „Víc“ jsou vidět rovnou jako skupina pod hlavními sekcemi.
- * Dole je nápověda (#205): na desktopu nahrazuje plovoucí tlačítko, které překrývalo obsah.
+ * Dole je nápověda (#205, #524): stejný dialog jako z menu Víc na mobilu, plovoucí tlačítko appka nemá.
  * Pod ní profilové menu s administrací a odhlášením (#205): desktop nemá horní lištu.
  * Pod názvem chaty je slot `today` pro dnešek chaty (datum, počasí, #338); plní ho AppShell.
  */
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
-import { HelpFab } from '@/components/shared/HelpFab'
+import { CircleHelp } from 'lucide-react'
+import { HelpDialog } from '@/components/shared/HelpDialog'
 import { InstallMenuItem } from '@/components/shared/InstallCard'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { SidebarProfileMenu } from './SidebarProfileMenu'
@@ -27,6 +28,7 @@ export function DesktopSidebar({ onOpenProfileDrawer, today }: DesktopSidebarPro
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
   const { canInstall } = usePwaInstall()
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const hasCabin = Boolean(user?.cabinId)
   const primary = hasCabin ? visibleNavItems(PRIMARY_NAV, cabin?.features, isGuest) : []
@@ -72,9 +74,19 @@ export function DesktopSidebar({ onOpenProfileDrawer, today }: DesktopSidebarPro
       ) : null}
 
       <div className="app-sidebar-footer">
-        <HelpFab variant="sidebar" />
+        <button
+          type="button"
+          className="app-sidebar-link app-sidebar-help"
+          title="Nápověda k této stránce"
+          onClick={() => setHelpOpen(true)}
+          data-testid="desktop-help-button"
+        >
+          <CircleHelp size={20} aria-hidden="true" />
+          <span className="app-sidebar-label">Nápověda</span>
+        </button>
         <SidebarProfileMenu onOpenProfileDrawer={onOpenProfileDrawer} />
       </div>
+      <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
     </aside>
   )
 }

@@ -484,8 +484,7 @@
     left: 0;
     right: 0;
     bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
-    /* vpravo místo pro plovoucí tlačítko nápovědy (.fab-help, 16 px od kraje), ať nepřekryje Uložit */
-    padding: 8px calc(16px + var(--touch-target-min) + var(--touch-target-gap)) 8px 12px;
+    padding: 8px 12px;
     border-radius: 0;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
   }

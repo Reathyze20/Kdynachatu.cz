@@ -175,7 +175,7 @@
     80%, 100% { transform: translateY(14px); }
   }
   /* Maskot (snímek 60 px) přihopká zleva po 21 px, zastaví se, dvakrát poskočí (zamává), otočí se a odhopká zpět
-     doleva. Nejdál dojde na 96 px od levého okraje, k nápovědě vpravo nikdy (hlídá navMascot.test.tsx). Každý
+     doleva. Nejdál dojde na 96 px od levého okraje, za pravý okraj ani na 320 px nikdy (hlídá navMascot.test.tsx). Každý
      keyframe má stejný seznam funkcí, ať se otočení (scaleX) neprolíná. */
   @keyframes scene-mascot-walk {
     0% { transform: translate(-60px, 0) scaleX(1); }

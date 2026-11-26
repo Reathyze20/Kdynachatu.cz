@@ -102,7 +102,7 @@
   },
   "inlineSvg": {
     "Ruční kopie ikony lucide, nahradí se komponentou z lucide-react s obrazovkou": [
-      "components/shared/HelpFab.tsx", "features/notes/ChatView.tsx", "features/notes/MessageBubble.tsx",
+      "features/notes/ChatView.tsx", "features/notes/MessageBubble.tsx",
       "features/notes/MessageContextMenu.tsx", "features/notes/MessageInput.tsx", "features/reservations/calendar/CalendarGrid.tsx",
       "features/reservations/ui/ReservationDetail.tsx", "features/shopping/InventoryRow.tsx", "features/shopping/ItemRow.tsx",
       "features/shopping/ListDetail.tsx", "features/shopping/PantryView.tsx"

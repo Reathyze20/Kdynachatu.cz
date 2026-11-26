@@ -77,7 +77,7 @@ export function NotesPage() {
     }
   }, [])
 
-  // Otevřený chat na mobilu: nápověda (.fab-help) by jinak překryla tlačítko Odeslat
+  // Otevřený chat na mobilu: staging karta „Co vyzkoušet“ (help.css) by jinak překryla pole zprávy
   const mobileChatOpen = isMobile && mobileShowChat;
   useEffect(() => {
     if (!mobileChatOpen) return

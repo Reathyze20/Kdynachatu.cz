@@ -3,7 +3,7 @@
  * Karta „Co vyzkoušet“ (#388): provede testera na stagingu aplikací. Jen na stagingu –
  * pozná se stejně jako testovací účty na přihlašovací obrazovce (backend je vydá jen tam).
  *
- * Plovoucí mini-karta (#399) vpravo dole, na mobilu nad lištou a nápovědou (help.css) – nic neodsouvá.
+ * Plovoucí mini-karta (#399) vpravo dole, na mobilu nad lištou (help.css) – nic neodsouvá.
  * Jeden úkol, šipky přepínají, „Hotovo“ posune na další nehotový. Rozbalená, dokud není vše hotové;
  * sbalení si pamatuje prohlížeč. „Ukaž mi kde“ ji nechá otevřenou. Zpětná vazba (#389) až na kliknutí.
  */

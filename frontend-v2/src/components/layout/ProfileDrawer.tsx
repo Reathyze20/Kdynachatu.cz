@@ -1,6 +1,7 @@
 /**
  * components/layout/ProfileDrawer.tsx
  * Překlad: #profile-drawer-overlay z index.html + initProfileDrawer() z main.ts
+ * Na mobilu nabízí nápovědu (#524): menu Víc chybí hostovi a chatě bez doplňků, plovoucí tlačítko appka nemá.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -18,8 +19,9 @@ import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
 import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
+import { HelpDialog } from '@/components/shared/HelpDialog'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, ScrollText, Settings, Shield } from 'lucide-react'
+import { CircleHelp, LogOut, ScrollText, Settings, Shield } from 'lucide-react'
 import { useCabinSceneMode, type CabinSceneMode } from '@/hooks/useCabinSceneMode'
 
 /** Volba „Scéna chaty“ (#565): scéna na Přehledu (později i maskot na liště), jen v tomto zařízení. */
@@ -50,6 +52,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
+  const [helpOpen, setHelpOpen] = useState(false)
 
   // ─── Email state ────────────────────────────────────────────────────────────
   const [email, setEmail] = useState('')
@@ -85,13 +88,13 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [leaveCabinError, setLeaveCabinError] = useState('')
 
   // ─── Zavřít klávesou Escape ─────────────────────────────────────────────────
-  // Otevřený dotaz na neodeslané změny si Escape vyřídí sám; šuplík by s sebou zavřel i dotaz (#537)
-  const pendingLogoutOpen = pendingDialog.isOpen
+  // Otevřený dotaz na neodeslané změny i nápověda si Escape vyřídí samy; šuplík by se zavřel s nimi (#537)
+  const dialogAbove = pendingDialog.isOpen || helpOpen
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !pendingLogoutOpen) onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !dialogAbove) onClose() }
     if (isOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, onClose, pendingLogoutOpen])
+  }, [isOpen, onClose, dialogAbove])
 
   // ─── Načíst profil ──────────────────────────────────────────────────────────
   const { data: profileData } = useQuery<ProfileData>({
@@ -112,6 +115,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     if (isOpen) return
 
     setActiveTab('personal')
+    setHelpOpen(false)
     setEmail(profileData?.email ?? '')
     setEmailError(false)
     setEmailMessage('')
@@ -393,6 +397,15 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               </div>
             </div>
           )}
+
+          {/* Desktop má nápovědu v sidebaru */}
+          <div className="md:hidden">
+            <button type="button" className="button-secondary drawer-quicklink" onClick={() => setHelpOpen(true)}>
+              <CircleHelp size={16} aria-hidden="true" />
+              <span>Nápověda</span>
+            </button>
+          </div>
+          <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
           {/* Segmented Control */}
           <div className="segmented-control">

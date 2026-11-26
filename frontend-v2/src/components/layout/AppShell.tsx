@@ -12,7 +12,6 @@ import { CabinToday } from '@/features/dashboard/CabinToday'
 import { MobileHeader } from './MobileHeader'
 import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
-import { HelpFab } from '@/components/shared/HelpFab'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
 import { TestingChecklist } from '@/features/staging/TestingChecklist'
 import { RouteTransitionSkeleton, getRouteSkeletonVariant } from '@/components/shared/RouteTransitionSkeleton'
@@ -129,9 +128,6 @@ export function AppShell() {
       <div id="loading-overlay" className="loading-overlay hidden">
         <div className="spinner"></div>
       </div>
-
-      {/* Help FAB + modal */}
-      <HelpFab />
 
       {/* Jen na stagingu: plovoucí karta „Co vyzkoušet“ mimo tok stránky (#399) */}
       <TestingChecklist />
