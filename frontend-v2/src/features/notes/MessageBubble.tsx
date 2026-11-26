@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { Check, EllipsisVertical } from 'lucide-react'
 import type { Note } from "@/api/notes";
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar';
 import { ReactionBar } from './ReactionBar';
@@ -94,7 +94,7 @@ export function MessageBubble({
 
   const resolvedBadge = resolved ? (
     <span className="message-resolved-badge" title="Převedeno na úkol" role="img" aria-label="Převedeno na úkol">
-      <Check className="w-3 h-3" aria-hidden="true" />
+      <Check size={16} aria-hidden="true" />
     </span>
   ) : null;
 
@@ -182,9 +182,7 @@ export function MessageBubble({
               onClick={handleTriggerClick}
               data-testid="notes-message-actions-button"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                <path d="M12 17.414l-6.707-6.707a1 1 0 0 1 1.414-1.414L12 14.586l5.293-5.293a1 1 0 0 1 1.414 1.414L12 17.414z" />
-              </svg>
+              <EllipsisVertical size={20} aria-hidden="true" />
             </button>
             {bubbleContent}
           </div>
@@ -225,9 +223,7 @@ export function MessageBubble({
               onClick={handleTriggerClick}
               data-testid="notes-message-actions-button"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                <path d="M12 17.414l-6.707-6.707a1 1 0 0 1 1.414-1.414L12 14.586l5.293-5.293a1 1 0 0 1 1.414 1.414L12 17.414z" />
-              </svg>
+              <EllipsisVertical size={20} aria-hidden="true" />
             </button>
             {/* Sender name inside the bubble — hidden when grouped */}
             {!isGrouped && <span className="message-bubble-sender">{note.username}</span>}
