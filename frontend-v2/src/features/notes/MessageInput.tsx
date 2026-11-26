@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect } from "react";
+import { ClipboardCheck, SendHorizontal, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSendNote } from "./hooks/useNotes";
 import type { Note } from "@/api/notes";
 import { getNetworkAwareActionMessage, isNetworkError } from "@/lib/networkError";
@@ -133,17 +135,9 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
                 : replyTo.message}
             </span>
           </div>
-          <button
-            type="button"
-            className="reply-preview-close"
-            onClick={onCancelReply}
-            title="Zrušit odpověď"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label="Zrušit odpověď" onClick={onCancelReply}>
+            <X aria-hidden="true" />
+          </Button>
         </div>
       )}
 
@@ -152,18 +146,10 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
         <div className="handover-panel" id="handover-panel">
           <div className="handover-panel-header">
             <span>Odjezdový protokol</span>
-            <button
-              type="button"
-              className="button-icon"
-              id="handover-panel-close"
-              title="Zavřít"
-              onClick={() => setHandoverOpen(false)}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            <Button type="button" variant="ghost" size="icon" id="handover-panel-close" aria-label="Zavřít odjezdový protokol"
+              onClick={() => setHandoverOpen(false)}>
+              <X aria-hidden="true" />
+            </Button>
           </div>
           <div className="handover-checklist" id="handover-checklist">
             {HANDOVER_ITEMS.map((item) => (
@@ -192,57 +178,26 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
             />
           </div>
           <div className="handover-panel-footer">
-            <button
-              type="button"
-              className="btn-ghost-secondary"
-              id="handover-panel-cancel"
-              onClick={() => setHandoverOpen(false)}
-            >
+            <Button type="button" variant="secondary" id="handover-panel-cancel" onClick={() => setHandoverOpen(false)}>
               Zrušit
-            </button>
-            <button
-              type="button"
-              className="button-primary"
-              id="handover-panel-insert"
-              onClick={insertHandover}
-            >
+            </Button>
+            <Button type="button" id="handover-panel-insert" onClick={insertHandover}>
               Vložit do zprávy
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Chip action buttons above input */}
       <div className="chat-actions-row">
-        <button
-          type="button"
-          className="btn-chip btn-chip-action"
-          onClick={() => setHandoverOpen((o) => !o)}
-          data-testid="notes-handover-toggle-button"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-            <rect x="9" y="3" width="6" height="4" rx="1" />
-            <path d="M9 14l2 2 4-4" />
-          </svg>
+        <Button type="button" variant="secondary" size="sm" aria-expanded={handoverOpen} aria-controls="handover-panel"
+          onClick={() => setHandoverOpen((o) => !o)} data-testid="notes-handover-toggle-button">
+          <ClipboardCheck aria-hidden="true" />
           Odjezdový protokol
-        </button>
+        </Button>
       </div>
 
       <div className="chat-input-row">
-        {/* Sponka — VENKU vlevo od pilulky */}
-        <button
-          type="button"
-          className="icon-btn attach-btn"
-          title="Přílohy — připravujeme"
-          disabled
-          aria-label="Přidat přílohu (připravujeme)"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-          </svg>
-        </button>
-
         {/* Bílá pilulka */}
         <form
           className="fake-input-wrapper pill-shape"
@@ -266,24 +221,11 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
             onKeyDown={handleKeyDown}
             data-testid="notes-message-textarea"
           />
-          <button
-            type="submit"
-            className="send-message-btn"
-            aria-label="Odeslat"
-            disabled={sendNote.isPending}
-            title={sendNote.isPending ? "Odesílám…" : "Odeslat (Enter)"}
-            data-testid="notes-send-button"
-          >
-            {sendNote.isPending ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 0.7s linear infinite" }}>
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ transform: "translate(1px, -0.5px)" }}>
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-              </svg>
-            )}
-          </button>
+          {/* Kulaté odesílací tlačítko v pilulce: tvar drží .send-message-btn, spinner a blokaci Button pending */}
+          <Button type="submit" size="icon" className="send-message-btn" aria-label="Odeslat" pending={sendNote.isPending}
+            data-testid="notes-send-button">
+            {!sendNote.isPending && <SendHorizontal aria-hidden="true" />}
+          </Button>
         </form>
       </div>
       {sendError ? (

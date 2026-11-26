@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, EllipsisVertical, Filter, MessageCircle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Note } from "@/api/notes";
 import { MessageBubble } from "./MessageBubble";
@@ -9,6 +9,7 @@ import { showToast } from "@/lib/toast";
 import { useAuth } from "@/context/AuthContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { formatDate, formatLongDate } from "@/lib/format";
 
@@ -284,7 +285,27 @@ export function ChatView({
   }, []);
 
   // ── Thread menu state ──────────────────────────────────────────
+  // Kebab „Akce tématu“ je rozbalovací panel s tlačítky, ne Radix DropdownMenu: test oprávnění #507
+  // ho otevírá kliknutím a hledá tlačítko „Smazat téma“ (AC #518: existující testy chatu beze změny).
   const [threadMenuOpen, setThreadMenuOpen] = useState(false);
+  const threadMenuRef = useRef<HTMLDivElement>(null);
+  const threadMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!threadMenuOpen) return;
+    // Esc zavře a vrátí focus na kebab, klepnutí mimo menu ho jen zavře.
+    const close = (e: KeyboardEvent | PointerEvent) => {
+      const isKey = e instanceof KeyboardEvent;
+      if (isKey ? e.key !== "Escape" : threadMenuRef.current?.contains(e.target as Node)) return;
+      setThreadMenuOpen(false);
+      if (isKey) threadMenuTriggerRef.current?.focus();
+    };
+    document.addEventListener("keydown", close);
+    document.addEventListener("pointerdown", close);
+    return () => {
+      document.removeEventListener("keydown", close);
+      document.removeEventListener("pointerdown", close);
+    };
+  }, [threadMenuOpen]);
 
   // ── Date separator + message grouping helpers ─────────────────
   // Den se určuje v pražském čase jako formátování (lib/format.ts), ne podle zóny zařízení.
@@ -317,8 +338,8 @@ export function ChatView({
       {/* Header */}
       <div className="chat-header">
         {onBack && <ChatBackButton onClick={onBack} />}
-        <div className="chat-header-info">
-          <h3 id="active-thread-name">{activeThreadName}</h3>
+        <div className="chat-header-info min-w-0">
+          <h2 id="active-thread-name" className="truncate text-card-title text-(--text-main)">{activeThreadName}</h2>
           {participantNames && (
             <span className="chat-header-participants">{participantNames}</span>
           )}
@@ -344,37 +365,32 @@ export function ChatView({
           </div>
         )}
         <div className="chat-header-actions">
-          <button
-            id="toggle-filters-btn"
-            className="button-icon"
-            title="Filtry"
-            onClick={() => setFiltersOpen((o) => !o)}
-            aria-label="Filtry zpráv"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
-          </button>
-          {/* Thread action menu */}
+          <Button id="toggle-filters-btn" variant="ghost" size="icon" aria-label="Filtry zpráv" aria-expanded={filtersOpen}
+            aria-controls="filters-panel" onClick={() => setFiltersOpen((o) => !o)}>
+            <Filter aria-hidden="true" />
+          </Button>
+          {/* Akce tématu v kebab menu (DESIGN.md §7), smazání potvrdí ConfirmDialog v NotesPage */}
           {activeThreadId !== null && onDeleteThread && (
-            <div className="thread-menu-wrapper">
-              <button
-                className="button-icon"
-                title="Akce tématu"
-                onClick={() => setThreadMenuOpen((o) => !o)}
-                aria-label="Akce tématu"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg>
-              </button>
+            <div className="relative" ref={threadMenuRef}>
+              <Button ref={threadMenuTriggerRef} variant="ghost" size="icon" aria-label="Akce tématu" aria-expanded={threadMenuOpen}
+                aria-controls="thread-action-menu" onClick={() => setThreadMenuOpen((o) => !o)}>
+                <EllipsisVertical aria-hidden="true" />
+              </Button>
               {threadMenuOpen && (
-                <div className="thread-action-menu">
+                <div
+                  id="thread-action-menu"
+                  className="absolute top-full right-0 z-(--z-dialog) mt-1 min-w-48 rounded-xl border border-rule-soft bg-sheet p-1 shadow-lift"
+                >
                   <button
-                    className="thread-action-item thread-action-danger"
+                    type="button"
+                    className="flex min-h-(--touch-target-min) w-full items-center gap-3 rounded-(--radius-sm) px-3 text-base text-(--status-error-dark) transition-colors hover:bg-(--status-error-light) focus-visible:bg-(--status-error-light) focus-visible:outline-none"
                     onClick={() => {
                       setThreadMenuOpen(false);
                       onDeleteThread();
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
-                    <span>Smazat téma</span>
+                    <Trash2 size={16} aria-hidden="true" />
+                    Smazat téma
                   </button>
                 </div>
               )}
@@ -421,21 +437,16 @@ export function ChatView({
             onChange={(e) => setDateTo(e.target.value)}
           />
         </div>
-        <button
-          id="reset-filters-btn"
-          className="button-secondary"
-          title="Smazat filtry"
+        <Button
+          id="reset-filters-btn" variant="ghost" size="icon" aria-label="Smazat filtry"
           onClick={() => {
             setAuthorFilter("");
             setDateFrom("");
             setDateTo("");
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+          <X aria-hidden="true" />
+        </Button>
       </div>
 
       {/* Messages */}
@@ -443,20 +454,13 @@ export function ChatView({
         {/* Load more indicator at top */}
         {hasMore && (
           <div className="load-more-indicator">
-            {isFetchingMore ? (
-              <span className="load-more-spinner" />
-            ) : (
-              <button className="btn-chip load-more-btn" onClick={() => onFetchMore?.()}>
-                Načíst starší zprávy
-              </button>
-            )}
+            <Button variant="secondary" size="sm" pending={isFetchingMore} onClick={() => onFetchMore?.()}>
+              {isFetchingMore ? "Načítám starší zprávy…" : "Načíst starší zprávy"}
+            </Button>
           </div>
         )}
         {filtered.length === 0 ? (
-          <div className="empty-chat-state">
-            <span className="empty-chat-state-icon"></span>
-            <p className="empty-chat-state-text">Zatím tu je ticho...<br />Napiš první zprávu.</p>
-          </div>
+          <EmptyState icon={MessageCircle} message="Zatím tu je ticho, napiš první zprávu." className="my-auto" />
         ) : (
           <>
             {filtered.map((note, index) => {
@@ -496,19 +500,12 @@ export function ChatView({
                           maxLength={2000}
                         />
                         <div className="message-edit-actions">
-                          <button
-                            className="btn-ghost-secondary"
-                            onClick={handleEditCancel}
-                          >
+                          <Button variant="secondary" size="sm" onClick={handleEditCancel}>
                             Zrušit
-                          </button>
-                          <button
-                            className="button-primary message-edit-save"
-                            onClick={handleEditSave}
-                            disabled={!editText.trim() || editNote.isPending}
-                          >
-                            {editNote.isPending ? "…" : "Uložit"}
-                          </button>
+                          </Button>
+                          <Button size="sm" onClick={handleEditSave} disabled={!editText.trim()} pending={editNote.isPending}>
+                            {editNote.isPending ? "Ukládám…" : "Uložit"}
+                          </Button>
                         </div>
                         {editError ? (
                           <div className="error-message show" role="alert">{editError}</div>
