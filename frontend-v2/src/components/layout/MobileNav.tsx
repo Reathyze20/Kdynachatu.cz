@@ -2,8 +2,8 @@
  * components/layout/MobileNav.tsx
  * Spodní lišta podle cyklu turnusu (redesign #0, issue #171): Přehled · Kalendář · Předávka · Zásoby · Víc.
  * Doplňky (Chat, Galerie, Deník, Rekonstrukce) a „Přidat na plochu“ (#277) jsou pod „Víc“, pod oddělovačem
- * Můj profil, Správa (jen správce), Nápověda a Odhlásit (#524). Víc se ukáže, jen když nabízí sekci nebo
- * instalaci; účet a nápověda bez nich zůstávají v šuplíku profilu pod avatarem v hlavičce.
+ * Můj profil, Správa (jen správce), Nápověda a Odhlásit (#524). Víc je vidět vždy, i hostovi a chatě bez doplňků:
+ * nápověda a účet na mobilu jinde nejsou.
  * Po horní hraně lišty jednou za otevření appky přejde maskot ze scény chaty (#566).
  */
 import { useState } from 'react'
@@ -46,6 +46,8 @@ export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
   const activeMore = active && underMore.includes(active) ? active : undefined
   // V sekci schované pod „Víc“ má záložka ikonu té sekce, popisek zůstává „Víc“ (úzké displeje).
   const MoreIcon = activeMore?.icon ?? MoreHorizontal
+  // Oddělovač jen pod něčím: hostovi a chatě bez doplňků (a bez instalace) by visel nad prvním řádkem
+  const hasSections = more.length > 0 || Boolean(canInstall)
 
   const renderNavLink = (item: NavItem, className: string, onClick?: () => void) => (
     <Link
@@ -67,20 +69,18 @@ export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
       <nav id="mobile-nav" className="mobile-nav" aria-label="Hlavní navigace" data-testid="mobile-nav">
         {tabs.map((item) => renderNavLink(item, 'mobile-nav-link'))}
 
-        {more.length > 0 || canInstall ? (
-          <button
-            type="button"
-            className={`mobile-nav-link${activeMore ? ' active' : ''}`}
-            data-testid="mobile-nav-more"
-            aria-haspopup="dialog"
-            aria-expanded={moreOpen}
-            aria-label={activeMore ? `Víc (právě: ${activeMore.label})` : 'Víc sekcí'}
-            onClick={() => setMoreOpen(true)}
-          >
-            <MoreIcon size={20} aria-hidden="true" />
-            <span>Víc</span>
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className={`mobile-nav-link${activeMore ? ' active' : ''}`}
+          data-testid="mobile-nav-more"
+          aria-haspopup="dialog"
+          aria-expanded={moreOpen}
+          aria-label={activeMore ? `Víc (právě: ${activeMore.label})` : undefined}
+          onClick={() => setMoreOpen(true)}
+        >
+          <MoreIcon size={20} aria-hidden="true" />
+          <span>Víc</span>
+        </button>
 
         <NavMascot />
       </nav>
@@ -90,7 +90,7 @@ export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
           {more.map((item) => renderNavLink(item, listRowLinkClass, closeMore))}
           <InstallMenuItem className={listRowLinkClass} />
 
-          <hr className="mx-4 my-2 border-rule-soft" />
+          {hasSections ? <hr className="mx-4 my-2 border-rule-soft" /> : null}
 
           {onOpenProfileDrawer ? (
             <button type="button" className={listRowLinkClass} onClick={() => { closeMore(); onOpenProfileDrawer() }}>

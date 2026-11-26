@@ -1,7 +1,7 @@
 /**
  * components/layout/ProfileDrawer.tsx
  * Šuplík profilu: osobní údaje, zabezpečení a pro správce rychlé odkazy do správy (#524).
- * Na mobilu nabízí i nápovědu, protože menu Víc chybí hostovi a chatě bez doplňků.
+ * Nápovědu nenese: na mobilu je v menu Víc (vidět vždy), na desktopu v sidebaru.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -19,10 +19,10 @@ import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
 import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
-import { HelpDialog } from '@/components/shared/HelpDialog'
 import { listRowLinkClass } from '@/components/shared/ListRow'
 import { useNavigate } from 'react-router-dom'
-import { CircleHelp, LogOut, ScrollText, Settings, Shield } from 'lucide-react'
+import { LogOut, ScrollText, Shield } from 'lucide-react'
+import { ADMIN_NAV } from '@/lib/navRoutes'
 import { useCabinSceneMode, type CabinSceneMode } from '@/hooks/useCabinSceneMode'
 
 /** Volba „Scéna chaty“ (#565): scéna na Přehledu (později i maskot na liště), jen v tomto zařízení. */
@@ -53,7 +53,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'personal' | 'security'>('personal')
-  const [helpOpen, setHelpOpen] = useState(false)
 
   // ─── Email state ────────────────────────────────────────────────────────────
   const [email, setEmail] = useState('')
@@ -89,8 +88,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const [leaveCabinError, setLeaveCabinError] = useState('')
 
   // ─── Zavřít klávesou Escape ─────────────────────────────────────────────────
-  // Otevřený dotaz na neodeslané změny i nápověda si Escape vyřídí samy; šuplík by se zavřel s nimi (#537)
-  const dialogAbove = pendingDialog.isOpen || helpOpen
+  // Otevřený dotaz na neodeslané změny si Escape vyřídí sám; šuplík by se zavřel s ním (#537)
+  const dialogAbove = pendingDialog.isOpen
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !dialogAbove) onClose() }
     if (isOpen) document.addEventListener('keydown', handler)
@@ -116,7 +115,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     if (isOpen) return
 
     setActiveTab('personal')
-    setHelpOpen(false)
     setEmail(profileData?.email ?? '')
     setEmailError(false)
     setEmailMessage('')
@@ -364,9 +362,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <h3 className="text-card-title text-(--text-main)">Správa</h3>
               <div className="-mx-4 flex flex-col md:-mx-6">
                 {isAdmin ? (
-                  <button type="button" className={listRowLinkClass} onClick={() => handleNavigate('/admin')}>
-                    <Settings size={20} aria-hidden="true" />
-                    <span>Správa chaty</span>
+                  <button type="button" className={listRowLinkClass} onClick={() => handleNavigate(ADMIN_NAV.to)}>
+                    <ADMIN_NAV.icon size={20} aria-hidden="true" />
+                    <span>{ADMIN_NAV.label}</span>
                   </button>
                 ) : null}
 
@@ -386,15 +384,6 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               </div>
             </div>
           )}
-
-          {/* Desktop má nápovědu v sidebaru; skrývá ji nav.css na zlomu sidebaru (769 px), ne md:hidden */}
-          <div className="drawer-help -mx-4 flex flex-col md:-mx-6">
-            <button type="button" className={listRowLinkClass} onClick={() => setHelpOpen(true)}>
-              <CircleHelp size={20} aria-hidden="true" />
-              <span>Nápověda</span>
-            </button>
-          </div>
-          <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
           {/* Segmented Control */}
           <div className="segmented-control">

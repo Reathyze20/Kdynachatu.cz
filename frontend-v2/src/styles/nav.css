@@ -259,11 +259,6 @@
 }
 
 @media (min-width: 769px) {
-  /* Nápovědu tu nese sidebar; šuplík ji skryje na stejném zlomu, ať v 768 px nezmizí z obou míst (#524) */
-  .drawer-help {
-    display: none;
-  }
-
   .app-sidebar {
     display: flex;
     flex-direction: column;

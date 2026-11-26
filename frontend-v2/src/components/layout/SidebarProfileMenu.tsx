@@ -12,7 +12,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useLogout } from '@/hooks/useLogout'
 import { LogoutPendingChangesDialog } from '@/components/layout/LogoutPendingChangesDialog'
-import { ChevronUp, LogOut, ScrollText, Settings, Shield, User, UserPlus } from 'lucide-react'
+import { ChevronUp, LogOut, ScrollText, Shield, User, UserPlus } from 'lucide-react'
+import { ADMIN_NAV } from '@/lib/navRoutes'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 
 interface SidebarProfileMenuProps {
@@ -33,7 +34,7 @@ export function SidebarProfileMenu({ onOpenProfileDrawer }: SidebarProfileMenuPr
     ...(isSuperAdmin ? [{ to: '/superadmin', label: 'Backoffice', icon: Shield, testId: 'superadmin' }] : []),
     ...(isAdmin
       ? [
-          { to: '/admin', label: 'Administrativa', icon: Settings, testId: 'admin' },
+          { to: ADMIN_NAV.to, label: ADMIN_NAV.label, icon: ADMIN_NAV.icon, testId: 'admin' },
           { to: '/admin/invites', label: 'Pozvat člena', icon: UserPlus, testId: 'invites' },
           { to: '/admin/diagnostics', label: 'Diagnostika', icon: ScrollText, testId: 'diagnostics' },
         ]

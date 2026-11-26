@@ -40,7 +40,7 @@ export const MORE_NAV: NavItem[] = [
   { to: '/reconstruction', label: 'Rekonstrukce', icon: Hammer,        featureKey: 'reconstruction' },
 ]
 
-/** Správa chaty: jen pro správce, na mobilu pod „Víc“ (#524), ve správě je pak „Víc“ aktivní */
+/** Správa: jen pro správce, na mobilu pod „Víc“, na desktopu v profilovém menu, všude stejný název (#524) */
 export const ADMIN_NAV: NavItem = { to: '/admin', label: 'Správa', icon: Settings }
 
 /** Položky, jejichž funkce je v chatě zapnutá; hostovi jen sekce z jeho whitelistu */
