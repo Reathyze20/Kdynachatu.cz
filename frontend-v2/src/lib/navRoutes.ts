@@ -1,11 +1,12 @@
 /**
  * lib/navRoutes.ts — globální navigace (redesign #0, issue #171)
  * Hlavní sekce podle cyklu turnusu (Přehled · Kalendář · Předávka · Zásoby), doplňky pod „Víc“.
- * Admin a backoffice nejsou sekce chaty, žijí v profilovém menu (SidebarProfileMenu, ProfileDrawer).
+ * Admin a backoffice nejsou sekce chaty, žijí v profilovém menu (SidebarProfileMenu, ProfileDrawer);
+ * na mobilu je správa navíc v menu Víc (#524).
  * Host (`guest`) vidí jen svůj pobyt (#484, PRODUCT.md „Role na chatě“): Přehled, Kalendář a Předávku.
  */
 import type { LucideIcon } from 'lucide-react'
-import { Home, CalendarDays, KeyRound, ShoppingCart, MessageCircle, Images, BookOpen, Hammer } from 'lucide-react'
+import { Home, CalendarDays, KeyRound, ShoppingCart, MessageCircle, Images, BookOpen, Hammer, Settings } from 'lucide-react'
 import { isFeatureEnabled } from '@/hooks/useCabinFeatures'
 
 export interface NavItem {
@@ -38,6 +39,9 @@ export const MORE_NAV: NavItem[] = [
   { to: '/diary',          label: 'Deník',        icon: BookOpen,      featureKey: 'diary' },
   { to: '/reconstruction', label: 'Rekonstrukce', icon: Hammer,        featureKey: 'reconstruction' },
 ]
+
+/** Správa chaty: jen pro správce, na mobilu pod „Víc“ (#524), ve správě je pak „Víc“ aktivní */
+export const ADMIN_NAV: NavItem = { to: '/admin', label: 'Správa', icon: Settings }
 
 /** Položky, jejichž funkce je v chatě zapnutá; hostovi jen sekce z jeho whitelistu */
 export function visibleNavItems(items: NavItem[], features: Record<string, boolean> | null | undefined, isGuest = false): NavItem[] {

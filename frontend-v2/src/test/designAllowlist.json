@@ -31,7 +31,7 @@
       "styles/shopping.css", "styles/skeleton.css", "styles/status-header.css"
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
-      "components/layout/ProfileDrawer.tsx", "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
+      "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
       "features/auth/ResetPasswordPage.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
       "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
