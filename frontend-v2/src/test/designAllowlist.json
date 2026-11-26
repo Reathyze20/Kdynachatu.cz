@@ -11,7 +11,7 @@
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
       "components/shared/GlobalFallback.tsx", "features/auth/ResetPasswordPage.tsx",
       "features/gallery/FolderGrid.tsx", "features/invite/InvitePage.tsx",
-      "features/landing/LandingPage.tsx", "features/reservations/ui/CheckoutSection.tsx"
+      "features/landing/LandingPage.tsx"
     ],
     "Barva člena a avatara je uložená data (#271), převod hex → rgba a paleta zatím mimo tokeny": [
       "components/shared/AnimalAvatar.tsx", "features/reservations/calendar/CalendarCell.tsx", "lib/avatars.ts", "lib/memberPalette.ts"
@@ -34,13 +34,12 @@
       "components/layout/ProfileDrawer.tsx", "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
       "features/auth/ResetPasswordPage.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
-      "features/reservations/ui/CheckoutSection.tsx", "features/reservations/ui/ReservationDetail.tsx",
       "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
     ]
   },
   "coldPalette": {
     "Rezervace mají vlastní studený jazyk slate/bg-white, převod obrazovky #460–#462": [
-      "features/reservations/ui/BookingForm.tsx", "features/reservations/ui/ReservationDetail.tsx"
+      "features/reservations/ui/BookingForm.tsx"
     ],
     "Studené slate/bg-white z doby před Jedlí, převede se s komponentou": [
       "components/shared/MunicipalityPicker.tsx", "components/shared/RouteTransitionSkeleton.tsx",
@@ -102,7 +101,7 @@
     "Ruční kopie ikony lucide, nahradí se komponentou z lucide-react s obrazovkou": [
       "features/notes/ChatView.tsx", "features/notes/MessageBubble.tsx",
       "features/notes/MessageContextMenu.tsx", "features/notes/MessageInput.tsx", "features/reservations/calendar/CalendarGrid.tsx",
-      "features/reservations/ui/ReservationDetail.tsx", "features/shopping/InventoryRow.tsx", "features/shopping/ItemRow.tsx",
+      "features/shopping/InventoryRow.tsx", "features/shopping/ItemRow.tsx",
       "features/shopping/ListDetail.tsx", "features/shopping/PantryView.tsx"
     ],
     "Landing page: ilustrace a ikony statické stránky (DESIGN.md §4)": ["features/landing/LandingPage.tsx"],
