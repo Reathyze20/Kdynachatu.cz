@@ -71,6 +71,13 @@ function add(l: Layer, token: string, d: string) {
 
 const box = (x: number, y: number, w: number, h: number) => `M${x} ${y}h${w}v${h}h${-w}z`;
 
+/** Jednobarevný závoj přes celou scénu (noc, zatažená obloha, blesk). */
+function veil(name: string, token: string, opacity?: number, motion?: string): Layer {
+  const l = { ...layer(name, motion), opacity };
+  add(l, token, box(0, 0, W, H));
+  return l;
+}
+
 /** Řádky mřížky po úsecích stejného znaku. */
 function drawSprite(l: Layer, grid: Sprite, x: number, y: number, remap: Record<string, string> = {}) {
   grid.forEach((row, j) => {
@@ -100,12 +107,7 @@ function landscape({ snowCover, frost, overcast, night }: CabinSceneState): Laye
     return { href, x, y: GROUND - h + 1, w, h };
   });
   const sky = [image("sky", { href: snowCover ? bgSnow : bgBare, x: 0, y: 0, w: W, h: H })];
-  if (overcast && !night) {
-    const veil = layer("overcast");
-    veil.opacity = 0.35;
-    add(veil, "overcast", box(0, 0, W, H));
-    sky.push(veil);
-  }
+  if (overcast && !night) sky.push(veil("overcast", "overcast", 0.35));
   return [...sky, image("trees", ...trees)];
 }
 
@@ -125,41 +127,37 @@ function windows({ occupied, winterized, night }: CabinSceneState, name = "windo
   return panes;
 }
 
-/** Vločky přes celou scénu. Při animaci padají: kopie nad scénou se posouvá o výšku scény, smyčka tak navazuje bez skoku. */
-function snowfall(moving: boolean): Layer {
-  const rnd = seededRandom(13);
-  const flakes = layer("snowfall", "animate-scene-snow");
-  for (let n = 0; n < (W * H) / 90; n++) {
-    const size = n % 3 ? 1 : 2;
-    const x = Math.floor(rnd() * W);
-    const y = Math.floor(rnd() * H);
-    add(flakes, "snow", box(x, y, size, size));
-    if (moving) add(flakes, "snow", box(x, y - H, size, size));
+/** Částice přes celou scénu, `size(n)` = šířka a výška n-té. Při animaci padají: kopie nad scénou se posouvá o výšku
+ * scény, smyčka tak navazuje bez skoku. */
+function falling(l: Layer, token: string, seed: number, count: number, moving: boolean, size: (n: number) => [number, number]): Layer {
+  const rnd = seededRandom(seed);
+  for (let n = 0; n < count; n++) {
+    const [x, y, [w, h]] = [Math.floor(rnd() * W), Math.floor(rnd() * H), size(n)];
+    add(l, token, box(x, y, w, h));
+    if (moving) add(l, token, box(x, y - H, w, h));
   }
-  return flakes;
+  return l;
 }
 
-/** Kapky padají stejně jako vločky (kopie nad scénou posunutá o výšku scény). Mrholení je řídké a pomalejší. */
+const snowfall = (moving: boolean) =>
+  falling(layer("snowfall", "animate-scene-snow"), "snow", 13, (W * H) / 90, moving, (n) => (n % 3 ? [1, 1] : [2, 2]));
+
+/** Kapky: mrholení řídké a pomalejší, déšť a bouřka husté. */
 function rainfall(precipitation: CabinSceneState["precipitation"], moving: boolean): Layer {
-  const rnd = seededRandom(17);
   const drizzle = precipitation === "drizzle";
   const drops = layer("rain", drizzle ? "animate-scene-drizzle" : "animate-scene-rain");
-  for (let n = 0; n < (W * H) / (drizzle ? 320 : 80); n++) {
-    const [x, y, len] = [Math.floor(rnd() * W), Math.floor(rnd() * H), n % 3 ? 2 : 3];
-    add(drops, "rain", box(x, y, 1, len));
-    if (moving) add(drops, "rain", box(x, y - H, 1, len));
-  }
-  return drops;
+  return falling(drops, "rain", 17, (W * H) / (drizzle ? 320 : 80), moving, (n) => [1, n % 3 ? 2 : 3]);
 }
 
 /** Šplouchání na louce při dešti a bouřce: čárky 1–3 jednotky, každá skupina svítí dva snímky pásu za sebou, pak zhasne.
  * Bez animace je vidět jen první snímek, tedy jen několik čárek. */
 const SPLASH_FRAMES = 6;
+const SPLASHES_PER_GROUP = 7;
 function splashes(): Layer {
   const rnd = seededRandom(23);
   const [w, h] = [W, H - GROUND];
   const cels = layer("splash-cels");
-  for (let n = 0; n < SPLASH_FRAMES * 7; n++) {
+  for (let n = 0; n < SPLASH_FRAMES * SPLASHES_PER_GROUP; n++) {
     const [x, y, len, group] = [Math.floor(rnd() * (w - 3)), Math.floor(rnd() * h), 1 + (n % 3), n % SPLASH_FRAMES];
     for (const frame of [group, (group + 1) % SPLASH_FRAMES]) add(cels, "rain", box(frame * w + x, y, len, 1));
   }
@@ -171,8 +169,11 @@ function splashes(): Layer {
  * (`animate-scene-peek`). V noci sleze k chatě a na zemi hryže oříšek (místo `ground`, kreslí se až po chatě). Přes zimu spí
  * schovaný pod střechou, vidět je jen zZz; stejně se schová před deštěm. */
 type MascotPlace = "roof" | "ground";
+/** Schovaný plch (zimní spánek, déšť) se nekreslí, je vidět jen zZz u hřebene. */
+type HiddenPose = "hibernate" | "shelter";
+const isHidden = (pose: MascotPose): pose is HiddenPose => pose === "hibernate" || pose === "shelter";
 interface MascotStrip { href: string; frames: number; ms: number; x: number; y: number; motion?: string; place: MascotPlace }
-const MASCOT: Record<Exclude<MascotPose, "hibernate" | "shelter">, MascotStrip> = {
+const MASCOT: Record<Exclude<MascotPose, HiddenPose>, MascotStrip> = {
   sleep: { href: dormouseSleep, frames: 6, ms: 420, x: MASCOT_X, y: -12, place: "roof" },
   peek: { href: dormousePeek, frames: 11, ms: 160, x: MASCOT_X, y: -6, motion: "animate-scene-peek", place: "roof" },
   nibble: { href: dormouseNibble, frames: 12, ms: 130, x: CABIN.x + CABIN.w - 6, y: GROUND - FEET, place: "ground" },
@@ -181,7 +182,7 @@ const MASCOT: Record<Exclude<MascotPose, "hibernate" | "shelter">, MascotStrip> 
 /** Vrstva plcha, když je v daném místě: na střeše (kreslí se dřív než chata), nebo na zemi u chaty (kreslí se po ní). */
 function mascot(state: CabinSceneState, place: MascotPlace): Layer[] {
   const pose = mascotPose(state);
-  if (pose === "hibernate" || pose === "shelter" || MASCOT[pose].place !== place) return [];
+  if (isHidden(pose) || MASCOT[pose].place !== place) return [];
   const { href, frames, ms, x, y, motion } = MASCOT[pose];
   return [{ ...layer("mascot", motion), strip: { href, x, y, w: FRAME, h: FRAME, frames, ms } }];
 }
@@ -190,7 +191,7 @@ function mascot(state: CabinSceneState, place: MascotPlace): Layer[] {
  * tam se nic nehýbe. */
 function snoring(state: CabinSceneState): Layer[] {
   const pose = mascotPose(state);
-  if (pose === "peek" || pose === "nibble") return [];
+  if (pose !== "sleep" && !isHidden(pose)) return [];
   const [x, y] = pose === "sleep" ? [MASCOT_X + 31, 2] : [CABIN.x + 44, RIDGE_Y - ZZZ.length - 1];
   return [drawSprite(layer("zzz", state.winterized ? undefined : "animate-scene-zzz"), ZZZ, x, y, state.night ? { o: "light" } : {})];
 }
@@ -218,10 +219,7 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
   if (moving && !night && !winterized) layers.push(bird());
   if (night) {
     const rnd = seededRandom(11);
-    const veil = layer("night");
-    veil.opacity = 0.5;
-    add(veil, "night-veil", box(0, 0, W, H));
-    layers.push(veil);
+    layers.push(veil("night", "night-veil", 0.5));
     // Při sněžení a srážkách je zataženo: bez měsíce a hvězd.
     if (!state.snowing && !state.overcast) {
       const sky = drawSprite(layer("stars"), MOON, W / 2 + 64, 4);
@@ -232,11 +230,7 @@ function buildScene(state: CabinSceneState, moving: boolean): Layer[] {
     if (occupied) layers.push(windows(state, "window-glow"));
   }
   // Blesk jen v pohybu: obloha jednou za ~8 s krátce zesvětlá (`animate-scene-lightning`), i přes noční clonu.
-  if (moving && state.precipitation === "storm") {
-    const flash = layer("lightning", "animate-scene-lightning");
-    add(flash, "flash", box(0, 0, W, H));
-    layers.push(flash);
-  }
+  if (moving && state.precipitation === "storm") layers.push(veil("lightning", "flash", undefined, "animate-scene-lightning"));
   // zZz až přes noční clonu, ať je v noci vidět.
   layers.push(...snoring(state));
   if (occupied) layers.push(drawSprite(layer("smoke", "animate-scene-smoke"), SMOKE, CABIN.x + CHIMNEY_X, CABIN_Y - SMOKE.length - 1));
