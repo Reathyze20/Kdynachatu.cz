@@ -121,7 +121,7 @@
     "Indikátor načítání nebo odesílání (spinner, skeleton): smyčka běží jen do konce načítání": [
       "components/ui/button.tsx", "features/reconstruction/ReconstructionSkeleton.tsx",
       "features/reservations/Reservations.module.css", "features/weather/StayWeatherCard.tsx", "styles/base.css", "styles/gallery.css",
-      "styles/invite.css", "styles/notes.css", "styles/skeleton.css"
+      "styles/invite.css", "styles/skeleton.css"
     ],
     "Dekorativní smyčka z doby před #565 (pulzující tečka stavu, landing page), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/landing.css", "styles/reservations.css"]
   }
