@@ -7,11 +7,7 @@ import { showToast } from "@/lib/toast";
 import { useAuth } from "@/context/AuthContext";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
-
-function formatNoteDate(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleDateString("cs-CZ", { day: "numeric", month: "long" });
-}
+import { formatLongDate } from "@/lib/format";
 
 interface Props {
   note: string | null;
@@ -93,7 +89,7 @@ export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
             <div className="card-footer">
               <span className="card-footer-meta">
                 {author && updatedAt
-                  ? `— ${author}, ${formatNoteDate(updatedAt)}`
+                  ? `— ${author}, ${formatLongDate(updatedAt)}`
                   : "Vzkaz pro návštěvníky"}
               </span>
               <a

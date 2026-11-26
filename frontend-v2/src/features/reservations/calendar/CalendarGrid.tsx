@@ -3,27 +3,15 @@ import { getDaysInMonth, getDay, format } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { CalendarCell } from "./CalendarCell";
 import type { Reservation, UserAvailability } from "@/api/reservations";
+import { formatLongDate } from "@/lib/format";
+import { MONTH_NAMES } from "@/lib/utils";
 import styles from "../Reservations.module.css";
 
-const MONTH_NAMES = [
-  "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-  "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
-];
-const MONTH_NAMES_GENITIVE = [
-  "ledna", "února", "března", "dubna", "května", "června",
-  "července", "srpna", "září", "října", "listopadu", "prosince",
-];
 const WEEKDAY_LABELS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const TOTAL_CELLS = 42;
 
 function toDateStr(d: Date): string {
   return format(d, "yyyy-MM-dd");
-}
-
-/** Format "2026-03-21" → "21. března" */
-function formatCzechDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return `${d.getDate()}. ${MONTH_NAMES_GENITIVE[d.getMonth()]}`;
 }
 
 interface CalendarGridProps {
@@ -134,9 +122,9 @@ export function CalendarGrid({
   };
 
   const rangeTitle = rangeStart
-    ? `Příjezd: ${formatCzechDate(rangeStart)} — vyber odjezd`
+    ? `Příjezd: ${formatLongDate(rangeStart)} — vyber odjezd`
     : selectedDay
-      ? `Vybraný den: ${formatCzechDate(selectedDay)}`
+      ? `Vybraný den: ${formatLongDate(selectedDay)}`
       : "Vyber den v kalendáři";
 
   // Formulace bez směrových odkazů — seznam rezervací je na desktopu vpravo,

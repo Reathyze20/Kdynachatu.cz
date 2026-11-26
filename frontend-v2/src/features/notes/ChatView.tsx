@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { formatDate, formatLongDate } from "@/lib/format";
 
 interface UserMap {
   [username: string]: { color?: string; animalIcon?: string | null };
@@ -286,14 +287,12 @@ export function ChatView({
   const [threadMenuOpen, setThreadMenuOpen] = useState(false);
 
   // ── Date separator + message grouping helpers ─────────────────
+  // Den se určuje v pražském čase jako formátování (lib/format.ts), ne podle zóny zařízení.
   const formatDateSeparator = useCallback((dateStr: string) => {
-    const d = new Date(dateStr);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    if (d.toDateString() === today.toDateString()) return "Dnes";
-    if (d.toDateString() === yesterday.toDateString()) return "Včera";
-    return `${d.getDate()}. ${d.toLocaleString("cs-CZ", { month: "long" })}`;
+    const day = formatDate(dateStr);
+    if (day === formatDate(Date.now())) return "Dnes";
+    if (day === formatDate(Date.now() - 86_400_000)) return "Včera";
+    return formatLongDate(dateStr);
   }, []);
 
   const isGroupedWithPrev = useCallback((curr: Note, prev: Note | undefined) => {
@@ -465,8 +464,8 @@ export function ChatView({
               const grouped = isGroupedWithPrev(note, prevNote);
 
               // Date separator: show when day changes
-              const currDate = new Date(note.createdAt).toDateString();
-              const prevDate = prevNote ? new Date(prevNote.createdAt).toDateString() : null;
+              const currDate = formatDate(note.createdAt);
+              const prevDate = prevNote ? formatDate(prevNote.createdAt) : null;
               const showDateSep = !prevDate || currDate !== prevDate;
 
               // If this note is being edited, show inline edit

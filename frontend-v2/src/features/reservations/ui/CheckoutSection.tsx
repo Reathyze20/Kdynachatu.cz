@@ -8,6 +8,7 @@ import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/ga
 import { isQueuedOffline } from "@/lib/offlineQueue";
 import { useCheckoutPending } from "@/hooks/useOfflineQueue";
 import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
+import { formatDate, formatTime } from "@/lib/format";
 import styles from "../Reservations.module.css";
 
 function chipStyle(active: boolean): React.CSSProperties {
@@ -139,12 +140,8 @@ export function CheckoutSection({ reservation }: Props) {
 
   // --- Completed state ---
   if (reservation.isCheckoutCompleted && completedStatus) {
-    const ts = completedStatus.checkoutCompletedAt
-      ? new Date(completedStatus.checkoutCompletedAt)
-      : null;
-    const formatted = ts
-      ? `${ts.getDate()}.${ts.getMonth() + 1}.${ts.getFullYear()} ${ts.getHours().toString().padStart(2, "0")}:${ts.getMinutes().toString().padStart(2, "0")}`
-      : "";
+    const ts = completedStatus.checkoutCompletedAt;
+    const formatted = ts ? `${formatDate(ts)} ${formatTime(ts)}` : "";
     const s = completedStatus.checkoutState;
     const gasSummary = gasLine(s?.gas);
     return (

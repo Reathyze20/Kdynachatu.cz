@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   formatAmount,
   formatCount,
@@ -44,6 +44,22 @@ describe('lib/format', () => {
     expect(formatShortDate(Date.UTC(2026, 0, 14, 22, 30))).toBe('14. 1.') // zima +1 h
   })
 
+  it('výsledek nezávisí na zóně zařízení (testy jinak běží v Europe/Prague, #456)', () => {
+    const midnightUtcHour = { UTC: 0, 'America/Los_Angeles': 16, 'Pacific/Kiritimati': 14 }
+    for (const [zone, hour] of Object.entries(midnightUtcHour)) {
+      vi.stubEnv('TZ', zone)
+      try {
+        expect(new Date(Date.UTC(2026, 0, 1)).getHours()).toBe(hour) // zóna zařízení se opravdu přepnula
+        expect(formatDate('2026-12-31T23:30:00.000Z')).toBe('1. 1. 2027')
+        expect(formatTime(Date.UTC(2026, 2, 21, 8, 40))).toBe('9:40')
+        expect(formatDate('2026-03-21')).toBe('21. 3. 2026')
+        expect(weekdayName('2026-03-23')).toBe('po')
+      } finally {
+        vi.unstubAllEnvs()
+      }
+    }
+  })
+
   it('čas 24 h včetně půlnoci a přechodu na letní a zimní čas', () => {
     expect(formatTime(Date.UTC(2026, 2, 21, 8, 40))).toBe('9:40')
     expect(formatTime('2026-07-14T22:00:00Z')).toBe('0:00')
@@ -55,6 +71,11 @@ describe('lib/format', () => {
     // 25. 10. 2026 v 1:00 UTC se ručičky vrátí ze 3:00 na 2:00, 2:30 je dvakrát
     expect(formatTime('2026-10-25T00:30:00Z')).toBe('2:30')
     expect(formatTime('2026-10-25T01:30:00Z')).toBe('2:30')
+  })
+
+  it('čas se sekundami pro logy a podporu (#456)', () => {
+    expect(formatTime('2026-03-21T08:40:05Z', { seconds: true })).toBe('9:40:05')
+    expect(formatTime('2026-07-14T22:00:00Z', { seconds: true })).toBe('0:00:00')
   })
 
   describe('rozsah', () => {
@@ -101,6 +122,11 @@ describe('lib/format', () => {
     expect(Array.from({ length: 12 }, (_, i) => monthName(i))).toEqual([
       'leden', 'únor', 'březen', 'duben', 'květen', 'červen',
       'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec',
+    ])
+    // 3. pád jako v „Poznámka k březnu“ (#456)
+    expect(Array.from({ length: 12 }, (_, i) => monthName(i, 'dative'))).toEqual([
+      'lednu', 'únoru', 'březnu', 'dubnu', 'květnu', 'červnu',
+      'červenci', 'srpnu', 'září', 'říjnu', 'listopadu', 'prosinci',
     ])
     expect(weekdayName('2026-03-23')).toBe('po')
     expect(weekdayName('2026-03-22', 'long')).toBe('neděle')

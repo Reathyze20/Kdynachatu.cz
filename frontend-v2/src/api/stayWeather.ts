@@ -1,6 +1,6 @@
 /** Předpověď Open-Meteo na 16 dní pro místo chaty (sdílí ji detail pobytu i Přehled) a výběr dnů pobytu (#323). */
-import { addIsoDays } from "@/lib/dateUtils";
-import { DAY_NAMES } from "@/lib/utils";
+import { addIsoDays, capitalize } from "@/lib/dateUtils";
+import { weekdayName } from "@/lib/format";
 import { mapWMOCode, resolveWeatherCoords, type WeatherPlace } from "./dashboard";
 
 /** Horizont předpovědi: dnes + 15 dní. Od 8. dne (posun 7) je předpověď orientační. */
@@ -58,7 +58,7 @@ export async function fetchCabinForecast(place: WeatherPlace | null | undefined)
       temp: Math.round(hourly.temperature_2m[h] ?? 0),
     }] : []);
     return {
-      date, dayName: DAY_NAMES[(new Date(date + "T12:00:00").getDay() + 6) % 7], weatherCode, ...mapWMOCode(weatherCode, false),
+      date, dayName: capitalize(weekdayName(date)), weatherCode, ...mapWMOCode(weatherCode, false),
       tempMax: daily.temperature_2m_max[i] ?? 0, tempMin: daily.temperature_2m_min[i] ?? 0, // nezaokrouhlené kvůli výstraze mrazu
       precipProbability: daily.precipitation_probability_max[i] ?? 0,
       precipSum: Math.round((daily.precipitation_sum[i] ?? 0) * 10) / 10,

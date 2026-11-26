@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getLastApiCorrelation, getSupportCodeFromSnapshot } from '@/lib/observability'
+import { formatDate, formatTime } from '@/lib/format'
 
 interface ApiErrorBody {
   message?: string
@@ -150,15 +151,7 @@ export function formatSupportBlock(details: SupportErrorDetails): string {
   }
 
   const time = details.timestamp ?? new Date().toISOString()
-  const formatted = new Date(time).toLocaleString('cs-CZ', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-  lines.push(`Čas: ${formatted}`)
+  lines.push(`Čas: ${formatDate(time)} ${formatTime(time, { seconds: true })}`)
 
   if (details.message) {
     lines.push(`Zpráva: ${details.message}`)

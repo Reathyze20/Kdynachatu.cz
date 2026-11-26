@@ -1,3 +1,6 @@
+import { capitalize } from "@/lib/dateUtils";
+import { weekdayName } from "@/lib/format";
+
 // ─── Types ────────────────────────────────────────────────────────────
 
 export interface PendingShoppingItem {
@@ -286,12 +289,10 @@ export async function fetchWeather(place: WeatherPlace | null | undefined): Prom
     const sunriseTime = sunriseRaw ? sunriseRaw.split("T")[1]?.slice(0, 5) ?? null : null;
     const sunsetTime = sunsetRaw ? sunsetRaw.split("T")[1]?.slice(0, 5) ?? null : null;
 
-    const DAY_NAMES_CZ = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
-
     // Forecast: days 1–5 (tomorrow + 4)
     const forecast: WeatherForecastDay[] = [1, 2, 3, 4, 5].map((i) => {
       const dateStr = fx.daily.time[i];
-      const dayName = dateStr ? DAY_NAMES_CZ[new Date(dateStr + "T12:00:00").getDay()] : "";
+      const dayName = dateStr ? capitalize(weekdayName(dateStr)) : "";
       const { icon: fIcon, color: fColor } = mapWMOCode(fx.daily.weather_code[i] ?? 0, false);
       return {
         dayName,
@@ -310,7 +311,7 @@ export async function fetchWeather(place: WeatherPlace | null | undefined): Prom
       const wmo = fx.daily.weather_code[i] ?? 0;
       if (wmo >= 80) {
         const dateStr = fx.daily.time[i];
-        const dayLabel = i === 0 ? "Dnes" : i === 1 ? "Zítra" : (dateStr ? DAY_NAMES_CZ[new Date(dateStr + "T12:00:00").getDay()] : "");
+        const dayLabel = i === 0 ? "Dnes" : i === 1 ? "Zítra" : (dateStr ? capitalize(weekdayName(dateStr)) : "");
         const { description: stormDesc } = mapWMOCode(wmo, false);
         stormAlert = { day: dayLabel, description: stormDesc };
         break;
