@@ -49,7 +49,7 @@ Používej **jazyk uživatele**, ne programátorský žargon.
 | Null / Empty | Zatím nic. Buďte první! |
 | Tenant | Chata |
 | User | Člen |
-| Admin panel | Správa chaty |
+| Admin panel | Správa |
 
 ---
 

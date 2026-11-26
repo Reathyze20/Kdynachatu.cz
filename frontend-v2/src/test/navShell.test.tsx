@@ -77,10 +77,10 @@ describe('MobileNav — dolní lišta (#171)', () => {
     for (const page of CABIN_PAGES) expect(reachable).toContain(page)
   })
 
-  it('„Víc“ zmizí, když chata nemá zapnutý žádný doplněk', () => {
+  it('„Víc“ zůstane, i když chata nemá zapnutý žádný doplněk (#524)', () => {
     features = { notes: false, gallery: false, diary: false, reconstruction: false }
     renderNav('/dashboard')
-    expect(screen.queryByRole('button', { name: /Víc/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Víc/ })).toBeInTheDocument()
     expect(screen.getAllByRole('link')).toHaveLength(4)
   })
 

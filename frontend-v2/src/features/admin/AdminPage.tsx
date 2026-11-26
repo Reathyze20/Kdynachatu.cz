@@ -886,7 +886,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
 // ─── AdminPage ────────────────────────────────────────────────────────────────
 
 export function AdminPage() {
-  useDocumentTitle('Administrativa');
+  useDocumentTitle('Správa');
   const location = useLocation()
   const navigate = useNavigate()
   const { isAdmin, user: currentUser } = useAuth()

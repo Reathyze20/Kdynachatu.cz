@@ -106,9 +106,9 @@ describe('Profilové menu v sidebaru — desktop bez horní lišty (#205)', () =
     await user.click(openMenuButton())
     const menu = screen.getByRole('menu')
     expect(within(menu).getAllByRole('menuitem').map((el) => el.textContent)).toEqual([
-      'Osobní profil', 'Administrativa', 'Pozvat člena', 'Diagnostika', 'Odhlásit',
+      'Osobní profil', 'Správa', 'Pozvat člena', 'Diagnostika', 'Odhlásit',
     ])
-    expect(within(menu).getByRole('menuitem', { name: 'Administrativa' })).toHaveAttribute('href', '/admin')
+    expect(within(menu).getByRole('menuitem', { name: 'Správa' })).toHaveAttribute('href', '/admin')
   })
 
   it('člen bez admin role vidí jen profil a odhlášení', async () => {
@@ -134,7 +134,7 @@ describe('Profilové menu v sidebaru — desktop bez horní lišty (#205)', () =
     renderSidebar('/dashboard')
     openMenuButton().focus()
     await user.keyboard('{Enter}{ArrowDown}')
-    expect(screen.getByRole('menuitem', { name: 'Administrativa' })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: 'Správa' })).toHaveFocus()
     await user.keyboard(' ')
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })

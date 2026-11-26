@@ -8,7 +8,6 @@ import { MobileNav } from '@/components/layout/MobileNav'
 import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 import { AdminRoute } from '@/components/layout/AdminRoute'
 import { showToast } from '@/lib/toast'
-import navCss from '@/styles/nav.css?raw'
 
 // Kostra aplikace na mobilu podle DESIGN.md (#524): menu Víc nese účet, nápovědu a správu,
 // plovoucí tlačítko nápovědy není. Fiktivní účet.
@@ -130,15 +129,18 @@ describe('šuplík profilu (#524)', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/admin/diagnostics')
   })
 
-  it('nápovědu skryje na stejném zlomu, kde se objeví sidebar s nápovědou (i v 768 px je vidět aspoň jedna)', () => {
-    // jsdom neměří media query: hlídá se kontrakt v CSS a v markupu
+  it('řádek do správy se jmenuje Správa jako v menu Víc a na desktopu', async () => {
+    auth.isAdmin = true
+    const user = userEvent.setup()
     renderAt('/dashboard', <ProfileDrawer isOpen onClose={vi.fn()} />)
-    const row = screen.getByRole('button', { name: 'Nápověda' }).parentElement!
-    expect(row).toHaveClass('drawer-help')
-    expect(row).not.toHaveClass('md:hidden')
-    const sidebarQuery = /@media \(min-width: 769px\) {([\s\S]*?)\n}/.exec(navCss)?.[1] ?? ''
-    expect(sidebarQuery).toMatch(/\.drawer-help\s*{\s*display:\s*none/)
-    expect(sidebarQuery).toMatch(/\.app-sidebar\s*{\s*display:\s*flex/)
+
+    await user.click(screen.getByRole('button', { name: 'Správa' }))
+    expect(screen.getByTestId('path')).toHaveTextContent('/admin')
+  })
+
+  it('nápovědu nenabízí, na mobilu je v menu Víc a na desktopu v sidebaru', () => {
+    renderAt('/dashboard', <ProfileDrawer isOpen onClose={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'Nápověda' })).not.toBeInTheDocument()
   })
 })
 

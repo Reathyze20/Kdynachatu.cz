@@ -5,9 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 
-// Nápověda bez plovoucího tlačítka (#524): otevírá se z menu Víc, ze sidebaru a ze šuplíku profilu. Fiktivní účet.
+// Nápověda bez plovoucího tlačítka (#524): otevírá se z menu Víc a ze sidebaru. Fiktivní účet.
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({
@@ -47,14 +46,6 @@ describe('nápověda bez plovoucího tlačítka (#524)', () => {
 
     await user.click(screen.getByRole('button', { name: /Víc/ }))
     await user.click(within(await screen.findByRole('dialog', { name: 'Víc' })).getByRole('button', { name: 'Nápověda' }))
-    await expectHelpFor('Kalendář')
-  })
-
-  it('nápověda jde otevřít i ze šuplíku profilu (na mobilu tam, kde Víc chybí)', async () => {
-    const user = userEvent.setup()
-    renderAt('/reservations', <ProfileDrawer isOpen onClose={vi.fn()} />)
-
-    await user.click(screen.getByRole('button', { name: 'Nápověda' }))
     await expectHelpFor('Kalendář')
   })
 

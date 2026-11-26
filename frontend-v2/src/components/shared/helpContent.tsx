@@ -100,8 +100,8 @@ export const HELP_PAGES: Record<string, ReactNode> = {
   ),
   '/admin': (
     <>
-      <h3>Administrativa</h3>
-      <p>Správa chaty pro administrátory. Otevřeš ji z profilového menu, mezi částmi přepínáš nahoře.</p>
+      <h3>Správa</h3>
+      <p>Nastavení chaty a členů pro správce. Na mobilu ji otevřeš z menu Víc, na počítači z profilového menu. Mezi částmi přepínáš nahoře.</p>
       <ul>
         <li><strong>Členové a role</strong> – kdo má do chaty přístup a s jakou rolí (admin, člen, host). Tady přidáš i člena bez e-mailu.</li>
         <li><strong>Pozvánky</strong> – odkazy, přes které se k chatě přidají noví lidé.</li>
