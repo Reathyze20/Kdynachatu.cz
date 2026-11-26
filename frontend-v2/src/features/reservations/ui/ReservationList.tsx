@@ -1,11 +1,17 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { CalendarCheck, ChevronDown, PenLine, X } from "lucide-react";
+import { CalendarCheck, ChevronDown, EllipsisVertical, PenLine, Pencil, Trash2, X } from "lucide-react";
 import type { Reservation } from "@/api/reservations";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal } from "@/components/shared/Modal";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { ListRow } from "@/components/shared/ListRow";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatDate, formatShortDate, monthName } from "@/lib/format";
-import { MONTH_NAMES } from "@/lib/utils";
+import { MONTH_NAMES, cn } from "@/lib/utils";
 import { useMonthlyNote, useUpdateMonthlyNote } from "../hooks/useReservations";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
@@ -45,21 +51,21 @@ function MonthPicker({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.15 }}
-      className="absolute top-full left-0 mt-2 z-30 bg-white rounded-xl shadow-lg border border-slate-200 p-3 w-64"
+      className="absolute top-full left-0 mt-2 z-(--z-dropdown) bg-sheet rounded-xl shadow-lift border border-rule-soft p-3 w-64"
     >
       <div className="flex items-center justify-between mb-2">
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg px-2 py-1 text-sm font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+          className="inline-flex size-(--touch-target-min) items-center justify-center rounded-lg text-body font-bold text-(--text-muted) transition-colors hover:bg-(--bg-hover) hover:text-(--text-main)"
           onClick={() => setPickerYear((y) => y - 1)}
           aria-label="Předchozí rok"
         >
           ‹
         </button>
-        <span className="font-bold text-slate-800">{pickerYear}</span>
+        <span className="text-card-title text-(--text-main)">{pickerYear}</span>
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg px-2 py-1 text-sm font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+          className="inline-flex size-(--touch-target-min) items-center justify-center rounded-lg text-body font-bold text-(--text-muted) transition-colors hover:bg-(--bg-hover) hover:text-(--text-main)"
           onClick={() => setPickerYear((y) => y + 1)}
           aria-label="Další rok"
         >
@@ -74,10 +80,10 @@ function MonthPicker({
               key={i}
               type="button"
               onClick={() => { onSelect(i, pickerYear); onClose(); }}
-              className={`min-h-11 rounded-lg px-1 py-2 text-xs font-medium transition-colors ${
+              className={`min-h-(--touch-target-min) rounded-lg px-1 py-2 text-label transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "text-slate-600 hover:bg-accent hover:text-primary"
+                  : "text-(--text-muted) hover:bg-accent hover:text-primary"
               }`}
             >
               {name.slice(0, 3)}
@@ -105,6 +111,10 @@ interface Props {
   onBookFromDay?: (day: string) => void;
   /** Host poznámku k měsíci nevidí (#484) */
   hideMonthlyNote?: boolean;
+  /** Smí uživatel pobyt upravit a smazat? Bez něj řádky kebab menu nemají (#460). */
+  canManage?: (r: Reservation) => boolean;
+  onEdit?: (r: Reservation) => void;
+  onDelete?: (id: string) => Promise<void> | void;
 }
 
 export function ReservationList({
@@ -118,12 +128,17 @@ export function ReservationList({
   onClearDayFilter,
   onBookFromDay,
   hideMonthlyNote = false,
+  canManage,
+  onEdit,
+  onDelete,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [noteSaveError, setNoteSaveError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"month" | "upcoming">("month");
+  const [deleteTarget, setDeleteTarget] = useState<Reservation | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   // Reset view to month when user navigates to a different month
   const prevMonthRef = useRef(`${year}-${month}`);
@@ -172,6 +187,20 @@ export function ReservationList({
     }
   };
 
+  // Mazání s potvrzením není optimistické: řádek zmizí, až server potvrdí (DESIGN.md §7).
+  const handleConfirmedDelete = async () => {
+    if (!deleteTarget || !onDelete) return;
+    setDeleteSubmitting(true);
+    try {
+      await onDelete(deleteTarget.id);
+      setDeleteTarget(null);
+    } catch {
+      // Chybu ohlásí toast mutace (lib/mutationError.ts), dialog zůstane otevřený pro nový pokus.
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
+
   const handlePrevMonth = () => {
     if (month === 0) onMonthChange(11, year - 1);
     else onMonthChange(month - 1, year);
@@ -195,7 +224,7 @@ export function ReservationList({
           >
             {MONTH_NAMES[month]} {year}
             <ChevronDown
-              size={14}
+              size={16}
               className={`${css.monthNavChevron} ${pickerOpen ? css.monthNavChevronOpen : ""}`}
             />
           </button>
@@ -262,40 +291,34 @@ export function ReservationList({
         )}
       </AnimatePresence>
 
-      <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${year}-${month}-${viewMode}`}
-            className={css.cardList}
-          >
-            {sorted.length === 0 && selectedDay ? (
-              <EmptyState
-                icon={CalendarCheck}
-                message={`${formatShortDate(selectedDay)} je volno.`}
-                action={onBookFromDay && { label: `Zarezervovat od ${formatShortDate(selectedDay)}`, onClick: () => onBookFromDay(selectedDay) }}
-              />
-            ) : sorted.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className={css.emptyState}
-              >
-                <img src="/empty_cabin.svg" alt="Chata je volná" className={css.emptyIllustration} />
-                <div className={css.emptyTextBlock}>
-                  <h3 className={css.emptyTitle}>Chata je volná!</h3>
-                  <p className={css.emptyText}>
-                    {viewMode === "upcoming"
-                      ? "Nejsou naplánovány žádné nadcházející pobyty."
-                      : "V tomto měsíci nejsou naplánovány žádné pobyty."}
-                  </p>
-                </div>
-              </motion.div>
-            ) : (
-              sorted.map((r, i) => <ReservationCard key={r.id} reservation={r} index={i} onClick={onShowDetail} />)
-            )}
-          </motion.div>
-        </AnimatePresence>
+      <div className="flex-1 overflow-y-auto min-h-0 pr-1">
+        {sorted.length === 0 && selectedDay ? (
+          <EmptyState
+            icon={CalendarCheck}
+            message={`${formatShortDate(selectedDay)} je volno.`}
+            action={onBookFromDay && { label: `Zarezervovat od ${formatShortDate(selectedDay)}`, onClick: () => onBookFromDay(selectedDay) }}
+          />
+        ) : sorted.length === 0 ? (
+          <EmptyState
+            icon={CalendarCheck}
+            message={viewMode === "upcoming" ? "Nejsou naplánované žádné nadcházející pobyty." : "V tomto měsíci nejsou naplánované žádné pobyty."}
+          />
+        ) : (
+          <ul className="divide-y divide-rule-soft">
+            {sorted.map((r) => {
+              const manageable = canManage?.(r) ?? false;
+              return (
+                <ReservationRow
+                  key={r.id}
+                  reservation={r}
+                  onClick={onShowDetail}
+                  onEdit={manageable ? onEdit : undefined}
+                  onAskDelete={manageable && onDelete ? setDeleteTarget : undefined}
+                />
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       {/* ── D. Monthly note (host ji nevidí, #484) ── */}
@@ -352,31 +375,22 @@ export function ReservationList({
         maxWidth="max-w-md"
         footer={
           <div className="flex items-center justify-between w-full">
-            <span className={`text-xs ${noteText.length > NOTE_MAX_LENGTH ? "text-red-500 font-bold" : "text-slate-400"}`}>
+            <span className={cn("text-meta", noteText.length > NOTE_MAX_LENGTH ? "font-semibold text-(--status-error-dark)" : "text-(--text-muted)")}>
               {noteText.length}/{NOTE_MAX_LENGTH}
             </span>
             <div className="flex gap-2">
-              <button
-                type="button"
-                className="text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                onClick={() => setNoteModalOpen(false)}
-              >
+              <Button variant="secondary" onClick={() => setNoteModalOpen(false)}>
                 Zrušit
-              </button>
-              <button
-                type="button"
-                className="text-sm font-semibold text-primary-foreground bg-primary hover:bg-(--brand-primary-hover) rounded-lg transition-colors disabled:opacity-50"
-                disabled={noteText.length > NOTE_MAX_LENGTH || updateNote.isPending}
-                onClick={handleSaveNote}
-              >
+              </Button>
+              <Button disabled={noteText.length > NOTE_MAX_LENGTH} pending={updateNote.isPending} onClick={handleSaveNote}>
                 {updateNote.isPending ? "Ukládám…" : "Uložit"}
-              </button>
+              </Button>
             </div>
           </div>
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-slate-500">
+          <p className="text-label text-(--text-muted)">
             Tuto poznámku uvidí všichni členové chaty. Můžeš ji kdykoliv upravit.
           </p>
           <textarea
@@ -388,30 +402,43 @@ export function ReservationList({
             maxLength={NOTE_MAX_LENGTH + 20}
             rows={3}
             placeholder={'Např. „V březnu přijede instalatér 15.–16., buďte prosím doma."'}
-            className="w-full resize-none rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-body text-(--text-main) placeholder:text-(--text-placeholder) focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
           />
           {noteSaveError ? (
             <div className="error-message show" role="alert">{noteSaveError}</div>
           ) : null}
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title="Smazat rezervaci"
+        message="Opravdu chceš smazat tuto rezervaci? Tato akce je nevratná."
+        confirmLabel="Smazat"
+        danger
+        loading={deleteSubmitting}
+        onConfirm={() => void handleConfirmedDelete()}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
 
-// ── Reservation card sub-component ──────────────────────────────────
+// ── Reservation row sub-component ───────────────────────────────────
 
 /** Pevná plně, předběžná obrysem, záložní (#209). */
 const TYPE_CLASS = { primary: css.typeFirm, soft: css.typeSoft, backup: css.typeBackup } as const;
 
-function ReservationCard({
+function ReservationRow({
   reservation: r,
-  index,
   onClick,
+  onEdit,
+  onAskDelete,
 }: {
   reservation: Reservation;
-  index: number;
   onClick: (r: Reservation) => void;
+  onEdit?: (r: Reservation) => void;
+  onAskDelete?: (r: Reservation) => void;
 }) {
   const isPast = new Date(r.to + "T00:00:00") < new Date();
   const nights = nightsBetween(r.from, r.to);
@@ -419,13 +446,11 @@ function ReservationCard({
   const dateLabel = `${formatShortDate(r.from)} – ${formatShortDate(r.to)}`;
   const status = r.status ?? "primary";
 
-  return (
-    <motion.button
+  // Celý řádek otevře detail i klávesnicí: plocha tlačítka (after:) je roztažená přes řádek.
+  const openDetail = (
+    <button
       type="button"
-      initial={{ opacity: 0, y: 32 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
-      className={`${css.card} ${isPast ? css.cardPast : ""}`}
+      className="flex w-full items-center gap-3 text-left after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-ring"
       data-testid="reservation-list-item"
       data-reservation-id={r.id}
       data-reservation-status={r.status}
@@ -446,6 +471,32 @@ function ReservationCard({
         </span>
         <span className={css.cardWho}>{r.username}</span>
       </span>
-    </motion.button>
+    </button>
+  );
+
+  return (
+    <ListRow
+      as="li"
+      className={cn("relative px-0 md:px-0", isPast && css.cardPast)}
+      action={(onEdit || onAskDelete) && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {/* relative: kebab leží nad roztaženou plochou tlačítka řádku */}
+            <Button variant="ghost" size="icon" className="relative" aria-label={`Akce s rezervací ${r.username}, ${dateLabel}`}>
+              <EllipsisVertical aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {onEdit && <DropdownMenuItem onSelect={() => onEdit(r)}><Pencil aria-hidden="true" />Upravit</DropdownMenuItem>}
+            {onEdit && onAskDelete && <DropdownMenuSeparator />}
+            {onAskDelete && (
+              <DropdownMenuItem variant="danger" onSelect={() => onAskDelete(r)}><Trash2 aria-hidden="true" />Smazat</DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    >
+      {openDetail}
+    </ListRow>
   );
 }

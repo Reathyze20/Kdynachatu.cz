@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { getDaysInMonth, getDay, format } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CalendarCell } from "./CalendarCell";
 import type { Reservation, UserAvailability } from "@/api/reservations";
 import { formatLongDate } from "@/lib/format";
@@ -34,8 +34,6 @@ interface CalendarGridProps {
   onDaySelect: (dateStr: string) => void;
   onDayClear?: () => void;
   quickStatsNode?: React.ReactNode;
-  /** „Nová rezervace" in the header — opens an empty booking form (no button without it). */
-  onNewReservation?: () => void;
 }
 
 export function CalendarGrid({
@@ -57,7 +55,6 @@ export function CalendarGrid({
   onDaySelect,
   onDayClear,
   quickStatsNode,
-  onNewReservation,
 }: CalendarGridProps) {
   const [rangeHoverDate, setRangeHoverDate] = useState<string | null>(null);
 
@@ -185,12 +182,6 @@ export function CalendarGrid({
             </div>
           ) : quickStatsNode}
         </div>
-        {onNewReservation ? (
-          <button type="button" className={`btn-primary ${styles.newReservationButton}`} onClick={onNewReservation} data-testid="reservation-create-button">
-            <Plus className="w-4 h-4" aria-hidden="true" />
-            <span className="max-md:sr-only">Nová rezervace</span>
-          </button>
-        ) : null}
       </div>
 
       {/* Calendar grid */}
