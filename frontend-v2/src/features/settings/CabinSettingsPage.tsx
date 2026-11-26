@@ -178,7 +178,7 @@ function FeatureToggles({ features, onChange }: FeatureTogglesProps) {
     onChange({ ...features, [key]: enabled })
   }
 
-  // Řádky přes celou šířku karty (ListRow má odsazení karty sám), celý řádek je popisek přepínače.
+  // Řádky přes celou šířku karty (ListRow má odsazení karty sám), název, popis i políčko jsou jeden popisek.
   return (
     <ul className="-mx-4 divide-y divide-rule-soft md:-mx-6" data-testid="cabin-settings-feature-toggles">
       {AVAILABLE_FEATURES.map((f) => (
@@ -365,7 +365,11 @@ export function CabinSettingsPanel({
     'tab-modules': 'Moduly',
   }
   const panelState = isLoading ? 'loading' : isError ? 'error' : 'ready'
-  const tabPane = (tab: TabId) => ({ role: 'tabpanel', id: tab, 'aria-labelledby': `${tab}-button`, hidden: activeTab !== tab })
+  // `cs-tab-pane` drží prolnutí při přepnutí záložky a test, že Uložit změny leží mimo záložky (#260).
+  const tabPane = (tab: TabId) => ({
+    role: 'tabpanel', id: tab, 'aria-labelledby': `${tab}-button`, hidden: activeTab !== tab,
+    className: cn('cs-tab-pane divide-y divide-rule-soft', activeTab === tab && 'active'),
+  })
 
   const saveBtnText = updateSettings.isPending ? 'Ukládám…' : saveSuccess ? 'Uloženo' : 'Uložit změny'
 
