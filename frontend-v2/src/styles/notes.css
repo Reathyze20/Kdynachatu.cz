@@ -341,60 +341,6 @@
   gap: var(--space-sm);
 }
 
-/* Thread action menu — dropdown in chat header */
-.thread-menu-wrapper {
-  position: relative;
-}
-
-.thread-action-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  min-width: 180px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
-  z-index: 100;
-  overflow: hidden;
-}
-
-.thread-action-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 0.9rem;
-  border: none;
-  background: none;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.thread-action-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.thread-action-danger {
-  color: #dc3545;
-}
-
-.thread-action-danger:hover {
-  background: rgba(220, 53, 69, 0.06);
-}
-
-.thread-action-disabled {
-  color: #999;
-  font-style: italic;
-  cursor: default;
-  pointer-events: none;
-}
-
-.mobile-only {
-  display: none;
-}
-
 /* Filters */
 .filters-container {
   display: flex;
@@ -469,33 +415,6 @@
   border-radius: 2px;
 }
 
-.empty-chat-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: var(--space-md);
-  color: var(--color-text-light);
-  text-align: center;
-  padding: var(--space-xl);
-  user-select: none;
-}
-
-.empty-chat-state-icon {
-  font-size: 2.5rem;
-  opacity: 0.35;
-  line-height: 1;
-}
-
-.empty-chat-state-text {
-  font-size: var(--font-size-base);
-  color: var(--text-muted);
-  font-style: italic;
-  max-width: 260px;
-  line-height: 1.5;
-}
-
 /* Obal zprávy s oddělovačem data: sloupcový flex, aby align-self zprávy platil (#508) */
 .chat-message-row {
   display: flex;
@@ -536,11 +455,6 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-}
-
-/* Sender name is now rendered INSIDE the bubble via .message-bubble-sender */
-.message-sender {
-  display: none;
 }
 
 /* Sender name inside bubble (other messages only) */
@@ -584,64 +498,6 @@
   margin: 0;
 }
 
-.message-meta {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.message-wrapper:hover .message-meta {
-  opacity: 1;
-}
-
-.delete-note-btn {
-  background: none;
-  border: none;
-  color: rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  padding: 0;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.delete-note-btn:hover {
-  color: var(--color-danger);
-}
-
-/* ── Context Action Buttons (  🛠️) ─────────────────────────────────────── */
-.msg-action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0 8px;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  opacity: 0.6;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-  line-height: 1;
-}
-
-.msg-action-btn:hover {
-  opacity: 1;
-  transform: scale(1.15);
-}
-
-.msg-action-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  transform: none;
-}
-
 /* ── Resolved Badge ✅ ────────────────────────────────────────────────────── */
 .message-resolved-badge {
   font-size: 0.7rem;
@@ -653,40 +509,6 @@
 
 .message-resolved .message-bubble {
   opacity: 0.75;
-}
-
-/* ── Dialog Field (for context action modals) ─────────────────────────────── */
-.dialog-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.dialog-field:last-child {
-  margin-bottom: 0;
-}
-
-.dialog-field label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.dialog-field select.dialog-input {
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  font-size: var(--font-size-base);
-  font-family: inherit;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  outline: none;
-  transition: border-color var(--transition-fast);
-}
-
-.dialog-field select.dialog-input:focus {
-  border-color: var(--color-primary);
 }
 
 /* Input Area */
@@ -708,72 +530,12 @@
   display: flex;
 }
 
-.btn-chip {
-  background-color: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 16px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  color: var(--color-text, #374151);
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  transition: background 0.15s, box-shadow 0.15s;
-}
-
-.btn-chip:hover {
-  background: #f5f5f5;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.btn-chip:active {
-  background: #eeeeee;
-}
-
-/* Prominent action chip — used for handover protocol, etc. */
-.btn-chip.btn-chip-action {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border-color: var(--color-primary, #3f7b63);
-  color: var(--color-primary, #3f7b63);
-  font-weight: 500;
-}
-
-.btn-chip.btn-chip-action:hover {
-  background: rgba(63, 123, 99, 0.06);
-  border-color: var(--color-primary, #3f7b63);
-}
-
-.btn-chip.btn-chip-action svg {
-  flex-shrink: 0;
-}
-
-/* Řádek se sponkou a pilulkou */
+/* Řádek s pilulkou vstupu */
 .chat-input-row {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-}
-
-/* Ikonka sponky */
-.icon-btn.attach-btn {
-  background: transparent;
-  border: none;
-  color: #666;
-  padding: 10px 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.icon-btn.attach-btn:hover {
-  color: #222;
 }
 
 /* BÍLÁ PILULKA (Wrapper) */
@@ -852,25 +614,6 @@
   transform: none;
 }
 
-.button-icon {
-  background: none;
-  border: none;
-  color: var(--color-text-light);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-
-.button-icon:hover {
-  background-color: var(--color-bg-hover);
-  color: var(--color-primary);
-}
-
 /* ── Odjezdovy protokol — panel ──────────────────────────────────────────── */
 
 /* ── Odjezdovy protokol — popup panel ───────────────────────────────────── */
@@ -897,10 +640,6 @@
   }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .handover-panel-header {
   display: flex;
   align-items: center;
@@ -908,11 +647,6 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text);
-}
-
-.handover-panel-header i {
-  color: var(--color-primary, #5d9b62);
-  margin-right: 6px;
 }
 
 .handover-checklist {
@@ -991,22 +725,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-}
-
-.btn-ghost-secondary {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-light);
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-}
-
-.btn-ghost-secondary:hover {
-  background: var(--color-bg-alt);
-  color: var(--color-text);
 }
 
 /* ── Odjezdovy protokol — renderovani v bublinach ────────────────────────── */
@@ -1118,10 +836,6 @@
     display: flex;
   }
 
-  .mobile-only {
-    display: flex;
-  }
-
   .chat-messages {
     padding: 12px;
   }
@@ -1158,19 +872,6 @@
 
   .chat-avatar-group {
     display: none;
-  }
-
-  /* Mobile: always show action buttons (no hover) */
-  .message-meta {
-    opacity: 1;
-  }
-
-  .msg-action-btn {
-    opacity: 0.5;
-    font-size: 0.95rem;
-    padding: 0 8px;
-    min-width: 44px;
-    min-height: 44px;
   }
 }
 
@@ -1538,25 +1239,6 @@
   white-space: nowrap;
 }
 
-.reply-preview-close {
-  background: none;
-  border: none;
-  color: var(--color-text-light, #6b7280);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s, color 0.12s;
-  flex-shrink: 0;
-}
-
-.reply-preview-close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
-}
-
 /* ============================================================================
    Message Footer (time + badges)
    ============================================================================ */
@@ -1699,13 +1381,6 @@
   margin-top: 6px;
 }
 
-.message-edit-save {
-  padding: 4px 12px !important;
-  font-size: 0.8rem !important;
-  border-radius: 6px !important;
-  min-height: unset !important;
-}
-
 /* ============================================================================
    Message Highlight (scroll-to-reply flash)
    ============================================================================ */
@@ -1717,13 +1392,6 @@
 .message-highlight > .message-bubble,
 .message-highlight > .message-bubble-container > .message-bubble-outer > .message-bubble {
   animation: highlightFlash 1.5s ease-out;
-}
-
-/* ============================================================================
-   Remove old hover meta (replaced by context menu)
-   ============================================================================ */
-.message-meta {
-  display: none;
 }
 
 /* Touch-friendly context menu on mobile */
@@ -1754,28 +1422,6 @@
     align-items: stretch;
     gap: 10px;
   }
-
-  .message-edit-actions .btn-ghost-secondary,
-  .message-edit-save {
-    width: 100%;
-    min-height: 44px;
-    justify-content: center;
-  }
-
-  .message-edit-actions .btn-ghost-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 14px;
-    font-size: 0.9rem;
-  }
-
-  .message-edit-save {
-    padding: 10px 14px !important;
-    font-size: 0.9rem !important;
-    border-radius: 10px !important;
-    min-height: 44px !important;
-  }
 }
 
 /* ============================================================================
@@ -1805,26 +1451,4 @@
   justify-content: center;
   padding: 12px 0 8px;
   flex-shrink: 0;
-}
-
-.load-more-btn {
-  font-size: 0.8rem;
-  padding: 6px 16px;
-}
-
-.load-more-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--color-border, #e5e7eb);
-  border-top-color: var(--color-primary, #3f7b63);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-/* ============================================================================
-   Disabled attachment button
-   ============================================================================ */
-.icon-btn.attach-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
