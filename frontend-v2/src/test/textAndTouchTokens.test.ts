@@ -59,7 +59,7 @@ const countPerFile = (files: Record<string, string>, count: (source: string) => 
  * Smí jen klesat. Když soubor převedeš, sniž číslo (nebo řádek smaž); nový soubor sem nepatří.
  */
 const G3_DEBT: Record<string, number> = {
-  '../features/reservations/Reservations.module.css': 27,
+  '../features/reservations/Reservations.module.css': 26,
   '../styles/admin.css': 13,
   '../styles/cabin-settings.css': 8,
   '../styles/diary.css': 3,
