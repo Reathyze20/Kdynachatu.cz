@@ -65,7 +65,9 @@ export default defineConfig({
         // Precache jen app shell (+ ikony z includeAssets). Obrázky a ilustrace v public/
         // mají dohromady přes 20 MB — telefon by je stahoval celé při první návštěvě,
         // proto se cachují až při zobrazení (runtimeCaching 'images' níže).
-        globPatterns: ['**/*.{js,css,html,woff2}'],
+        // Pixel art scény chaty (assets/*.png, asi 50 kB, menší soubory jsou vložené v JS) patří k app shellu,
+        // aby scéna offline nepřišla o pozadí v počasí, které se ještě nezobrazilo.
+        globPatterns: ['**/*.{js,css,html,woff2}', 'assets/*.png'],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8 MB
         // API (/api) se záměrně necachuje — odpovědi závisí na přihlášeném uživateli
         // a chatě; offline čtení řeší TanStack Query, zápisy lib/offlineQueue.

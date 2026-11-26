@@ -25,7 +25,7 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 | Sémantické tokeny | `--text-*`, `--bg-*`, `--brand-*`, `--status-*`, `--border-*`, `--space-*`, `--radius-*`, `--shadow-*`, `--font-*`, `--transition-*`, `--z-*`, `--touch-target-*` | všechny komponenty |
 | Povrchy redesignu | `--page`, `--sheet`, `--sheet-alt`, `--inset`, `--rule`, `--rule-soft`, `--glow`, `--lift`, `--ok`/`--low`/`--empty` a jejich `-bg` | všechny komponenty. Jsou to RGB trojice, s alfou `rgb(var(--sheet) / .96)` |
 | Most shadcn | `--primary`, `--muted-foreground`, `--border`, `--input`, `--ring` … (`shadcn-tokens.css`) | primitiva `ui/` a utility z `@theme` |
-| Scéna chaty | `--scene-*` (sépiová paleta pixel artu, #563) | jen `features/dashboard/CabinScene.tsx` |
+| Scéna chaty | PNG z PixelLabu v `features/dashboard/scene/`, `--scene-*` jen pro vektorové doplňky (kouř, okna, noc, sníh, #563) | jen `features/dashboard/CabinScene.tsx` |
 | Legacy aliasy | `--color-*` | **deprecated**. Nový kód je nepoužívá, stávající výskyty jsou v allowlistu (#450) |
 
 ### Jak token použít
@@ -102,7 +102,7 @@ Vybírá se role, ne velikost v pixelech. Utilita `text-<role>` nastaví velikos
 - Vstup `easeOut`, odchod `easeIn`, nikdy lineárně. Animují se `opacity` a `transform`, ne rozměry a pozice (`width`, `height`, `top`, `left`).
 - Animuje se otevření a zavření modálu, přidání a odebrání položky seznamu, rozbalení a přepnutí záložky. Přechod mezi routami řeší `AppShell`, stránka ho nepřidává. Změna textu, obnovení dat ani poloha scrollu se neanimují.
 - Při `prefers-reduced-motion: reduce` pohyb odpadne nebo se zkrátí na prolnutí.
-- **Výjimka „Scéna chaty a maskot“ (#558, #565).** Jen scéna chaty (`CabinScene`) a maskot smí mít pomalé smyčkové a občasné náhodné animace, krokované jako pixel art (`--animate-scene-*` v `@theme`, `shadcn-tokens.css`). Hýbou jen `opacity` a `transform` a stojí, když je stránka na pozadí nebo scéna mimo obrazovku. Vždy respektují `prefers-reduced-motion` a vypínač „Scéna chaty“ v profilu (Animovaná / Statická / Skrytá, per zařízení): bez uložené volby je při `reduce` scéna Statická, výslovná volba v profilu platí přednostně. Pravidlo „Klid“ platí pro zbytek appky dál a smyčku jinde zakazuje guard `loopAnimation`.
+- **Výjimka „Scéna chaty a maskot“ (#558, #565).** Jen scéna chaty (`CabinScene`) a maskot smí mít pomalé smyčkové a občasné náhodné animace, posuny krokované po jednotkách mřížky jako pixel art a postavičky animované přepínáním snímků z pásu (sprite sheet) (`--animate-scene-*` v `@theme`, `shadcn-tokens.css`). Hýbou jen `opacity` a `transform` a stojí, když je stránka na pozadí nebo scéna mimo obrazovku. Vždy respektují `prefers-reduced-motion` a vypínač „Scéna chaty“ v profilu (Animovaná / Statická / Skrytá, per zařízení): bez uložené volby je při `reduce` scéna Statická, výslovná volba v profilu platí přednostně. Pravidlo „Klid“ platí pro zbytek appky dál a smyčku jinde zakazuje guard `loopAnimation`.
 
 ## 6. Komponenty
 

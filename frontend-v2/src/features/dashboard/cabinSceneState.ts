@@ -89,7 +89,7 @@ export function cabinSceneLabel(s: CabinSceneState): string {
       s.arriving ? "Dnes někdo přijíždí, u chaty stojí auto." : "Dnes někdo odjíždí, u chaty stojí auto.",
     POSE_TEXT[mascotPose(s)],
     // Pod sněhem je jinovatka vidět jen na stromech.
-    !s.frost ? "" : s.snowCover ? "Mrzne, plch má šálu a stromy pokrývá jinovatka." : "Mrzne, plch má šálu, na střeše, trávě i stromech je jinovatka.",
+    !s.frost ? "" : "Mrzne, plch má šálu a stromy pokrývá jinovatka.",
     s.snowCover ? "Leží sníh, střecha je bílá." : "",
     // Při sněžení je zataženo: noc bez hvězd.
     !s.night ? "" : s.snowing ? "Je noc." : "Je noc, na nebi svítí hvězdy.",
