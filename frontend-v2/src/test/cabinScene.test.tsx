@@ -593,3 +593,193 @@ describe('Déšť, mrholení a bouřka ve scéně chaty (#609)', () => {
     act(() => { document.dispatchEvent(new Event('visibilitychange')) })
   })
 })
+
+// Vítr, mlha a soumrak se svítáním ve scéně (#610): popis říká, co obraz ukazuje; vrstvu bez věty v popisu ověří `data-layer`.
+describe('Vítr, mlha, soumrak a svítání ve scéně chaty (#610)', () => {
+  const occupied = () => reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) })
+  afterEach(() => {
+    vi.mocked(fetchWeather).mockImplementation(() => Promise.resolve(null))
+  })
+
+  it('od 20 km/h se kouř z komína stáčí po větru, při 19 km/h ne', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ windSpeed: 19 }))
+    renderOverview(occupied())
+    await weatherLoaded()
+    let img = await scene()
+    expect(img).toHaveAccessibleName(/z komína jde kouř/i)
+    expect(img).not.toHaveAccessibleName(/vítr|stáčí/i)
+    cleanup()
+
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ windSpeed: 20 }))
+    renderOverview(occupied())
+    img = await screen.findByRole('img', { name: /fouká vítr, kouř se stáčí\./i })
+    expect(layer(img, 'smoke')).not.toBeNull()
+  })
+
+  it('od 40 km/h padá déšť i sníh šikmo, při 39 km/h svisle', async () => {
+    for (const [weatherCode, falls] of [[63, /prší\./i], [73, /sněží\./i]] as const) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode, windSpeed: 39 }))
+      renderOverview(reservations())
+      let img = await screen.findByRole('img', { name: falls })
+      expect(img).not.toHaveAccessibleName(/vítr|šikmo/i)
+      cleanup()
+
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode, windSpeed: 40 }))
+      renderOverview(reservations())
+      img = await screen.findByRole('img', { name: falls })
+      expect(img).toHaveAccessibleName(weatherCode === 63 ? /fouká silný vítr, kapky padají šikmo\./i : /fouká silný vítr, vločky padají šikmo\./i)
+      cleanup()
+    }
+  })
+
+  it('silný vítr u obsazené chaty v dešti: kouř se stáčí a kapky padají šikmo', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 95, windSpeed: 55 }))
+    renderOverview(occupied())
+    expect(await screen.findByRole('img', { name: /bouřka\./i })).toHaveAccessibleName(/fouká silný vítr, kouř se stáčí a kapky padají šikmo\./i)
+  })
+
+  it('vítr se nepopisuje, když není vidět: prázdná chata bez srážek, ani v silném větru', async () => {
+    for (const windSpeed of [25, 39, 60]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ windSpeed }))
+      renderOverview(reservations())
+      await weatherLoaded()
+      expect(await scene()).not.toHaveAccessibleName(/vítr|stáčí|šikmo/i)
+      cleanup()
+    }
+  })
+
+  it('mlha (WMO 45, 48): pásy přes louku a stromy, ve dne šedý závoj, v noci bez hvězd a měsíce; plch se neschovává', async () => {
+    for (const weatherCode of [45, 48]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations(), { time: '10:00' })
+      const day = await screen.findByRole('img', { name: /je mlha\./i })
+      expect(day).toHaveAccessibleName(/plch spí stočený na střeše/i)
+      expect(day).not.toHaveAccessibleName(/schoval/i)
+      expect(layer(day, 'overcast')).not.toBeNull()
+      cleanup()
+
+      renderOverview(reservations(), { time: '21:30' })
+      const night = await screen.findByRole('img', { name: /je mlha\./i })
+      expect(night).toHaveAccessibleName(/je noc\./i)
+      expect(night).not.toHaveAccessibleName(/hvězd/i)
+      expect(layer(night, 'stars')).toBeNull()
+      expect(night).toHaveAccessibleName(/plch v noci hryže u chaty oříšek/i)
+      cleanup()
+    }
+  })
+
+  it('jiné kódy než 45 a 48 mlhu nekreslí', async () => {
+    for (const weatherCode of [3, 51]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations())
+      await weatherLoaded()
+      expect(await scene()).not.toHaveAccessibleName(/mlha/i)
+      cleanup()
+    }
+  })
+
+  it('soumrak 45 min před západem slunce do západu, svítání od východu 30 min; mimo tato okna ne', async () => {
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ sunriseTime: '07:45', sunsetTime: '16:02' }))
+    const cases = [
+      ['07:44', null], ['07:45', /svítá\./i], ['08:14', /svítá\./i], ['08:15', null],
+      ['15:16', null], ['15:17', /zapadá slunce\./i], ['16:01', /zapadá slunce\./i], ['16:02', null],
+    ] as const
+    for (const [time, twilight] of cases) {
+      renderOverview(reservations(), { time })
+      await weatherLoaded()
+      const img = await scene()
+      if (twilight) expect(img).toHaveAccessibleName(twilight)
+      else expect(img).not.toHaveAccessibleName(/svítá|zapadá/i)
+      expect(img).not.toHaveAccessibleName(twilight?.source.startsWith('svítá') ? /zapadá/i : /svítá/i)
+      cleanup()
+    }
+  })
+
+  it('soumrak ani svítání za zataženého nebe (srážky, sněžení, mlha) ani bez časů slunce; u zazimované chaty ano', async () => {
+    for (const weatherCode of [61, 73, 45]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode }))
+      renderOverview(reservations(), { time: '15:30' })
+      await weatherLoaded()
+      expect(await scene()).not.toHaveAccessibleName(/zapadá/i)
+      cleanup()
+    }
+
+    for (const sun of [{ sunriseTime: null }, { sunsetTime: null }]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather(sun))
+      for (const time of ['07:50', '15:30']) {
+        renderOverview(reservations(), { time })
+        await weatherLoaded()
+        expect(await scene()).not.toHaveAccessibleName(/svítá|zapadá/i)
+        cleanup()
+      }
+    }
+
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather())
+    renderOverview(reservations(), { time: '15:30', isWinterized: true })
+    expect(await screen.findByRole('img', { name: /zapadá slunce\./i })).toHaveAccessibleName(/zazimovaná/i)
+  })
+
+  it('statická scéna i prefers-reduced-motion bez volby: mlha, stočený kouř, šikmé srážky a soumrak stojí jako obraz', async () => {
+    const setups = [
+      () => localStorage.setItem('cabinSceneMode', 'static'),
+      () => prefersReducedMotion(true),
+    ]
+    for (const setup of setups) {
+      setup()
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 45 }))
+      renderOverview(reservations())
+      const fog = await screen.findByRole('img', { name: /je mlha\./i })
+      expect(fog).toHaveAttribute('data-motion', 'static')
+      for (const name of ['fog-trees', 'fog-meadow']) expect(layer(fog, name)).not.toBeNull()
+      cleanup()
+
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 63, windSpeed: 45 }))
+      renderOverview(occupied())
+      const storm = await screen.findByRole('img', { name: /kouř se stáčí a kapky padají šikmo\./i })
+      expect(storm).toHaveAttribute('data-motion', 'static')
+      cleanup()
+
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather())
+      renderOverview(reservations(), { time: '15:30' })
+      expect(await screen.findByRole('img', { name: /zapadá slunce\./i })).toHaveAttribute('data-motion', 'static')
+      cleanup()
+      localStorage.clear()
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('Skrytá: v mlze ani ve větru se nic nekreslí', async () => {
+    localStorage.setItem('cabinSceneMode', 'hidden')
+    for (const weather of [{ weatherCode: 45 }, { weatherCode: 63, windSpeed: 45 }]) {
+      vi.mocked(fetchWeather).mockResolvedValue(todayWeather(weather))
+      renderOverview(occupied())
+      await weatherLoaded()
+      expect(screen.queryByRole('img', { name: /^Scéna chaty/ })).not.toBeInTheDocument()
+      cleanup()
+    }
+  })
+
+  it('mlha a vítr stojí na pozadí i mimo obrazovku', async () => {
+    const callbacks: ((entries: { isIntersecting: boolean }[]) => void)[] = []
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(cb: (entries: { isIntersecting: boolean }[]) => void) { callbacks.push(cb) }
+      observe() {}
+      disconnect() {}
+    })
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 45, windSpeed: 30 }))
+    renderOverview(occupied())
+    const img = await screen.findByRole('img', { name: /je mlha\..*kouř se stáčí/i })
+    expect(img).toHaveAttribute('data-motion', 'animated')
+
+    act(() => callbacks.forEach((cb) => cb([{ isIntersecting: false }])))
+    expect(img).toHaveAttribute('data-motion', 'paused')
+    act(() => callbacks.forEach((cb) => cb([{ isIntersecting: true }])))
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' })
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    expect(img).toHaveAttribute('data-motion', 'paused')
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    vi.unstubAllGlobals()
+  })
+})

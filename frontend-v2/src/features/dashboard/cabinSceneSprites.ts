@@ -28,3 +28,8 @@ export const SMOKE: Sprite = [
   ".~~~......", "~~~~~.....", "~~~~~.....", ".~~~......", "....~~~...", "...~~~~~..",
   "...~~~~~..", "....~~~...", "......~~..", ".....~~~~.", "......~~..",
 ];
+/** Kouř stočený po větru zleva doprava (#610): nízký, ať se vejde mezi komín a horní okraj scény; spodní obláček sedí
+ * nad komínem stejně jako u `SMOKE`. */
+export const SMOKE_WIND: Sprite = [
+  "...........~~~...~~~.", "......~~~.~~~~~~~~~~~", ".....~~~~~~~~~..~~~..", "......~~~~...........",
+];

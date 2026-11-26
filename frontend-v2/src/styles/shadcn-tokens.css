@@ -150,11 +150,20 @@
    V SVG jsou px jednotky mřížky scény. */
 @theme {
   --animate-scene-smoke: scene-smoke 4.2s steps(3) infinite;
+  /* Vítr (#610): stočený kouř odplouvá doprava. */
+  --animate-scene-smoke-wind: scene-smoke-wind 3.4s steps(3) infinite;
   --animate-scene-zzz: scene-zzz 4s steps(3) infinite;
   --animate-scene-snow: scene-snow 11s steps(76) infinite;
   /* Déšť (#609) padá stejně jako vločky, jen rychleji a po dvou jednotkách; mrholení pomaleji. */
   --animate-scene-rain: scene-snow 1.3s steps(38) infinite;
   --animate-scene-drizzle: scene-snow 3.1s steps(38) infinite;
+  /* Silný vítr (#610): vločky padají úhlopříčně a rychleji, kapky o jednotku doprava na dvě dolů. */
+  --animate-scene-snow-wind: scene-snow-wind 7s steps(76) infinite;
+  --animate-scene-rain-wind: scene-rain-wind 1.3s steps(38) infinite;
+  --animate-scene-drizzle-wind: scene-rain-wind 3.1s steps(38) infinite;
+  /* Mlha (#610): dva pásy plují doprava o periodu chuchvalců (160 jednotek) po jedné, každý jinou rychlostí. */
+  --animate-scene-fog: scene-fog 53s steps(160) infinite;
+  --animate-scene-fog-slow: scene-fog 89s steps(160) infinite;
   --animate-scene-lightning: scene-lightning 8.3s infinite;
   --animate-scene-bird: scene-bird 47s steps(42) infinite;
   --animate-scene-peek: scene-peek 13s steps(7) infinite;
@@ -166,6 +175,12 @@
     70% { transform: translate(-1px, -5px); opacity: 0.5; }
     100% { transform: translate(1px, -8px); opacity: 0; }
   }
+  @keyframes scene-smoke-wind {
+    0% { transform: translate(0, 0); opacity: 1; }
+    35% { transform: translate(3px, 0); opacity: 0.85; }
+    70% { transform: translate(6px, -1px); opacity: 0.5; }
+    100% { transform: translate(10px, -1px); opacity: 0; }
+  }
   @keyframes scene-zzz {
     0% { transform: translate(0, 0); opacity: 0; }
     20% { transform: translate(0, -1px); opacity: 1; }
@@ -174,8 +189,12 @@
   }
   /* O výšku scény (76 jednotek), po jedné jednotce: vločky nad scénou navážou přesně na start smyčky. */
   @keyframes scene-snow { to { transform: translateY(76px); } }
+  /* Ve větru navíc doprava o tolik, o kolik jsou kopie částic nad scénou posunuté doleva. */
+  @keyframes scene-snow-wind { to { transform: translate(76px, 76px); } }
+  @keyframes scene-rain-wind { to { transform: translate(38px, 76px); } }
   /* Blesk (#609): jednou za smyčku zesvětlí scénu asi o čtvrtinu na ~2 snímky (≈ 35 ms) a hned zhasne. Jediný
      záblesk ve scéně, hluboko pod prahem WCAG 2.3.1 (3 záblesky za sekundu). */
+  @keyframes scene-fog { to { transform: translateX(160px); } }
   @keyframes scene-lightning {
     0%, 60% { opacity: 0; }
     60.1%, 60.5% { opacity: 0.25; }
