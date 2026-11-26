@@ -50,11 +50,13 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
     bad: [
       '.dark { --page: 24 20 17; }', '.dark .card { color: red; }', '@custom-variant dark (&:where(.x));', 'className="bg-sheet dark:bg-black"',
       'className="hover:dark:flex"', '[data-theme="lake"] { --brand-primary: blue; }', "root.setAttribute('data-theme', 'mountain')",
-      '@media (prefers-color-scheme: dark) {', "import { ThemeProvider } from 'next-themes'",
+      '@media (prefers-color-scheme: dark) {', "import { ThemeProvider } from 'next-themes'", 'html.dark { color: red; }', ':root.dark {',
+      '@variant dark {', 'color-scheme: light dark;', "document.documentElement.classList.toggle('dark')", "el.dataset.theme = 'lake'",
+      'className="data-[theme=lake]:bg-sheet"',
     ],
     good: [
       '--status-error-dark: var(--raw-danger-dark);', 'color: var(--color-primary-dark);', 'const c = theme.dark', 'const d = settings?.dark',
-      'className="text-(--text-main)"', '<p>Venku je tma</p>', "label: 'Tmavé dřevo'",
+      'className="text-(--text-main)"', '<p>Venku je tma</p>', "label: 'Tmavé dřevo'", '<Row {...dark} />', 'data-theme-color="x"', 'color-scheme: light;',
     ],
   },
   localFormatter: {
