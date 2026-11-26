@@ -1,25 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { HelpFab } from '@/components/shared/HelpFab'
+import { HelpDialog } from '@/components/shared/HelpDialog'
 import { HELP_PAGES } from '@/components/shared/helpContent'
 import { PRIMARY_NAV, MORE_NAV } from '@/lib/navRoutes'
 
 async function openHelpAt(entry: string) {
-  const user = userEvent.setup()
   const view = render(
     <MemoryRouter initialEntries={[entry]}>
-      <HelpFab />
+      <HelpDialog isOpen onClose={() => {}} />
     </MemoryRouter>,
   )
-  await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
   const modal = await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })
   const dialog = modal.querySelector<HTMLElement>('#help-modal-content')!
   return { dialog, unmount: view.unmount }
 }
 
-describe('HelpFab – nápověda podle položky navigace (#510)', () => {
+describe('HelpDialog – nápověda podle položky navigace (#510)', () => {
   it.each([...PRIMARY_NAV, ...MORE_NAV].map((item) => [item.label, item.to]))(
     'položka „%s“ má vlastní nápovědu se stejným názvem',
     async (label, to) => {

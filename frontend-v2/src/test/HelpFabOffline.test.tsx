@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { act, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { HelpFab } from '@/components/shared/HelpFab'
+import { HelpDialog } from '@/components/shared/HelpDialog'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
 
 let onlineState = true
@@ -12,15 +11,15 @@ function setNavigatorOnline(value: boolean) {
   window.dispatchEvent(new Event(value ? 'online' : 'offline'))
 }
 
-function renderHelpFab(initialEntry: string) {
+function renderHelp(initialEntry: string) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
-      <HelpFab />
+      <HelpDialog isOpen onClose={() => {}} />
     </MemoryRouter>,
   )
 }
 
-describe('HelpFab and OfflineBanner', () => {
+describe('HelpDialog and OfflineBanner', () => {
   beforeEach(() => {
     onlineState = true
     Object.defineProperty(window.navigator, 'onLine', {
@@ -30,11 +29,7 @@ describe('HelpFab and OfflineBanner', () => {
   })
 
   it('shows route-specific help for reservations', async () => {
-    const user = userEvent.setup()
-
-    renderHelpFab('/reservations')
-
-    await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
+    renderHelp('/reservations')
 
     expect(await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).toBeInTheDocument()
     expect(screen.getByText('Kalendář')).toBeInTheDocument()
@@ -42,22 +37,14 @@ describe('HelpFab and OfflineBanner', () => {
   })
 
   it('shows dedicated help content for cabin settings', async () => {
-    const user = userEvent.setup()
-
-    renderHelpFab('/admin/cabin')
-
-    await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
+    renderHelp('/admin/cabin')
 
     expect(await screen.findByText('Nastavení chaty')).toBeInTheDocument()
     expect(screen.getByText(/součástí administrace chaty/)).toBeInTheDocument()
   })
 
   it('shows dedicated help content for diagnostics', async () => {
-    const user = userEvent.setup()
-
-    renderHelpFab('/admin/diagnostics')
-
-    await user.click(screen.getByRole('button', { name: 'Potřebuješ poradit?' }))
+    renderHelp('/admin/diagnostics')
 
     expect(await screen.findByText('Diagnostika')).toBeInTheDocument()
     expect(screen.getByText(/samostatná provozní stránka/i)).toBeInTheDocument()

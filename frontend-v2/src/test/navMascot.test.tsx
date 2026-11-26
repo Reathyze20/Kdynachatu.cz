@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 import tokensCss from '@/styles/shadcn-tokens.css?raw'
-import helpCss from '@/styles/help.css?raw'
 
 // Maskot na mobilní liště (#566): jednou za otevření appky přejde po horní hraně lišty, jen ve stavu
 // Animovaná, ne přes otevřené okno ani klávesnici. Testy přes lištu, jak ji vidí uživatel; falešné hodiny, proto
@@ -201,15 +200,12 @@ describe('maskot na mobilní liště (#566)', () => {
     expect(waitForMascot()).toBeNull()
   })
 
-  it('otočí se dřív, než dojde k tlačítku nápovědy (i na nejužším displeji 320 px)', () => {
-    // jsdom neměří layout: hlídá se kontrakt v CSS. Nápověda zabírá u pravého okraje odsazení + šířku (help.css,
-    // bere se nejširší varianta); maskot (snímek 60 px) nejdál dojde do bodu, kde se v keyframes otočí zpět.
+  it('otočí se dřív, než dojde k pravému okraji (i na nejužším displeji 320 px)', () => {
+    // jsdom neměří layout: hlídá se kontrakt v CSS. Plovoucí tlačítko nápovědy #524 zrušil, zbývá okraj displeje;
+    // maskot (snímek 60 px) nejdál dojde do bodu, kde se v keyframes otočí zpět.
     const walk = /@keyframes scene-mascot-walk\s*{([\s\S]*?)\n {2}}/.exec(tokensCss)?.[1] ?? ''
     const farthest = Math.max(...[...walk.matchAll(/translate\((-?\d+)px/g)].map((m) => Number(m[1])))
-    const fabs = [...helpCss.matchAll(/\.fab-help\s*{[^}]*right:\s*(\d+)px;[^}]*width:\s*(\d+)px/g)]
-    const fabReach = Math.max(...fabs.map((m) => Number(m[1]) + Number(m[2])))
     expect(farthest).toBeGreaterThan(0)
-    expect(fabReach).toBeGreaterThanOrEqual(64)
-    expect(farthest + 60).toBeLessThanOrEqual(320 - fabReach)
+    expect(farthest + 60).toBeLessThanOrEqual(320)
   })
 })

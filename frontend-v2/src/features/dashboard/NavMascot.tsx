@@ -5,8 +5,8 @@ import dormousePeek from "./scene/dormouse-peek.png";
 
 /**
  * Maskot na mobilní liště (#566): plch ze scény chaty jednou za otevření appky přijde zleva po horní hraně spodní
- * lišty, zastaví se, rozhlédne, dvakrát poskočí (zamává) a odejde zpět doleva, takže nikdy nedojde k tlačítku
- * nápovědy vpravo. Jen na mobilu a ve stavu „Scéna chaty“ Animovaná. Nevyjde, dokud je otevřené okno, šuplík
+ * lišty, zastaví se, rozhlédne, dvakrát poskočí (zamává) a odejde zpět doleva, na displeji 320 px nevyjde
+ * za pravý okraj. Jen na mobilu a ve stavu „Scéna chaty“ Animovaná. Nevyjde, dokud je otevřené okno, šuplík
  * profilu nebo klávesnice (fokus v textovém poli) nebo je appka na pozadí; když se něco z toho stane během
  * průchodu, zmizí a už se nevrátí. Dekorativní: `aria-hidden`, `pointer-events: none`. Chůzi nese keyframe
  * `scene-mascot-walk` v `shadcn-tokens.css`, rozhlížení pás snímků vykukování ze scény (`animate-scene-frames`).

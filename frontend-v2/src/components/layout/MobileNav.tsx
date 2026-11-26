@@ -1,16 +1,17 @@
 /**
  * components/layout/MobileNav.tsx
  * Spodní lišta podle cyklu turnusu (redesign #0, issue #171): Přehled · Kalendář · Předávka · Zásoby · Víc.
- * Doplňky (Chat, Galerie, Deník, Rekonstrukce) a „Přidat na plochu“ (#277) jsou pod „Víc“.
+ * Doplňky (Chat, Galerie, Deník, Rekonstrukce), „Přidat na plochu“ (#277) a nápověda (#524) jsou pod „Víc“.
  * Po horní hraně lišty jednou za otevření appky přejde maskot ze scény chaty (#566).
  */
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { MoreHorizontal } from 'lucide-react'
+import { CircleHelp, MoreHorizontal } from 'lucide-react'
 import { MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
 import { useCabinFeatures } from '@/hooks/useCabinFeatures'
 import { useAuth } from '@/context/AuthContext'
 import { Modal } from '@/components/shared/Modal'
+import { HelpDialog } from '@/components/shared/HelpDialog'
 import { InstallMenuItem } from '@/components/shared/InstallCard'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { NavMascot } from '@/features/dashboard/NavMascot'
@@ -20,6 +21,7 @@ export function MobileNav() {
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const { canInstall } = usePwaInstall()
 
   if (!user?.cabinId) return null
@@ -73,8 +75,14 @@ export function MobileNav() {
         <div className="drawer-quicklinks" data-testid="mobile-nav-more-sheet">
           {more.map((item) => renderNavLink(item, 'button-secondary drawer-quicklink', () => setMoreOpen(false)))}
           <InstallMenuItem className="button-secondary drawer-quicklink" />
+          <button type="button" className="button-secondary drawer-quicklink" onClick={() => { setMoreOpen(false); setHelpOpen(true) }}>
+            <CircleHelp size={20} aria-hidden="true" />
+            <span>Nápověda</span>
+          </button>
         </div>
       </Modal>
+
+      <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   )
 }
