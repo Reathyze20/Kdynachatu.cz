@@ -149,5 +149,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    // Testy běží v zóně rodiny (lib/format.ts zobrazuje okamžiky v Europe/Prague), stejně lokálně i v CI v UTC (#456).
+    env: { TZ: 'Europe/Prague' },
   },
 })

@@ -12,6 +12,8 @@ import { DiaryLightbox } from './DiaryLightbox'
 import { Modal } from '@/components/shared/Modal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
+import { formatLongDate, weekdayName } from '@/lib/format'
+import { capitalize, toIsoDate } from '@/lib/dateUtils'
 
 const MAX_CHARS = 20000
 
@@ -21,12 +23,10 @@ function samePhotoIds(a: string[], b: string[]): boolean {
   return b.every(id => set.has(id))
 }
 
-const WEEKDAY_LONG = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota']
-const MONTH_CS = ['ledna', 'února', 'března', 'dubna', 'května', 'června',
-                  'července', 'srpna', 'září', 'října', 'listopadu', 'prosince']
-
+/** „Sobota, 27. března 2027“. Den deníku je lokální `Date`, proto přes kalendářní den z lokálních složek. */
 function formatNotebookDate(d: Date): string {
-  return `${WEEKDAY_LONG[d.getDay()]}, ${d.getDate()}. ${MONTH_CS[d.getMonth()]} ${d.getFullYear()}`
+  const day = toIsoDate(d)
+  return `${capitalize(weekdayName(day, 'long'))}, ${formatLongDate(day, { year: true })}`
 }
 
 interface Props {

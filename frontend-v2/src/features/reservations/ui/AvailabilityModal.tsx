@@ -7,12 +7,7 @@ import {
 } from "../hooks/useReservations";
 import { Modal } from "@/components/shared/Modal";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
-
-function formatDate(date: string): string {
-  if (!date) return "";
-  const d = new Date(date + "T00:00:00");
-  return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
-}
+import { formatDate } from "@/lib/format";
 
 interface Props {
   open: boolean;

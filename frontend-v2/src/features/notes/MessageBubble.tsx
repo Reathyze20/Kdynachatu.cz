@@ -6,6 +6,7 @@ import { AnimalAvatar } from '@/components/shared/AnimalAvatar';
 import { ReactionBar } from './ReactionBar';
 import { escapeHtml } from '@/lib/utils';
 import { formatMessage } from './formatMessage';
+import { formatShortDate, formatTime } from '@/lib/format';
 
 interface UserInfo {
   color?: string;
@@ -45,9 +46,8 @@ export function MessageBubble({
     return () => { if (longPressTimer.current) clearTimeout(longPressTimer.current) }
   }, []);
 
-  const d = new Date(note.createdAt);
-  const timeFmt = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  const dateFmt = `${d.getDate()}.${d.getMonth() + 1}.`;
+  const timeFmt = formatTime(note.createdAt);
+  const dateFmt = formatShortDate(note.createdAt);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

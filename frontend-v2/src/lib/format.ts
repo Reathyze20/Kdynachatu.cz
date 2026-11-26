@@ -42,16 +42,24 @@ export function formatLongDate(input: DateInput, { weekday = false, year = false
   return dateFormat({ day: 'numeric', month: 'long', ...(weekday && { weekday: 'long' }), ...(year && { year: 'numeric' }) }, input)
 }
 
-/** Čas 24 h „9:40“, půlnoc „0:00“. */
-export const formatTime = (input: DateInput) => dateFormat({ hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }, input)
+/** Čas 24 h „9:40“, půlnoc „0:00“; se `seconds` „9:40:05“ (logy, údaje pro podporu). */
+export function formatTime(input: DateInput, { seconds = false } = {}): string {
+  return dateFormat({ hour: 'numeric', minute: '2-digit', ...(seconds && { second: '2-digit' }), hourCycle: 'h23' }, input)
+}
 
 /** Den v týdnu „po“ / „pondělí“. */
 export const weekdayName = (input: DateInput, style: 'short' | 'long' = 'short') => dateFormat({ weekday: style }, input)
 
-/** Název měsíce podle indexu 0–11 (jako `Date#getMonth`): „březen“, ve 2. pádě „března“ (jako v „21. března“). */
-export function monthName(month: number, form: 'nominative' | 'genitive' = 'nominative'): string {
+/**
+ * Název měsíce podle indexu 0–11 (jako `Date#getMonth`): „březen“, ve 2. pádě „března“ (jako v „21. března“),
+ * ve 3. pádě „březnu“ (jako v „Poznámka k březnu“). `Intl` 3. pád nezná: u všech dvanácti měsíců vznikne
+ * z 2. pádu záměnou koncového „-a“ za „-u“ a „-ce“ za „-ci“ („září“ a „listopadu“ se nemění).
+ */
+export function monthName(month: number, form: 'nominative' | 'genitive' | 'dative' = 'nominative'): string {
   const day = `2000-${String(month + 1).padStart(2, '0')}-01`
-  return form === 'nominative' ? dateFormat({ month: 'long' }, day) : formatLongDate(day).replace(/^\d+\.\s*/, '')
+  if (form === 'nominative') return dateFormat({ month: 'long' }, day)
+  const genitive = formatLongDate(day).replace(/^\d+\.\s*/, '')
+  return form === 'genitive' ? genitive : genitive.replace(/a$/, 'u').replace(/ce$/, 'ci')
 }
 
 /**

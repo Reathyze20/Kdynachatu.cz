@@ -57,6 +57,11 @@ describe('lib/format', () => {
     expect(formatTime('2026-10-25T01:30:00Z')).toBe('2:30')
   })
 
+  it('čas se sekundami pro logy a podporu (#456)', () => {
+    expect(formatTime('2026-03-21T08:40:05Z', { seconds: true })).toBe('9:40:05')
+    expect(formatTime('2026-07-14T22:00:00Z', { seconds: true })).toBe('0:00:00')
+  })
+
   describe('rozsah', () => {
     it('v jednom měsíci jen jedno číslo měsíce, pomlčka bez mezer', () => {
       expect(formatDateRange('2026-07-12', '2026-07-14')).toBe('12.–14. 7.')
@@ -101,6 +106,11 @@ describe('lib/format', () => {
     expect(Array.from({ length: 12 }, (_, i) => monthName(i))).toEqual([
       'leden', 'únor', 'březen', 'duben', 'květen', 'červen',
       'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec',
+    ])
+    // 3. pád jako v „Poznámka k březnu“ (#456)
+    expect(Array.from({ length: 12 }, (_, i) => monthName(i, 'dative'))).toEqual([
+      'lednu', 'únoru', 'březnu', 'dubnu', 'květnu', 'červnu',
+      'červenci', 'srpnu', 'září', 'říjnu', 'listopadu', 'prosinci',
     ])
     expect(weekdayName('2026-03-23')).toBe('po')
     expect(weekdayName('2026-03-22', 'long')).toBe('neděle')

@@ -1,7 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
-import { formatCount } from '@/lib/format'
+import { formatCount, formatShortDate, formatTime } from '@/lib/format'
 import type { LogEntry, LogQueryParams, LogResponse } from '@/api/admin'
 
 interface LogsPanelProps {
@@ -36,13 +36,7 @@ function formatLogTime(value: string | number | undefined): string {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return String(value)
 
-  return parsed.toLocaleString('cs-CZ', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
+  return `${formatShortDate(parsed)} ${formatTime(parsed, { seconds: true })}`
 }
 
 function formatLogDetail(entry: LogEntry): string {

@@ -385,7 +385,7 @@ export function LandingPage() {
               <div className="pricing-card-top">
                 <h3 className="pricing-plan">Sezónní Předplatné</h3>
                 <div className="pricing-price" style={{ marginBottom: 8 }}>
-                  <span className="pricing-amount">{seasonal.price.toLocaleString('cs-CZ')}</span>
+                  <span className="pricing-amount">{seasonal.price}</span>
                   <span className="pricing-currency">Kč</span>
                 </div>
                 <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--brand-primary, #5d9b62)', textTransform: 'uppercase' as const, letterSpacing: '0.03em' }}>

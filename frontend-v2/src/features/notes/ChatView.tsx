@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { formatLongDate } from "@/lib/format";
 
 interface UserMap {
   [username: string]: { color?: string; animalIcon?: string | null };
@@ -293,7 +294,7 @@ export function ChatView({
     yesterday.setDate(today.getDate() - 1);
     if (d.toDateString() === today.toDateString()) return "Dnes";
     if (d.toDateString() === yesterday.toDateString()) return "Včera";
-    return `${d.getDate()}. ${d.toLocaleString("cs-CZ", { month: "long" })}`;
+    return formatLongDate(d);
   }, []);
 
   const isGroupedWithPrev = useCallback((curr: Note, prev: Note | undefined) => {

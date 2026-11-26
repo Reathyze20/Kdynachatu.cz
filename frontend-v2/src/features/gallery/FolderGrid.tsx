@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Plus, FolderOpen, MoreVertical, Pencil, Trash2, Image } from 'lucide-react'
 import type { GalleryFolder } from '@/api/gallery'
-import { formatCount } from '@/lib/format'
+import { formatCount, formatDate } from '@/lib/format'
 
 interface Props {
   folders: GalleryFolder[]
@@ -218,7 +218,7 @@ export function FolderGrid({
               <span className="folder-card__name">{f.name}</span>
               <div className="folder-card__meta">
                 <span>{formatCount(f.photoCount ?? 0, 'fotka', 'fotky', 'fotek')}</span>
-                <span>{new Date(f.createdAt).toLocaleDateString('cs-CZ')}</span>
+                <span>{formatDate(f.createdAt)}</span>
               </div>
             </div>
 

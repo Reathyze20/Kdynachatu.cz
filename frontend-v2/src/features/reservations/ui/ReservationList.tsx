@@ -4,23 +4,14 @@ import type { Reservation } from "@/api/reservations";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal } from "@/components/shared/Modal";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { formatShortDate } from "@/lib/format";
+import { formatDate, formatShortDate, monthName } from "@/lib/format";
+import { MONTH_NAMES } from "@/lib/utils";
 import { useMonthlyNote, useUpdateMonthlyNote } from "../hooks/useReservations";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { nightsBetween, nightsLabel } from "@/lib/dateUtils";
 import { RESERVATION_TYPE_LABEL } from "../reservationType";
 import css from "../Reservations.module.css";
-
-const MONTH_NAMES = [
-  "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-  "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
-];
-
-const MONTH_NAMES_GENITIVE = [
-  "lednu", "únoru", "březnu", "dubnu", "květnu", "červnu",
-  "červenci", "srpnu", "září", "říjnu", "listopadu", "prosinci",
-];
 
 const NOTE_MAX_LENGTH = 180;
 
@@ -114,11 +105,6 @@ interface Props {
   onBookFromDay?: (day: string) => void;
   /** Host poznámku k měsíci nevidí (#484) */
   hideMonthlyNote?: boolean;
-}
-
-function formatDayChip(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
 }
 
 export function ReservationList({
@@ -262,7 +248,7 @@ export function ReservationList({
             className={css.dayFilterChip}
           >
             <span className={css.dayFilterChipText}>
-              Rezervace pro {formatDayChip(selectedDay)}
+              Rezervace pro {formatDate(selectedDay)}
             </span>
             <button
               type="button"
@@ -316,7 +302,7 @@ export function ReservationList({
       {!hideMonthlyNote && <div className={css.noteSection}>
         <div className={css.noteHeader}>
           <h4 className={css.sectionHeading} style={{ margin: 0 }}>
-            Poznámka k {MONTH_NAMES_GENITIVE[month]}
+            Poznámka k {monthName(month, "dative")}
           </h4>
           {monthlyNoteFailed ? (
             <button
@@ -427,11 +413,10 @@ function ReservationCard({
   index: number;
   onClick: (r: Reservation) => void;
 }) {
-  const d1 = new Date(r.from + "T00:00:00");
-  const d2 = new Date(r.to + "T00:00:00");
-  const isPast = d2 < new Date();
+  const isPast = new Date(r.to + "T00:00:00") < new Date();
   const nights = nightsBetween(r.from, r.to);
-  const dateLabel = `${d1.getDate()}. ${d1.getMonth() + 1}. – ${d2.getDate()}. ${d2.getMonth() + 1}.`;
+  // Tvar „14. 6. – 19. 6.“ drží test reservationCards; formatDateRange by dal „14.–19. 6.“ (DESIGN.md §9, rozhodnutí v #456).
+  const dateLabel = `${formatShortDate(r.from)} – ${formatShortDate(r.to)}`;
   const status = r.status ?? "primary";
 
   return (

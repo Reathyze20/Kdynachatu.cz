@@ -2,7 +2,8 @@ import { formatDateRange as formatRange, formatDayDate, formatLongDate, formatSh
 
 // Formátovače níž jen delegují na lib/format.ts (DESIGN.md §9) a drží tvar, na který jsou zvyklí volající.
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+/** Velké první písmeno: „sobota“ → „Sobota“. */
+export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const dayOf = (iso: string) => Number(iso.slice(8, 10));
 
 /** „12. – 14. března 2026“, přes měsíc „30. června – 2. července 2026“, přes rok s rokem u obou dnů. Vstup YYYY-MM-DD. */

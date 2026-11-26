@@ -201,7 +201,7 @@ Každá obrazovka s daty řeší čtyři stavy:
 
 ## 9. Formáty
 
-Jediný jazyk je čeština (`cs-CZ`). Formátuje jeden modul na `Intl`, **`frontend-v2/src/lib/format.ts`** (#455). `lib/dateUtils.ts` a `formatDate` z `lib/utils.ts` na něj delegují, lokální formátovače ve featurách převede #456. `date-fns` zůstává jen pro aritmetiku dat, ne pro zobrazení.
+Jediný jazyk je čeština (`cs-CZ`). Formátuje jeden modul na `Intl`, **`frontend-v2/src/lib/format.ts`** (#455). `lib/dateUtils.ts` a `formatDate` z `lib/utils.ts` na něj delegují, lokální formátovače ve featurách převedl #456. `date-fns` zůstává jen pro aritmetiku dat, ne pro zobrazení.
 
 | Co | Tvar | Funkce |
 |---|---|---|
@@ -210,10 +210,10 @@ Jediný jazyk je čeština (`cs-CZ`). Formátuje jeden modul na `Intl`, **`front
 | Datum se dnem | po 21. 3. | `formatDayDate` |
 | Datum s názvem měsíce | 10. prosince, čtvrtek 10. prosince | `formatLongDate` |
 | Rozsah v měsíci / přes měsíc / přes rok | 12.–14. 7. / 30. 6. – 2. 7. / 30. 12. 2026 – 2. 1. 2027 | `formatDateRange` (`year: true` přidá rok vždy) |
-| Čas, 24 h | 9:40, půlnoc 0:00 | `formatTime` |
+| Čas, 24 h | 9:40, půlnoc 0:00, se sekundami 9:40:05 (logy, údaje pro podporu) | `formatTime` (`seconds: true`) |
 | Částka | 1 234 Kč, celé koruny | `formatAmount` |
 | Procenta | 12 % (vstup je hodnota v procentech) | `formatPercent` |
-| Názvy měsíců a dnů | březen / března, po / pondělí | `monthName`, `weekdayName` |
+| Názvy měsíců a dnů | březen / března / (k) březnu, po / pondělí | `monthName`, `weekdayName` |
 | Počet s tvarem slova | 1 fotka / 2 fotky / 5 fotek, 21 fotek | `formatCount`, samotný tvar `pluralize` |
 
 - Rozsah píše pomlčku „–“ podle české typografie: bez mezer mezi jednoslovnými částmi („12.–14. 7.“), s mezerami mezi víceslovnými („30. 6. – 2. 7.“, tak to už ukazují pobyty, rezervace i přehled). Přes přelom roku má rok u obou dnů, jinak by z rozsahu nebyl poznat.

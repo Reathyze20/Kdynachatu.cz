@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import type { NoteThread } from "@/api/notes";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
+import { formatShortDate, formatTime } from "@/lib/format";
 
 interface UserMap {
   [username: string]: { color?: string; animalIcon?: string | null };
@@ -42,10 +43,7 @@ function stripMarkdown(text: string): string {
 function formatThreadTime(isoStr: string): string {
   const d = new Date(isoStr);
   const today = new Date();
-  if (d.toDateString() === today.toDateString()) {
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  }
-  return `${d.getDate()}.${d.getMonth() + 1}.`;
+  return d.toDateString() === today.toDateString() ? formatTime(d) : formatShortDate(d);
 }
 
 export function ThreadList({
