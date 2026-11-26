@@ -8,6 +8,7 @@ import { memberInitial } from '@/lib/memberPalette'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/shared/Card'
+import { ListRow } from '@/components/shared/ListRow'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
@@ -36,6 +37,8 @@ function getRoleLabel(role: SystemUser['role']): string {
 const TILE_CLASS = 'grid content-start gap-1 rounded-xl bg-inset p-3 md:p-4'
 const EYEBROW_CLASS = 'text-eyebrow uppercase text-(--text-muted)'
 const CODE_CLASS = 'block whitespace-pre-wrap rounded-lg bg-sheet p-3 text-label text-(--text-main) wrap-anywhere'
+/** Seznam účtů na celou šířku karty, oddělovače mezi řádky `ListRow` (stejně jako Správa členů). */
+const USER_LIST_CLASS = '-mx-4 divide-y divide-rule-soft border-t border-rule-soft md:-mx-6'
 
 function getStatusMeta(user: SystemUser): { label: string; className: string } {
   if (user.isBanned) {
@@ -60,22 +63,45 @@ function getStatusMeta(user: SystemUser): { label: string; className: string } {
 
 function UserListSkeleton() {
   return (
-    <div className="admin-members-list">
+    <ul className={USER_LIST_CLASS} aria-hidden="true">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="admin-user-card admin-user-card--skeleton">
-          <div className="admin-user-main">
-            <div className="skeleton admin-user-avatar-skeleton" />
-            <div className="admin-user-skeleton-copy">
-              <div className="skeleton admin-skeleton-line admin-skeleton-line--lg" />
-              <div className="skeleton admin-skeleton-line admin-skeleton-line--sm" />
-            </div>
+        <ListRow as="li" key={index} action={<div className="skeleton h-12 w-28 rounded-xl" />}>
+          <div className="flex items-center gap-3">
+            <div className="skeleton hidden size-10 shrink-0 rounded-full md:block" />
+            <div className="grid flex-1 gap-2"><div className="skeleton h-4 w-2/5" /><div className="skeleton h-4 w-3/5" /></div>
           </div>
-          <div className="admin-user-tags">
-            <div className="skeleton admin-skeleton-pill" />
-            <div className="skeleton admin-skeleton-pill admin-skeleton-pill--muted" />
-          </div>
-          <div className="skeleton admin-skeleton-button" />
-        </div>
+        </ListRow>
+      ))}
+    </ul>
+  )
+}
+
+interface FilterOption<T extends string> {
+  value: T
+  label: string
+  count: number
+}
+
+/** Řada přepínačů filtru: vybraný je primární, ostatní sekundární, stav nese `aria-pressed`. */
+function FilterButtons<T extends string>({ label, options, value, onChange, testId }: {
+  label: string
+  options: Array<FilterOption<T>>
+  value: T
+  onChange: (value: T) => void
+  testId: string
+}) {
+  return (
+    <div className="flex flex-wrap gap-2" role="group" aria-label={label} data-testid={testId}>
+      {options.map((option) => (
+        <Button
+          key={option.value}
+          size="sm"
+          variant={value === option.value ? 'primary' : 'secondary'}
+          aria-pressed={value === option.value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label} <span className="tabular-nums">{option.count}</span>
+        </Button>
       ))}
     </div>
   )
@@ -145,19 +171,32 @@ export function SuperAdminPage() {
   const hasFilters = normalizedSearch.length > 0 || roleFilter !== 'all' || statusFilter !== 'all'
   const hasFallbackSecrets = Boolean(lastCreatedUser?.tempPassword && lastCreatedUser?.verificationToken)
 
-  const roleFilters: Array<{ value: RoleFilter; label: string; count: number }> = [
+  const roleFilters: Array<FilterOption<RoleFilter>> = [
     { value: 'all', label: 'Všechny role', count: users.length },
     { value: 'admin', label: 'Admini', count: users.filter((user) => user.role === 'admin').length },
     { value: 'user', label: 'Členové', count: users.filter((user) => user.role === 'user').length },
     { value: 'guest', label: 'Hosté', count: users.filter((user) => user.role === 'guest').length },
   ]
 
-  const statusFilters: Array<{ value: StatusFilter; label: string; count: number }> = [
+  const statusFilters: Array<FilterOption<StatusFilter>> = [
     { value: 'all', label: 'Všechny stavy', count: users.length },
     { value: 'active', label: 'Aktivní', count: activeCount },
     { value: 'pending', label: 'Čekají', count: pendingCount },
     { value: 'banned', label: 'Zablokovaní', count: bannedCount },
     { value: 'superadmin', label: 'Super Admini', count: superAdminCount },
+  ]
+
+  const overviewStats = [
+    { label: 'Účty v systému', value: totalUsers, meta: 'Celkový počet registrovaných účtů napříč všemi chatami.' },
+    {
+      label: 'Aktivní účty',
+      value: activeCount,
+      meta: pendingCount > 0
+        ? `${formatCount(pendingCount, 'účet', 'účty', 'účtů')} ještě ${pluralize(pendingCount, 'čeká', 'čekají', 'čeká')} na dokončení aktivace.`
+        : 'Žádný účet momentálně nečeká na ověření.',
+    },
+    { label: 'Zablokované účty', value: bannedCount, meta: 'Okamžitý přehled účtů, které mají zablokovaný přístup.' },
+    { label: 'Super Admini', value: superAdminCount, meta: 'Počet globálních správců s přístupem do backoffice.' },
   ]
 
   function scrollToSection(sectionId: string) {
@@ -266,7 +305,7 @@ export function SuperAdminPage() {
 
   return (
     <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="ready">
-      <Card as="section">
+      <Card as="section" className="grid gap-4 md:gap-6">
         <PageHeader
           title="Globální dohled nad účty a provozem"
           subtitle="Tady řešíš systémové účty napříč celou aplikací, blokace, ruční zakládání uživatelů a provozní logy. Rozhraní je záměrně stejné jako cabin admin, ale s větším důrazem na kontrolu a bezpečnost."
@@ -274,30 +313,14 @@ export function SuperAdminPage() {
           secondaryActions={[{ label: 'Provozní logy', icon: Shield, onSelect: () => scrollToSection('superadmin-logs') }]}
         />
 
-        <div className="admin-overview-grid">
-          <article className="admin-overview-stat admin-overview-stat--forest">
-            <span className="admin-overview-stat-label">Účty v systému</span>
-            <strong className="admin-overview-stat-value">{isLoading || isError ? '—' : totalUsers}</strong>
-            <p className="admin-overview-stat-meta">Celkový počet registrovaných účtů napříč všemi chatami.</p>
-          </article>
-
-          <article className="admin-overview-stat admin-overview-stat--mist">
-            <span className="admin-overview-stat-label">Aktivní účty</span>
-            <strong className="admin-overview-stat-value">{isLoading || isError ? '—' : activeCount}</strong>
-            <p className="admin-overview-stat-meta">{pendingCount > 0 ? `${formatCount(pendingCount, 'účet', 'účty', 'účtů')} ještě ${pluralize(pendingCount, 'čeká', 'čekají', 'čeká')} na dokončení aktivace.` : 'Žádný účet momentálně nečeká na ověření.'}</p>
-          </article>
-
-          <article className="admin-overview-stat admin-overview-stat--sand">
-            <span className="admin-overview-stat-label">Zablokované účty</span>
-            <strong className="admin-overview-stat-value">{isLoading || isError ? '—' : bannedCount}</strong>
-            <p className="admin-overview-stat-meta">Okamžitý přehled účtů, které mají zablokovaný přístup.</p>
-          </article>
-
-          <article className="admin-overview-stat admin-overview-stat--ink">
-            <span className="admin-overview-stat-label">Super Admini</span>
-            <strong className="admin-overview-stat-value">{isLoading || isError ? '—' : superAdminCount}</strong>
-            <p className="admin-overview-stat-meta">Počet globálních správců s přístupem do backoffice.</p>
-          </article>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {overviewStats.map((stat) => (
+            <div key={stat.label} className={TILE_CLASS}>
+              <span className={EYEBROW_CLASS}>{stat.label}</span>
+              <strong className="text-page-title text-(--text-main)">{isLoading || isError ? '—' : stat.value}</strong>
+              <p className="text-label text-(--text-muted)">{stat.meta}</p>
+            </div>
+          ))}
         </div>
       </Card>
 
@@ -325,35 +348,8 @@ export function SuperAdminPage() {
               />
             </div>
 
-            <div className="grid gap-3">
-              <div className="admin-filter-row" role="tablist" aria-label="Filtrovat účty podle role" data-testid="superadmin-role-filters">
-                {roleFilters.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`admin-filter-chip ${roleFilter === option.value ? 'is-active' : ''}`}
-                    onClick={() => setRoleFilter(option.value)}
-                  >
-                    <span>{option.label}</span>
-                    <span className="admin-filter-chip-count">{option.count}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="admin-filter-row" role="tablist" aria-label="Filtrovat účty podle stavu" data-testid="superadmin-status-filters">
-                {statusFilters.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`admin-filter-chip ${statusFilter === option.value ? 'is-active' : ''}`}
-                    onClick={() => setStatusFilter(option.value)}
-                  >
-                    <span>{option.label}</span>
-                    <span className="admin-filter-chip-count">{option.count}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <FilterButtons label="Filtrovat účty podle role" options={roleFilters} value={roleFilter} onChange={setRoleFilter} testId="superadmin-role-filters" />
+            <FilterButtons label="Filtrovat účty podle stavu" options={statusFilters} value={statusFilter} onChange={setStatusFilter} testId="superadmin-status-filters" />
           </div>
 
           {isLoading ? (
@@ -388,41 +384,21 @@ export function SuperAdminPage() {
                 ) : null}
               </div>
 
-              <div className="admin-members-list">
+              <ul className={USER_LIST_CLASS} data-testid="superadmin-users-list">
                 {filteredUsers.map((user) => {
                   const statusMeta = getStatusMeta(user)
                   const isSelf = currentUser?.userId === user.id
                   const lockActionDisabled = isSelf || user.isSuperAdmin
 
                   return (
-                    <article key={user.id} className={`admin-user-card ${isSelf ? 'is-current-user' : ''}`} data-testid="superadmin-user-card" data-user-id={user.id}>
-                      <div className="admin-user-main">
-                        <div aria-hidden="true" className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary">
-                          {memberInitial(user.username)}
-                        </div>
-
-                        <div className="admin-user-identity">
-                          <div className="admin-user-title-row">
-                            <span className="admin-user-name">{user.username}</span>
-                            {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
-                          </div>
-                          <div className="admin-user-subline">
-                            <span className="wrap-anywhere">{user.email || 'Účet bez e-mailu'}</span>
-                            <span>Založen {formatDate(user.createdAt) || 'neznámo kdy'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="admin-user-tags">
-                        {user.isSuperAdmin ? <span className="admin-role-badge admin-role-badge--superadmin">Super Admin</span> : null}
-                        <span className={`admin-role-badge admin-role-badge--${user.role === 'admin' ? 'admin' : user.role === 'guest' ? 'guest' : 'member'}`}>
-                          {getRoleLabel(user.role)}
-                        </span>
-                        <span className={statusMeta.className}>{statusMeta.label}</span>
-                      </div>
-
-                      <div className="admin-user-actions">
+                    <ListRow
+                      as="li"
+                      key={user.id}
+                      data-testid="superadmin-user-card"
+                      data-user-id={user.id}
+                      action={
                         <Button
+                          size="sm"
                           variant={user.isBanned ? 'secondary' : 'danger'}
                           onClick={() => {
                             setBanError(null)
@@ -440,11 +416,33 @@ export function SuperAdminPage() {
                         >
                           {user.isBanned ? 'Zrušit blokaci' : 'Zablokovat'}
                         </Button>
+                      }
+                    >
+                      <div className="flex items-center gap-3">
+                        <div aria-hidden="true" className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary md:inline-flex">
+                          {memberInitial(user.username)}
+                        </div>
+                        <div className="grid min-w-0 gap-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold wrap-anywhere">{user.username}</span>
+                            {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
+                            {user.isSuperAdmin ? <span className="admin-role-badge admin-role-badge--superadmin">Super Admin</span> : null}
+                            <span className={`admin-role-badge admin-role-badge--${user.role === 'admin' ? 'admin' : user.role === 'guest' ? 'guest' : 'member'}`}>
+                              {getRoleLabel(user.role)}
+                            </span>
+                            <span className={statusMeta.className}>{statusMeta.label}</span>
+                          </div>
+                          <p className="flex flex-wrap gap-x-2 text-meta text-(--text-muted) wrap-anywhere">
+                            <span>{user.email || 'Účet bez e-mailu'}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>Založen {formatDate(user.createdAt) || 'neznámo kdy'}</span>
+                          </p>
+                        </div>
                       </div>
-                    </article>
+                    </ListRow>
                   )
                 })}
-              </div>
+              </ul>
             </>
           )}
         </Card>
