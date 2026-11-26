@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check } from "lucide-react";
+import { Check, RefreshCw } from "lucide-react";
 import apiClient from "@/api/client";
 import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservations";
 import { useCheckoutReservation } from "../hooks/useReservations";
@@ -8,19 +8,30 @@ import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/ga
 import { isQueuedOffline } from "@/lib/offlineQueue";
 import { useCheckoutPending } from "@/hooks/useOfflineQueue";
 import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
+import { Button } from "@/components/ui/button";
 import { formatDate, formatTime } from "@/lib/format";
-import styles from "../Reservations.module.css";
 
-function chipStyle(active: boolean): React.CSSProperties {
-  return {
-    padding: "4px 12px",
-    borderRadius: 999,
-    border: `1px solid ${active ? "var(--color-primary, #ea580c)" : "var(--color-border, #d0d5dd)"}`,
-    background: active ? "color-mix(in srgb, var(--color-primary, #ea580c) 14%, transparent)" : "transparent",
-    fontWeight: active ? 600 : 400,
-    cursor: "pointer",
-    fontSize: "0.85rem",
-  };
+// Předávka leží v detailu: vnořený blok bg-inset, rounded-xl (DESIGN.md §7).
+const SECTION = "flex flex-col gap-3 rounded-xl bg-inset p-4";
+const TITLE = "text-card-title text-(--text-main)";
+const HINT = "text-meta text-(--text-muted)";
+const CHECK_ROW = "flex min-h-(--touch-target-min) cursor-pointer items-center gap-3 text-body text-(--text-main)";
+const CHECKBOX = "size-5 shrink-0 accent-(--brand-primary)";
+
+/** Nepovinné textové pole předávky, popisek nad polem. */
+function NoteField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="flex flex-col gap-1.5 text-label text-(--text-muted)">
+      {label}
+      <textarea
+        rows={2}
+        maxLength={1000}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-body text-(--text-main) focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+      />
+    </label>
+  );
 }
 
 /** Returns true if reservation is active or was active in the last ~day */
@@ -104,9 +115,9 @@ export function CheckoutSection({ reservation }: Props) {
 
   if (checkoutPending) {
     return (
-      <div className={styles.checkoutSection}>
-        <h4 className={styles.checkoutTitle}>Předávka je vyplněná</h4>
-        <p className={styles.checkoutHint}>Odešle se, jakmile bude signál.</p>
+      <div className={SECTION}>
+        <h3 className={TITLE}>Předávka je vyplněná</h3>
+        <p className={HINT}>Odešle se, jakmile bude signál.</p>
         <PendingSyncBadge />
       </div>
     );
@@ -114,26 +125,20 @@ export function CheckoutSection({ reservation }: Props) {
 
   if (loading) {
     return (
-      <div className={styles.checkoutSection}>
-        <div className="spinner" />
+      <div className={SECTION} aria-busy="true">
+        <div className="h-24 rounded-xl bg-sheet" />
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className={styles.checkoutSection}>
-        <div className={styles.emptyTasksBox}>
-          <div>{loadError}</div>
-          <button
-            type="button"
-            className="button-secondary"
-            style={{ marginTop: '12px' }}
-            onClick={() => setReloadKey((value) => value + 1)}
-          >
-            Zkusit znovu
-          </button>
-        </div>
+      <div className={`${SECTION} items-center text-center`} role="alert">
+        <p className="text-body text-(--text-main)">{loadError}</p>
+        <Button type="button" variant="secondary" onClick={() => setReloadKey((value) => value + 1)}>
+          <RefreshCw aria-hidden="true" />
+          Zkusit znovu
+        </Button>
       </div>
     );
   }
@@ -145,16 +150,16 @@ export function CheckoutSection({ reservation }: Props) {
     const s = completedStatus.checkoutState;
     const gasSummary = gasLine(s?.gas);
     return (
-      <div className={styles.checkoutSection}>
-        <div className={styles.checkoutCompleted}>
-          <div className={styles.checkoutCompletedIcon} aria-hidden="true"><Check className="w-5 h-5" /></div>
-          <div className={styles.checkoutCompletedText}>
-            <strong>Odjezd potvrzen</strong>
-            {formatted && <span className={styles.checkoutCompletedDate}>{formatted}</span>}
+      <div className={SECTION}>
+        <div className="flex items-center gap-3 rounded-xl bg-(--status-success-light) p-3">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--status-success) text-(--text-on-success)" aria-hidden="true"><Check className="size-5" /></div>
+          <div className="flex flex-col">
+            <strong className={TITLE}>Odjezd potvrzen</strong>
+            {formatted && <span className={HINT}>{formatted}</span>}
           </div>
         </div>
         {s && (
-          <div style={{ marginTop: 10, fontSize: "0.85rem", lineHeight: 1.6 }}>
+          <div className="flex flex-col gap-1 text-body text-(--text-main)">
             {gasSummary && <div>{gasSummary}</div>}
             {s.heatingOff && <div>Topení vypnuté</div>}
             {s.waterOff && <div>Voda uzavřená</div>}
@@ -209,72 +214,60 @@ export function CheckoutSection({ reservation }: Props) {
   const clearErr = () => { if (submitError) setSubmitError(null); };
 
   return (
-    <div className={styles.checkoutSection}>
-      <h4 className={styles.checkoutTitle}>Stav chaty při odjezdu</h4>
-      <p className={styles.checkoutHint} style={{ marginTop: -4 }}>
-        Vyplň pro dalšího návštěvníka — uvidí to jako přivítání. Vše nepovinné.
-      </p>
+    <div className={SECTION}>
+      <div className="flex flex-col gap-1">
+        <h3 className={TITLE}>Stav chaty při odjezdu</h3>
+        <p className={HINT}>Vyplň pro dalšího návštěvníka – uvidí to jako přivítání. Vše je nepovinné.</p>
+      </div>
 
       {/* Plynová bomba: tři segmenty, opětovné klepnutí výběr zruší (plyn je nepovinný) */}
-      <div style={{ marginBottom: 12 }}>
-        <span id={`gas-label-${reservation.id}`} style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", display: "block", marginBottom: 6 }}>{GAS_LABEL}</span>
-        <div role="group" aria-labelledby={`gas-label-${reservation.id}`} style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      <div className="flex flex-col gap-1.5">
+        <span id={`gas-label-${reservation.id}`} className="text-label text-(--text-muted)">{GAS_LABEL}</span>
+        <div role="group" aria-labelledby={`gas-label-${reservation.id}`} className="flex flex-wrap gap-2">
           {GAS_OPTIONS.map((o) => (
-            <button type="button" key={o.value} aria-pressed={gas === o.value} style={chipStyle(gas === o.value)} onClick={() => { clearErr(); setGas(gas === o.value ? null : o.value); }}>
+            <Button type="button" key={o.value} size="sm" variant={gas === o.value ? "primary" : "secondary"} aria-pressed={gas === o.value} onClick={() => { clearErr(); setGas(gas === o.value ? null : o.value); }}>
               {o.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
       {/* Topení / voda */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 12, flexWrap: "wrap" }}>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.9rem" }}>
-          <input type="checkbox" checked={heatingOff} onChange={(e) => { clearErr(); setHeatingOff(e.target.checked); }} /> Topení vypnuté
+      <div className="flex flex-wrap gap-x-6">
+        <label className={CHECK_ROW}>
+          <input type="checkbox" className={CHECKBOX} checked={heatingOff} onChange={(e) => { clearErr(); setHeatingOff(e.target.checked); }} /> Topení vypnuté
         </label>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.9rem" }}>
-          <input type="checkbox" checked={waterOff} onChange={(e) => { clearErr(); setWaterOff(e.target.checked); }} /> Voda uzavřená
+        <label className={CHECK_ROW}>
+          <input type="checkbox" className={CHECKBOX} checked={waterOff} onChange={(e) => { clearErr(); setWaterOff(e.target.checked); }} /> Voda uzavřená
         </label>
       </div>
 
-      <textarea className="form-control" style={{ marginBottom: 8 }} rows={2} maxLength={1000}
-        placeholder="Rozbité / potřebuje pozornost…" value={broken} onChange={(e) => { clearErr(); setBroken(e.target.value); }} />
-      <textarea className="form-control" style={{ marginBottom: 8 }} rows={2} maxLength={1000}
-        placeholder="Co jsem nechal/a (dřevo, jídlo…)" value={leftBehind} onChange={(e) => { clearErr(); setLeftBehind(e.target.value); }} />
-      <textarea className="form-control" style={{ marginBottom: 12 }} rows={2} maxLength={1000}
-        placeholder="Vzkaz pro dalšího" value={stateNote} onChange={(e) => { clearErr(); setStateNote(e.target.value); }} />
+      <NoteField label="Rozbité nebo potřebuje pozornost (nepovinné)" value={broken} onChange={(v) => { clearErr(); setBroken(v); }} />
+      <NoteField label="Co jsem nechal/a, třeba dřevo nebo jídlo (nepovinné)" value={leftBehind} onChange={(v) => { clearErr(); setLeftBehind(v); }} />
+      <NoteField label="Vzkaz pro dalšího (nepovinné)" value={stateNote} onChange={(v) => { clearErr(); setStateNote(v); }} />
 
-      {/* Výjezdový protokol — jen pokud chata má nakonfigurované úkoly */}
+      {/* Výjezdový protokol – jen pokud chata má nakonfigurované úkoly */}
       {tasks.length > 0 && (
-        <>
-          <h4 className={styles.checkoutTitle}>Výjezdový protokol</h4>
-          <p className={styles.checkoutProgress}>
-            Splněno <span className={styles.checkoutProgressBold}>{checked.size}</span> z{" "}
-            <span className={styles.checkoutProgressBold}>{tasks.length}</span> úkolů
-          </p>
-          <div className={styles.checkoutTasksList}>
-            {tasks.map((task, i) => (
-              <label key={i} className={styles.checkoutTaskItem}>
-                <input type="checkbox" checked={checked.has(i)} onChange={() => { clearErr(); toggle(i); }} />
-                <span>{task}</span>
-              </label>
-            ))}
-          </div>
-        </>
+        <div className="flex flex-col gap-1">
+          <h3 className={TITLE}>Výjezdový protokol</h3>
+          <p className={HINT}>Splněno {checked.size} z {tasks.length} úkolů</p>
+          {tasks.map((task, i) => (
+            <label key={i} className={CHECK_ROW}>
+              <input type="checkbox" className={CHECKBOX} checked={checked.has(i)} onChange={() => { clearErr(); toggle(i); }} />
+              <span>{task}</span>
+            </label>
+          ))}
+        </div>
       )}
 
-      <button
-        className={styles.checkoutConfirmBtn}
-        disabled={!allChecked || checkout.isPending}
-        onClick={handleConfirm}
-      >
+      <Button className="w-full" disabled={!allChecked} pending={checkout.isPending} onClick={handleConfirm}>
         {checkout.isPending ? "Ukládám…" : "Potvrdit odjezd"}
-      </button>
+      </Button>
       {tasks.length > 0 && !allChecked && (
-        <p className={styles.checkoutHint}>Potvrď všechny úkoly pro odeslání.</p>
+        <p className={`${HINT} text-center`}>Potvrď všechny úkoly pro odeslání.</p>
       )}
       {submitError ? (
-        <div className="error-message show" role="alert">{submitError}</div>
+        <p className="text-label text-(--status-error)" role="alert">{submitError}</p>
       ) : null}
     </div>
   );

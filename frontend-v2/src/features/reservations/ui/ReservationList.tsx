@@ -16,7 +16,7 @@ import { useMonthlyNote, useUpdateMonthlyNote } from "../hooks/useReservations";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { nightsBetween, nightsLabel } from "@/lib/dateUtils";
-import { RESERVATION_TYPE_LABEL } from "../reservationType";
+import { RESERVATION_TYPE_CLASS, RESERVATION_TYPE_LABEL } from "../reservationType";
 import css from "../Reservations.module.css";
 
 const NOTE_MAX_LENGTH = 180;
@@ -426,9 +426,6 @@ export function ReservationList({
 
 // ── Reservation row sub-component ───────────────────────────────────
 
-/** Pevná plně, předběžná obrysem, záložní (#209). */
-const TYPE_CLASS = { primary: css.typeFirm, soft: css.typeSoft, backup: css.typeBackup } as const;
-
 function ReservationRow({
   reservation: r,
   onClick,
@@ -464,7 +461,7 @@ function ReservationRow({
       <span className={css.cardContent}>
         <span className={css.cardTopRow}>
           <span className={css.cardTitle}>{r.purpose || "Bez názvu"}</span>
-          <span className={TYPE_CLASS[status]}>{RESERVATION_TYPE_LABEL[status]}</span>
+          <span className={RESERVATION_TYPE_CLASS[status]}>{RESERVATION_TYPE_LABEL[status]}</span>
         </span>
         <span className={css.cardMeta}>
           {dateLabel}{nights > 0 && ` · ${nights} ${nightsLabel(nights)}`}

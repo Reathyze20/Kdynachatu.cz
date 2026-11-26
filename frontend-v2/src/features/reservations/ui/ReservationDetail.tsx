@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Eye } from "lucide-react";
+import { ChevronLeft, EllipsisVertical, Eye, Trash2 } from "lucide-react";
 import apiClient from "@/api/client";
 import type { Reservation } from "@/api/reservations";
 import { CheckoutSection } from "./CheckoutSection";
@@ -8,16 +8,19 @@ import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { escapeHtml } from "@/lib/utils";
-import { getLocalTodayIso } from "@/lib/dateUtils";
+import { getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
 import { formatLongDate } from "@/lib/format";
 import { toMemberColor } from "@/lib/memberPalette";
 import { getNetworkAwareActionMessage } from "@/lib/networkError";
 import { showToast } from "@/lib/toast";
-import { RESERVATION_TYPE_LABEL } from "../reservationType";
+import { RESERVATION_TYPE_CLASS, RESERVATION_TYPE_LABEL } from "../reservationType";
 import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
 
 interface WatchStatus { watching: boolean }
+
+const EYEBROW = "text-eyebrow uppercase text-(--text-muted)";
 
 interface Props {
   reservation: Reservation;
@@ -41,13 +44,10 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
   const canWatch = !isMine && !isGuest && r.to >= getLocalTodayIso();
 
   // Night count for timeline
-  const nightCount = r.from && r.to
-    ? Math.round((new Date(r.to + "T00:00:00").getTime() - new Date(r.from + "T00:00:00").getTime()) / 86400000)
-    : 0;
+  const nightCount = r.from && r.to ? nightsBetween(r.from, r.to) : 0;
 
-  // Typ jako na kartě v seznamu; štítek 14 px (G3), velká písmena jen stylem.
+  // Typ jako na kartě v seznamu (stejný štítek).
   const status = r.status ?? "primary";
-  const statusCls = { primary: "bg-accent text-primary", backup: "bg-amber-50 text-amber-700", soft: "bg-slate-50 text-slate-700" }[status];
 
   // Watch status
   const { data: watchData, refetch: refetchWatch } = useQuery<WatchStatus>({
@@ -95,64 +95,85 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
     }
   };
 
+  // Leží v papírovém bočním panelu (karta), proto bez vlastní karty; vnořené bloky jsou bg-inset.
   return (
-    <div className="bg-white rounded-[24px] p-5 shadow-sm flex flex-col gap-5 overflow-hidden" data-testid="reservation-detail-card">
+    <article className="flex flex-col gap-4" aria-label={`Rezervace ${r.username}`} data-testid="reservation-detail-card">
+      {/* ── Zpět vlevo, akce nad rezervací vpravo (DESIGN.md §7) ── */}
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" className="-ml-3 text-primary" onClick={onBack} data-testid="reservation-back-button">
+          <ChevronLeft aria-hidden="true" />
+          Zpět
+        </Button>
+        {canEdit && (
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => onEdit(r)} data-testid="reservation-edit-button">
+              Upravit
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Další akce">
+                  <EllipsisVertical aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem variant="danger" onSelect={() => setDeleteConfirmOpen(true)} data-testid="reservation-delete-button">
+                  <Trash2 aria-hidden="true" />
+                  Smazat
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
+
       {/* ── Header: User left, Badge right ── */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2.5">
-          <AnimalAvatar
-            icon={r.userAnimalIcon}
-            username={r.username}
-            color={memberColor}
-            size={42}
-          />
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: memberColor }} />
-          <strong className="text-[16px] font-bold text-slate-800">{r.username}</strong>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <AnimalAvatar icon={r.userAnimalIcon} username={r.username} color={memberColor} size={42} />
+          <h2 className="text-card-title text-(--text-main) [overflow-wrap:anywhere]">{r.username}</h2>
         </div>
-        <span className={`${statusCls} px-2.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase`}>{RESERVATION_TYPE_LABEL[status]}</span>
+        <span className={RESERVATION_TYPE_CLASS[status]}>{RESERVATION_TYPE_LABEL[status]}</span>
       </div>
 
       {/* ── Timeline Widget ── */}
-      <div className="bg-slate-50 border border-slate-100/60 rounded-[20px] p-4 flex items-center justify-between mt-1">
-        <div className="flex flex-col gap-1 z-10 text-left">
-          <span className="text-[10px] font-bold text-[var(--text-placeholder)] uppercase tracking-widest">Příjezd</span>
-          <span className="font-bold text-[15px] text-slate-900">{formatLongDate(r.from)}</span>
+      <div className="flex items-center justify-between rounded-xl bg-inset p-4">
+        <div className="flex flex-col gap-1 text-left">
+          <span className={EYEBROW}>Příjezd</span>
+          <span className="text-body font-semibold text-(--text-main)">{formatLongDate(r.from)}</span>
         </div>
-        
-        <div className="flex-1 mx-4 flex items-center justify-center relative">
-          <div className="w-full h-[1px] bg-slate-200 absolute"></div>
-          <span className="bg-white px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-600 shadow-sm z-10 whitespace-nowrap">
-            {nightCount} {nightCount === 1 ? "noc" : nightCount > 1 && nightCount < 5 ? "noci" : "nocí"}
+        <div className="relative mx-3 flex flex-1 items-center justify-center">
+          <div className="absolute h-px w-full bg-rule-soft" />
+          <span className="relative whitespace-nowrap rounded-full bg-sheet px-2.5 py-0.5 text-meta text-(--text-muted)">
+            {nightCount} {nightsLabel(nightCount)}
           </span>
         </div>
-
-        <div className="flex flex-col gap-1 z-10 text-right">
-          <span className="text-[10px] font-bold text-[var(--text-placeholder)] uppercase tracking-widest">Odjezd</span>
-          <span className="font-bold text-[15px] text-slate-900">{formatLongDate(r.to)}</span>
+        <div className="flex flex-col gap-1 text-right">
+          <span className={EYEBROW}>Odjezd</span>
+          <span className="text-body font-semibold text-(--text-main)">{formatLongDate(r.to)}</span>
         </div>
       </div>
 
       {/* ── Data Fields (hidden if empty) ── */}
       {r.purpose && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold text-[var(--text-placeholder)] uppercase tracking-widest">Účel</span>
-          <span className="text-slate-800 font-medium text-[15px]">{r.purpose}</span>
+          <span className={EYEBROW}>Účel</span>
+          <span className="text-body text-(--text-main)">{r.purpose}</span>
         </div>
       )}
       {r.notes && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Poznámka</span>
+          <span className={EYEBROW}>Poznámka</span>
           <span
-            className="text-sm text-slate-600 bg-[var(--color-bg-alt)] p-3 rounded-xl border border-slate-100/60 leading-relaxed"
+            className="rounded-xl bg-inset p-3 text-body text-(--text-main)"
             dangerouslySetInnerHTML={{ __html: escapeHtml(r.notes) }}
           />
         </div>
       )}
       {r.handoverNote && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vzkaz pro další</span>
+          <span className={EYEBROW}>Vzkaz pro další</span>
           <span
-            className="text-sm text-amber-900 bg-amber-50/50 p-3 rounded-xl leading-relaxed"
+            className="rounded-xl bg-(--status-warning-light) p-3 text-body text-(--text-main)"
             dangerouslySetInnerHTML={{ __html: escapeHtml(r.handoverNote) }}
           />
         </div>
@@ -161,12 +182,12 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
       {/* ── Co-occupants (spolucestující) ── */}
       {r.participants && r.participants.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Také jede</span>
+          <span className={EYEBROW}>Také jede</span>
           <div className="flex flex-wrap gap-2.5 mt-1">
             {r.participants.map((p) => (
               <span key={p.userId} className="inline-flex items-center gap-2" title={p.username}>
                 <AnimalAvatar icon={p.userAnimalIcon ?? null} username={p.username} color={p.userColor || undefined} size={28} />
-                <span className="text-sm font-medium text-slate-700">{p.username}</span>
+                <span className="text-body text-(--text-main)">{p.username}</span>
               </span>
             ))}
           </div>
@@ -200,34 +221,6 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
       {/* ── Checkout ── */}
       <CheckoutSection reservation={r} />
 
-      {/* ── Action Bar (footer) ── */}
-      <div className="flex justify-between items-center mt-1 pt-4 border-t border-slate-100">
-        <div className="flex gap-4 items-center">
-          <button className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-colors" onClick={onBack} data-testid="reservation-back-button">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Zpět
-          </button>
-          {canEdit && (
-            <button
-              className="text-[13px] font-medium text-red-600 hover:text-red-700 transition-colors"
-              onClick={() => setDeleteConfirmOpen(true)}
-              data-testid="reservation-delete-button"
-            >
-              Smazat
-            </button>
-          )}
-        </div>
-        <div className="flex gap-2 items-center">
-          {canEdit && (
-            <button className="px-4 py-1.5 rounded-[12px] text-[12px] font-semibold bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)] transition-colors shadow-sm" onClick={() => onEdit(r)} data-testid="reservation-edit-button">
-              Upravit
-            </button>
-          )}
-        </div>
-      </div>
-
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         title="Smazat rezervaci"
@@ -242,6 +235,6 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
           setDeleteError(null);
         }}
       />
-    </div>
+    </article>
   );
 }
