@@ -171,6 +171,11 @@ export function PrivacyPage() {
         </section>
 
         <section>
+          <h2>Odkud bereme veřejná data</h2>
+          <p>Seznam obcí pro výběr nejbližší obce chaty: ČÚZK (RÚIAN), CC BY 4.0.</p>
+        </section>
+
+        <section>
           <h2>Kontakt</h2>
           <p>
             Máš otázky ohledně svých údajů? Napiš nám na{' '}
