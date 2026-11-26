@@ -15,6 +15,7 @@ import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { LogsPanel } from '@/components/shared/LogsPanel'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
+import { ADMIN_LAYOUT_GRID_CLASS, ADMIN_SIDEBAR_STACK_CLASS } from '@/features/admin/components/adminLayout'
 import { superadminApi, type SuperadminCreateUserResponse, type SystemUser } from '@/api/superadmin'
 import {
   useSuperadminCreateUser,
@@ -324,7 +325,7 @@ export function SuperAdminPage() {
         </div>
       </Card>
 
-      <div className="admin-layout-grid">
+      <div className={ADMIN_LAYOUT_GRID_CLASS}>
         <Card as="section" className="space-y-4" id="superadmin-users" data-testid="superadmin-users-section">
           <AdminCardHeading
             eyebrow="Systémové účty"
@@ -447,7 +448,7 @@ export function SuperAdminPage() {
           )}
         </Card>
 
-        <aside className="admin-sidebar-stack">
+        <aside className={ADMIN_SIDEBAR_STACK_CLASS}>
           <Card as="section" className="space-y-4" id="superadmin-create-user" data-testid="superadmin-create-user-section">
             <AdminCardHeading
               eyebrow="Ruční založení"
