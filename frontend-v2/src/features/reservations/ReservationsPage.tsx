@@ -386,7 +386,7 @@ export function ReservationsPage() {
       <InventoryNotifyDialog
         open={invDialogOpen}
         summary={invSummary}
-        onConfirm={() => { setInvDialogOpen(false); navigate("/shopping"); }}
+        onConfirm={() => { setInvDialogOpen(false); navigate("/shopping?view=shopping"); }}
         onClose={() => setInvDialogOpen(false)}
       />
     </div>

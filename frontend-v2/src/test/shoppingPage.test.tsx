@@ -1,10 +1,10 @@
-import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, renderHook, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { InventoryItem, ShoppingItem } from '@/api/shopping'
+import type { InventoryItem, ShoppingItem, ShoppingList } from '@/api/shopping'
 import { ShoppingPage } from '@/features/shopping/ShoppingPage'
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from '@/features/shopping/hooks/useShoppingLists'
 import { INVENTORY_KEY } from '@/features/shopping/hooks/useInventory'
@@ -47,19 +47,20 @@ function invalidatedKeys(qc: QueryClient) {
   return () => spy.mock.calls.map(([filters]) => filters?.queryKey)
 }
 
-function renderPage(items: ShoppingItem[], { role = 'member', listCreatedById = 'u-me' } = {}) {
+type ListFixture = Pick<ShoppingList, 'id' | 'name'> & Partial<ShoppingList>
+interface PageOptions { role?: string; listCreatedById?: string; lists?: ListFixture[]; inventory?: InventoryItem[]; url?: string }
+
+function renderPage(items: ShoppingItem[], { role = 'member', listCreatedById = 'u-me', lists, inventory = [], url = '/shopping' }: PageOptions = {}) {
   auth.role = role
-  api.get.mockImplementation((url: string) =>
-    Promise.resolve({
-      data: url === '/shopping-lists'
-        ? [{ id: 'list-1', name: 'Víkend', createdById: listCreatedById, isResolved: false, items }]
-        : [],
-    }),
+  const shoppingLists = (lists ?? [{ id: 'list-1', name: 'Víkend', items }])
+    .map((l) => ({ createdById: listCreatedById, isResolved: false, items: [], ...l }))
+  api.get.mockImplementation((path: string) =>
+    Promise.resolve({ data: path === '/shopping-lists' ? shoppingLists : path === '/inventory' ? inventory : [] }),
   )
   const qc = newClient()
   render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[url]}>
         <ShoppingPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -259,7 +260,7 @@ async function renderPantry(inventory = pantry, role = 'member') {
   api.get.mockImplementation((url: string) => Promise.resolve({ data: url === '/inventory' ? inventory : [] }))
   render(<QueryClientProvider client={newClient()}><MemoryRouter><ShoppingPage /></MemoryRouter></QueryClientProvider>)
   const user = userEvent.setup()
-  await user.click(screen.getAllByRole('button', { name: /Zásoby na chatě/ })[0])
+  await user.click(screen.getByRole('button', { name: 'Zásoby' }))
   await screen.findByText(inventory[0].name)
   return user
 }
@@ -362,5 +363,74 @@ describe('shopping page: stock item menu', () => {
     await waitFor(() => expect(screen.queryByText('Káva')).not.toBeInTheDocument())
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     await waitFor(() => expect(stockRow('Cukr').getByRole('button', { name: 'Akce se zásobou Cukr' })).toHaveFocus())
+  })
+})
+
+// #224: přepínač „Zásoby / Nákup · N“ nahoře a režim v URL (`?view=pantry|shopping`, bez parametru Nákup).
+describe('shopping page: pantry and shopping modes', () => {
+  beforeEach(() => localStorage.clear())
+  const mode = (name: string | RegExp) => screen.getByRole('button', { name })
+  // Seznamy chodí z API od nejnovějšího; ve stavu Koupit jsou Mléko, Uhlí a Klobásy.
+  const twoLists = [
+    { id: 'list-new', name: 'Víkend', items: [item({ id: 'a', name: 'Mléko' }), item({ id: 'b', name: 'Sůl', status: 'purchased' }), item({ id: 'c', name: 'Plyn', status: 'bring_from_home' })] },
+    { id: 'list-old', name: 'Grilovačka', items: [item({ id: 'd', name: 'Uhlí' }), item({ id: 'e', name: 'Klobásy' })] },
+  ]
+
+  it('switches between Nákup and Zásoby under one page heading; Zásoby has no "Zpět"', async () => {
+    renderPage([item({ id: 'i-1', name: 'Mléko' })])
+    await rowOf('Mléko')
+    expect(screen.getByRole('heading', { level: 1, name: 'Zásoby a nákupy' })).toBeInTheDocument()
+    expect(mode(/^Nákup/)).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.setup().click(mode('Zásoby'))
+    expect(await screen.findByRole('heading', { name: 'Zásoby na chatě' })).toBeInTheDocument()
+    expect(mode('Zásoby')).toHaveAttribute('aria-pressed', 'true')
+    expect(mode(/^Nákup/)).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('button', { name: /Zpět/ })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['/shopping?view=pantry', 'Zásoby'],
+    ['/shopping?view=shopping', /^Nákup/],
+    ['/shopping', /^Nákup/],
+  ] as const)('opens %s in its mode', async (url, pressed) => {
+    renderPage([], { url })
+    await waitFor(() => expect(mode(pressed)).toHaveAttribute('aria-pressed', 'true'))
+  })
+
+  it('counts Koupit items of all active lists on the switcher and no longer badges missing stock on Zásoby', async () => {
+    renderPage([], { lists: twoLists, inventory: [stock({ id: 's-empty', name: 'Cukr', status: 'EMPTY' })] })
+
+    expect(await screen.findByRole('button', { name: 'Nákup · 3' })).toBeInTheDocument()
+    await userEvent.setup().click(mode(/^Zásoby/))
+    await screen.findByText('Cukr')
+    expect(mode(/^Zásoby/)).toHaveAccessibleName('Zásoby')
+  })
+
+  it('adds a stock from the Zásoby form with labelled fields', async () => {
+    renderPage([], { url: '/shopping?view=pantry' })
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Přidat zásobu' }))
+    await user.type(screen.getByRole('textbox', { name: 'Název' }), 'Rýže')
+    await user.type(screen.getByRole('textbox', { name: 'Kde to leží (nepovinné)' }), 'Kumbál')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Kategorie' }), 'NÁPOJE')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Stav' }), 'LOW')
+    await user.click(screen.getByRole('button', { name: 'Přidat' }))
+    expect(api.post).toHaveBeenCalledWith('/inventory', { name: 'Rýže', category: 'NÁPOJE', status: 'LOW', location: 'Kumbál', isEssential: false })
+  })
+
+  it('remembers the chosen list in the browser and falls back to the newest active list once it is gone', async () => {
+    renderPage([], { lists: twoLists })
+    expect(await screen.findByText('Mléko')).toBeInTheDocument()
+    await userEvent.setup().click(screen.getByText('Grilovačka'))
+    expect(await screen.findByText('Uhlí')).toBeInTheDocument()
+
+    cleanup()
+    renderPage([], { lists: twoLists })
+    expect(await screen.findByText('Uhlí')).toBeInTheDocument()
+
+    cleanup()
+    renderPage([], { lists: [twoLists[0]] })
+    expect(await screen.findByText('Mléko')).toBeInTheDocument()
   })
 })

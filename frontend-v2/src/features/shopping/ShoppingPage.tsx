@@ -1,9 +1,10 @@
 /**
- * ShoppingPage.tsx — Hlavní stránka nákupů a inventáře
- * Mode: 'shopping' (nákupní seznamy) | 'pantry' (spíž / inventář)
+ * ShoppingPage.tsx — Zásoby a nákupy: přepínač „Zásoby / Nákup · N“ (#224), režim v URL (`?view=pantry|shopping`),
+ * bez parametru Nákup. Nákup = nákupní seznamy, Zásoby = spíž na chatě.
  */
 import { useState, useEffect } from 'react'
-import { ViewSwitcher } from './ViewSwitcher'
+import { useSearchParams } from 'react-router-dom'
+import { ViewSwitcher, type ActiveView } from './ViewSwitcher'
 import type { ShoppingList } from '@/api/shopping'
 import {
   useShoppingLists,
@@ -18,18 +19,29 @@ import { ShareListDialog } from './ShareListDialog'
 import { showToast } from '@/lib/toast'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PromptDialog } from '@/components/shared/PromptDialog'
-import { useInventory } from './hooks/useInventory'
-import { isMissingStock } from './constants'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { Card } from '@/components/shared/Card'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   ShoppingErrorState,
   getShoppingActionErrorMessage,
 } from './ShoppingErrorState'
 
-type ActiveView = 'shopping' | 'pantry'
+/** Aktuální seznam se pamatuje v tomto prohlížeči (#224). */
+const SELECTED_LIST_KEY = 'shoppingSelectedListId'
+
+function readSelectedListId(): string | null {
+  try {
+    return localStorage.getItem(SELECTED_LIST_KEY)
+  } catch {
+    return null
+  }
+}
 
 export function ShoppingPage() {
-  useDocumentTitle('Nákupy');
+  useDocumentTitle('Zásoby a nákupy');
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeView: ActiveView = searchParams.get('view') === 'pantry' ? 'pantry' : 'shopping'
   const {
     data: lists = [],
     isLoading,
@@ -37,17 +49,16 @@ export function ShoppingPage() {
     error: listsError,
     refetch: refetchLists,
   } = useShoppingLists()
-  const { data: inventory = [], isError: inventoryError } = useInventory()
   const createList = useCreateList()
   const deleteList = useDeleteList()
   const archiveList = useArchiveList()
 
-  const missingCount = inventoryError
+  // Položky ve stavu Koupit ve všech aktivních seznamech; dokud se seznamy nenačtou, bez čísla
+  const pendingCount = isLoading || isError
     ? undefined
-    : inventory.filter(isMissingStock).length
+    : lists.reduce((sum, list) => sum + list.items.filter(i => i.status === 'pending').length, 0)
 
-  const [activeView, setActiveView] = useState<ActiveView>('shopping')
-  const [selectedListId, setSelectedListId] = useState<string | null>(null)
+  const [selectedListId, setSelectedListId] = useState<string | null>(readSelectedListId)
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [shareList, setShareList] = useState<ShoppingList | null>(null)
   const [showNewListModal, setShowNewListModal] = useState(false)
@@ -57,7 +68,7 @@ export function ShoppingPage() {
   const [deleteListError, setDeleteListError] = useState<string | null>(null)
   const [archiveListError, setArchiveListError] = useState<string | null>(null)
 
-  // Auto-select first list on load
+  // Bez volby, nebo když zapamatovaný seznam zmizel (smazaný, uzavřený), platí nejnovější aktivní (API řadí od nejnovějšího)
   useEffect(() => {
     if (activeView === 'shopping' && !selectedListId && lists.length > 0) {
       setSelectedListId(lists[0].id)
@@ -69,22 +80,23 @@ export function ShoppingPage() {
 
   const selectedList = lists.find(l => l.id === selectedListId) ?? null
 
-  function handleSelectList(id: string) {
+  function rememberList(id: string) {
     setSelectedListId(id)
-    setActiveView('shopping')
+    try {
+      localStorage.setItem(SELECTED_LIST_KEY, id)
+    } catch {
+      // Bez úložiště platí volba jen do obnovení stránky
+    }
+  }
+
+  function handleSelectList(id: string) {
+    rememberList(id)
     setMobileDetailOpen(true)
   }
 
-  function handleShowPantry() {
-    if (activeView === 'pantry') return
-    setActiveView('pantry')
-    setSelectedListId(null)
-    setMobileDetailOpen(true)
-  }
-
-  function handleShowLists() {
-    if (activeView === 'shopping') return
-    setActiveView('shopping')
+  function handleChangeView(view: ActiveView) {
+    if (view === activeView) return
+    setSearchParams({ view }, { replace: true })
     setMobileDetailOpen(false)
   }
 
@@ -154,8 +166,7 @@ export function ShoppingPage() {
       const created = await createList.mutateAsync(cleanName)
       setShowNewListModal(false)
       showToast('Nákupní seznam vytvořen.', 'success')
-      setSelectedListId(created.id)
-      setActiveView('shopping')
+      rememberList(created.id)
       setMobileDetailOpen(true)
     } catch (error) {
       setNewListError(
@@ -170,19 +181,17 @@ export function ShoppingPage() {
 
   return (
     <div className="shopping-page" id="shopping-page" data-testid="shopping-page">
-      {/* Mobile-only switcher — visible when master panel is showing */}
-      <div className="shopping-switcher-bar shopping-switcher-bar--mobile">
-        <ViewSwitcher
-          activeView={activeView}
-          onShowLists={handleShowLists}
-          onShowPantry={handleShowPantry}
-          missingCount={missingCount}
-        />
+      {/* Page header inside the legacy master-detail frame, so it pads like the cards below it */}
+      <div className="shrink-0 p-3 pb-0 md:p-6 md:pb-0">
+        <Card className="flex flex-col gap-4">
+          <PageHeader title="Zásoby a nákupy" />
+          <ViewSwitcher activeView={activeView} onChange={handleChangeView} pendingCount={pendingCount} />
+        </Card>
       </div>
 
-      {/* Content */}
+      {/* Content; on mobile the detail (Zásoby or the open list) replaces the list panel */}
       <div
-        className={`shopping-layout${mobileDetailOpen ? ' detail-open' : ''}`}
+        className={`shopping-layout${mobileDetailOpen || activeView === 'pantry' ? ' detail-open' : ''}`}
         id="shopping-layout"
       >
         {/* Master panel (only in shopping view) */}
@@ -223,20 +232,10 @@ export function ShoppingPage() {
           )
         )}
 
-        {/* Right column: switcher + detail */}
+        {/* Right column: detail */}
         <div className="shopping-right-col">
-          <div className="shopping-switcher-bar shopping-switcher-bar--desktop">
-            <ViewSwitcher
-              activeView={activeView}
-              onShowLists={handleShowLists}
-              onShowPantry={handleShowPantry}
-              missingCount={missingCount}
-            />
-          </div>
-
-          {/* Detail panel */}
           {activeView === 'pantry' ? (
-            <PantryView onBack={handleBack} />
+            <PantryView />
           ) : (
             <ListDetail list={selectedList} onBack={handleBack} />
           )}
