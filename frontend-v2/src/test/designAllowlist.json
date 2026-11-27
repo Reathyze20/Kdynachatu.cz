@@ -9,7 +9,7 @@
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
-      "components/shared/GlobalFallback.tsx", "features/auth/ResetPasswordPage.tsx",
+      "components/shared/GlobalFallback.tsx",
       "features/gallery/FolderGrid.tsx", "features/invite/InvitePage.tsx",
       "features/landing/LandingPage.tsx"
     ],
@@ -32,7 +32,6 @@
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
-      "features/auth/ResetPasswordPage.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
       "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
     ]
@@ -112,7 +111,6 @@
       "features/reservations/ui/BookingForm.tsx", "features/weather/StayWeatherCard.tsx"
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
-      "features/auth/ResetPasswordPage.tsx",
       "features/gallery/FolderGrid.tsx", "features/gallery/UploadModal.tsx",
       "features/invite/InvitePage.tsx", "features/shopping/PantryView.tsx"
     ]

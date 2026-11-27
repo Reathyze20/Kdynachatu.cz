@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, CircleCheck, CircleX } from 'lucide-react'
 import { apiClient } from '@/api/client'
 import { showToast } from '@/lib/toast'
+import { AuthLayout, AuthStatus } from '@/components/layout/AuthLayout'
 import { Button } from '@/components/ui/button'
 
 type ResetViewState = 'loading' | 'ready' | 'success' | 'expired' | 'error' | 'no-token'
@@ -21,28 +22,24 @@ function isExpiredLink(err: unknown) {
 /** Odkaz nejde použít: řekne proč a nabídne nový odkaz přes zapomenuté heslo, vedle návrat na přihlášení (#514). */
 function DeadEnd({ title, text }: { title: string; text: string }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <CircleX size={24} aria-hidden="true" className="text-(--status-error)" />
-      <h2 className="text-card-title text-(--text-main)">{title}</h2>
-      <p className="mb-3 text-body text-(--text-muted)">{text}</p>
-      <Button asChild size="lg" className="w-full">
-        <Link to="/login?view=forgot" data-testid="reset-password-new-link">Poslat nový odkaz</Link>
-      </Button>
-      <Button asChild variant="ghost">
-        <Link to="/login" data-testid="reset-password-login-link">Zpět na přihlášení</Link>
-      </Button>
-    </div>
+    <AuthStatus
+      icon={CircleX}
+      tone="error"
+      title={title}
+      actions={(
+        <>
+          <Button asChild size="lg" className="w-full">
+            <Link to="/login?view=forgot" data-testid="reset-password-new-link">Poslat nový odkaz</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/login" data-testid="reset-password-login-link">Zpět na přihlášení</Link>
+          </Button>
+        </>
+      )}
+    >
+      {text}
+    </AuthStatus>
   )
-}
-
-const cardStyle = {
-  maxWidth: 440,
-  width: '100%',
-  background: 'white',
-  borderRadius: 16,
-  padding: '2.5rem 2rem',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-  textAlign: 'center' as const,
 }
 
 export function ResetPasswordPage() {
@@ -131,148 +128,113 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--color-bg, #f5f5f5)',
-      padding: '1rem',
-    }} data-testid="reset-password-page" data-reset-state={viewState}>
-      <div style={cardStyle} data-testid="reset-password-card">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <img src="/logo-icon.svg" alt="Logo" style={{ width: 48, height: 48 }} />
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.5rem' }}>
-            Kdy na chatu
-          </h1>
-        </div>
+    <AuthLayout data-testid="reset-password-page" data-reset-state={viewState}>
+      {viewState === 'loading' && (
+        <p role="status" className="text-center text-body text-(--text-muted)">Ověřuji resetovací odkaz…</p>
+      )}
 
-        {viewState === 'loading' && (
-          <>
-            <div className="spinner" style={{ margin: '2rem auto' }} />
-            <p style={{ color: 'var(--color-text-light)' }}>Ověřuji resetovací odkaz…</p>
-          </>
-        )}
+      {viewState === 'ready' && (
+        <>
+          <h2 className="mb-2 text-center text-card-title text-(--text-main)">Nastavení nového hesla</h2>
+          <p className="mb-6 text-center text-body text-(--text-muted)">
+            Zvol nové heslo pro svůj účet. Odkaz můžeš použít jen jednou.
+          </p>
 
-        {viewState === 'ready' && (
-          <>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Nastavení nového hesla
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              Zvol nové heslo pro svůj účet. Odkaz můžeš použít jen jednou.
-            </p>
-
-            <form onSubmit={handleSubmit} style={{ textAlign: 'left' }} data-testid="reset-password-form">
-              <div className="form-group">
-                <label htmlFor="reset-password">Nové heslo</label>
-                <div className="input-eye-wrapper">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="reset-password"
-                    name="password"
-                    maxLength={100}
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={submitting}
-                    data-testid="reset-password-input"
-                  />
-                  <button
-                    type="button"
-                    className="toggle-password"
-                    aria-label={showPassword ? 'Skrýt heslo' : 'Zobrazit heslo'}
-                    aria-pressed={showPassword}
-                    onClick={() => setShowPassword((value) => !value)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+          <form onSubmit={handleSubmit} data-testid="reset-password-form">
+            <div className="form-group">
+              <label htmlFor="reset-password">Nové heslo</label>
+              <div className="input-eye-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="reset-password"
+                  name="password"
+                  maxLength={100}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={submitting}
+                  data-testid="reset-password-input"
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  aria-label={showPassword ? 'Skrýt heslo' : 'Zobrazit heslo'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                </button>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="reset-password-confirm">Potvrzení nového hesla</label>
-                <div className="input-eye-wrapper">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    id="reset-password-confirm"
-                    name="confirmPassword"
-                    maxLength={100}
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={submitting}
-                    data-testid="reset-password-confirm-input"
-                  />
-                  <button
-                    type="button"
-                    className="toggle-password"
-                    aria-label={showConfirmPassword ? 'Skrýt potvrzení hesla' : 'Zobrazit potvrzení hesla'}
-                    aria-pressed={showConfirmPassword}
-                    onClick={() => setShowConfirmPassword((value) => !value)}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+            <div className="form-group">
+              <label htmlFor="reset-password-confirm">Potvrzení nového hesla</label>
+              <div className="input-eye-wrapper">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  id="reset-password-confirm"
+                  name="confirmPassword"
+                  maxLength={100}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={submitting}
+                  data-testid="reset-password-confirm-input"
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  aria-label={showConfirmPassword ? 'Skrýt potvrzení hesla' : 'Zobrazit potvrzení hesla'}
+                  aria-pressed={showConfirmPassword}
+                  onClick={() => setShowConfirmPassword((value) => !value)}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
+                </button>
               </div>
+            </div>
 
-              <p style={{ color: 'var(--color-text-light)', fontSize: '0.95rem', marginBottom: '1rem' }}>
-                Heslo musí mít alespoň 8 znaků.
+            <p className="mb-4 text-label text-(--text-muted)">Heslo musí mít alespoň 8 znaků.</p>
+
+            {(message || passwordMismatch) && (
+              <p className="mb-4 text-label text-(--status-error)" data-testid="reset-password-message">
+                {passwordMismatch ? 'Hesla se neshodují.' : message}
               </p>
+            )}
 
-              {(message || passwordMismatch) && (
-                <p style={{ color: 'var(--color-danger)', marginBottom: '1rem' }} data-testid="reset-password-message">
-                  {passwordMismatch ? 'Hesla se neshodují.' : message}
-                </p>
-              )}
+            <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={submitting || passwordMismatch} data-testid="reset-password-submit-button">
+              {submitting ? 'Ukládám nové heslo…' : 'Uložit nové heslo'}
+            </button>
+          </form>
+        </>
+      )}
 
-              <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={submitting || passwordMismatch} data-testid="reset-password-submit-button">
-                {submitting ? 'Ukládám nové heslo…' : 'Uložit nové heslo'}
-              </button>
-            </form>
-          </>
-        )}
+      {viewState === 'success' && (
+        <AuthStatus
+          icon={CircleCheck}
+          tone="success"
+          title="Heslo změněno"
+          actions={(
+            <Button asChild size="lg" className="w-full">
+              <Link to="/login" data-testid="reset-password-login-link">Přihlásit se</Link>
+            </Button>
+          )}
+        >
+          {message}
+        </AuthStatus>
+      )}
 
-        {viewState === 'success' && (
-          <>
-            <CircleCheck size={48} aria-hidden="true" style={{ display: 'block', margin: '0 auto 1rem', color: 'var(--status-success)' }} />
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Heslo změněno
-            </h2>
-            <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem' }}>
-              {message}
-            </p>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-block',
-                padding: '0.75rem 2rem',
-                background: 'var(--color-primary, #2563eb)',
-                color: 'white',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-              data-testid="reset-password-login-link"
-            >
-              Přihlásit se
-            </Link>
-          </>
-        )}
+      {viewState === 'expired' && (
+        <DeadEnd title="Odkaz vypršel nebo už byl použitý." text="Pošli si nový odkaz pro obnovu hesla na svůj e-mail." />
+      )}
 
-        {viewState === 'expired' && (
-          <DeadEnd title="Odkaz vypršel nebo už byl použitý." text="Pošli si nový odkaz pro obnovu hesla na svůj e-mail." />
-        )}
+      {viewState === 'error' && <DeadEnd title="Reset hesla selhal" text={message} />}
 
-        {viewState === 'error' && <DeadEnd title="Reset hesla selhal" text={message} />}
-
-        {viewState === 'no-token' && (
-          <DeadEnd
-            title="Chybí resetovací odkaz"
-            text="Odkaz neobsahuje platný token. Pošli si nový odkaz pro obnovu hesla na svůj e-mail."
-          />
-        )}
-      </div>
-    </div>
+      {viewState === 'no-token' && (
+        <DeadEnd
+          title="Chybí resetovací odkaz"
+          text="Odkaz neobsahuje platný token. Pošli si nový odkaz pro obnovu hesla na svůj e-mail."
+        />
+      )}
+    </AuthLayout>
   )
 }
