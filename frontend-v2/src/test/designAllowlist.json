@@ -12,13 +12,12 @@
       "features/landing/LandingPage.tsx"
     ],
     "Barva člena a avatara je uložená data (#271), převod hex → rgba a paleta zatím mimo tokeny": [
-      "components/shared/AnimalAvatar.tsx", "features/reservations/calendar/CalendarCell.tsx", "lib/avatars.ts", "lib/memberPalette.ts"
+      "features/reservations/calendar/CalendarCell.tsx", "lib/avatars.ts", "lib/memberPalette.ts"
     ],
     "Barvy ikon počasí natvrdo v datové vrstvě, přesunout do tokenů": ["api/dashboard.ts"]
   },
   "rawPalette": {
-    "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": ["styles/gallery.css", "styles/shopping.css"],
-    "Inline styl s --raw-white, převede se s komponentou": ["components/shared/AnimalAvatar.tsx"]
+    "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": ["styles/gallery.css", "styles/shopping.css"]
   },
   "legacyColorAlias": {
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
@@ -50,7 +49,7 @@
   },
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/ConfirmDialog.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
+      "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/UploadModal.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",

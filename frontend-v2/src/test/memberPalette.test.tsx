@@ -54,7 +54,7 @@ describe('member color is never alone (G4)', () => {
     render(<AnimalAvatar icon={null} username="eva" color="#c1877a" size={32} />)
     const avatar = screen.getByTitle('eva')
     expect(avatar).toHaveTextContent('E')
-    expect(avatar).toHaveStyle({ backgroundColor: 'rgb(179, 64, 26)', color: 'var(--raw-white)' })
+    expect(avatar).toHaveStyle({ backgroundColor: 'rgb(179, 64, 26)', color: 'var(--text-on-primary)' })
   })
 
   it('names every swatch in the color picker and marks the mapped stored color as chosen', () => {

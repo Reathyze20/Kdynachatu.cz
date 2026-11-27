@@ -12,6 +12,7 @@
  *     onCancel={() => setShowConfirm(false)}
  *   />
  */
+import { Button } from '@/components/ui/button'
 import { Modal } from './Modal'
 import type { ReactNode } from 'react'
 
@@ -50,30 +51,24 @@ export function ConfirmDialog({
       maxWidth="max-w-sm"
       footer={
         <div className="modal-dialog-actions">
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={onCancel}
-            disabled={loading}
-            data-testid="confirm-dialog-cancel-button"
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={loading} data-testid="confirm-dialog-cancel-button">
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={danger ? 'btn-danger' : 'btn-primary'}
+            variant={danger ? 'danger' : 'primary'}
             onClick={onConfirm}
-            disabled={loading}
+            pending={loading}
             data-testid="confirm-dialog-confirm-button"
           >
-            {loading ? '…' : confirmLabel}
-          </button>
+            {confirmLabel}
+          </Button>
         </div>
       }
     >
-      <p style={{ color: 'var(--text-main)', lineHeight: 1.5 }} data-testid="confirm-dialog-message">{message}</p>
+      <p className="text-body text-(--text-main)" data-testid="confirm-dialog-message">{message}</p>
       {errorMessage ? (
-        <div className="error-message show" role="alert" style={{ marginTop: '12px' }} data-testid="confirm-dialog-error">
+        <div className="error-message show mt-3" role="alert" data-testid="confirm-dialog-error">
           {errorMessage}
         </div>
       ) : null}

@@ -67,7 +67,7 @@ describe('zrušení pozvánky (#258)', () => {
     expect(message.textContent).toContain('Chata U Lesa')
     expect(message.textContent).toContain('Jana')
     expect(message.textContent).toMatch(/přestane fungovat/)
-    expect(screen.getByTestId('confirm-dialog-confirm-button').className).toMatch(/btn-danger/)
+    expect(screen.getByTestId('confirm-dialog-confirm-button')).toHaveAttribute('data-variant', 'danger')
   })
 
   it('zavření dialogu tlačítkem Nechat platit nic nezmění', async () => {

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 
 /**
  * Tlačítko pro každou akci (DESIGN.md §6, #452). Varianty `primary` (hlavní akce, výchozí), `secondary`,
- * `ghost` a `danger`. Každá velikost má dotykový cíl aspoň 48 px, `lg` je hlavní akce obrazovky 56 px.
+ * `ghost` a `danger`; varianta je i v `data-variant`, ať ji testy čtou bez vazby na třídy. Každá velikost má dotykový cíl aspoň 48 px, `lg` je hlavní akce obrazovky 56 px.
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-(--radius-md) text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -51,13 +51,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const classes = cn(buttonVariants({ variant, size, className }))
     if (asChild) {
       return (
-        <Slot className={classes} ref={ref} aria-busy={pending || undefined} {...props}>
+        <Slot className={classes} ref={ref} data-variant={variant ?? "primary"} aria-busy={pending || undefined} {...props}>
           {children}
         </Slot>
       )
     }
     return (
-      <button className={classes} ref={ref} aria-busy={pending || undefined} {...props} disabled={props.disabled || pending}>
+      <button className={classes} ref={ref} data-variant={variant ?? "primary"} aria-busy={pending || undefined} {...props} disabled={props.disabled || pending}>
         {pending && <LoaderCircle aria-hidden="true" className="animate-spin motion-reduce:animate-none" />}
         {children}
       </button>
