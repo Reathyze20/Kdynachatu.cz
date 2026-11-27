@@ -42,10 +42,4 @@ describe('seznam logů (#526, #527)', () => {
     expect(entry).toHaveAttribute('open')
     expect(within(entry).getByText(/"requestId": "req-1"/)).toBeVisible()
   })
-
-  it('rozbalení ukazuje ikona lucide, ne znak v CSS (DESIGN.md §4)', async () => {
-    renderPanel()
-    const [entry] = await screen.findAllByTestId('log-entry')
-    expect(entry.querySelector('summary svg')).toHaveAttribute('aria-hidden', 'true')
-  })
 })

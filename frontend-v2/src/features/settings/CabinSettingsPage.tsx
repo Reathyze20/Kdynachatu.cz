@@ -185,7 +185,7 @@ function FeatureToggles({ features, onChange }: FeatureTogglesProps) {
     <ul className="-mx-4 divide-y divide-rule-soft md:-mx-6" data-testid="cabin-settings-feature-toggles">
       {AVAILABLE_FEATURES.map((f) => (
         <ListRow as="li" key={f.key} data-testid="cabin-settings-feature-toggle-row" data-feature={f.key}>
-          <label className="flex cursor-pointer items-center gap-3">
+          <label className="flex min-h-(--touch-target-min) cursor-pointer items-center gap-3">
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">{f.label}</span>
               <span className="block text-label text-(--text-muted)">{f.description}</span>

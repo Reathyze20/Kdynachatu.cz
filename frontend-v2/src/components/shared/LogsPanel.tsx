@@ -23,7 +23,7 @@ interface LogsPanelProps {
 const LEVEL_TONES = {
   error: 'bg-(--empty-bg) text-[rgb(var(--empty))]',
   warn: 'bg-(--low-bg) text-[rgb(var(--low))]',
-  info: 'bg-inset text-(--text-muted)',
+  info: 'bg-sheet text-(--text-muted)',
 }
 const PILL_CLASS = 'inline-flex items-center rounded-full px-3 py-1 text-eyebrow uppercase'
 
