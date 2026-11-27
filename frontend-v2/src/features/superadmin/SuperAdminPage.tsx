@@ -15,7 +15,8 @@ import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { LogsPanel } from '@/components/shared/LogsPanel'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
-import { ADMIN_COLUMN_STACK_CLASS, ADMIN_LAYOUT_GRID_CLASS } from '@/features/admin/components/adminLayout'
+import { ADMIN_COLUMN_STACK_CLASS, ADMIN_FORM_CLASS, ADMIN_LAYOUT_GRID_CLASS, ADMIN_PAGE_CLASS } from '@/features/admin/components/adminLayout'
+import { accountBadgeClass, roleBadgeTone } from '@/features/admin/components/accountBadge'
 import { superadminApi, type SuperadminCreateUserResponse, type SystemUser } from '@/api/superadmin'
 import {
   useSuperadminCreateUser,
@@ -45,20 +46,20 @@ function getStatusMeta(user: SystemUser): { label: string; className: string } {
   if (user.isBanned) {
     return {
       label: 'Zablokovaný',
-      className: 'admin-status-badge admin-status-badge--banned',
+      className: accountBadgeClass('empty'),
     }
   }
 
   if (!user.isVerified) {
     return {
       label: 'Čeká na ověření',
-      className: 'admin-status-badge admin-status-badge--pending',
+      className: accountBadgeClass('low'),
     }
   }
 
   return {
     label: 'Aktivní',
-    className: 'admin-status-badge admin-status-badge--active',
+    className: accountBadgeClass('ok'),
   }
 }
 
@@ -296,7 +297,7 @@ export function SuperAdminPage() {
 
   if (!isSuperAdmin) {
     return (
-      <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="denied">
+      <div className={ADMIN_PAGE_CLASS} data-testid="superadmin-page" data-superadmin-state="denied">
         <Card>
           <PageHeader title="Přístup odepřen" subtitle="Tato sekce je vyhrazená pouze pro superadminy." />
         </Card>
@@ -305,7 +306,7 @@ export function SuperAdminPage() {
   }
 
   return (
-    <div className="main-content-admin" data-testid="superadmin-page" data-superadmin-state="ready">
+    <div className={ADMIN_PAGE_CLASS} data-testid="superadmin-page" data-superadmin-state="ready">
       <Card as="section" className="grid gap-4 md:gap-6">
         <PageHeader
           title="Globální dohled nad účty a provozem"
@@ -420,15 +421,15 @@ export function SuperAdminPage() {
                       }
                     >
                       <div className="flex items-center gap-3">
-                        <div aria-hidden="true" className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary md:inline-flex">
+                        <div aria-hidden="true" className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary max-md:hidden">
                           {memberInitial(user.username)}
                         </div>
                         <div className="grid min-w-0 gap-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-semibold wrap-anywhere">{user.username}</span>
-                            {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
-                            {user.isSuperAdmin ? <span className="admin-role-badge admin-role-badge--superadmin">Superadmin</span> : null}
-                            <span className={`admin-role-badge admin-role-badge--${user.role === 'admin' ? 'admin' : user.role === 'guest' ? 'guest' : 'member'}`}>
+                            {isSelf ? <span className={accountBadgeClass('brand')}>Tvůj účet</span> : null}
+                            {user.isSuperAdmin ? <span className={accountBadgeClass('brand')}>Superadmin</span> : null}
+                            <span className={accountBadgeClass(roleBadgeTone(user.role))}>
                               {getRoleLabel(user.role)}
                             </span>
                             <span className={statusMeta.className}>{statusMeta.label}</span>
@@ -457,7 +458,7 @@ export function SuperAdminPage() {
             />
 
             <form
-              className="admin-compact-form"
+              className={ADMIN_FORM_CLASS}
               onSubmit={handleCreateUser}
               onChange={() => {
                 if (createError) setCreateError(null)
@@ -489,7 +490,7 @@ export function SuperAdminPage() {
               </Button>
             </form>
 
-            {createError ? <div className="error-message show admin-section-error">{createError}</div> : null}
+            {createError ? <div className="error-message show mt-0!">{createError}</div> : null}
           </Card>
 
           <Card as="section">

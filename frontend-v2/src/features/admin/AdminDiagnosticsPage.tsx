@@ -7,6 +7,7 @@ import { LogsPanel } from '@/components/shared/LogsPanel'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { adminApi } from '@/api/admin'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
+import { ADMIN_PAGE_CLASS } from '@/features/admin/components/adminLayout'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 
@@ -37,7 +38,7 @@ export function AdminDiagnosticsPage() {
 
   return (
     <div
-      className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden p-3 md:gap-6 md:p-6"
+      className={ADMIN_PAGE_CLASS}
       data-testid="admin-diagnostics-page"
     >
       <Card as="section" className="grid gap-4 md:gap-6" data-testid="admin-diagnostics-hero">
