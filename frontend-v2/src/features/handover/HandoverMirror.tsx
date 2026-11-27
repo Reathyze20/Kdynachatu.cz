@@ -26,9 +26,15 @@ function Row({ icon, className = "", children }: { icon: ReactNode; className?: 
  * Read-only zrcadlo předávky (spec #173): stejný jazyk jako formulář, bez interakce. Prázdné části
  * skryje, topení a vodu ukáže jen u uvedeného údaje. Znovu ho použije příjezdová karta #174.
  */
-export function HandoverMirror({ handover }: { handover: LastHandover }) {
+export function HandoverMirror({ handover, title, children }: {
+  handover: Pick<LastHandover, "from" | "to" | "completedAt" | "completedByUsername" | "checkoutState"> & Partial<Pick<LastHandover, "organizer">>;
+  /** Shrnutí vlastní předávky („Chata předána“, #218): meta řekne, kdo a kdy předal. */
+  title?: string;
+  children?: ReactNode;
+}) {
   const { checkoutState: s, completedAt } = handover;
-  const who = handover.completedByUsername ?? handover.organizer.username;
+  const who = handover.completedByUsername ?? handover.organizer?.username ?? null;
+  const when = completedAt ? `${formatDate(completedAt)} v ${formatTime(completedAt)}` : null;
   const gas = gasStateLabel(s.gas);
   const rows = [
     s.gas && gas && (
@@ -53,19 +59,21 @@ export function HandoverMirror({ handover }: { handover: LastHandover }) {
   return (
     <Card as="section" aria-labelledby="handover-mirror-title" className="flex flex-col gap-3">
       <div>
-        <h2 id="handover-mirror-title" className="text-card-title text-(--text-main)">Od minule · {who}</h2>
+        <h2 id="handover-mirror-title" className="text-card-title text-(--text-main)">{title ?? `Od minule · ${who}`}</h2>
         <p className="text-meta text-(--text-muted)">
-          Pobyt {formatDateRange(handover.from, handover.to)}
-          {completedAt && ` · předáno ${formatDate(completedAt)} v ${formatTime(completedAt)}`}
+          {title
+            ? [who && `Předal/a ${who}`, when].filter(Boolean).join(" · ")
+            : `Pobyt ${formatDateRange(handover.from, handover.to)}${when ? ` · předáno ${when}` : ""}`}
         </p>
       </div>
       {rows.length > 0 && <ul className="flex flex-col gap-2">{rows}</ul>}
       {s.note && (
         <figure className="flex flex-col gap-1 rounded-xl bg-inset p-3">
           <blockquote className="text-body text-(--text-main)">„{s.note}“</blockquote>
-          <figcaption className="text-meta text-(--text-muted)">{who}</figcaption>
+          {who && <figcaption className="text-meta text-(--text-muted)">{who}</figcaption>}
         </figure>
       )}
+      {children}
     </Card>
   );
 }
