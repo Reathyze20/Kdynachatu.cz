@@ -19,6 +19,7 @@ import { showToast } from '@/lib/toast'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PromptDialog } from '@/components/shared/PromptDialog'
 import { useInventory } from './hooks/useInventory'
+import { isMissingStock } from './constants'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   ShoppingErrorState,
@@ -43,7 +44,7 @@ export function ShoppingPage() {
 
   const missingCount = inventoryError
     ? undefined
-    : inventory.filter(i => i.status === 'EMPTY').length
+    : inventory.filter(isMissingStock).length
 
   const [activeView, setActiveView] = useState<ActiveView>('shopping')
   const [selectedListId, setSelectedListId] = useState<string | null>(null)

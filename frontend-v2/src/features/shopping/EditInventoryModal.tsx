@@ -7,7 +7,8 @@ import { useUpdateInventoryItem, useDeleteInventoryItem } from './hooks/useInven
 import { useAuth } from '@/context/AuthContext'
 import { Modal } from '@/components/shared/Modal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
-import { CATEGORY_ORDER, CATEGORY_LABELS } from './constants'
+import { Button } from '@/components/ui/button'
+import { CATEGORY_ORDER, CATEGORY_LABELS, INVENTORY_STATUSES, INVENTORY_STATUS_LABELS } from './constants'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 
 interface Props {
@@ -88,27 +89,25 @@ export function EditInventoryModal({ item, onClose }: Props) {
       footer={
         <div className="flex justify-between w-full items-center">
           {!isGuest ? (
-            <button
-              type="button"
-              className="btn-modal-delete"
+            <Button
+              variant="ghost"
+              className="text-(--status-error-dark)"
               onClick={handleDelete}
               disabled={deleteItem.isPending}
             >
               Smazat zásobu
-            </button>
+            </Button>
           ) : <span />}
           <div className="flex gap-2 ml-auto">
-            <button type="button" className="button-secondary" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose}>
               Zrušit
-            </button>
-            <button
-              type="button"
-              className="button-primary"
+            </Button>
+            <Button
               onClick={() => formRef.current?.requestSubmit()}
               disabled={updateItem.isPending || !name.trim()}
             >
               Uložit
-            </button>
+            </Button>
           </div>
         </div>
       }
@@ -157,9 +156,7 @@ export function EditInventoryModal({ item, onClose }: Props) {
                 setStatus(e.target.value as InventoryItem['status'])
               }}
             >
-              <option value="OK">Dostatek</option>
-              <option value="LOW">Málo</option>
-              <option value="EMPTY">Došlo</option>
+              {INVENTORY_STATUSES.map(s => <option key={s} value={s}>{INVENTORY_STATUS_LABELS[s]}</option>)}
             </select>
           </div>
           <div className="form-group">
