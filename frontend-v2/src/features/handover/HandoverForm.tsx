@@ -24,7 +24,7 @@ const TEXTS = [
   { key: "note", label: "Vzkaz pro dalšího", placeholder: "Užijte si to! Dřevo je u kamen." },
 ] as const;
 
-/** Velký přepínač: checkbox s rolí switch, vizuálně dráha s jezdcem, řádek ≥ 48 px. */
+// Velký přepínač: checkbox s rolí switch, vizuálně dráha s jezdcem
 function SwitchRow({ icon, label, checked, onChange }: { icon: ReactNode; label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
     <label className={ROW}>
@@ -51,9 +51,8 @@ export function HandoverForm({ reservationId, stayRange, initial, onSaved, onQue
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (checkout.isPending) return;
+    if (checkout.isPending) return; // druhé odeslání během ukládání
     setError(null);
-    // Celý stav: booleany explicitně, prázdný text vynechaný (úprava ho tím smaže)
     const state: CheckoutState = { gas: gas ?? undefined, heatingOff, waterOff, broken: texts.broken.trim() || undefined,
       leftBehind: texts.leftBehind.trim() || undefined, note: texts.note.trim() || undefined };
     try {
@@ -73,17 +72,17 @@ export function HandoverForm({ reservationId, stayRange, initial, onSaved, onQue
           <p className={HINT}>Tvůj pobyt {stayRange} · vše je nepovinné</p>
         </div>
         <span id={`${id}-gas`} className="text-label text-(--text-muted)">{GAS_LABEL}</span>
-        <div role="radiogroup" aria-labelledby={`${id}-gas`} className="grid grid-cols-3 gap-2">
+        <div role="group" aria-labelledby={`${id}-gas`} className="grid grid-cols-3 gap-2">
           {GAS_OPTIONS.map((o) => (
-            <Button key={o.value} type="button" size="sm" variant="secondary" role="radio" aria-checked={gas === o.value}
-              className="px-2 aria-checked:border-primary aria-checked:bg-accent aria-checked:text-primary"
+            <Button key={o.value} type="button" size="sm" variant="secondary" aria-pressed={gas === o.value}
+              className="px-2 aria-pressed:border-primary aria-pressed:bg-accent aria-pressed:text-primary"
               onClick={() => setGas(gas === o.value ? null : o.value)}>
               {o.label}
             </Button>
           ))}
         </div>
-        <SwitchRow icon={<Flame className="size-5" />} label="Topení vypnuté" checked={heatingOff} onChange={setHeatingOff} />
-        <SwitchRow icon={<Droplets className="size-5" />} label="Voda uzavřená" checked={waterOff} onChange={setWaterOff} />
+        <SwitchRow icon={<Flame className="size-4" />} label="Topení vypnuté" checked={heatingOff} onChange={setHeatingOff} />
+        <SwitchRow icon={<Droplets className="size-4" />} label="Voda uzavřená" checked={waterOff} onChange={setWaterOff} />
       </Card>
 
       {TEXTS.map(({ key, label, placeholder }) => (
@@ -106,7 +105,7 @@ export function HandoverForm({ reservationId, stayRange, initial, onSaved, onQue
       <Button type="submit" size="lg" className="w-full" pending={checkout.isPending}>
         {checkout.isPending ? "Ukládám…" : "Předat chatu"}
       </Button>
-      {error && <p role="alert" className="text-label text-(--status-error-dark)">{error}</p>}
+      {error && <p role="alert" className="rounded-xl bg-(--status-error-light) p-3 text-label text-(--status-error-dark)">{error}</p>}
     </form>
   );
 }

@@ -407,7 +407,6 @@ const schemas: Record<string, JsonSchema> = {
   },
   CheckoutStatus: {
     type: "object",
-    description: "Stav predavky pobytu; checkoutState je null, kdyz stav nikdo nevyplnil",
     properties: {
       isCheckoutCompleted: { type: "boolean" },
       checkoutCompletedBy: { type: "string", nullable: true }, checkoutCompletedByUsername: { type: "string", nullable: true },

@@ -61,9 +61,7 @@ export function HandoverMirror({ handover, title, children }: {
       <div>
         <h2 id="handover-mirror-title" className="text-card-title text-(--text-main)">{title ?? `Od minule · ${who}`}</h2>
         <p className="text-meta text-(--text-muted)">
-          {title
-            ? [who && `Předal/a ${who}`, when].filter(Boolean).join(" · ")
-            : `Pobyt ${formatDateRange(handover.from, handover.to)}${when ? ` · předáno ${when}` : ""}`}
+          {title ? [who && `Předal/a ${who}`, when].filter(Boolean).join(" · ") : `Pobyt ${formatDateRange(handover.from, handover.to)}${when ? ` · předáno ${when}` : ""}`}
         </p>
       </div>
       {rows.length > 0 && <ul className="flex flex-col gap-2">{rows}</ul>}

@@ -108,17 +108,16 @@ const expectPatch = (checkoutState: unknown) => expect(patch).toHaveBeenCalledWi
 
 describe('HandoverPage: předat chatu', () => {
   beforeEach(() => { get.mockReset(); patch.mockReset() })
-
   it('ve fázi departure pošle jeden PATCH s celým stavem, během ukládání nejde odeslat znovu, pak ukáže shrnutí', async () => {
     routes(DEPARTURE)
     let resolve!: (v: unknown) => void
     patch.mockReturnValue(new Promise((r) => { resolve = r }))
     renderPage()
-    const gas = await screen.findByRole('radiogroup', { name: 'Plynová bomba' })
-    expect(within(gas).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Dostatek', 'Dochází', 'Došlo'])
+    const gas = await screen.findByRole('group', { name: 'Plynová bomba' })
+    expect(within(gas).getAllByRole('button').map((r) => r.textContent)).toEqual(['Dostatek', 'Dochází', 'Došlo'])
     expect(screen.queryByText(/Od minule|Než odjedeš/)).not.toBeInTheDocument()
-    await userEvent.click(within(gas).getByRole('radio', { name: 'Dochází' }))
-    expect(within(gas).getByRole('radio', { name: 'Dochází' })).toHaveAttribute('aria-checked', 'true')
+    await userEvent.click(within(gas).getByRole('button', { name: 'Dochází' }))
+    expect(within(gas).getByRole('button', { name: 'Dochází' })).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(screen.getByRole('switch', { name: 'Voda uzavřená' }))
     await userEvent.type(field(/Rozbité/), '  Kape kohoutek  ')
     await userEvent.type(field(/Vzkaz pro dalšího/), 'Užijte si to')
@@ -141,7 +140,7 @@ describe('HandoverPage: předat chatu', () => {
     const done = await screen.findByRole('region', { name: 'Chata předána' })
     expect(done).toHaveTextContent('Topení zapnuté')
     await userEvent.click(within(done).getByRole('button', { name: 'Upravit předávku' }))
-    expect(screen.getByRole('radio', { name: 'Dostatek' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('button', { name: 'Dostatek' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('switch', { name: 'Voda uzavřená' })).toBeChecked()
     await userEvent.clear(field(/Vzkaz pro dalšího/))
     await submit()
@@ -160,7 +159,7 @@ describe('HandoverPage: předat chatu', () => {
     routes({ ...UPCOMING, phase: 'ongoing' })
     renderPage()
     await userEvent.click(await screen.findByRole('button', { name: 'Odjíždím dřív – předat teď' }))
-    expect(screen.getByRole('radiogroup', { name: 'Plynová bomba' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Plynová bomba' })).toBeInTheDocument()
   })
 
   it('request v offline frontě ukáže „Čeká na připojení“, ne „Chata předána“', async () => {
@@ -168,7 +167,7 @@ describe('HandoverPage: předat chatu', () => {
     patch.mockRejectedValue(Object.assign(new Error('Network Error'), { queuedOffline: true }))
     renderPage()
     await submit()
-    expect(await screen.findByRole('status')).toHaveTextContent('Čeká na připojení')
+    expect(await screen.findByRole('status')).toHaveTextContent(/Čeká na připojení.*Čeká na odeslání/)
     expect(screen.queryByText('Chata předána')).not.toBeInTheDocument()
   })
 

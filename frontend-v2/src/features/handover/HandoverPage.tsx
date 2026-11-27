@@ -11,6 +11,7 @@ import { Card } from "@/components/shared/Card";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 import { Button } from "@/components/ui/button";
 import { useCheckoutStatus, useHandoverOverview } from "@/features/reservations/hooks/useReservations";
 import { useCheckoutPending } from "@/hooks/useOfflineQueue";
@@ -56,7 +57,8 @@ function MyHandover({ overview: { myStay: stay, lastHandover } }: { overview: Ha
   const inWindow = stay?.phase === "departure" || leavingEarly;
 
   if (stay && (pending || (queued && !stay.isCheckoutCompleted))) {
-    return <Card as="section" role="status"><h2 className={TITLE}>Čeká na připojení</h2><p className="text-body">Předávka se odešle automaticky, jakmile bude signál.</p></Card>;
+    return <Card as="section" role="status" className="flex flex-col items-start gap-2"><h2 className={TITLE}>Čeká na připojení</h2>
+      <p className="text-body text-(--text-main)">Předávka se odešle automaticky, jakmile bude signál.</p><PendingSyncBadge /></Card>;
   }
   if (stay && (editing || (inWindow && !stay.isCheckoutCompleted && !saved))) {
     return (
@@ -71,7 +73,7 @@ function MyHandover({ overview: { myStay: stay, lastHandover } }: { overview: Ha
     const { checkoutCompletedAt: completedAt, checkoutCompletedByUsername: completedByUsername, checkoutState } = current;
     return (
       <HandoverMirror title="Chata předána" handover={{ ...stay, completedAt, completedByUsername, checkoutState: checkoutState ?? {} }}>
-        {inWindow && <Button variant="secondary" className="self-start" onClick={() => setEditing(true)}>Upravit předávku</Button>}
+        {stay.phase === "departure" && <Button variant="secondary" className="self-start" onClick={() => setEditing(true)}>Upravit předávku</Button>}
       </HandoverMirror>
     );
   }

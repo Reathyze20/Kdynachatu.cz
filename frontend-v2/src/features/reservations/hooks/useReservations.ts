@@ -154,14 +154,14 @@ export function useCheckoutReservation() {
         qc.setQueryData(RESERVATIONS_KEY, context.previous);
       }
       // Optimistic rollback done, now show structured toast
-      handleMutationError("Nepodařilo se odeslat checklist")(_err);
+      handleMutationError("Předávku se nepodařilo uložit", { silent: true })(_err); // chybu ukazuje formulář u tlačítka (DESIGN §7)
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
     },
     onSuccess: (status, { id }) => {
       qc.setQueryData(checkoutStatusKey(id), status); // shrnutí ukáže uložený stav hned, ne starý do refetche
-      showToast("Odjezdový checklist dokončen.", "success");
+      showToast("Chata předána.", "success");
     },
   });
 }
