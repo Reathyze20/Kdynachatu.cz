@@ -11,6 +11,7 @@ import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
+import { useTrayNudges } from "./useTrayNudges";
 import { AttentionCard } from "./AttentionCard";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
@@ -199,10 +200,17 @@ export function DashboardPage() {
   // „Visí na tobě“ a „Potřebuje pozornost“: na mobilu nahoře v hlavním sloupci, na desktopu
   // v bočním panelu nad vzkazem, aby se Přehled vešel bez scrollování (#275, #356)
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
-  const nudges = <NudgeTray reservations={reservationsQuery.data} shopping={shoppingQuery.data} />;
+  const tray = useTrayNudges(reservationsQuery.data, shoppingQuery.data);
+  const nudges = <NudgeTray nudges={tray.nudges} onDismiss={tray.dismiss} />;
+  const shoppingLoaded = !shoppingQuery.isError && !!shoppingQuery.data;
+  // Co nese „Visí na tobě“ a „Potřebuje pozornost“, „Od minule“ zopakuje jen tlumeně (#425)
+  const shownElsewhere = {
+    gas: tray.nudges.some((n) => n.id.startsWith("gas-")),
+    faultText: shoppingLoaded ? reservationsQuery.data?.lastFault?.text ?? null : null,
+  };
   const attention = shoppingQuery.isError ? (
     manyFailed ? null : <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
-  ) : shoppingQuery.data ? (
+  ) : shoppingLoaded ? (
     <AttentionCard shopping={shoppingQuery.data} fault={reservationsQuery.data?.lastFault} />
   ) : null;
 
@@ -267,7 +275,7 @@ export function DashboardPage() {
               <FeatureErrorFallback title="Rezervace se nepodařilo načíst" error={reservationsQuery.error as Error} resetErrorBoundary={() => reservationsQuery.refetch()} />
             </ErrorBoundary>
           ) : reservationsQuery.data ? (
-            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} weather={todayWeather} />
+            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} weather={todayWeather} shownElsewhere={shownElsewhere} />
           ) : null}
         </motion.div>
 

@@ -20,7 +20,7 @@ export function QuickLinksWidget({ gallery, notes }: Props) {
     <div className="glass-card">
       <div className="card-body-full">
         <div className="dashboard-card-header">
-          <span className="dashboard-card-header-title">Rychlý přehled</span>
+          <span className="text-card-title text-(--text-main)">Rychlý přehled</span>
         </div>
 
         <div className="quick-links-list">

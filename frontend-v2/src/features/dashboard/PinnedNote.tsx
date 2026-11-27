@@ -78,7 +78,7 @@ export function PinnedNote({ note, author, updatedAt, onNoteUpdate }: Props) {
         <div className="glass-card dashboard-handover-card" id="dashboard-handover-note">
           <div className="card-body-full handover-card-content">
             <div className="dashboard-card-header">
-              <span className="dashboard-card-header-title">Vzkaz</span>
+              <h2 className="m-0 text-card-title text-(--text-main)">Vzkaz</h2>
               {!isGuest && (
                 <button className="handover-edit-btn" id="btn-edit-handover" title="Upravit vzkaz" onClick={openModal}>
                   <SquarePen size={16} />

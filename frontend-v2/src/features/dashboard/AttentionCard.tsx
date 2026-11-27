@@ -131,7 +131,7 @@ export function AttentionCard({ shopping, fault }: Props) {
   return (
     <section className="glass-card attention-card" aria-labelledby={headingId} data-testid="dashboard-attention">
       <div className="dashboard-card-header">
-        <h2 id={headingId} className="dashboard-card-header-title">Potřebuje pozornost</h2>
+        <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Potřebuje pozornost</h2>
         <CopyForWhatsAppButton text={whatsAppMessage(attentionWhatsApp(all), "/shopping")} />
       </div>
       <ul className="attention-list">
