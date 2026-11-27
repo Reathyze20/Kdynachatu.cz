@@ -17,7 +17,7 @@ async function openHelpAt(entry: string) {
 }
 
 describe('HelpDialog – nápověda podle položky navigace (#510)', () => {
-  it.each([...PRIMARY_NAV, ...MORE_NAV].map((item) => [item.label, item.to]))(
+  it.each([...PRIMARY_NAV, ...MORE_NAV].map((item) => [item.fullLabel ?? item.label, item.to]))(
     'položka „%s“ má vlastní nápovědu se stejným názvem',
     async (label, to) => {
       const { dialog } = await openHelpAt(to)
@@ -33,6 +33,14 @@ describe('HelpDialog – nápověda podle položky navigace (#510)', () => {
     const handover = await openHelpAt('/reservations?sekce=predavka')
     expect(handover.dialog).toHaveTextContent(/stav chaty při odjezdu/i)
     expect(handover.dialog.textContent).not.toBe(calendarText)
+  })
+
+  it('nápověda píše vždy „předávka chaty“, aby bylo jasné, k čemu slouží (#688)', () => {
+    for (const [key, content] of Object.entries(HELP_PAGES)) {
+      const { container, unmount } = render(<>{content}</>)
+      expect(container.textContent, key).not.toMatch(/předávk\p{L}*(?!\p{L}| chaty)/iu)
+      unmount()
+    }
   })
 
   it('správa má vlastní nápovědu i mimo hlavní navigaci', async () => {

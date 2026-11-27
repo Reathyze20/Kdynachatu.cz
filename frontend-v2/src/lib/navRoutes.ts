@@ -12,7 +12,10 @@ import { isFeatureEnabled } from '@/hooks/useCabinFeatures'
 export interface NavItem {
   /** Cíl odkazu; query část rozlišuje položky, které zatím vedou na stejnou stránku */
   to: string
+  /** Popisek; ve spodní liště musí být čitelný i na 360 px */
   label: string
+  /** Celý název, když je `label` kvůli liště zkrácený (#688). Boční panel ho ukáže, lišta ho dá do `aria-label`. */
+  fullLabel?: string
   icon: LucideIcon
   /** Položka je viditelná jen pokud cabin.features[featureKey] není vypnuté */
   featureKey?: string
@@ -28,7 +31,7 @@ export interface NavItem {
 export const PRIMARY_NAV: NavItem[] = [
   { to: '/dashboard',                   label: 'Přehled',  icon: Home, forGuest: true },
   { to: '/reservations',                label: 'Kalendář', icon: CalendarDays, featureKey: 'reservations', forGuest: true },
-  { to: '/reservations?sekce=predavka', label: 'Předávka', icon: KeyRound,     featureKey: 'reservations', forGuest: true },
+  { to: '/reservations?sekce=predavka', label: 'Předávka', fullLabel: 'Předávka chaty', icon: KeyRound, featureKey: 'reservations', forGuest: true },
   { to: '/shopping',                    label: 'Zásoby',   icon: ShoppingCart, featureKey: 'shopping' },
 ]
 

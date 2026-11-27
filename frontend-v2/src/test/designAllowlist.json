@@ -28,7 +28,7 @@
       "styles/shopping.css"
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
-      "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx",
+      "features/dashboard/PinnedNote.tsx",
       "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
     ]
   },

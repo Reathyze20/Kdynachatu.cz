@@ -42,7 +42,7 @@ describe('DesktopSidebar — desktop rám #1b (#171)', () => {
     const nav = renderSidebar('/dashboard')!
     const links = within(nav).getAllByRole('link')
     expect(links.map((el) => el.textContent)).toEqual([
-      'Přehled', 'Kalendář', 'Předávka', 'Zásoby', 'Chat', 'Galerie', 'Deník', 'Rekonstrukce',
+      'Přehled', 'Kalendář', 'Předávka chaty', 'Zásoby', 'Chat', 'Galerie', 'Deník', 'Rekonstrukce',
     ])
     for (const link of links) expect(link.querySelector('svg')).not.toBeNull()
     const hrefs = links.map((el) => el.getAttribute('href')?.split('?')[0])

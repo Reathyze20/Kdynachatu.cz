@@ -44,10 +44,10 @@ export function DesktopSidebar({ onOpenProfileDrawer, today }: DesktopSidebarPro
       aria-current={item === active ? 'page' : undefined}
       data-testid="desktop-nav-link"
       data-route={item.to}
-      title={item.label}
+      title={item.fullLabel ?? item.label}
     >
       <item.icon size={20} aria-hidden="true" />
-      <span className="app-sidebar-label">{item.label}</span>
+      <span className="app-sidebar-label">{item.fullLabel ?? item.label}</span>
     </Link>
   )
 

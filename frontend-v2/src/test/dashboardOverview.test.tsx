@@ -691,6 +691,16 @@ describe('Přehled: žádná duplicita (#425)', () => {
     expect(screen.queryByText('Dnes odjíždíš z chaty')).not.toBeInTheDocument()
   })
 
+  it('v den odjezdu Přehled zve k vyplnění předávky chaty (#688)', async () => {
+    renderOverview(reservations({
+      activeReservation: { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY },
+      departingToday: true,
+      departingReservationId: 'r-now',
+    }))
+
+    expect(await screen.findByText(/Nezapomeň vyplnit předávku chaty/)).toBeInTheDocument()
+  })
+
   it('závada z „Důležité“ je v „Od minule“ jen tlumeně, bez karty pozornosti zůstane zvýrazněná', async () => {
     renderOverview({ ...handover({ broken: 'Kape kohoutek.' }), lastFault: FAULT })
 
