@@ -420,7 +420,7 @@ const schemas: Record<string, JsonSchema> = {
     properties: {
       isCheckoutCompleted: { type: "boolean" },
       checkoutCompletedBy: { type: "string", nullable: true }, checkoutCompletedByUsername: { type: "string", nullable: true },
-      checkoutCompletedAt: { type: "string", format: "date-time", nullable: true }, checkoutState: ref("CheckoutState"),
+      checkoutCompletedAt: { type: "string", format: "date-time", nullable: true }, checkoutState: { ...ref("CheckoutState"), nullable: true },
     },
   },
   Reservation: {

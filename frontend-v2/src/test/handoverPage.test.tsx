@@ -7,8 +7,9 @@ import { HandoverPage } from '@/features/handover/HandoverPage'
 import { RESERVATIONS_KEY } from '@/features/reservations/hooks/useReservations'
 
 // Tab Předávka (#216) s podvrženým API a fiktivními daty.
-const { get, patch } = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
+const { get, patch, showToast } = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn(), showToast: vi.fn() }))
 vi.mock('@/api/client', () => ({ default: { get, patch } }))
+vi.mock('@/lib/toast', () => ({ showToast }))
 vi.mock('@/lib/errorReporting', () => ({ reportError: vi.fn() }))
 
 const LAST = {
@@ -169,6 +170,21 @@ describe('HandoverPage: předat chatu', () => {
     await submit()
     expect(await screen.findByRole('status')).toHaveTextContent(/Čeká na připojení.*Čeká na odeslání/)
     expect(screen.queryByText('Chata předána')).not.toBeInTheDocument()
+  })
+
+  it('po odložení do fronty nenačítá znovu a selhaný refetch (slabý signál) stav „Čeká na připojení“ nepřebije', async () => {
+    routes(DEPARTURE)
+    patch.mockRejectedValue(Object.assign(new Error('Network Error'), { queuedOffline: true }))
+    const qc = renderPage()
+    await submit()
+    await screen.findByRole('status')
+    expect(get.mock.calls.filter(([url]) => url === '/handover')).toHaveLength(1)
+
+    get.mockRejectedValue(new Error('Network Error'))
+    await act(() => qc.invalidateQueries({ queryKey: RESERVATIONS_KEY })) // např. reservation:updated od jiného člena
+    expect(screen.getByRole('status')).toHaveTextContent('Čeká na připojení')
+    expect(screen.queryByText('Předávku se nepodařilo načíst')).not.toBeInTheDocument()
+    expect(showToast).not.toHaveBeenCalledWith(expect.anything(), 'error')
   })
 
   it('při chybě serveru zůstanou data ve formuláři a ukáže se hláška', async () => {

@@ -97,7 +97,7 @@ export function HandoverPage() {
               <div className="skeleton h-40 rounded-2xl" />
               <div className="skeleton h-24 rounded-2xl" />
             </div>
-          ) : isError ? (
+          ) : isError && !data ? (
             <FeatureErrorFallback
               error={error}
               resetErrorBoundary={() => void refetch()}
