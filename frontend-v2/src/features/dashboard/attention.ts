@@ -1,47 +1,67 @@
 /**
- * attention.ts — co na Přehledu „potřebuje pozornost“ (#275, návrh #6 díl 4 = A + C).
- * Věci a jejich pořadí (Došlo před Dochází, důležité napřed) dává server (`attention`).
- * Tady se z nich skládají nejvýš tři řádky karty a text pro WhatsApp. Závada z poslední
- * předávky je vidět vždy jako poslední řádek, protože souhrn „+ N dalších“ vede do Zásob
- * a tam závady nejsou.
+ * attention.ts — co patří do bloku „Důležité“ na Přehledu (#682, spec #677).
+ * Pevné pořadí: výstraha před bouřkou → plyn a závada z poslední předávky → Došlo u zásoby s ★.
+ * Běžné Dochází a položky bez ★ na Přehled nepatří.
+ * Host vidí jen výstrahu před bouřkou. Rozhoduje se tady, karta jen vykresluje.
  */
-import type { AttentionItem, HandoverFault } from "@/api/dashboard";
+import type { AttentionItem, HandoverFault, WeatherData } from "@/api/dashboard";
+import { GAS_LABEL, gasStateLabel, type GasValue } from "@/lib/gasLevel";
 import { formatDayMonth } from "@/lib/dateUtils";
 
 export const MAX_ATTENTION_ROWS = 3;
 
-export type AttentionRow = ({ kind: "supply" } & AttentionItem) | ({ kind: "fault" } & HandoverFault);
+/** Tón štítku a ikony (DESIGN.md §2): varování nebo došlo. */
+export type AttentionTone = "low" | "empty";
+
+interface RowBase { key: string; label: string; tone: AttentionTone; text: string; meta?: string }
+export type AttentionRow =
+  | (RowBase & { kind: "storm" | "gas" })
+  | (RowBase & { kind: "fault"; fault: HandoverFault })
+  | (RowBase & { kind: "supply"; item: AttentionItem });
 
 export interface Attention {
   /** Nejvýš tři řádky karty. */
   rows: AttentionRow[];
-  /** Kolik zásob se nevešlo (souhrn „+ N dalších“). */
+  /** Kolik věcí se nevešlo (souhrn „+ N dalších“). */
   more: number;
   /** Všechno pro „Zkopírovat pro WhatsApp“. */
   all: AttentionRow[];
 }
 
+export interface AttentionInput {
+  storm?: WeatherData["stormAlert"];
+  /** Plyn z poslední předávky; `null`, když ho nese „Visí na tobě“. */
+  gas?: GasValue | null;
+  fault?: HandoverFault | null;
+  supplies?: AttentionItem[];
+  isGuest?: boolean;
+}
+
 /** Stabilní klíč věci (řádek React, optimistické odebrání). */
 export const attentionKey = (item: AttentionItem): string => item.inventoryId ?? item.shoppingItemId ?? item.name;
 
-/** Stav zásoby slovem a třída štítku (slovník Zásob, #166). */
-export function supplyStatus(isEmpty: boolean): { label: string; badge: string } {
-  return isEmpty ? { label: "Došlo", badge: "badge-empty" } : { label: "Dochází", badge: "badge-low" };
-}
-
-export function buildAttention(items: AttentionItem[] = [], fault?: HandoverFault | null): Attention {
-  const supplies: AttentionRow[] = items.map((i) => ({ kind: "supply", ...i }));
-  const faults: AttentionRow[] = fault ? [{ kind: "fault", ...fault }] : [];
-  const shown = supplies.slice(0, MAX_ATTENTION_ROWS - faults.length);
-  return { rows: [...shown, ...faults], more: supplies.length - shown.length, all: [...supplies, ...faults] };
+export function buildAttention({ storm, gas, fault, supplies = [], isGuest }: AttentionInput): Attention {
+  const all: AttentionRow[] = [];
+  if (storm) all.push({ kind: "storm", key: "storm", label: "Výstraha", tone: "low", text: `${storm.day}: ${storm.description}` });
+  if (!isGuest) {
+    if (gas === "low" || gas === "empty") {
+      all.push({ kind: "gas", key: "gas", label: gasStateLabel(gas) ?? "", tone: gas, text: GAS_LABEL });
+    }
+    if (fault) {
+      all.push({ kind: "fault", key: "fault", label: "Závada", tone: "empty", text: fault.text, meta: `${fault.reportedBy} ${formatDayMonth(fault.reportedAt)}`, fault });
+    }
+    for (const item of supplies.filter((i) => i.isEmpty && i.isEssential)) {
+      all.push({ kind: "supply", key: attentionKey(item), label: "Došlo", tone: "empty", text: item.name, item });
+    }
+  }
+  const rows = all.slice(0, MAX_ATTENTION_ROWS);
+  return { rows, more: all.length - rows.length, all };
 }
 
 /** Text pro rodinnou skupinu: každá věc na jednom řádku se stavem slovem. */
 export function attentionWhatsApp(rows: AttentionRow[]): string {
   const lines = rows.map((r) =>
-    r.kind === "fault"
-      ? `- Závada: ${r.text} (${r.reportedBy}, ${formatDayMonth(r.reportedAt)})`
-      : `- ${supplyStatus(r.isEmpty).label}: ${r.name}`,
+    r.kind === "fault" ? `- Závada: ${r.text} (${r.fault.reportedBy}, ${formatDayMonth(r.fault.reportedAt)})` : `- ${r.label}: ${r.text}`,
   );
   return ["Na chatě potřebuje pozornost:", ...lines].join("\n");
 }

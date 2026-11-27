@@ -13,6 +13,7 @@ import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
 import { useTrayNudges } from "./useTrayNudges";
 import { AttentionCard } from "./AttentionCard";
+import { buildAttention } from "./attention";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
@@ -23,6 +24,7 @@ import { DASHBOARD_RESERVATIONS_KEY } from "@/features/reservations/hooks/useRes
 import { DASHBOARD_SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
+import { Card } from "@/components/shared/Card";
 import { getLocalTodayIso } from "@/lib/dateUtils";
 import { motion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
@@ -31,7 +33,7 @@ import { TriangleAlert } from "lucide-react";
 
 export function StatusCardSkeleton() {
   return (
-    <div className="glass-card status-card" id="dashboard-active-reservation">
+    <Card flush className="flex flex-col status-card" id="dashboard-active-reservation">
       <div className="card-body-full status-content">
         <div className="status-split-row">
           <div className="skeleton skeleton-avatar-lg" />
@@ -46,13 +48,13 @@ export function StatusCardSkeleton() {
           <div className="skeleton skeleton-btn" style={{ width: 130 }} />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 export function PinnedNoteSkeleton() {
   return (
-    <div className="glass-card dashboard-handover-card" id="dashboard-handover-note">
+    <Card flush className="flex flex-col dashboard-handover-card" id="dashboard-handover-note">
       <div className="card-body-full handover-card-content">
         <div className="dashboard-card-header">
           <div className="skeleton skeleton-text" style={{ width: 60, height: 14 }} />
@@ -64,13 +66,13 @@ export function PinnedNoteSkeleton() {
           <div className="skeleton skeleton-text medium" style={{ height: 13 }} />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 export function ActivationChecklistSkeleton() {
   return (
-    <div className="glass-card dashboard-activation-inline-card">
+    <Card flush className="flex flex-col dashboard-activation-inline-card">
       <div className="card-body-full dashboard-activation-inline-content">
         <div className="dashboard-activation-inline-main">
           <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
@@ -93,7 +95,7 @@ export function ActivationChecklistSkeleton() {
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -197,22 +199,33 @@ export function DashboardPage() {
   const stayPick = reservationsQuery.data
     ? pickOverviewStay(reservationsQuery.data.activeReservation, reservationsQuery.data.upcomingReservations, user, getLocalTodayIso())
     : null;
-  // „Visí na tobě“ a „Potřebuje pozornost“: na mobilu nahoře v hlavním sloupci, na desktopu
+  // „Visí na tobě“ a „Důležité“: na mobilu nahoře v hlavním sloupci, na desktopu
   // v bočním panelu nad vzkazem, aby se Přehled vešel bez scrollování (#275, #356)
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const tray = useTrayNudges(reservationsQuery.data, shoppingQuery.data);
   const nudges = <NudgeTray nudges={tray.nudges} onDismiss={tray.dismiss} />;
-  const shoppingLoaded = !shoppingQuery.isError && !!shoppingQuery.data;
-  // Co nese „Visí na tobě“ a „Potřebuje pozornost“, „Od minule“ zopakuje jen tlumeně (#425)
+  // Důležité (#682): plyn jen tomu, komu ho nenese „Visí na tobě“; bouřka z počasí, i když karta počasí není vidět
+  const gasInTray = tray.nudges.some((n) => n.id.startsWith("gas-"));
+  const important = buildAttention({
+    storm: todayWeather && typeof todayWeather === "object" ? todayWeather.stormAlert : null,
+    gas: gasInTray ? null : reservationsQuery.data?.lastStay?.checkoutState?.gas,
+    fault: reservationsQuery.data?.lastFault,
+    supplies: shoppingQuery.data?.attention,
+    isGuest,
+  });
+  // Co nese „Visí na tobě“ a „Důležité“, „Od minule“ zopakuje jen tlumeně (#425)
   const shownElsewhere = {
-    gas: tray.nudges.some((n) => n.id.startsWith("gas-")),
-    faultText: shoppingLoaded ? reservationsQuery.data?.lastFault?.text ?? null : null,
+    gas: gasInTray || important.all.some((r) => r.kind === "gas"),
+    faultText: important.all.find((r) => r.kind === "fault")?.text ?? null,
   };
-  const attention = shoppingQuery.isError ? (
-    manyFailed ? null : <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
-  ) : shoppingLoaded ? (
-    <AttentionCard shopping={shoppingQuery.data} fault={reservationsQuery.data?.lastFault} />
-  ) : null;
+  const attention = (
+    <>
+      {shoppingQuery.isError && !manyFailed && (
+        <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
+      )}
+      {(isGuest || !shoppingQuery.isPending) && <AttentionCard attention={important} />}
+    </>
+  );
 
   const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">

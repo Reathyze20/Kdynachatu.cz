@@ -11,7 +11,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <ul>
         <li><strong>Na chatě teď</strong> – kdo je zrovna na chatě, nebo kdy je další pobyt. U pobytu je i předpověď počasí.</li>
         <li><strong>Visí na tobě</strong> – věci, které máš udělat. Tlačítko tě vezme rovnou k úkolu.</li>
-        <li><strong>Potřebuje pozornost</strong> – zásoby, které docházejí, a závady z poslední předávky. „Koupím já“ dá ostatním vědět, že to přivezeš.</li>
+        <li><strong>Důležité</strong> – výstraha před bouřkou, plyn a závada z poslední předávky a došlé nezbytné zásoby. „Koupím já“ dá ostatním vědět, že to přivezeš.</li>
         <li><strong>Vzkaz</strong> – připnutá zpráva pro každého, kdo na chatu přijede.</li>
         <li><strong>Dnes odjíždíš!</strong> – v den odjezdu se nahoře objeví připomínka, ať nezapomeneš na předávku.</li>
       </ul>
