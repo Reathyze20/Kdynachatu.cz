@@ -68,7 +68,7 @@
   },
   "newCssFile": {
     "Stávající legacy CSS, zmizí, až se jeho obrazovky převedou na utility (DESIGN.md §11)": [
-      "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
+      "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",

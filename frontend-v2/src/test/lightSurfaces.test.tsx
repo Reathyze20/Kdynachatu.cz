@@ -352,36 +352,6 @@ describe('Obrazovky s fotkou: text jen na plném papíře (#341)', () => {
     }
   })
 
-  // Správa, Diagnostika a Superadmin: všechen text leží na kartách .admin-page-card (#341, třetí řez)
-  it('Správa: karty .admin-page-card jsou plný papír na desktopu i na mobilu', () => {
-    expect(onDesktop('admin.css', '.admin-page-card', 'background')).toBe('rgb(var(--sheet))')
-    expect(onMobile('admin.css', '.admin-page-card', 'background')).toBe('rgb(var(--sheet))')
-    expect(onDesktop('admin.css', '.admin-page-card', 'border')).toBe('1px solid rgb(var(--rule-soft))')
-    expect(onDesktop('admin.css', '.admin-page-card', 'box-shadow')).toBe('var(--lift)')
-  })
-
-  it.each([
-    ['admin.css', '.admin-shell-card'],
-    ['admin.css', '.admin-overview-card'],
-    ['superadmin.css', '.superadmin-overview-card'],
-    ['superadmin.css', '.superadmin-handoff-card'],
-  ])('Správa: %s %s nepřebíjí papír karty průsvitným pozadím', (file, selector) => {
-    expect([undefined, 'rgb(var(--sheet))']).toContain(onDesktop(file, selector, 'background'))
-    expect([undefined, 'rgb(var(--sheet))']).toContain(onMobile(file, selector, 'background'))
-  })
-
-  it.each(['.admin-kicker', '.admin-card-eyebrow', '.admin-card-counter', '.admin-user-self-badge', '.admin-support-steps strong'])(
-    'Správa: zelený text %s na papíře i s nádechem pilulky ≥ 4,5 : 1',
-    (selector) => {
-      const root = fileRules('variables.css').filter((r) => r.selectors.includes(':root'))
-      const value = onDesktop('admin.css', selector, 'color') ?? ''
-      const token = /^(?:rgb\()?var\((--[\w-]+)(?:,[^)]*)?\)\)?$/.exec(value)
-      const color = token ? rgbOf(root, token[1]) : hex(value)
-      const paper = rgbOf(root, '--sheet')
-      const tint = /^rgba\((\d+), (\d+), (\d+), ([\d.]+)\)$/.exec(onDesktop('admin.css', selector, 'background') ?? '')
-      const alpha = tint ? Number(tint[4]) : 0
-      const surface = paper.map((p, i) => (tint ? Number(tint[i + 1]) : p) * alpha + p * (1 - alpha))
-      expect(contrast(color, surface)).toBeGreaterThanOrEqual(4.5)
-    },
-  )
+  // Správa, Diagnostika a Superadmin stojí na <Card> a utilitách, admin.css je pryč (#527): adminLegacyCss.test.ts,
+  // kontrast zeleného textu na podbarvení hlídá brandGreen.test.ts.
 })

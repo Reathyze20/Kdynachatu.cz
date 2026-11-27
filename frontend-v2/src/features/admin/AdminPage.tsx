@@ -35,7 +35,8 @@ import { CopyForWhatsAppButton } from '@/components/shared/CopyForWhatsAppButton
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import { ChevronDown, Mail, Pencil, ScrollText, Search, SearchX, SlidersHorizontal, Ticket, TicketPlus, UserPlus, Users } from 'lucide-react'
 import { AdminCardHeading } from '@/features/admin/components/AdminCardHeading'
-import { ADMIN_COLUMN_STACK_CLASS, ADMIN_LAYOUT_GRID_CLASS } from '@/features/admin/components/adminLayout'
+import { ADMIN_COLUMN_STACK_CLASS, ADMIN_FORM_CLASS, ADMIN_LAYOUT_GRID_CLASS, ADMIN_PAGE_CLASS } from '@/features/admin/components/adminLayout'
+import { accountBadgeClass, roleBadgeTone } from '@/features/admin/components/accountBadge'
 import { AdminSectionMenu } from '@/features/admin/components/AdminSectionMenu'
 import { SystemStatsPanel } from '@/features/admin/components/SystemStatsPanel'
 import { StagingFeedbackSection } from '@/features/admin/components/StagingFeedbackSection'
@@ -56,14 +57,8 @@ function getRoleLabel(role: string): string {
   return 'Člen'
 }
 
-function getRoleVariant(role: string): 'admin' | 'member' | 'guest' {
-  if (role === 'admin') return 'admin'
-  if (role === 'guest') return 'guest'
-  return 'member'
-}
-
 function getRoleBadgeClass(role: string): string {
-  return `admin-role-badge admin-role-badge--${getRoleVariant(role)}`
+  return accountBadgeClass(roleBadgeTone(role))
 }
 
 function getUserStatusMeta(user: Pick<CabinUser, 'isBanned' | 'isVerified' | 'isActive'>): {
@@ -73,20 +68,20 @@ function getUserStatusMeta(user: Pick<CabinUser, 'isBanned' | 'isVerified' | 'is
   if (user.isBanned) {
     return {
       label: 'Zablokovaný',
-      className: 'admin-status-badge admin-status-badge--banned',
+      className: accountBadgeClass('empty'),
     }
   }
 
   if (!user.isVerified) {
     return {
       label: 'Čeká na ověření',
-      className: 'admin-status-badge admin-status-badge--pending',
+      className: accountBadgeClass('low'),
     }
   }
 
   return {
     label: user.isActive ? 'Aktivní' : 'Neaktivní',
-    className: `admin-status-badge ${user.isActive ? 'admin-status-badge--active' : 'admin-status-badge--inactive'}`,
+    className: accountBadgeClass(user.isActive ? 'ok' : 'quiet'),
   }
 }
 
@@ -122,20 +117,20 @@ function getInviteStatus(invite: Invite): {
   if (isInviteExpired(invite.expiresAt)) {
     return {
       label: 'Vypršela',
-      className: 'admin-invite-status admin-invite-status--expired',
+      className: accountBadgeClass('low'),
     }
   }
 
   if (isInviteAccepted(invite)) {
     return {
       label: 'Přijatá',
-      className: 'admin-invite-status admin-invite-status--accepted',
+      className: accountBadgeClass('quiet'),
     }
   }
 
   return {
     label: 'Aktivní',
-    className: 'admin-invite-status admin-invite-status--active',
+    className: accountBadgeClass('ok'),
   }
 }
 
@@ -538,11 +533,11 @@ function UserRow({ user, isSelf, onEdit }: { user: CabinUser; isSelf: boolean; o
       }
     >
       <div className="flex items-center gap-3">
-        <div className="hidden shrink-0 md:block"><AnimalAvatar icon={user.animalIcon} username={user.username} color={user.avatarColor ?? undefined} size={40} /></div>
+        <div className="shrink-0 max-md:hidden"><AnimalAvatar icon={user.animalIcon} username={user.username} color={user.avatarColor ?? undefined} size={40} /></div>
         <div className="grid min-w-0 gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold wrap-anywhere">{user.username}</span>
-            {isSelf ? <span className="admin-user-self-badge">Tvůj účet</span> : null}
+            {isSelf ? <span className={accountBadgeClass('brand')}>Tvůj účet</span> : null}
             <span className={getRoleBadgeClass(user.role)}>{getRoleLabel(user.role)}</span>
             <span className={statusMeta.className}>{statusMeta.label}</span>
           </div>
@@ -719,7 +714,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
       </form>
       <p className="text-label text-(--text-muted)">Pro rodinu je nejpraktičtější jednorázová pozvánka. Pole počet použití můžeš smazat, pokud chceš sdílený odkaz.</p>
       {createError ? (
-        <div className="error-message show admin-section-error" role="alert">{createError}</div>
+        <div className="error-message show mt-0!" role="alert">{createError}</div>
       ) : null}
 
       {isLoading ? (
@@ -784,14 +779,14 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         </ul>
       )}
       {actionError ? (
-        <div className="error-message show admin-section-error" role="alert">{actionError}</div>
+        <div className="error-message show mt-0!" role="alert">{actionError}</div>
       ) : null}
 
       {!isError && inactiveInvites.length > 0 && (
-        <details className="admin-details">
-          <summary>
+        <details className="group border-t border-rule-soft pt-4">
+          <summary className="flex min-h-(--touch-target-min) cursor-pointer list-none items-center justify-between gap-4 text-label font-bold text-(--text-main) group-open:mb-4 [&::-webkit-details-marker]:hidden">
             <span>Archiv neaktivních pozvánek</span>
-            <span className="admin-details-count">{inactiveInvites.length}</span>
+            <span className="inline-flex min-w-8 items-center justify-center rounded-full bg-inset px-2 py-1 text-meta text-(--text-muted)">{inactiveInvites.length}</span>
           </summary>
           <ul className={MEMBER_LIST_CLASS} data-testid="invite-archive-list">
             {inactiveInvites.map((inv) => (
@@ -852,8 +847,8 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
         }
       >
         {emailInvite ? (
-          <form id="invite-email-form" className="admin-compact-form" onSubmit={handleSendInviteEmail}>
-            <p className="admin-form-note admin-invite-modal-note">
+          <form id="invite-email-form" className={ADMIN_FORM_CLASS} onSubmit={handleSendInviteEmail}>
+            <p className="m-0 text-meta text-(--text-muted) [&_strong]:text-(--text-main)">
               Pozvánka do chaty <strong>{emailInvite.cabinName}</strong> se odešle jako role <strong>{getRoleLabel(emailInvite.role).toLocaleLowerCase('cs-CZ')}</strong>.
             </p>
             <div className="form-group">
@@ -871,11 +866,11 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 maxLength={255}
               />
             </div>
-            <div className="admin-invite-share-preview">
-              <span>Krátký text pro zprávu</span>
-              <p>{buildInviteShareText(emailInvite)}</p>
+            <div className="flex flex-col gap-2 rounded-xl bg-inset px-4 py-3">
+              <span className="text-eyebrow uppercase text-(--text-muted)">Krátký text pro zprávu</span>
+              <p className="m-0 text-body text-(--text-main) wrap-anywhere">{buildInviteShareText(emailInvite)}</p>
             </div>
-            {emailError ? <div className="error-message show admin-section-error" role="alert">{emailError}</div> : null}
+            {emailError ? <div className="error-message show mt-0!" role="alert">{emailError}</div> : null}
           </form>
         ) : null}
       </Modal>
@@ -1004,7 +999,7 @@ export function AdminPage() {
   // Guard
   if (!isAdmin) {
     return (
-      <div className="main-content-admin" data-testid="admin-page" data-admin-state="denied">
+      <div className={ADMIN_PAGE_CLASS} data-testid="admin-page" data-admin-state="denied">
         <Card>
           <PageHeader title="Přístup odepřen" subtitle="Nemáš administrátorská oprávnění pro správu účtů, pozvánek ani systémového přehledu." />
         </Card>
@@ -1050,7 +1045,7 @@ export function AdminPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="main-content-admin" data-testid="admin-page" data-admin-state="ready" data-admin-workspace={activeWorkspace}>
+    <div className={ADMIN_PAGE_CLASS} data-testid="admin-page" data-admin-state="ready" data-admin-workspace={activeWorkspace}>
       <Card as="section" className="grid gap-4 md:gap-6">
         <PageHeader
           title={workspaceSummary[activeWorkspace].title}
@@ -1156,7 +1151,7 @@ export function AdminPage() {
 
               <form
                 id="add-user-form"
-                className="admin-compact-form"
+                className={ADMIN_FORM_CLASS}
                 onSubmit={handleCreateUser}
                 onChange={() => {
                   if (createUserError) setCreateUserError(null)
@@ -1188,7 +1183,7 @@ export function AdminPage() {
               </p>
 
               {createUserError ? (
-                <div className="error-message show admin-section-error" role="alert" data-testid="admin-create-user-error">{createUserError}</div>
+                <div className="error-message show mt-0!" role="alert" data-testid="admin-create-user-error">{createUserError}</div>
               ) : null}
             </Card>
 
@@ -1262,7 +1257,7 @@ export function AdminPage() {
 
       {activeWorkspace === 'cabin' ? (
         // Bez vlastní karty ani titulku: CabinSettingsPanel je karta sám a stránku pojmenuje hlavička správy (DESIGN.md §6, §7)
-        <section className="admin-settings-shell" id="admin-cabin-settings" data-testid="admin-cabin-settings-section">
+        <section id="admin-cabin-settings" data-testid="admin-cabin-settings-section">
           <CabinSettingsPanel />
         </section>
       ) : null}

@@ -266,6 +266,7 @@ export function LogsPanel({
       <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 lg:grid-cols-4" data-testid="logs-toolbar">
         <Field id={`${scopeKey}-log-date`} label="Den">
           <select
+            className="min-h-(--touch-target-min)! text-base!"
             id={`${scopeKey}-log-date`}
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
@@ -286,6 +287,7 @@ export function LogsPanel({
 
         <Field id={`${scopeKey}-log-level`} label="Úroveň">
           <select
+            className="min-h-(--touch-target-min)! text-base!"
             id={`${scopeKey}-log-level`}
             value={level}
             onChange={(event) => setLevel(event.target.value as 'all' | 'debug' | 'error' | 'warn' | 'info')}
@@ -301,6 +303,7 @@ export function LogsPanel({
 
         <Field id={`${scopeKey}-log-source`} label="Zdroj">
           <select
+            className="min-h-(--touch-target-min)! text-base!"
             id={`${scopeKey}-log-source`}
             value={source}
             onChange={(event) => setSource(event.target.value as 'all' | 'backend' | 'frontend')}
@@ -314,6 +317,7 @@ export function LogsPanel({
 
         <Field id={`${scopeKey}-log-lines`} label="Rozsah">
           <select
+            className="min-h-(--touch-target-min)! text-base!"
             id={`${scopeKey}-log-lines`}
             value={String(lines)}
             onChange={(event) => setLines(Number(event.target.value))}

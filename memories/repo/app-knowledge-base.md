@@ -438,7 +438,7 @@ Legacy frontend (`src/frontend/`) obsahuje:
 | [gallery/](frontend-v2/src/features/gallery/) | 6 (GalleryPage, FolderGrid, PhotoGrid, Lightbox, UploadModal) | 1 (useGallery) | gallery.ts | gallery.css, lightbox.css | ✅ Complete |
 | [diary/](frontend-v2/src/features/diary/) | 7 (DiaryPage, DiaryFolders, DiaryCalendar, DiaryLightbox, GalleryPicker, NotebookModal) | 1 (useDiary) | diary.ts | diary.css | ✅ Complete |
 | [reconstruction/](frontend-v2/src/features/reconstruction/) | 4 (ReconstructionPage, KanbanColumn, TaskFormModal) | 1 (useReconstruction) | reconstruction.ts | reconstruction.css | ✅ Complete |
-| [admin/](frontend-v2/src/features/admin/) | 2 (AdminPage + modal/dialog) | 1 (useAdmin) | admin.ts | admin.css | ✅ Complete |
+| [admin/](frontend-v2/src/features/admin/) | 2 (AdminPage + modal/dialog) | 1 (useAdmin) | admin.ts | — (utility, #527) | ✅ Complete |
 | [settings/](frontend-v2/src/features/settings/) | 2 (CabinSettingsPage) | 1 (useCabinSettings) | settings.ts | cabin-settings.css | ✅ Complete |
 | [not-found/](frontend-v2/src/features/not-found/) | 1 (NotFoundPage) | 0 | 0 | — | ✅ Complete |
 
