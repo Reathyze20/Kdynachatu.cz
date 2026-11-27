@@ -110,12 +110,16 @@ describe("users: GET /api/users for cabin A contains nothing from cabin B", () =
 });
 
 describe("users: bulk changes from cabin A do not touch cabin B", () => {
-  // Hromadné deleteMany odpoví 200 i na neexistující id, takže 200 tu nic neprozradí; tenant
-  // kontrakt je, že rezervace chaty B zůstane.
-  test("DELETE /api/users/:id/reservations on a cabin B member keeps their reservation", async () => {
+  // Člen chaty B je pro správce A stejně neznámý jako neexistující id: 404 a rezervace B zůstane (#492).
+  test("DELETE /api/users/:id/reservations on a cabin B member returns 404 and keeps their reservation", async () => {
     const res = await as(app, world.adminA).delete(`/api/users/${world.memberB.id}/reservations`);
-    assert.equal(res.status, 200);
+    assert.equal(res.status, 404);
     assert.ok(await prisma.reservation.findUnique({ where: { id: reservationB } }));
+  });
+
+  test("DELETE /api/users/:id/reservations on a nonexistent user returns 404", async () => {
+    const res = await as(app, world.adminA).delete("/api/users/neexistujici-uzivatel/reservations");
+    assert.equal(res.status, 404);
   });
 
   test("positive control: DELETE /api/users/:id/reservations removes a cabin A member's reservations", async () => {

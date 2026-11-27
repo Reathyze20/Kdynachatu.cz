@@ -43,8 +43,6 @@ const KNOWN_EXCEPTIONS: Readonly<Record<string, Partial<Record<Caller, number>>>
   "GET /api/wallpapers": { superadmin: 400 },
   "POST /api/wallpapers": { superadmin: 400 },
   "DELETE /api/wallpapers/:id": { superadmin: 400 },
-  // #492: správce cizí chaty dostane 200, i když se nic nesmaže (deleteMany filtruje jeho cabinId).
-  "DELETE /api/users/:id/reservations": { foreignAdmin: 200 },
   // Router zpětné vazby se mountuje jen na stagingu, tady je 404 pro všechny. Hosta odmítne jeho requireCabin.
   "POST /api/staging-feedback": { guest: 404 },
   "GET /api/staging-feedback": { guest: 404 },
