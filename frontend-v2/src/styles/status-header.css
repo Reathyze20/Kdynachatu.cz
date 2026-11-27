@@ -13,7 +13,7 @@
 /* Dlouhé jméno se zalomí, neusekne (G3, WCAG 1.4.4) */
 .status-header__name { font-size: var(--font-size-lg); font-weight: 700; line-height: 1.25; color: var(--text-main); overflow-wrap: anywhere; }
 .status-header__when { font-size: max(1rem, var(--font-size-base)); line-height: 1.35; color: var(--text-muted); }
-.status-header__warn { color: var(--color-warning-text); font-weight: 600; }
+.status-header__warn { color: rgb(var(--low)); font-weight: 600; }
 .status-header__more {
   display: inline-block;
   padding: 0 6px;

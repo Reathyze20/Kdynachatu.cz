@@ -4,7 +4,7 @@
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
-      "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
+      "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
@@ -24,9 +24,9 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css", "styles/layout.css",
-      "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reservations.css",
-      "styles/shopping.css", "styles/skeleton.css", "styles/status-header.css"
+      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
+      "styles/modal.css", "styles/notes.css", "styles/reservations.css",
+      "styles/shopping.css"
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx",
@@ -36,9 +36,6 @@
   "coldPalette": {
     "Rezervace mají vlastní studený jazyk slate/bg-white, převod obrazovky #460–#462": [
       "features/reservations/ui/BookingForm.tsx"
-    ],
-    "Studené slate/bg-white z doby před Jedlí, převede se s komponentou": [
-      "components/shared/RouteTransitionSkeleton.tsx"
     ]
   },
   "breakpoint": {
@@ -49,8 +46,7 @@
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
       "styles/reservations.css", "styles/shopping.css", "styles/status-header.css"
     ],
-    "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"],
-    "Skeleton s mřížkou sm:/xl:, sjednotí se s rozvržením stránek": ["components/shared/RouteTransitionSkeleton.tsx"]
+    "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"]
   },
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
