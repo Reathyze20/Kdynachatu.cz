@@ -90,27 +90,11 @@ describe("GET /api/handover: lastHandover", () => {
   });
 });
 
-describe("GET /api/handover: guest (#484)", () => {
-  test("a guest gets their own stay, but not the last handover of other members' stays", async () => {
-    const membersHandover = await stay(world.adminA, -3, -1, handedOverBy(world.adminA, { note: "Jen pro členy" }));
-    const ownStay = await stay(world.guestA, 3, 5);
+describe("GET /api/handover: guest (#216, #484)", () => {
+  test("a guest gets 403, even with a stay of their own", async () => {
+    await stay(world.guestA, -1, 0);
     const res = await overview(world.guestA);
-    assert.equal(res.status, 200);
-    assert.equal(res.body.myStay.reservationId, ownStay);
-    assert.equal(res.body.lastHandover, null);
-    assert.equal(JSON.stringify(res.body).includes(membersHandover), false);
-  });
-
-  test("as a co-traveller the guest gets that stay, and the last handover only from their own earlier stay", async () => {
-    const membersHandover = await stay(world.adminA, -3, -1, handedOverBy(world.adminA, { note: "Jen pro členy" }));
-    const ownEarlier = await stay(world.guestA, -9, -7, handedOverBy(world.guestA, { note: "Od hosta" }));
-    const asCoTraveller = await stay(world.adminA, -1, 2, { participants: { create: { userId: world.guestA.id } } });
-
-    const res = await overview(world.guestA);
-    assert.equal(res.body.myStay.reservationId, asCoTraveller);
-    assert.equal(res.body.myStay.phase, "ongoing");
-    assert.equal(res.body.lastHandover.reservationId, ownEarlier);
-    assert.equal(res.body.lastHandover.completedByUsername, world.guestA.username);
-    assert.equal(JSON.stringify(res.body).includes(membersHandover), false);
+    assert.equal(res.status, 403);
+    assert.equal(res.body.myStay, undefined);
   });
 });

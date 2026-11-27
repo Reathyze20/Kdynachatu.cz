@@ -1011,7 +1011,7 @@ const paths: Record<string, OpenApiObject> = {
   "/api/handover": {
     get: {
       tags: ["Reservations"],
-      summary: "Tab Predavka: muj pobyt k predani a posledni predavka v chate (den v Europe/Prague); host jen sve pobyty",
+      summary: "Tab Predavka: muj pobyt k predani a posledni predavka v chate (den v Europe/Prague); host dostane 403",
       security: bearerSecurity,
       responses: {
         "200": jsonResponse(
@@ -1061,7 +1061,7 @@ const paths: Record<string, OpenApiObject> = {
           "Prehled predavky pro prihlaseneho uzivatele",
         ),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
-        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema prirazenou chatu"),
+        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema prirazenou chatu, nebo je host"),
       },
     },
   },

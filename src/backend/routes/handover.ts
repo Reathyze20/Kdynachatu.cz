@@ -1,19 +1,19 @@
 import { Router, Request, Response } from "express";
 import { protect } from "../../middleware/authMiddleware";
-import { requireCabinAllowGuest } from "../../middleware/cabinMiddleware";
+import { requireCabin } from "../../middleware/cabinMiddleware";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import type { HandoverOverview } from "../../types";
-import { addDaysIso, calendarTodayIso, guestStayScope, pickMyStay, sanitizeCheckoutState } from "./reservationHelpers";
+import { addDaysIso, calendarTodayIso, pickMyStay, sanitizeCheckoutState } from "./reservationHelpers";
 
 const router = Router();
 
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 // GET /api/handover — tab Předávka: můj pobyt k předání a poslední předávka v chatě (spec #173)
-router.get("/", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
+router.get("/", protect, requireCabin, async (req: Request, res: Response) => {
   try {
-    // protect + requireCabinAllowGuest zaručí přihlášeného uživatele s chatou
+    // protect + requireCabin zaručí přihlášeného člena chaty (host dostane 403, #484)
     const cabinId = req.user!.cabinId!;
     const userId = req.user!.userId;
     const today = calendarTodayIso(new Date());
@@ -31,11 +31,9 @@ router.get("/", protect, requireCabinAllowGuest, async (req: Request, res: Respo
       today,
     );
 
-    // Host vidí jen vlastní pobyty (#484), ani poslední předávku ostatních
     const last = await prisma.reservation.findFirst({
       where: {
         cabinId,
-        ...guestStayScope(req.user),
         isCheckoutCompleted: true,
         dateTo: { lte: new Date(today) },
         ...(myStay ? { id: { not: myStay.reservationId } } : {}),
