@@ -18,21 +18,28 @@ export function AuthBackdrop({ className, children, ...props }: HTMLAttributes<H
   )
 }
 
-interface AuthLayoutProps extends HTMLAttributes<HTMLDivElement> {
-  /** Jedna věta pod názvem appky, co obrazovka dělá („Přihlas se ke svému účtu“). */
+interface AuthLayoutProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
+  /**
+   * Nadpis obrazovky jako `h1` („Pozvánka na chatu“). Bez něj je `h1` název appky; s ním zůstane
+   * název appky nad nadpisem jako text.
+   */
+  title?: ReactNode
+  /** Jedna věta pod nadpisem, co obrazovka dělá („Přihlas se ke svému účtu“), nebo krátký údaj k ní (název chaty). */
   subtitle?: ReactNode
 }
 
 /**
  * Rám veřejných obrazovek mimo landing page (#525, DESIGN.md §6): papírová `Card`, nad obsahem logo a název
- * appky na střed (jediné `h1`). Třída `auth-card` drží styly polí formuláře z `styles/layout.css`.
+ * appky na střed. Jediné `h1` je název appky, nebo `title`, když ho obrazovka má. Třída `auth-card` drží
+ * styly polí formuláře z `styles/layout.css`.
  */
-export function AuthLayout({ subtitle, className, children, ...props }: AuthLayoutProps) {
+export function AuthLayout({ title, subtitle, className, children, ...props }: AuthLayoutProps) {
   const sheet = (
     <Card className={cn('auth-card w-full max-w-md px-6 py-8 md:p-8', className)} {...props}>
       <div className="mb-6 flex flex-col items-center gap-2 text-center">
         <img src="/logo-icon.svg" alt="" className="h-12 w-auto" />
-        <h1 className="text-page-title text-(--text-main)">Kdy na chatu</h1>
+        {title && <p className="text-label text-(--text-muted)">Kdy na chatu</p>}
+        <h1 className="text-page-title text-(--text-main)">{title ?? 'Kdy na chatu'}</h1>
         {subtitle && <p className="text-label text-(--text-muted)">{subtitle}</p>}
       </div>
       {children}
