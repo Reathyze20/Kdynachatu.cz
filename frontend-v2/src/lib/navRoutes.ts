@@ -54,7 +54,7 @@ export function isGuestAllowedPath(pathname: string): boolean {
 
 /**
  * Najde aktivní položku: cesta musí sedět (i podstránky) a všechny query parametry odkazu musí být v URL.
- * Když sedí víc položek (Kalendář i Předávka), vyhraje ta s víc parametry — aktivní je vždy nejvýš jedna.
+ * Když by sedělo víc položek, vyhraje ta s víc parametry v odkazu, aktivní je vždy nejvýš jedna.
  */
 export function findActiveNavItem(
   items: NavItem[],

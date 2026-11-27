@@ -73,6 +73,14 @@ describe('HandoverPage: tab Předávka mimo den odjezdu', () => {
     expect(screen.getByRole('link', { name: 'Předat chatu v Kalendáři' })).toHaveAttribute('href', '/reservations')
   })
 
+  it('v den odjezdu po dokončené předávce řekne „Chata předána“', async () => {
+    respond({ myStay: { ...UPCOMING, phase: 'departure', isCheckoutCompleted: true }, lastHandover: null })
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Chata předána' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Předat chatu v Kalendáři' })).not.toBeInTheDocument()
+  })
+
   it('po chybě nabídne „Zkusit znovu“ a znovu načte', async () => {
     respond({ myStay: UPCOMING, lastHandover: null })
     get.mockRejectedValueOnce(new Error('Network Error'))

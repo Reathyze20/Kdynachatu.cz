@@ -7,6 +7,7 @@ import { CalendarDays } from "lucide-react";
 import type { HandoverOverview } from "@/api/handover";
 import { TwoColumnLayout } from "@/components/layout/TwoColumnLayout";
 import { Card } from "@/components/shared/Card";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -28,19 +29,28 @@ function CalendarLink({ label }: { label: string }) {
 function MyStayCard({ stay }: { stay: HandoverOverview["myStay"] }) {
   if (!stay) {
     return (
-      <Card className="flex flex-col gap-3">
-        <p className="text-body text-(--text-main)">Teď nemáš naplánovaný žádný pobyt. Předávka se otevře v den tvého odjezdu.</p>
-        <CalendarLink label="Otevřít Kalendář" />
+      <Card>
+        <EmptyState
+          icon={CalendarDays}
+          message="Teď nemáš naplánovaný žádný pobyt."
+          action={{ label: "Otevřít Kalendář", icon: CalendarDays, to: "/reservations" }}
+        />
       </Card>
     );
   }
   const range = formatDateRange(stay.from, stay.to);
   if (stay.phase === "departure") {
+    const done = stay.isCheckoutCompleted;
     return (
       <Card as="section" aria-labelledby="my-handover-title" className="flex flex-col gap-3">
-        <h2 id="my-handover-title" className={TITLE}>{stay.isCheckoutCompleted ? "Chata předána" : "Dnes odjíždíš"}</h2>
-        <p className={HINT}>Tvůj pobyt {range}. Předávku najdeš v detailu pobytu v Kalendáři.</p>
-        <CalendarLink label={stay.isCheckoutCompleted ? "Otevřít Kalendář" : "Předat chatu v Kalendáři"} />
+        <div className="flex flex-col gap-1">
+          <h2 id="my-handover-title" className={TITLE}>{done ? "Chata předána" : "Dnes odjíždíš"}</h2>
+          <p className="text-body text-(--text-main)">
+            {done ? "Shrnutí najdeš v detailu pobytu v Kalendáři." : "Předávku zatím vyplníš v detailu pobytu v Kalendáři."}
+          </p>
+          <p className={HINT}>Tvůj pobyt {range}</p>
+        </div>
+        <CalendarLink label={done ? "Otevřít Kalendář" : "Předat chatu v Kalendáři"} />
       </Card>
     );
   }
@@ -57,7 +67,7 @@ export function HandoverPage() {
   const { data, isPending, isError, error, refetch } = useHandoverOverview();
   return (
     <div className="flex flex-col gap-4 p-3 md:gap-6 md:p-0" data-testid="handover-page">
-      <PageHeader title="Předávka" />
+      <PageHeader title="Předávka chaty" />
       <TwoColumnLayout>
         <div className="flex flex-col gap-4 md:gap-6">
           {isPending ? (
