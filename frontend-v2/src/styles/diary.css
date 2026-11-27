@@ -1,204 +1,11 @@
 /* ============================================================================
-   Diary Page — Redesigned
-   Folders grid, day calendar, notebook modal, attachments.
-   Warm cabin aesthetic with Kalam handwriting accents.
+   Diary Page
+   Seznam pobytů a dny pobytu jsou utility v TSX (#520). Tady zůstává ruční
+   písmo (DESIGN.md §3), karta alba ve výběru fotek (GalleryPicker: .folder-info,
+   .folder-name) a zápisník s přílohami.
    ============================================================================ */
 
-/* ── Page wrapper ──────────────────────────────────────────────────────────── */
-.main-content-diary {
-  width: 100%;
-  flex-grow: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.diary-card {
-  /* extends .page-card */
-  background: rgb(var(--sheet));
-  border-radius: var(--radius-2xl, 16px);
-  position: relative;
-}
-
-/* ── Shared views ──────────────────────────────────────────────────────────── */
-.diary-folders-view,
-.diary-entries-view {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-}
-
-/* ── Header ────────────────────────────────────────────────────────────────── */
-.diary-header {
-  padding: var(--space-lg) var(--space-xl);
-  border-bottom: 1px solid var(--border-light, #f1f5f9);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 64px;
-  gap: var(--space-md);
-  z-index: var(--z-sticky);
-  position: relative;
-}
-
-.diary-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.diary-header-left h1 {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0;
-  line-height: 1.3;
-}
-
-.diary-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.diary-header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex-shrink: 0;
-}
-
-/* ── Period filter (pill toggle) ───────────────────────────────────────────── */
-.period-filter {
-  display: inline-flex;
-  gap: 0;
-  background: rgba(0, 0, 0, 0.04);
-  padding: 3px;
-  border-radius: var(--radius-full);
-}
-
-.filter-btn {
-  position: relative;
-  padding: 5px 14px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.filter-btn:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.filter-btn.active {
-  background: var(--bg-card);
-  color: var(--brand-primary);
-  box-shadow: var(--shadow-xs);
-}
-
-/* ── Back button (entries view) ────────────────────────────────────────────── */
-.back-btn {
-  background: none;
-  border: none;
-  color: var(--brand-primary);
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  padding: 4px 8px;
-  margin: 0;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.back-btn:hover {
-  background: var(--brand-primary-light);
-}
-
-/* ── Folders grid ──────────────────────────────────────────────────────────── */
-.diary-folders-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--space-xl);
-  align-content: start;
-  padding: var(--space-xl);
-  flex: 1;
-  overflow-y: auto;
-  /* Warm paper background */
-  background-color: var(--bg-page-diary, #fdfbf7);
-  background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-/* ── Empty state ───────────────────────────────────────────────────────────── */
-.diary-folders-view .empty-state,
-.diary-entries-view .empty-state {
-  text-align: center;
-  padding: var(--space-3xl) var(--space-xl);
-  color: var(--text-muted);
-  font-size: var(--font-size-base);
-  font-family: var(--font-diary);
-}
-
-/* ── Folder card (book metaphor) ───────────────────────────────────────────── */
-.folder-card.diary-folder {
-  background: linear-gradient(to right, #f8fafc 0%, #ffffff 8%, #ffffff 100%);
-  border-radius: 4px var(--radius-xl) var(--radius-xl) 4px;
-  padding: var(--space-xl) var(--space-lg) var(--space-lg) 30px;
-  box-shadow:
-    -2px 0 5px rgba(0, 0, 0, 0.04),
-    4px 4px 12px rgba(0, 0, 0, 0.06),
-    inset 2px 0 5px rgba(255, 255, 255, 1);
-  border: 1px solid var(--border-strong, #e5e7eb);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 170px;
-  gap: var(--space-xs);
-}
-
-/* Page edges on the right */
-.folder-card.diary-folder::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: -3px;
-  bottom: 4px;
-  width: 3px;
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--border-strong, #e2e8f0),
-    var(--border-strong, #e2e8f0) 1px,
-    #ffffff 1px,
-    #ffffff 3px
-  );
-  border-radius: 0 2px 2px 0;
-  opacity: 0.6;
-}
-
-.folder-card.diary-folder:hover {
-  transform: translateY(-4px) translateX(-2px) rotate(-0.5deg);
-  box-shadow:
-    -3px 2px 8px rgba(0, 0, 0, 0.05),
-    8px 8px 20px rgba(0, 0, 0, 0.1),
-    inset 2px 0 5px rgba(255, 255, 255, 1);
-}
-
-/* ── Folder card inner elements ────────────────────────────────────────────── */
+/* ── Karta alba ve výběru fotek a data pobytu ──────────────────────────────── */
 .folder-info {
   display: flex;
   flex-direction: column;
@@ -221,126 +28,6 @@
   color: var(--text-muted);
   font-family: var(--font-diary);
   font-weight: 500;
-}
-
-.folder-stats-badges {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 4px;
-}
-
-/* ── Folder hover actions (edit / delete) ──────────────────────────────────── */
-.folder-card-hover-actions {
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  display: flex;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.folder-card.diary-folder:hover .folder-card-hover-actions {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .folder-card-hover-actions {
-    opacity: 1;
-  }
-}
-
-.folder-card-hover-actions .edit-folder-btn:hover {
-  color: var(--brand-primary);
-  background: var(--brand-primary-light);
-}
-
-.folder-card-hover-actions .delete-folder-btn:hover {
-  color: var(--status-error);
-  background: var(--status-error-light);
-}
-
-/* ============================================================================
-   Day Calendar (entries view)
-   ============================================================================ */
-
-.diary-calendar-wrapper {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding: var(--space-lg) var(--space-xl);
-  /* Warm tint background */
-  background-color: var(--bg-page-diary, #fdfbf7);
-  background-image: radial-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-.diary-calendar {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--space-md);
-  width: 100%;
-  margin: 0 auto;
-  padding-bottom: var(--space-xl);
-}
-
-.diary-day-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-strong, #e5e7eb);
-  border-radius: var(--radius-lg);
-  min-height: 130px;
-  padding: var(--space-md);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-
-.diary-day-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--brand-primary-light);
-  z-index: 2;
-}
-
-.diary-day-card.has-entry {
-  background: linear-gradient(135deg, var(--brand-primary-light) 0%, var(--bg-card) 100%);
-}
-
-/* Ink pen splotch for written days — replaces FontAwesome icon */
-.diary-day-card.has-entry::after {
-  content: "✎";
-  position: absolute;
-  bottom: 8px;
-  right: 10px;
-  font-size: 1.2rem;
-  color: var(--brand-primary);
-  opacity: 0.2;
-}
-
-.day-header-row {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  z-index: 1;
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.day-weekday {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 /* Náhled zápisu v dni pobytu: rozvržení a barvy jsou utility v DiaryCalendar (#520), tady jen ruční písmo. */
@@ -493,8 +180,16 @@
   font-size: 1.25rem;
   line-height: 2rem;
   color: var(--text-main);
-  padding-top: 0.1rem;
+  /* forms.css dává každé textarea rámeček s !important a odsazení; text má sedět na linkách papíru. */
+  border: none !important;
+  box-shadow: none;
+  padding: 0.1rem 0 0;
   overflow-y: auto;
+}
+
+/* Textarea je bez rámečku, focus proto ukáže celý papír. */
+.notebook-paper:focus-within {
+  box-shadow: var(--focus-ring);
 }
 
 /* Legacy ID selector — keep for backward compat */
@@ -519,7 +214,6 @@
   color: var(--text-muted);
   text-align: right;
   padding: 4px 0 8px;
-  opacity: 0.6;
 }
 
 /* ── Notebook footer ───────────────────────────────────────────────────────── */
@@ -639,12 +333,17 @@
   text-align: center;
   line-height: 24px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
   border: 2px solid white;
   box-shadow: var(--shadow-sm);
   z-index: 10;
   transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+/* Kroužek je malý, dotykový cíl ale aspoň 48 × 48 px (DESIGN.md §7). */
+.attachment-remove-btn::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
 }
 
 .attachment-remove-btn:hover {
@@ -655,31 +354,6 @@
 /* ============================================================================
    Responsive
    ============================================================================ */
-
-@media (max-width: 900px) {
-  .diary-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-md);
-    padding: var(--space-md) var(--space-lg);
-    min-height: auto;
-  }
-
-  .diary-header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .diary-folders-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-lg);
-    padding: var(--space-lg);
-  }
-
-  .diary-calendar {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-}
 
 @media (max-width: 600px) {
   .diary-folders-grid {
@@ -760,18 +434,3 @@
   }
 }
 
-@media (max-width: 400px) {
-  .diary-folders-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .diary-header-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
-  }
-
-  .period-filter {
-    align-self: center;
-  }
-}
