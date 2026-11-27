@@ -68,7 +68,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
     : content.trim() !== '' || photosChanged
 
   // ── Navigace prev / next ─────────────────────────────────────────────────
-  const dateKey = dateObj.toISOString().slice(0, 10)
+  const dateKey = toIsoDate(dateObj)
   const currentIdx = allDates.indexOf(dateKey)
   const hasPrev = currentIdx > 0
   const hasNext = currentIdx < allDates.length - 1

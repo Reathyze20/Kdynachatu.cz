@@ -30,7 +30,7 @@ export function calendarTodayIso(now: Date, timeZone: string = CABIN_TIME_ZONE):
 }
 
 /** Den "YYYY-MM-DD" posunutý o `days`; počítá se v UTC, takže ho neposune zóna serveru ani letní čas. */
-function addDaysIso(day: string, days: number): string {
+export function addDaysIso(day: string, days: number): string {
   const d = new Date(`${day}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);

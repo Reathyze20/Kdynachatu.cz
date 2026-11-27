@@ -96,6 +96,13 @@ export function addIsoDays(iso: string, n: number): string {
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
 
+/** Všechny kalendářní dny od `from` do `to` včetně ("YYYY-MM-DD"); prázdné pole, když `from` > `to`. */
+export function isoDaysBetween(from: string, to: string): string[] {
+  const days: string[] = [];
+  for (let day = from; day <= to; day = addIsoDays(day, 1)) days.push(day);
+  return days;
+}
+
 /** Date v lokální poledne daného dne – jen pro zobrazení (den v týdnu, měsíc). */
 export function isoDateToLocalNoon(day: string): Date {
   return new Date(day + "T12:00:00");
