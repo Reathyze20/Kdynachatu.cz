@@ -5,6 +5,7 @@
 import nodemailer from "nodemailer";
 import logger from "./logger";
 import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, FRONTEND_URL } from "../config/config";
+import type { WaitlistSegment } from "../types";
 
 // ─── Nodemailer transporter (Resend SMTP) ─────────────────────────────────────
 
@@ -458,7 +459,7 @@ export const sendFrostAlertEmail = async (
 
 // ─── Waitlist: potvrzení návštěvníkovi a upozornění správci (#696) ─────────
 
-const WAITLIST_SEGMENT_LABELS: Record<string, string> = {
+const WAITLIST_SEGMENT_LABELS: Record<WaitlistSegment, string> = {
   rodina: "Rodina",
   spolek: "Oddíl nebo spolek",
   firma: "Firma",
@@ -468,7 +469,7 @@ const WAITLIST_SEGMENT_LABELS: Record<string, string> = {
 
 export interface WaitlistSignupEmailData {
   email: string;
-  segment: string;
+  segment: WaitlistSegment;
   households: string | null;
   willingnessToPay: string | null;
   painPoint: string | null;
@@ -486,6 +487,7 @@ const simpleEmailHtml = (paragraphs: string[]) => `<!DOCTYPE html>
     <h1 style="margin: 0 0 24px 0; color: #111827; font-size: 24px; font-weight: 600; text-align: center;">${EMAIL_APP_NAME}</h1>
     ${paragraphs.map((text) => `<p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">${text}</p>`).join("\n    ")}
   </div>
+  <p style="text-align: center; font-size: 12px; color: #9ca3af; margin: 16px 0 0 0;">${EMAIL_APP_FOOTER}</p>
 </body>
 </html>`;
 
@@ -500,7 +502,7 @@ export const sendWaitlistConfirmationEmail = async (email: string, contactEmail:
   const paragraphs = [
     "Ahoj,",
     "Díky, jsi na seznamu. Odpověz mi na tenhle e-mail, jak to u tebe na chatě funguje.",
-    "Až bude Kdy na chatu připravená pro další chaty, ozvu se ti. Jiné e-maily ti posílat nebudu, žádný newsletter.",
+    "Až bude Kdy na chatu připravená i pro tvoji chatu, ozvu se ti. Jiné e-maily ti posílat nebudu, žádný newsletter.",
     "Kdykoli ti zápis smažu, stačí odpovědět na tenhle e-mail. Jinak ho smažu nejpozději po 24 měsících.",
     `Tomáš, ${EMAIL_APP_NAME}`,
   ];
@@ -526,7 +528,7 @@ export const sendWaitlistAdminNotice = async (notifyEmail: string, signup: Waitl
   const missing = "neuvedeno";
   const fields: [string, string][] = [
     ["E-mail", signup.email],
-    ["Kdo je", WAITLIST_SEGMENT_LABELS[signup.segment] ?? signup.segment],
+    ["Kdo je", WAITLIST_SEGMENT_LABELS[signup.segment]],
     ["Domácností", signup.households ?? missing],
     ["Ochota platit ročně", signup.willingnessToPay ?? missing],
     ["Co štve", signup.painPoint ?? missing],
@@ -539,7 +541,7 @@ export const sendWaitlistAdminNotice = async (notifyEmail: string, signup: Waitl
     from: EMAIL_FROM,
     to: notifyEmail,
     replyTo: signup.email,
-    subject: `Nový zápis do waitlistu: ${WAITLIST_SEGMENT_LABELS[signup.segment] ?? signup.segment}`,
+    subject: `Nový zápis do waitlistu: ${WAITLIST_SEGMENT_LABELS[signup.segment]}`,
     text: fields.map(([label, value]) => `${label}: ${value}`).join("\n"),
     html: simpleEmailHtml(fields.map(([label, value]) => `<strong>${label}:</strong> ${escapeHtml(value)}`)),
   });

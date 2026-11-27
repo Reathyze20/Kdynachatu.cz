@@ -129,8 +129,8 @@ export function WaitlistForm() {
               aria-describedby={fieldErrors.consent ? errorId('consent') : undefined}
             />
             <span>
-              Souhlasím, že můj e-mail uložíte kvůli zápisu na seznam zájemců, nejdéle 24 měsíců. Smazat ho můžu
-              kdykoli odpovědí na potvrzovací e-mail.
+              Souhlasím se zpracováním e-mailu kvůli zápisu na seznam zájemců. Uloží se nejdéle na 24 měsíců
+              a smazat ho můžu kdykoli odpovědí na potvrzovací e-mail.
             </span>
           </label>
           {fieldError('consent')}

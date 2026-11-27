@@ -61,8 +61,8 @@ export function PrivacyPage() {
             <li>Abychom ti mohli poslat důležité e-maily (ověření účtu)</li>
           </ul>
           <p className="legal-highlight">
-            Neposíláme reklamy ani newslettery. Kromě e-mailů potřebných pro účet a jednoho potvrzení zápisu
-            na seznam zájemců ti nic nepošleme.
+            Neposíláme reklamy ani newslettery. Kromě e-mailů potřebných pro účet ti pošleme jen potvrzení zápisu
+            na seznam zájemců a jednu zprávu, až bude aplikace připravená i pro tvoji chatu.
           </p>
         </section>
 
@@ -75,7 +75,7 @@ export function PrivacyPage() {
             Údaje zpracováváme na základě tvého souhlasu.
           </p>
           <ul>
-            <li>Pošleme ti jeden potvrzovací e-mail, na který můžeš odpovědět. Žádný newsletter ani hromadné e-maily.</li>
+            <li>Pošleme ti jeden potvrzovací e-mail, na který můžeš odpovědět, a ozveme se, až bude aplikace připravená pro tvoji chatu. Žádný newsletter.</li>
             <li>Zápis držíme nejdéle 24 měsíců, pak ho smažeme.</li>
             <li>Smazat ho můžeš kdykoli dřív: stačí odpovědět na potvrzovací e-mail, že chceš zápis smazat.</li>
           </ul>

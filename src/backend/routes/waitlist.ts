@@ -2,10 +2,10 @@
  * POST /api/waitlist — veřejný zápis zájemce z landing page (#696, spec #692). Bez přihlášení, není to data
  * chaty (žádné cabinId). Vstup validuje `waitlistSignupSchema`, rate limit na IP nastavuje app.ts.
  *
- * Odpověď je vždy stejná `{ ok: true }`: duplicitní e-mail ani vyplněný honeypot nesmí prozradit, že se
+ * Odpověď je vždy stejná `{ ok: true }`: duplicitní e-mail ani vyplněný honeypot (i s jinak neplatným vstupem) nesmí prozradit, že se
  * nic neuložilo. E-maily jsou vedlejší: chybějící adresa nebo výpadek maileru zápis neshodí, jen se zaloguje.
  */
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { z } from "zod";
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
@@ -37,29 +37,32 @@ async function sendWaitlistEmails(signup: WaitlistSignupEmailData, signupId: str
     sendWaitlistAdminNotice(notify, signup));
 }
 
-export async function waitlistSignupHandler(req: Request, res: Response) {
-  const { email, segment, ref, website } = req.body as z.infer<typeof waitlistSignupSchema>;
-
-  if (website) {
+/** Honeypot: skryté pole `website`, člověk ho nevyplní. Běží před validací, bot dostane úspěch i s neplatným vstupem. */
+export function waitlistHoneypot(req: Request, res: Response, next: NextFunction) {
+  const website: unknown = req.body?.website;
+  if (typeof website === "string" && website.trim() !== "") {
     logger.info("WAITLIST", "Honeypot filled, signup ignored");
     return res.json(OK);
   }
+  next();
+}
+
+export async function waitlistSignupHandler(req: Request, res: Response) {
+  const { email, segment, ref } = req.body as z.infer<typeof waitlistSignupSchema>;
 
   try {
-    const now = new Date();
-    const signup = { email, segment, ref, consentedAt: now, createdAt: now };
     // ON CONFLICT DO NOTHING: první zápis zůstává beze změny, i když dva dorazí naráz.
-    const created = await prisma.waitlistSignup.createManyAndReturn({ data: [signup], skipDuplicates: true, select: { id: true } });
-    if (created.length === 0) {
+    const [created] = await prisma.waitlistSignup.createManyAndReturn({
+      data: [{ email, segment, ref, consentedAt: new Date() }],
+      skipDuplicates: true,
+    });
+    if (!created) {
       logger.info("WAITLIST", "Duplicate waitlist e-mail, nothing saved or sent");
       return res.json(OK);
     }
 
-    logger.info("WAITLIST", "New waitlist signup", { signupId: created[0].id, segment, ref });
-    await sendWaitlistEmails(
-      { ...signup, households: null, willingnessToPay: null, painPoint: null, rentalIntent: null, rentalNeeds: [] },
-      created[0].id,
-    );
+    logger.info("WAITLIST", "New waitlist signup", { signupId: created.id, segment, ref });
+    await sendWaitlistEmails({ ...created, segment }, created.id);
     return res.json(OK);
   } catch (error) {
     logger.prismaError("Waitlist signup failed", error);

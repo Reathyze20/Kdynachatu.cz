@@ -48,7 +48,7 @@ import wallpapersRoutes from "./routes/wallpapers";
 import { municipalitySearchHandler } from "./routes/municipalities";
 import { validate } from "../validators/validate";
 import { municipalitySearchSchema, waitlistSignupSchema } from "../validators/schemas";
-import { waitlistSignupHandler } from "./routes/waitlist";
+import { waitlistHoneypot, waitlistSignupHandler } from "./routes/waitlist";
 import { demoAccountsHandler, resolveDemoAccounts } from "./routes/demoAccounts";
 import { createStagingFeedbackRouter, isStagingFeedbackEnabled, stagingFeedbackFilePath } from "./routes/stagingFeedback";
 
@@ -268,7 +268,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
   app.get("/api/municipalities", validate(municipalitySearchSchema, "query"), municipalitySearchHandler);
 
   // Veřejný zápis do waitlistu z landing page, bez přihlášení (viz routes/waitlist.ts)
-  app.post("/api/waitlist", waitlistLimiter, validate(waitlistSignupSchema), waitlistSignupHandler);
+  app.post("/api/waitlist", waitlistLimiter, waitlistHoneypot, validate(waitlistSignupSchema), waitlistSignupHandler);
 
   // API routes
   app.use("/api/dashboard", dashboardRoutes);

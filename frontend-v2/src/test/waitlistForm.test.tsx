@@ -86,6 +86,24 @@ describe('landing page: zápis do waitlistu (#696)', () => {
     expect(screen.getByTestId('waitlist-form')).toBeInTheDocument()
   })
 
+  it('chybějící souhlas a segment ukáže u jejich polí', async () => {
+    vi.spyOn(apiClient, 'post').mockRejectedValue(
+      httpError(400, {
+        message: 'Chyba validace',
+        errors: [
+          { path: 'segment', message: 'Vyber, kdo jsi.' },
+          { path: 'consent', message: 'Bez souhlasu tě na seznam zapsat nemůžeme.' },
+        ],
+      }),
+    )
+    renderLanding()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Zapsat se' }))
+
+    const consentError = await screen.findByText('Bez souhlasu tě na seznam zapsat nemůžeme.')
+    expect(screen.getByRole('checkbox', { name: /Souhlasím/ })).toHaveAttribute('aria-describedby', consentError.id)
+    expect(screen.getByLabelText('Kdo jsi')).toHaveAttribute('aria-describedby', screen.getByText('Vyber, kdo jsi.').id)
+  })
+
   it('jinou chybu (rate limit) ukáže jako hlášku formuláře', async () => {
     vi.spyOn(apiClient, 'post').mockRejectedValue(
       httpError(429, { message: 'Z tohohle připojení přišlo moc zápisů. Zkus to za hodinu.' }),

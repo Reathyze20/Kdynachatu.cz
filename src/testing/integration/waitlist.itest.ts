@@ -70,7 +70,7 @@ describe("POST /api/waitlist: signing up", () => {
   });
 
   test("ref is cut to 64 characters, an empty ref is not saved", async () => {
-    assert.equal((await signUp(validBody({ ref: "x".repeat(300) }))).status, 200);
+    assert.equal((await signUp(validBody({ ref: "x".repeat(5000) }))).status, 200);
     assert.equal((await signUp(validBody({ ref: "  <>  " }))).status, 200);
     const refs = (await rows()).map((row) => row.ref).sort();
     assert.deepEqual(refs, ["x".repeat(64), null].sort());
@@ -119,6 +119,13 @@ describe("POST /api/waitlist: duplicates and bots", () => {
     assert.deepEqual(res.body, { ok: true });
     assert.equal((await rows()).length, 0);
     assert.equal(sentEmails.length, 0);
+  });
+
+  test("a filled honeypot gets the same answer even with otherwise invalid input", async () => {
+    const res = await signUp({ email: "neni-email", website: "https://spam.example.test" });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { ok: true });
+    assert.equal((await rows()).length, 0);
   });
 });
 

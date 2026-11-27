@@ -426,7 +426,7 @@ export function LandingPage() {
         <div className="landing-section-inner mx-auto max-w-xl">
           <h2 className="landing-section-title">Zapiš se na seznam</h2>
           <p className="landing-section-subtitle">
-            Kdy na chatu zatím používá naše rodina. Zapiš se a ozvu se, až bude připravená i pro vaši chatu.
+            Kdy na chatu zatím používá naše rodina. Zapiš se a ozvu se, až bude připravená i pro tvoji chatu.
           </p>
           <WaitlistForm />
         </div>
