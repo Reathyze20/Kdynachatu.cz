@@ -41,7 +41,7 @@ router.get("/", protect, requireCabinAllowGuest, async (req: Request, res: Respo
         dateTo: { lte: new Date(today) },
         ...(myStay ? { id: { not: myStay.reservationId } } : {}),
       },
-      orderBy: [{ dateTo: "desc" }, { checkoutCompletedAt: "desc" }],
+      orderBy: [{ dateTo: "desc" }, { checkoutCompletedAt: { sort: "desc", nulls: "last" } }],
       select: {
         id: true, dateFrom: true, dateTo: true, checkoutState: true, checkoutCompletedAt: true, checkoutCompletedBy: true,
         user: { select: { username: true, color: true, animalIcon: true } },

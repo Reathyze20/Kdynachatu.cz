@@ -1032,7 +1032,7 @@ const paths: Record<string, OpenApiObject> = {
           "Prehled predavky pro prihlaseneho uzivatele",
         ),
         "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
-        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema priirazenou chatu"),
+        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema prirazenou chatu"),
       },
     },
   },

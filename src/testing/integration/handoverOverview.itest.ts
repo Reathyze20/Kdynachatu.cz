@@ -64,6 +64,7 @@ describe("GET /api/handover: lastHandover", () => {
     assert.equal(resA.status, 200);
     assert.equal(resA.body.myStay.reservationId, mine);
     assert.equal(resA.body.myStay.isCheckoutCompleted, true);
+    assert.equal(resA.body.myStay.phase, "departure");
     assert.equal(resA.body.lastHandover.reservationId, older);
     assert.equal(resA.body.lastHandover.organizer.username, world.adminA.username);
     assert.equal(resA.body.lastHandover.completedByUsername, world.memberA.username);
