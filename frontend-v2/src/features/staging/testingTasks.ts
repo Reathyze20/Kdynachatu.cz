@@ -28,7 +28,7 @@ export const TESTING_TASKS: readonly TestingTask[] = [
   { id: 'poznamka-mesic', title: 'Napiš poznámku k měsíci', places: [{ to: '/reservations' }] },
   { id: 'chat', title: 'Pošli zprávu do chatu', places: [{ to: '/notes' }] },
   // Stejný cíl jako záložka Předávka ve spodní liště (lib/navRoutes.ts)
-  { id: 'predavka', title: 'Projdi předávku chaty', places: [{ to: '/reservations?sekce=predavka' }] },
+  { id: 'predavka', title: 'Projdi předávku chaty', places: [{ to: '/handover' }] },
   { id: 'galerie', title: 'Prohlédni si galerii / deník', places: [{ to: '/gallery', name: 'galerie' }, { to: '/diary', name: 'deník' }] },
 ]
 

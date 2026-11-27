@@ -7,8 +7,8 @@ import { HandoverPage } from '@/features/handover/HandoverPage'
 import { RESERVATIONS_KEY } from '@/features/reservations/hooks/useReservations'
 
 // Tab Předávka (#216) s podvrženým API a fiktivními daty.
-const { get } = vi.hoisted(() => ({ get: vi.fn() }))
-vi.mock('@/api/client', () => ({ default: { get } }))
+const { get, patch } = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
+vi.mock('@/api/client', () => ({ default: { get, patch } }))
 vi.mock('@/lib/errorReporting', () => ({ reportError: vi.fn() }))
 
 const LAST = {
@@ -37,6 +37,7 @@ describe('HandoverPage: tab Předávka mimo den odjezdu', () => {
     get.mockReturnValue(new Promise(() => {}))
     renderPage()
     expect(screen.getByLabelText('Načítám předávku')).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('status', { name: 'Načítám předávku' })).toBeInTheDocument()
     expect(get).toHaveBeenCalledWith('/handover')
   })
 
@@ -65,14 +66,6 @@ describe('HandoverPage: tab Předávka mimo den odjezdu', () => {
     expect(screen.queryByText(/Od minule/)).not.toBeInTheDocument()
   })
 
-  it('v den odjezdu dočasně vede do Kalendáře, kde je zatím formulář', async () => {
-    respond({ myStay: { ...UPCOMING, phase: 'departure' }, lastHandover: null })
-    renderPage()
-
-    expect(await screen.findByRole('heading', { name: 'Dnes odjíždíš' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Předat chatu v Kalendáři' })).toHaveAttribute('href', '/reservations')
-  })
-
   it('v den odjezdu po dokončené předávce řekne „Chata předána“', async () => {
     respond({ myStay: { ...UPCOMING, phase: 'departure', isCheckoutCompleted: true }, lastHandover: null })
     renderPage()
@@ -98,5 +91,102 @@ describe('HandoverPage: tab Předávka mimo den odjezdu', () => {
     respond({ myStay: UPCOMING, lastHandover: LAST })
     await act(() => qc.invalidateQueries({ queryKey: RESERVATIONS_KEY }))
     expect(await screen.findByRole('region', { name: 'Od minule · Jana' })).toBeInTheDocument()
+  })
+})
+
+// Formulář a předání (#218): GET podle URL, PATCH /checkout podvržený.
+const DEPARTURE = { ...UPCOMING, phase: 'departure' }
+const SAVED = { isCheckoutCompleted: true, checkoutCompletedByUsername: 'Jana', checkoutCompletedAt: '2027-07-22T08:40:00Z',
+  checkoutState: { gas: 'half', heatingOff: false, waterOff: true, note: 'Klíč je u souseda.' } }
+function routes(myStay: unknown, extra: Record<string, unknown> = {}) {
+  const data: Record<string, unknown> = { '/handover': { myStay, lastHandover: LAST }, '/cabin': { departureChecklist: null }, ...extra }
+  get.mockImplementation((url: string) => Promise.resolve({ data: data[url] }))
+}
+const field = (name: RegExp) => screen.getByRole('textbox', { name })
+const submit = async () => userEvent.click(await screen.findByRole('button', { name: 'Předat chatu' }))
+const expectPatch = (checkoutState: unknown) => expect(patch).toHaveBeenCalledWith('/reservations/r-mine/checkout', { checkoutState })
+
+describe('HandoverPage: předat chatu', () => {
+  beforeEach(() => { get.mockReset(); patch.mockReset() })
+  it('ve fázi departure pošle jeden PATCH s celým stavem, během ukládání nejde odeslat znovu, pak ukáže shrnutí', async () => {
+    routes(DEPARTURE)
+    let resolve!: (v: unknown) => void
+    patch.mockReturnValue(new Promise((r) => { resolve = r }))
+    renderPage()
+    const gas = await screen.findByRole('group', { name: 'Plynová bomba' })
+    expect(within(gas).getAllByRole('button').map((r) => r.textContent)).toEqual(['Dostatek', 'Dochází', 'Došlo'])
+    expect(screen.queryByText(/Od minule|Než odjedeš/)).not.toBeInTheDocument()
+    await userEvent.click(within(gas).getByRole('button', { name: 'Dochází' }))
+    expect(within(gas).getByRole('button', { name: 'Dochází' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('switch', { name: 'Voda uzavřená' }))
+    await userEvent.type(field(/Rozbité/), '  Kape kohoutek  ')
+    await userEvent.type(field(/Vzkaz pro dalšího/), 'Užijte si to')
+    await submit()
+    const saving = screen.getByRole('button', { name: 'Ukládám…' })
+    expect(saving).toBeDisabled()
+    await userEvent.click(saving)
+    expect(patch).toHaveBeenCalledTimes(1)
+    expectPatch({ gas: 'low', heatingOff: false, waterOff: true, broken: 'Kape kohoutek', note: 'Užijte si to' })
+    await act(async () => resolve({ data: { ...SAVED, checkoutState: { gas: 'low', waterOff: true } } }))
+    const done = await screen.findByRole('region', { name: 'Chata předána' })
+    expect(done).toHaveTextContent('Předal/a Jana · 22. 7. 2027 v 10:40')
+    expect(done).toHaveTextContent('Dochází')
+  })
+
+  it('úprava předvyplní uložený stav (half jako Dostatek) a uložení ho přepíše', async () => {
+    routes({ ...DEPARTURE, isCheckoutCompleted: true }, { '/reservations/r-mine/checkout': SAVED })
+    patch.mockResolvedValue({ data: SAVED })
+    renderPage()
+    const done = await screen.findByRole('region', { name: 'Chata předána' })
+    expect(done).toHaveTextContent('Topení zapnuté')
+    await userEvent.click(within(done).getByRole('button', { name: 'Upravit předávku' }))
+    expect(screen.getByRole('button', { name: 'Dostatek' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('switch', { name: 'Voda uzavřená' })).toBeChecked()
+    await userEvent.clear(field(/Vzkaz pro dalšího/))
+    await submit()
+    expectPatch({ gas: 'full', heatingOff: false, waterOff: true })
+    expect(await screen.findByRole('region', { name: 'Chata předána' })).toBeInTheDocument()
+  })
+
+  it('mimo okno předávky je shrnutí jen ke čtení', async () => {
+    routes({ ...UPCOMING, phase: 'ongoing', isCheckoutCompleted: true }, { '/reservations/r-mine/checkout': SAVED })
+    renderPage()
+    expect(await screen.findByRole('region', { name: 'Chata předána' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Upravit předávku' })).not.toBeInTheDocument()
+  })
+
+  it('ve fázi ongoing čeká a „Odjíždím dřív – předat teď“ otevře formulář', async () => {
+    routes({ ...UPCOMING, phase: 'ongoing' })
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Odjíždím dřív – předat teď' }))
+    expect(screen.getByRole('group', { name: 'Plynová bomba' })).toBeInTheDocument()
+  })
+
+  it('request v offline frontě ukáže „Čeká na připojení“, ne „Chata předána“', async () => {
+    routes(DEPARTURE)
+    patch.mockRejectedValue(Object.assign(new Error('Network Error'), { queuedOffline: true }))
+    renderPage()
+    await submit()
+    expect(await screen.findByRole('status')).toHaveTextContent(/Čeká na připojení.*Čeká na odeslání/)
+    expect(screen.queryByText('Chata předána')).not.toBeInTheDocument()
+  })
+
+  it('při chybě serveru zůstanou data ve formuláři a ukáže se hláška', async () => {
+    routes(DEPARTURE)
+    patch.mockRejectedValue(Object.assign(new Error('Server'), { isAxiosError: true, response: { status: 500 } }))
+    renderPage()
+    await userEvent.type(await screen.findByRole('textbox', { name: /Co nechávám/ }), 'Dřevo')
+    await submit()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Předávku se nepodařilo uložit.')
+    expect(field(/Co nechávám/)).toHaveValue('Dřevo')
+  })
+
+  it('nastavený odjezdový checklist je nepovinná připomínka a neblokuje předání', async () => {
+    routes(DEPARTURE, { '/cabin': { departureChecklist: ['Zamknout okenice', 'Vynést koš'] } })
+    patch.mockResolvedValue({ data: SAVED })
+    renderPage()
+    expect(within(await screen.findByRole('region', { name: 'Než odjedeš' })).getAllByRole('checkbox')).toHaveLength(2)
+    await submit()
+    expectPatch({ heatingOff: false, waterOff: false })
   })
 })

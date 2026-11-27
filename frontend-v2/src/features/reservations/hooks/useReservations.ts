@@ -10,9 +10,10 @@ import type {
   ReservationsApiResponse,
   MissingSummary,
   CheckoutState,
+  CheckoutStatus,
   UserAvailability,
 } from "@/api/reservations";
-import { completeCheckout } from "@/api/reservations";
+import { checkoutPath, completeCheckout } from "@/api/reservations";
 import { fetchHandoverOverview } from "@/api/handover";
 
 // ─── Query Keys ───────────────────────────────────────────────────────
@@ -31,6 +32,11 @@ export const USERS_KEY = ["users"] as const;
 export function useHandoverOverview() {
   return useQuery({ queryKey: HANDOVER_KEY, queryFn: fetchHandoverOverview });
 }
+
+/** Uložená předávka pobytu (GET /checkout) pro shrnutí „Chata předána“ (#218); obnoví ji RESERVATIONS_KEY. */
+const checkoutStatusKey = (id: string) => [...RESERVATIONS_KEY, "checkout", id] as const;
+export const useCheckoutStatus = (id: string, enabled: boolean) =>
+  useQuery({ queryKey: checkoutStatusKey(id), queryFn: () => apiClient.get<CheckoutStatus>(checkoutPath(id)).then((r) => r.data), enabled });
 
 export function useReservationsData() {
   return useQuery<ReservationsApiResponse>({
@@ -148,13 +154,14 @@ export function useCheckoutReservation() {
         qc.setQueryData(RESERVATIONS_KEY, context.previous);
       }
       // Optimistic rollback done, now show structured toast
-      handleMutationError("Nepodařilo se odeslat checklist")(_err);
+      handleMutationError("Předávku se nepodařilo uložit", { silent: true })(_err); // chybu ukazuje formulář u tlačítka (DESIGN §7)
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
     },
-    onSuccess: () => {
-      showToast("Odjezdový checklist dokončen.", "success");
+    onSuccess: (status, { id }) => {
+      qc.setQueryData(checkoutStatusKey(id), status); // shrnutí ukáže uložený stav hned, ne starý do refetche
+      showToast("Chata předána.", "success");
     },
   });
 }

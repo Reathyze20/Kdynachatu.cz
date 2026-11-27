@@ -407,6 +407,22 @@ const schemas: Record<string, JsonSchema> = {
       features: { type: "object", additionalProperties: true },
     },
   },
+  CheckoutState: {
+    type: "object",
+    description: "Stav chaty pri predavce; chybejici klic = neuvedeno. Plyn half je stara hodnota, UI zapisuje jen full/low/empty",
+    properties: {
+      gas: { type: "string", enum: ["full", "half", "low", "empty"] }, heatingOff: { type: "boolean" }, waterOff: { type: "boolean" },
+      broken: { type: "string", maxLength: 1000 }, leftBehind: { type: "string", maxLength: 1000 }, note: { type: "string", maxLength: 1000 },
+    },
+  },
+  CheckoutStatus: {
+    type: "object",
+    properties: {
+      isCheckoutCompleted: { type: "boolean" },
+      checkoutCompletedBy: { type: "string", nullable: true }, checkoutCompletedByUsername: { type: "string", nullable: true },
+      checkoutCompletedAt: { type: "string", format: "date-time", nullable: true }, checkoutState: ref("CheckoutState"),
+    },
+  },
   Reservation: {
     type: "object",
     required: ["id", "userId", "username", "from", "to", "purpose", "status"],
@@ -967,6 +983,30 @@ const paths: Record<string, OpenApiObject> = {
       },
     },
   },
+  "/api/reservations/{id}/checkout": {
+    get: {
+      tags: ["Reservations"],
+      summary: "Stav predavky pobytu (kdo a kdy predal, stav chaty); host jen svuj pobyt",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+      responses: {
+        "200": jsonResponse(ref("CheckoutStatus"), "Stav predavky"),
+        "404": jsonResponse(ref("ErrorResponse"), "Pobyt neni v chate uzivatele"),
+      },
+    },
+    patch: {
+      tags: ["Reservations"],
+      summary: "Predej chatu: dokonci predavku, nebo prepise stav uz dokoncene (cely objekt, neslucuje); emituje reservation:updated",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+      requestBody: jsonRequestBody({ type: "object", properties: { checkoutState: ref("CheckoutState") } },
+        "Bez checkoutState se jen dokonci predavka a ulozeny stav zustane; nezname klice a typy server zahodi", false),
+      responses: {
+        "200": jsonResponse(ref("CheckoutStatus"), "Predavka ulozena"),
+        "404": jsonResponse(ref("ErrorResponse"), "Pobyt neni v chate uzivatele"),
+      },
+    },
+  },
   "/api/reservations/{reservationId}/assign": {
     post: {
       tags: ["Reservations"],
@@ -1052,18 +1092,7 @@ const paths: Record<string, OpenApiObject> = {
                   organizer: { type: "object", properties: { username: { type: "string" }, userColor: { type: "string", nullable: true }, userAnimalIcon: { type: "string", nullable: true } } },
                   completedByUsername: { type: "string", nullable: true, description: "Kdo predavku dokoncil" },
                   completedAt: { type: "string", format: "date-time", nullable: true },
-                  checkoutState: {
-                    type: "object",
-                    description: "Stav chaty; chybejici klic = neuvedeno",
-                    properties: {
-                      gas: { type: "string", enum: ["full", "half", "low", "empty"] },
-                      heatingOff: { type: "boolean" },
-                      waterOff: { type: "boolean" },
-                      broken: { type: "string" },
-                      leftBehind: { type: "string" },
-                      note: { type: "string" },
-                    },
-                  },
+                  checkoutState: ref("CheckoutState"),
                 },
               },
             },

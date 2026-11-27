@@ -165,7 +165,7 @@ describe('karta „Co vyzkoušet“ (staging)', () => {
     ['Přidej něco do nákupního seznamu', '/shopping'],
     ['Napiš poznámku k měsíci', '/reservations'],
     ['Pošli zprávu do chatu', '/notes'],
-    ['Projdi předávku chaty', '/reservations?sekce=predavka'],
+    ['Projdi předávku chaty', '/handover'],
     ['Prohlédni si galerii', '/gallery', 'galerie'],
     ['Prohlédni si galerii', '/diary', 'deník'],
   ])('"Ukaž mi kde" for "%s" goes to %s and keeps the card open on the same task', async (title, path, place?: string) => {
