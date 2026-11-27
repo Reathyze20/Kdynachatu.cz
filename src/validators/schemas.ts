@@ -432,13 +432,41 @@ const sanitizeWaitlistRef = (value: unknown): string | null =>
     ? value.slice(0, 1000).trim().replace(/[^\p{L}\p{N}._-]/gu, "").slice(0, WAITLIST_REF_MAX_LENGTH) || null
     : null;
 
+// Dobrovolné otázky (#699); hodnoty zrcadlí frontend-v2 api/waitlist.ts a popisky v utils/email.ts
+export const WAITLIST_HOUSEHOLDS = ["2", "3-4", "5+"] as const;
+export const WAITLIST_WILLINGNESS_TO_PAY = ["0", "do-500", "500-1000", "nad-1000"] as const;
+export const WAITLIST_RENTAL_INTENTS = ["ne", "obcas", "ano"] as const;
+export const WAITLIST_RENTAL_NEEDS = [
+  "rezervace-hostu", "zalohy-platby", "predani-klicu", "uklid-mezi-hosty", "kalendar-booking-airbnb", "rozpocitani-prijmu",
+] as const;
+export const WAITLIST_PAIN_POINT_MAX_LENGTH = 1000;
+
+/** Nevyplněná volba (chybí, null nebo "") je neuvedená odpověď, jinak musí být z pevné sady. */
+const optionalWaitlistChoice = <T extends readonly [string, ...string[]]>(values: T, message: string) =>
+  z.preprocess((value) => (value === "" ? null : value), z.enum(values, { message }).nullish())
+    .transform((value) => value ?? null);
+
 export const waitlistSignupSchema = z.object({
   email: z.string().trim().toLowerCase().email("Zadej platný e-mail.").max(255, "E-mail je příliš dlouhý."),
   segment: z.enum(WAITLIST_SEGMENTS, { message: "Vyber, kdo jsi." }),
   consent: z.literal(true, { message: "Bez souhlasu tě na seznam zapsat nemůžeme." }),
   ref: z.unknown().optional().transform(sanitizeWaitlistRef),
+  households: optionalWaitlistChoice(WAITLIST_HOUSEHOLDS, "Vyber počet domácností z nabídky."),
+  willingnessToPay: optionalWaitlistChoice(WAITLIST_WILLINGNESS_TO_PAY, "Vyber částku z nabídky."),
+  painPoint: z.string({ message: "Napiš odpověď jako text." }).trim()
+    .max(WAITLIST_PAIN_POINT_MAX_LENGTH, `Text může mít nejvýš ${WAITLIST_PAIN_POINT_MAX_LENGTH} znaků.`)
+    .nullish().transform((value) => value || null),
+  rentalIntent: optionalWaitlistChoice(WAITLIST_RENTAL_INTENTS, "Vyber odpověď z nabídky."),
+  rentalNeeds: z.array(z.enum(WAITLIST_RENTAL_NEEDS, { message: "Vyber jen z nabízených možností." }),
+    { message: "Vyber jen z nabízených možností." }).nullish(),
   // Honeypot `website` hlídá waitlistHoneypot v routes/waitlist.ts ještě před validací.
-});
+}).transform(({ rentalNeeds, ...signup }) => ({
+  ...signup,
+  // Potřeby pronájmu jen při „Občas“ nebo „Ano“; bez duplicit a v pořadí nabídky.
+  rentalNeeds: signup.rentalIntent === "obcas" || signup.rentalIntent === "ano"
+    ? WAITLIST_RENTAL_NEEDS.filter((need) => rentalNeeds?.includes(need))
+    : [],
+}));
 
 // Superadmin — create user
 export const superadminCreateUserSchema = z.object({

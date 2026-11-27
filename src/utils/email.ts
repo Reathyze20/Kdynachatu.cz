@@ -5,7 +5,13 @@
 import nodemailer from "nodemailer";
 import logger from "./logger";
 import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM, FRONTEND_URL } from "../config/config";
-import type { WaitlistSegment } from "../types";
+import type {
+  WaitlistHouseholds,
+  WaitlistRentalIntent,
+  WaitlistRentalNeed,
+  WaitlistSegment,
+  WaitlistWillingnessToPay,
+} from "../types";
 
 // ─── Nodemailer transporter (Resend SMTP) ─────────────────────────────────────
 
@@ -467,6 +473,34 @@ const WAITLIST_SEGMENT_LABELS: Record<WaitlistSegment, string> = {
   jine: "Jiné",
 };
 
+// Popisky dobrovolných odpovědí (#699), stejné jako volby ve formuláři (frontend-v2 WaitlistForm.tsx)
+const WAITLIST_HOUSEHOLDS_LABELS: Record<WaitlistHouseholds, string> = { "2": "2", "3-4": "3–4", "5+": "5 a víc" };
+
+const WAITLIST_WILLINGNESS_LABELS: Record<WaitlistWillingnessToPay, string> = {
+  "0": "0 Kč",
+  "do-500": "Do 500 Kč",
+  "500-1000": "500–1 000 Kč",
+  "nad-1000": "Přes 1 000 Kč",
+};
+
+const WAITLIST_RENTAL_INTENT_LABELS: Record<WaitlistRentalIntent, string> = {
+  ne: "Ne",
+  obcas: "Občas, když ji nepoužíváme",
+  ano: "Ano, hlavně kvůli pronájmu",
+};
+
+const WAITLIST_RENTAL_NEED_LABELS: Record<WaitlistRentalNeed, string> = {
+  "rezervace-hostu": "Rezervace a obsazenost pro hosty",
+  "zalohy-platby": "Zálohy a platby",
+  "predani-klicu": "Instrukce a předání klíčů hostům",
+  "uklid-mezi-hosty": "Úklid a kontrola mezi hosty",
+  "kalendar-booking-airbnb": "Propojení s kalendářem Booking/Airbnb",
+  "rozpocitani-prijmu": "Rozpočítání příjmů mezi spolumajitele",
+};
+
+/** Uložená hodnota (z DB je to `string`) přeložená na popisek; neznámou nechá, jak je. */
+const waitlistLabel = (labels: Record<string, string>, value: string): string => labels[value] ?? value;
+
 export interface WaitlistSignupEmailData {
   email: string;
   segment: WaitlistSegment;
@@ -529,11 +563,13 @@ export const sendWaitlistAdminNotice = async (notifyEmail: string, signup: Waitl
   const fields: [string, string][] = [
     ["E-mail", signup.email],
     ["Kdo je", WAITLIST_SEGMENT_LABELS[signup.segment]],
-    ["Domácností", signup.households ?? missing],
-    ["Ochota platit ročně", signup.willingnessToPay ?? missing],
+    ["Domácností", signup.households ? waitlistLabel(WAITLIST_HOUSEHOLDS_LABELS, signup.households) : missing],
+    ["Ochota platit ročně", signup.willingnessToPay ? waitlistLabel(WAITLIST_WILLINGNESS_LABELS, signup.willingnessToPay) : missing],
     ["Co štve", signup.painPoint ?? missing],
-    ["Pronájem cizím", signup.rentalIntent ?? missing],
-    ["Co by pomohlo s pronájmem", signup.rentalNeeds.length > 0 ? signup.rentalNeeds.join(", ") : missing],
+    ["Pronájem cizím", signup.rentalIntent ? waitlistLabel(WAITLIST_RENTAL_INTENT_LABELS, signup.rentalIntent) : missing],
+    ["Co by pomohlo s pronájmem", signup.rentalNeeds.length > 0
+      ? signup.rentalNeeds.map((need) => waitlistLabel(WAITLIST_RENTAL_NEED_LABELS, need)).join(", ")
+      : missing],
     ["Odkud přišel (ref)", signup.ref ?? missing],
     ["Zapsáno", signup.createdAt.toISOString()],
   ];
