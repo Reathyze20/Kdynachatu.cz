@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import '@/styles/landing.css'
+import { WaitlistForm } from './WaitlistForm'
 
 const CheckIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -417,6 +418,17 @@ export function LandingPage() {
             <button className="landing-btn landing-btn-primary landing-btn-lg" onClick={goToLogin}>Vyzkoušet zdarma</button>
             <a href="#funkce" className="landing-btn landing-btn-outline landing-btn-lg" onClick={smoothScroll('funkce')}>Prozkoumat funkce</a>
           </div>
+        </div>
+      </section>
+
+      {/* ========== ZÁPIS DO WAITLISTU (#696) ========== */}
+      <section id="zapis" className="landing-section landing-section--alt" data-testid="landing-waitlist-section">
+        <div className="landing-section-inner mx-auto max-w-xl">
+          <h2 className="landing-section-title">Zapiš se na seznam</h2>
+          <p className="landing-section-subtitle">
+            Kdy na chatu zatím používá naše rodina. Zapiš se a ozvu se, až bude připravená i pro tvoji chatu.
+          </p>
+          <WaitlistForm />
         </div>
       </section>
 

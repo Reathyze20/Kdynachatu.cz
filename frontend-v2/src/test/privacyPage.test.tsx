@@ -9,4 +9,16 @@ describe('Ochrana soukromí', () => {
     render(<MemoryRouter><PrivacyPage /></MemoryRouter>)
     expect(screen.getByText(/ČÚZK \(RÚIAN\), CC BY 4\.0/)).toBeInTheDocument()
   })
+
+  // #696: zápis do waitlistu na landing page – co se sbírá, jak dlouho, jak smazat, jeden e-mail bez newsletteru.
+  it('describes the waitlist without contradicting the no-marketing promise', () => {
+    render(<MemoryRouter><PrivacyPage /></MemoryRouter>)
+    const section = screen.getByRole('heading', { name: 'Seznam zájemců' }).closest('section')!
+    expect(section).toHaveTextContent(/e-mail/)
+    expect(section).toHaveTextContent(/24 měsíců/)
+    expect(section).toHaveTextContent(/odpově/)
+    expect(section).toHaveTextContent(/jeden potvrzovací e-mail/)
+    expect(section).toHaveTextContent(/newsletter/)
+    expect(screen.queryByText('Neposíláme reklamy, newslettery ani marketingové e-maily.')).not.toBeInTheDocument()
+  })
 })

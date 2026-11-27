@@ -48,7 +48,8 @@ import cabinRoutes from "./routes/cabin";
 import wallpapersRoutes from "./routes/wallpapers";
 import { municipalitySearchHandler } from "./routes/municipalities";
 import { validate } from "../validators/validate";
-import { municipalitySearchSchema } from "../validators/schemas";
+import { municipalitySearchSchema, waitlistSignupSchema } from "../validators/schemas";
+import { waitlistHoneypot, waitlistSignupHandler } from "./routes/waitlist";
 import { demoAccountsHandler, resolveDemoAccounts } from "./routes/demoAccounts";
 import { createStagingFeedbackRouter, isStagingFeedbackEnabled, stagingFeedbackFilePath } from "./routes/stagingFeedback";
 
@@ -133,6 +134,15 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
       const username = typeof req.body?.username === "string" ? req.body.username.trim().toLowerCase() : "";
       return `${ipKeyGenerator(req.ip ?? "")}:${username}`;
     },
+  });
+
+  // Zápis do waitlistu z landing page (#696): pár zápisů za hodinu z jedné IP. Neplatný vstup (400)
+  // se nepočítá, aby překlep v e-mailu člověka nezablokoval.
+  const waitlistLimiter = limiter({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: "Z tohohle připojení přišlo moc zápisů. Zkus to za hodinu.",
+    skipFailedRequests: true,
   });
 
   // Body parser (10mb for photo uploads via multer, reduced from 50mb)
@@ -257,6 +267,9 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
 
   // Veřejné našeptávání obcí (číselník RÚIAN) pro registraci nové chaty (viz routes/municipalities.ts)
   app.get("/api/municipalities", validate(municipalitySearchSchema, "query"), municipalitySearchHandler);
+
+  // Veřejný zápis do waitlistu z landing page, bez přihlášení (viz routes/waitlist.ts)
+  app.post("/api/waitlist", waitlistLimiter, waitlistHoneypot, validate(waitlistSignupSchema), waitlistSignupHandler);
 
   // API routes
   app.use("/api/dashboard", dashboardRoutes);

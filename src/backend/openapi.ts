@@ -326,6 +326,22 @@ const schemas: Record<string, JsonSchema> = {
       },
     },
   },
+  WaitlistSignupRequest: {
+    type: "object",
+    required: ["email", "segment", "consent"],
+    properties: {
+      email: { type: "string", format: "email", maxLength: 255, description: "Ulozi se oriznuty a malymi pismeny", example: "jana@example.com" },
+      segment: { type: "string", enum: ["rodina", "spolek", "firma", "pronajimatel", "jine"], description: "Kdo se zapisuje" },
+      consent: { type: "boolean", enum: [true], description: "Souhlas se zpracovanim e-mailu (ulozeni nejdele 24 mesicu)" },
+      ref: { type: "string", nullable: true, description: "Odkud navstevnik prisel (?ref=); server ho orizne, necha jen pismena, cislice, . _ - a zkrati na 64 znaku" },
+      website: { type: "string", description: "Honeypot, clovek ho necha prazdny. Vyplneny = nic se neulozi ani neposle, odpoved je stejna" },
+    },
+  },
+  WaitlistSignupResponse: {
+    type: "object",
+    required: ["ok"],
+    properties: { ok: { type: "boolean", enum: [true] } },
+  },
   CabinSettings: {
     type: "object",
     required: ["id", "name", "subdomain", "weatherLocation", "isWinterized", "features", "createdAt"],
@@ -740,6 +756,19 @@ const paths: Record<string, OpenApiObject> = {
       responses: {
         "200": jsonResponse(ref("MunicipalitySearchResponse"), "Obce s okresem a krajem, bez souradnic"),
         "400": jsonResponse(ref("ValidationErrorResponse"), "Chybi dotaz nebo je kratsi nez 2 znaky"),
+      },
+    },
+  },
+  "/api/waitlist": {
+    post: {
+      tags: ["Waitlist"],
+      summary: "Verejny zapis zajemce z landing page (bez prihlaseni, neni to data chaty)",
+      description: "Navstevnik dostane jeden potvrzovaci e-mail (reply-to WAITLIST_CONTACT_EMAIL), spravce upozorneni na WAITLIST_NOTIFY_EMAIL. Bez nastavene adresy nebo pri vypadku maileru se zapis ulozi i tak.",
+      requestBody: jsonRequestBody(ref("WaitlistSignupRequest")),
+      responses: {
+        "200": jsonResponse(ref("WaitlistSignupResponse"), "Zapis prijat; stejna odpoved i pro duplicitni e-mail (nic se nezmeni ani neposle) a vyplneny honeypot"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny e-mail, chybejici souhlas nebo neznamy segment"),
+        "429": jsonResponse(ref("ErrorResponse"), "Prilis mnoho zapisu z jedne IP (5 za hodinu)"),
       },
     },
   },
@@ -1337,6 +1366,7 @@ export const openApiSpec = {
     { name: "Admin", description: "Admin-only cabin diagnostics" },
     { name: "Logs", description: "Operational log access" },
     { name: "Staging", description: "Staging-only guided testing" },
+    { name: "Waitlist", description: "Public waitlist signup from the landing page" },
   ],
   components: {
     securitySchemes: {

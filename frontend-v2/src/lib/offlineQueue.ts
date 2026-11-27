@@ -54,6 +54,7 @@ const EXCLUDED_URL_PARTS = [
   '/users/me/logout-all',
   '/session-cookie',
   '/logout',
+  '/waitlist', // návštěvník landing page má hned vidět, že se zápis neodeslal (#696)
 ]
 /** Klíč těla s heslem: heslo nesmí skončit v plaintextu v LocalStorage (#478). */
 const PASSWORD_KEY = /password/i

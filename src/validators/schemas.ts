@@ -422,6 +422,24 @@ export const stagingFeedbackSchema = z.object({
   viewportWidth: z.number().int().min(0).max(10000),
 });
 
+// Waitlist z landing page (#696, spec #692); segmenty zrcadlí frontend-v2 api/waitlist.ts
+export const WAITLIST_SEGMENTS = ["rodina", "spolek", "firma", "pronajimatel", "jine"] as const;
+export const WAITLIST_REF_MAX_LENGTH = 64;
+
+/** Ref z URL (`?ref=`) zápis nikdy neshodí: ořízne se, zůstanou jen písmena, číslice, `.`, `_` a `-`, a zkrátí se. */
+const sanitizeWaitlistRef = (value: unknown): string | null =>
+  typeof value === "string"
+    ? value.slice(0, 1000).trim().replace(/[^\p{L}\p{N}._-]/gu, "").slice(0, WAITLIST_REF_MAX_LENGTH) || null
+    : null;
+
+export const waitlistSignupSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Zadej platný e-mail.").max(255, "E-mail je příliš dlouhý."),
+  segment: z.enum(WAITLIST_SEGMENTS, { message: "Vyber, kdo jsi." }),
+  consent: z.literal(true, { message: "Bez souhlasu tě na seznam zapsat nemůžeme." }),
+  ref: z.unknown().optional().transform(sanitizeWaitlistRef),
+  // Honeypot `website` hlídá waitlistHoneypot v routes/waitlist.ts ještě před validací.
+});
+
 // Superadmin — create user
 export const superadminCreateUserSchema = z.object({
   username: z.string().trim().min(2, "Jméno musí mít alespoň 2 znaky").max(50),

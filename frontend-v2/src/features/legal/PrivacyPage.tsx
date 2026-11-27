@@ -21,7 +21,7 @@ export function PrivacyPage() {
 
         <h1>Ochrana tvých údajů</h1>
         <p className="legal-subtitle">Tady najdeš, jak s tvými daty nakládáme. Jednoduše a srozumitelně.</p>
-        <p className="legal-updated">Poslední aktualizace: 12. dubna 2026</p>
+        <p className="legal-updated">Poslední aktualizace: 27. listopadu 2026</p>
 
         <section>
           <h2>Kdo jsme</h2>
@@ -61,8 +61,24 @@ export function PrivacyPage() {
             <li>Abychom ti mohli poslat důležité e-maily (ověření účtu)</li>
           </ul>
           <p className="legal-highlight">
-            Neposíláme reklamy, newslettery ani marketingové e-maily.
+            Neposíláme reklamy ani newslettery. Kromě e-mailů potřebných pro účet ti pošleme jen potvrzení zápisu
+            na seznam zájemců a jednu zprávu, až bude aplikace připravená i pro tvoji chatu.
           </p>
+        </section>
+
+        <section id="waitlist">
+          <h2>Seznam zájemců</h2>
+          <p>
+            Když se na úvodní stránce zapíšeš na seznam zájemců, uložíme tvůj e-mail, odpověď na otázku, kdo jsi,
+            a z jakého odkazu jsi přišel. Případně i odpovědi na dobrovolné otázky. Potřebujeme je, abychom ti
+            mohli dát vědět, až bude aplikace připravená pro další chaty, a abychom věděli, pro koho ji stavět.
+            Údaje zpracováváme na základě tvého souhlasu.
+          </p>
+          <ul>
+            <li>Pošleme ti jeden potvrzovací e-mail, na který můžeš odpovědět, a ozveme se, až bude aplikace připravená pro tvoji chatu. Žádný newsletter.</li>
+            <li>Zápis držíme nejdéle 24 měsíců, pak ho smažeme.</li>
+            <li>Smazat ho můžeš kdykoli dřív: stačí odpovědět na potvrzovací e-mail, že chceš zápis smazat.</li>
+          </ul>
         </section>
 
         <section>

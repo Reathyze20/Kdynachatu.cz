@@ -220,6 +220,22 @@ export interface MunicipalitySearchResponse {
   municipalities: MunicipalityOption[];
 }
 
+// POST /api/waitlist – veřejný zápis zájemce z landing page (#696, spec #692)
+export type WaitlistSegment = "rodina" | "spolek" | "firma" | "pronajimatel" | "jine";
+
+export interface WaitlistSignupRequest {
+  email: string;
+  segment: WaitlistSegment;
+  consent: boolean; // server přijme jen true
+  ref?: string | null; // z URL (?ref=), server ho ořízne a očistí
+  website?: string; // honeypot, člověk nechá prázdné
+}
+
+// Vždy stejná odpověď, i pro duplicitní e-mail a vyplněný honeypot
+export interface WaitlistSignupResponse {
+  ok: true;
+}
+
 // PUT /api/cabin/cover-photo – titulní fotka chaty z vlastní Galerie (jen správce, #321).
 // Odpověď (i u DELETE) je nastavení chaty; coverPhotoUrl je WebP varianta pro desktop
 // 1920 × 1200 (do ~200 kB), mobilní 1080 × 1920 (do ~150 kB) má stejné jméno s příponou -sm
