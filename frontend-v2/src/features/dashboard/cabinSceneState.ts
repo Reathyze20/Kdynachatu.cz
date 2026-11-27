@@ -50,9 +50,10 @@ export interface CabinSceneState {
   /** Zataženo: při mrholení, dešti, bouřce a mlze. Ve dne šedý závoj přes oblohu, v noci bez měsíce a hvězd. */
   overcast: boolean;
   wind: Wind;
-  season: Season;
   /** Jen když jsou známé oba časy slunce a není zataženo (srážky, sněžení, mlha); zazimování ho neruší. */
   twilight: Twilight;
+  /** Roční období z data zařízení; jaké pozadí se kreslí, říká `sceneBackdrop` (sníh má přednost). */
+  season: Season;
 }
 
 const isSnowCode = (code: number) => (code >= 71 && code <= 77) || code === 85 || code === 86;
@@ -65,10 +66,11 @@ const minutesOf = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
 function seasonOf(d: Date): Season {
-  const [month, day] = [d.getMonth() + 1, d.getDate()];
+  const month = d.getMonth() + 1;
   if (month >= 3 && month <= 5) return "spring";
   if (month >= 6 && month <= 8) return "summer";
-  return month === 9 || month === 10 || (month === 11 && day <= 15) ? "autumn" : "bare";
+  if (month === 9 || month === 10 || (month === 11 && d.getDate() <= 15)) return "autumn";
+  return "bare";
 }
 
 const windOf = (kmh: number): Wind => (kmh >= STRONG_WIND_KMH ? "strong" : kmh >= WIND_KMH ? "wind" : "none");
@@ -119,11 +121,12 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
     fog,
     overcast,
     twilight,
-    season: seasonOf(now),
     wind: forecast ? windOf(forecast.windSpeed) : "none",
+    season: seasonOf(now),
   };
 }
 
+/** Pozadí krajiny: při sněhové pokrývce zasněžené, jinak podle ročního období (#656). */
 export const sceneBackdrop = (s: CabinSceneState): Backdrop => (s.snowCover ? "snow" : s.season);
 
 /** Kouř z komína (jen u obsazené chaty) se ve větru stáčí po větru. */
@@ -163,7 +166,7 @@ const POSE_TEXT: Record<MascotPose, string> = {
 const BACKDROP_TEXT: Record<Backdrop, string> = {
   spring: "Je jaro, louka se zelená.",
   summer: "Je léto, louka je sytě zelená.",
-  autumn: "Je podzim, louka zlátne a břízy žloutnou.",
+  autumn: "Je podzim, louka zlátne a listnáče žloutnou.",
   bare: "",
   snow: "",
 };

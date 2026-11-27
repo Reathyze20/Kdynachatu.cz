@@ -8,6 +8,7 @@ import bgSnow from '@/features/dashboard/scene/bg-snow.png'
 import bgSpring from '@/features/dashboard/scene/bg-spring.png'
 import bgSummer from '@/features/dashboard/scene/bg-summer.png'
 import bgAutumn from '@/features/dashboard/scene/bg-autumn.png'
+import pineSnowLg from '@/features/dashboard/scene/pine-snow-lg.png'
 
 // Roční období ve scéně chaty (#656, spec #652): pozadí krajiny podle data zařízení, sníh má přednost. Fiktivní data.
 
@@ -76,7 +77,7 @@ describe('pozadí scény podle ročního období (#656)', () => {
   it.each([
     ['2027-04-10', bgSpring, /Je jaro, louka se zelená\./],
     ['2027-07-15', bgSummer, /Je léto, louka je sytě zelená\./],
-    ['2027-10-05', bgAutumn, /Je podzim, louka zlátne a břízy žloutnou\./],
+    ['2027-10-05', bgAutumn, /Je podzim, louka zlátne a listnáče žloutnou\./],
   ])('%s: pozadí období a věta v popisu', (date, href, sentence) => {
     const img = renderScene(date)
     expect(background(img)).toBe(href)
@@ -124,6 +125,7 @@ describe('pozadí scény podle ročního období (#656)', () => {
 
     const frost = renderScene(date, { w: weather({ temp: -2 }) })
     expect(frost).toHaveAccessibleName(/jinovatka/i)
+    expect([...layer(frost, 'trees')!.querySelectorAll('image')].map((i) => i.getAttribute('href'))).toContain(pineSnowLg)
     expect(background(frost)).not.toBe(bgSnow)
   })
 })
