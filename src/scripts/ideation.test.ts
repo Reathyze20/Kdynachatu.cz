@@ -434,3 +434,188 @@ describe("ideation blind", () => {
     assert.match(noInput.output, /slepe\.json/);
   });
 });
+
+function writeKey(root: string, run: string, candidates: Array<[string, "pipeline" | "baseline"]>): void {
+  mkdirSync(path.join(root, "runs"), { recursive: true });
+  const key = { run, candidates: candidates.map(([id, origin]) => ({ id, origin, title: `Nápad ${id}` })) };
+  writeFileSync(keyPath(root, run), `${JSON.stringify(key, null, 2)}\n`);
+}
+
+function withLessons(verdictLines: string[]): string {
+  const root = freshRoot();
+  mkdirSync(root, { recursive: true });
+  writeFileSync(
+    path.join(root, "lessons.md"),
+    ["# Poučení", "", "## A. Opakované výtky", "", "- Výtka (běhy: 2026-11-24)", "", "## B. Verdikty rodiny", "", ...verdictLines, ""].join("\n"),
+  );
+  return root;
+}
+
+/** Řádek tabulky `evaluate` pro jednu stranu jako čísla: navrženo, chtěla, použila, nechtěla, bez odpovědi. */
+function tableRow(output: string, side: string): number[] {
+  const line = output.split(/\r?\n/).find((l) => l.startsWith(`| ${side} |`));
+  assert.ok(line, `chybí řádek ${side} v:\n${output}`);
+  return line.split("|").slice(2, -1).map((cell) => Number(cell.trim()));
+}
+
+describe("ideation evaluate", () => {
+  test("sums both sides across runs and counts a missing verdict as no answer, not as unwanted", () => {
+    const root = withLessons([
+      "- 2026-11-24 K1 | Nápad K1 | chtějí | ušetří telefonát",
+      "- 2026-11-24 K2 | Nápad K2 | nechtějí | WhatsApp stačí",
+      "- 2026-11-24 K3 | Nápad K3 | použili | přidali první položku",
+      "- 2026-12-22 K1 | Nápad K1 | chtějí | babička se ptala",
+      "- 2026-12-22 K2 | Nápad K2 | použili | používají každý víkend",
+    ]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K2", "baseline"], ["K3", "pipeline"], ["K4", "baseline"]]);
+    writeKey(root, "2026-12-22", [["K1", "baseline"], ["K2", "pipeline"], ["K3", "pipeline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.match(output, /2026-11-24, 2026-12-22/);
+    // navrženo, chtěla (i použila), použila, nechtěla, bez odpovědi
+    assert.deepEqual(tableRow(output, "pipeline"), [4, 3, 2, 0, 1]);
+    assert.deepEqual(tableRow(output, "baseline"), [3, 1, 0, 1, 1]);
+  });
+
+  test("reads verdict lines written in the exact format the check template documents", () => {
+    const root = freshRoot();
+    runHelper("check", "--root", root);
+    const lessonsPath = path.join(root, "lessons.md");
+    const template = readFileSync(lessonsPath, "utf8");
+    assert.match(template, /`- <běh> <K-ID> \| <název> \| chtějí \/ nechtějí \/ použili \| <důvod>`/);
+    const verdicts = ["- 2026-11-24 K2 | Nápad K2 | použili | zapsali první předávku", "- 2026-11-24 K1 | Nápad K1 | nechtějí | zbytečné"];
+    writeFileSync(lessonsPath, `${template}${verdicts.join("\n")}\n`);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K2", "baseline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(tableRow(output, "pipeline"), [1, 0, 0, 1, 0]);
+    assert.deepEqual(tableRow(output, "baseline"), [1, 1, 1, 0, 0]);
+  });
+
+  test("reports a verdict whose K-ID or run has no key and leaves it out of the table", () => {
+    const root = withLessons([
+      "- 2026-11-24 K1 | Nápad K1 | chtějí | ano",
+      "- 2026-11-24 K9 | Překlep | chtějí | K9 v klíči není",
+      "- 2026-10-01 K1 | Starý běh | použili | běh bez klíče",
+    ]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K2", "baseline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(tableRow(output, "pipeline"), [1, 1, 0, 0, 0]);
+    assert.deepEqual(tableRow(output, "baseline"), [1, 0, 0, 0, 1]);
+    assert.match(output, /Nezapočteno.*\n.*2026-11-24 K9/);
+    assert.match(output, /2026-11-24 K9: K-ID není v klíči běhu/);
+    assert.match(output, /2026-10-01 K1: běh nemá klíč/);
+  });
+
+  test("an unrecognised verdict or a malformed line is reported and the candidate stays without an answer", () => {
+    const root = withLessons([
+      "- 2026-11-24 K1 | Nápad K1 | možná | ještě neví",
+      "- 2026-11-24 K2 | Nápad K2 |  | zeptám se v neděli",
+      "- 2026-11-24 K3 chtějí",
+    ]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K2", "baseline"], ["K3", "pipeline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(tableRow(output, "pipeline"), [2, 0, 0, 0, 2]);
+    assert.deepEqual(tableRow(output, "baseline"), [1, 0, 0, 0, 1]);
+    assert.match(output, /2026-11-24 K1: neznámý verdikt „možná“/);
+    assert.match(output, /„- 2026-11-24 K3 chtějí“: řádek není ve formátu/);
+    assert.doesNotMatch(output, /2026-11-24 K2:/);
+  });
+
+  test("a second verdict for the same candidate is reported and the last one counts", () => {
+    const root = withLessons(["- 2026-11-24 K1 | Nápad K1 | chtějí | ano", "- 2026-11-24 K1 | Nápad K1 | použili | po měsíci"]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(tableRow(output, "pipeline"), [1, 1, 1, 0, 0]);
+    assert.match(output, /2026-11-24 K1: verdikt je tu víckrát, počítá se poslední/);
+  });
+
+  test("lists every candidate with its origin and verdict, runs in chronological order", () => {
+    const root = withLessons(["- 2026-11-24-2 K1 | Nápad K1 | chtějí | ano", "- 2026-11-24 K2 | Nápad K2 | nechtějí | ne"]);
+    writeKey(root, "2026-11-24-2", [["K1", "baseline"]]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K2", "baseline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.match(output, /Běhy: 2026-11-24, 2026-11-24-2 \(2\)/);
+    assert.match(
+      output,
+      /- 2026-11-24 K1 – Nápad K1: pipeline, bez odpovědi\n- 2026-11-24 K2 – Nápad K2: baseline, nechtějí\n- 2026-11-24-2 K1 – Nápad K1: baseline, chtějí/,
+    );
+  });
+
+  test("an emptied verdict replaces an earlier one, and an empty or starred line is still checked", () => {
+    const root = withLessons([
+      "- 2026-11-24 K1 | Nápad K1 | chtějí | ano",
+      "- 2026-11-24 K1 | Nápad K1 |  | prý si to rozmyslí",
+      "- 2026-11-24 K8 | Překlep |  | K8 v klíči není",
+      "* 2026-11-24 K2 | Nápad K2 | chtějí | jiná odrážka",
+    ]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K2", "baseline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 0, output);
+    assert.deepEqual(tableRow(output, "pipeline"), [1, 0, 0, 0, 1]);
+    assert.deepEqual(tableRow(output, "baseline"), [1, 0, 0, 0, 1]);
+    assert.match(output, /2026-11-24 K1: verdikt je tu víckrát, počítá se poslední/);
+    assert.match(output, /2026-11-24 K8: K-ID není v klíči běhu/);
+    assert.match(output, /„\* 2026-11-24 K2 .*“: řádek není ve formátu/);
+  });
+
+  test("a key with a repeated K-ID exits non-zero and names the file", () => {
+    const root = withLessons([]);
+    writeKey(root, "2026-11-24", [["K1", "pipeline"], ["K1", "baseline"]]);
+
+    const { code, output } = runHelper("evaluate", "--root", root);
+
+    assert.equal(code, 1, output);
+    assert.match(output, /2026-11-24\.klic\.json.*K1/);
+  });
+
+  test("without lessons.md, its section B or any key it exits non-zero and says what is missing", () => {
+    const noLessons = freshRoot();
+    writeKey(noLessons, "2026-11-24", [["K1", "pipeline"]]);
+    const noSection = freshRoot();
+    mkdirSync(noSection, { recursive: true });
+    writeFileSync(path.join(noSection, "lessons.md"), "# Poučení\n\n## A. Opakované výtky\n\n- 2026-11-24 K1 | Nápad K1 | chtějí | ano\n");
+    writeKey(noSection, "2026-11-24", [["K1", "pipeline"]]);
+    const noKey = withLessons(["- 2026-11-24 K1 | Nápad K1 | chtějí | ano"]);
+
+    const results = [noLessons, noSection, noKey].map((root) => runHelper("evaluate", "--root", root));
+
+    for (const { code } of results) assert.notEqual(code, 0);
+    assert.match(results[0].output, /lessons\.md/);
+    assert.match(results[1].output, /## B\. Verdikty rodiny/);
+    assert.match(results[2].output, /klíč/);
+  });
+
+  test("a key that is not valid JSON or has the wrong shape exits non-zero and names the file", () => {
+    const broken = withLessons([]);
+    mkdirSync(path.join(broken, "runs"), { recursive: true });
+    writeFileSync(keyPath(broken, "2026-11-24"), "{ nedopsáno");
+    const wrongShape = withLessons([]);
+    mkdirSync(path.join(wrongShape, "runs"), { recursive: true });
+    writeFileSync(keyPath(wrongShape, "2026-11-24"), JSON.stringify({ run: "2026-11-24", candidates: [{ id: "K1", origin: "jiná" }] }));
+
+    for (const root of [broken, wrongShape]) {
+      const { code, output } = runHelper("evaluate", "--root", root);
+      assert.equal(code, 1, output);
+      assert.match(output, /2026-11-24\.klic\.json/);
+    }
+  });
+});

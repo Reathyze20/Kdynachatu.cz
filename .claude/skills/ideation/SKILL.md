@@ -1,8 +1,8 @@
 ---
 name: ideation
-description: Kandidáti na funkce ze signálů rodiny a GitHub issues do lokálního Markdownu v .ideation/runs/.
+description: Kandidáti na funkce ze signálů rodiny a GitHub issues do lokálního Markdownu v .ideation/runs/; vyhodnoť = tabulka pipeline vs. baseline podle verdiktů rodiny.
 disable-model-invocation: true
-argument-hint: "[zkouška]"
+argument-hint: "[vyhodnoť] [zkouška]"
 ---
 
 # /ideation
@@ -17,7 +17,7 @@ Lokální databáze obsahuje produkční data rodiny a autopilot postaví cokoli
 - Zapisuješ jen do `<kořen>/` (gitignored). Na GitHub nezapisuješ nic: žádné `gh issue create` / `edit` / `comment` / `close`, žádné labely, PR ani `gh api` mimo GET. Z `<kořen>/` nic necommituješ.
 - Žádné `psql`, `docker`, `prisma`, žádné čtení `.env*`, žádný jiný přístup k databázi.
 - Ve výstupech jen role (prarodič, rodič…), nikdy jména.
-- Původ kandidátů znají jen helper a správce: klíč `<kořen>/runs/*.klic.json` otevírá jen správce a odkrytí patří do `/ideation vyhodnoť`. Ty ani žádný subagent ho nečtete ani nevypisujete, jinak slepé míchání nedrží.
+- Původ kandidátů znají jen helper a správce: klíč `<kořen>/runs/*.klic.json` čte jen helper a otevírá jen správce. Ty ani žádný subagent ho nečtete ani nevypisujete, jinak slepé míchání nedrží. Původ odkrývá jen výstup helperu v režimu `vyhodnoť`.
 
 Na začátek promptu každého subagenta kromě kritiků a rozhodčích (ti mají přísnější blok v [kritik.md](kritik.md) a [parove.md](parove.md)) vlož doslova tento blok:
 
@@ -27,12 +27,24 @@ Na začátek promptu každého subagenta kromě kritiků a rozhodčích (ti maj�
 
 Na jeden běh nejvýš: krok 1 = 1 subagent, krok 2 = 8 generátorů + 1 baseline, krok 3 = 1 subagent, krok 4 = 1 kritik na kandidáta (nejvýš 10 z pipeline + 5 z baseline), krok 5 = 3 rozhodčí v 1 kole. Subagent, který selže nebo vrátí nepoužitelný výstup, se nenahrazuje: pokračuj s tím, co máš, a uveď to v hlavičce výstupu.
 
+## Kořen
+
+Kořen je `.ideation`. S argumentem `zkouška` je to `.ideation/zkouska`, zkušební kořen nad fiktivními signály.
+
+## Režim `vyhodnoť`
+
+`/ideation vyhodnoť [zkouška]` spojí klíče všech běhů v kořeni s verdikty rodiny ze sekce B `<kořen>/lessons.md` a ukáže, jak si vedla pipeline proti baseline. Pipeline se nespouští: žádný subagent, žádný zápis souborů.
+
+1. Spusť `npm run --silent ideation -- evaluate --root <kořen>`.
+2. Výstup helperu ukaž uživateli beze změny, při nenulovém exit kódu jeho hlášku. Řádky pod „Nezapočteno“ opravuje správce v sekci B; ty `lessons.md` necháváš beze změny.
+
+Hotovo, když uživatel viděl výstup helperu. Tím režim končí, `## Postup` platí jen pro běh bez `vyhodnoť`.
+
 ## Postup
 
-### 0. Kořen a kontrola vstupu
+### 0. Kontrola vstupu
 
-- Bez argumentu je kořen `.ideation`.
-- `/ideation zkouška` je zkušební běh nad fiktivními signály: kořen `.ideation/zkouska`. Když `.ideation/zkouska/signals.md` neexistuje, zkopíruj do něj `src/scripts/assets/ideation-signals.fixture.md`.
+Při `zkouška`, když `.ideation/zkouska/signals.md` neexistuje, zkopíruj do něj `src/scripts/assets/ideation-signals.fixture.md`.
 
 Spusť `npm run --silent ideation -- check --root <kořen>`. Při nenulovém exit kódu vypiš uživateli výstup helperu (kolik signálů chybí, které šablony založil) a běh tím **končí**, bez jediného subagenta. Hotovo, když helper skončil s 0.
 
