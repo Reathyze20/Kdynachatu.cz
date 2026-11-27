@@ -1,6 +1,11 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { ScrollText } from 'lucide-react'
+import { Card } from '@/components/shared/Card'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { formatCount, formatShortDate, formatTime } from '@/lib/format'
 import type { LogEntry, LogQueryParams, LogResponse } from '@/api/admin'
 
@@ -107,6 +112,16 @@ function buildMetaPills(entry: LogEntry): string[] {
   return meta
 }
 
+/** Popisek nad polem filtru (DESIGN.md §7 Formuláře). */
+function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <label htmlFor={id} className="text-label text-(--text-muted)">{label}</label>
+      {children}
+    </div>
+  )
+}
+
 export function LogsPanel({
   id,
   scopeKey,
@@ -126,6 +141,7 @@ export function LogsPanel({
   const [pathFilter, setPathFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [searchFilter, setSearchFilter] = useState('')
+  const titleId = useId()
 
   const filesQuery = useQuery({
     queryKey: [scopeKey, 'log-files'],
@@ -219,24 +235,30 @@ export function LogsPanel({
     setSearchFilter('')
   }
 
+  const textFilters = [
+    { key: 'request-id', label: 'Request ID', value: requestId, set: setRequestId, placeholder: 'Např. 1a2b3c' },
+    { key: 'user-id', label: 'User ID', value: userId, set: setUserId, placeholder: 'UUID nebo actorId' },
+    { key: 'module', label: 'Modul', value: moduleFilter, set: setModuleFilter, placeholder: 'AUTH, INVITES, SHOPPING' },
+    { key: 'path', label: 'Cesta', value: pathFilter, set: setPathFilter, placeholder: '/api/invites, /dashboard' },
+    { key: 'status', label: 'Status', value: statusFilter, set: setStatusFilter, placeholder: '500', numeric: true },
+    { key: 'search', label: 'Text', value: searchFilter, set: setSearchFilter, placeholder: 'invite, SMTP, galerie' },
+  ]
+
   return (
-    <section id={id} className="page-card admin-page-card admin-card admin-logs-card" data-testid="logs-panel" data-logs-scope={scopeKey} data-logs-state={logsState}>
-      <div className="admin-card-header">
-        <div>
-          <div className="admin-card-eyebrow">{eyebrow}</div>
-          <div className="admin-card-title-row">
-            <h2 className="admin-card-title">{title}</h2>
-            <span className="admin-card-counter">
-              {logsQuery.isLoading ? 'Načítám…' : formatCount(logs.length, 'záznam', 'záznamy', 'záznamů')}
-            </span>
-          </div>
-          <p className="admin-card-description">{description}</p>
+    <Card as="section" id={id} className="grid gap-4" aria-labelledby={titleId} data-testid="logs-panel" data-logs-scope={scopeKey} data-logs-state={logsState}>
+      <div className="grid gap-1">
+        <span className="text-eyebrow uppercase text-(--text-muted)">{eyebrow}</span>
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <h2 id={titleId} className="text-card-title text-(--text-main)">{title}</h2>
+          <span className="text-meta text-(--text-muted)">
+            {logsQuery.isLoading ? 'Načítám…' : formatCount(logs.length, 'záznam', 'záznamy', 'záznamů')}
+          </span>
         </div>
+        <p className="text-label text-(--text-muted)">{description}</p>
       </div>
 
-      <div className="admin-log-toolbar" data-testid="logs-toolbar">
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-date`}>Den</label>
+      <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 lg:grid-cols-4" data-testid="logs-toolbar">
+        <Field id={`${scopeKey}-log-date`} label="Den">
           <select
             id={`${scopeKey}-log-date`}
             value={selectedDate}
@@ -254,10 +276,9 @@ export function LogsPanel({
               ))
             )}
           </select>
-        </div>
+        </Field>
 
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-level`}>Úroveň</label>
+        <Field id={`${scopeKey}-log-level`} label="Úroveň">
           <select
             id={`${scopeKey}-log-level`}
             value={level}
@@ -270,10 +291,9 @@ export function LogsPanel({
             <option value="warn">Jen warningy</option>
             <option value="info">Jen info</option>
           </select>
-        </div>
+        </Field>
 
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-source`}>Zdroj</label>
+        <Field id={`${scopeKey}-log-source`} label="Zdroj">
           <select
             id={`${scopeKey}-log-source`}
             value={source}
@@ -284,10 +304,9 @@ export function LogsPanel({
             <option value="backend">Jen backend</option>
             <option value="frontend">Jen frontend</option>
           </select>
-        </div>
+        </Field>
 
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-lines`}>Rozsah</label>
+        <Field id={`${scopeKey}-log-lines`} label="Rozsah">
           <select
             id={`${scopeKey}-log-lines`}
             value={String(lines)}
@@ -299,96 +318,33 @@ export function LogsPanel({
             <option value="200">200 řádků</option>
             <option value="500">500 řádků</option>
           </select>
-        </div>
+        </Field>
 
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-request-id`}>Request ID</label>
-          <input
-            id={`${scopeKey}-log-request-id`}
-            type="text"
-            value={requestId}
-            placeholder="Např. 1a2b3c"
-            onChange={(event) => setRequestId(event.target.value)}
-            data-testid="logs-request-id-input"
-          />
-        </div>
+        {textFilters.map((filter) => (
+          <Field key={filter.key} id={`${scopeKey}-log-${filter.key}`} label={filter.label}>
+            <Input
+              id={`${scopeKey}-log-${filter.key}`}
+              type="text"
+              inputMode={filter.numeric ? 'numeric' : undefined}
+              value={filter.value}
+              placeholder={filter.placeholder}
+              onChange={(event) => filter.set(event.target.value)}
+              data-testid={`logs-${filter.key}-input`}
+            />
+          </Field>
+        ))}
 
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-user-id`}>User ID</label>
-          <input
-            id={`${scopeKey}-log-user-id`}
-            type="text"
-            value={userId}
-            placeholder="UUID nebo actorId"
-            onChange={(event) => setUserId(event.target.value)}
-            data-testid="logs-user-id-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-module`}>Modul</label>
-          <input
-            id={`${scopeKey}-log-module`}
-            type="text"
-            value={moduleFilter}
-            placeholder="AUTH, INVITES, SHOPPING"
-            onChange={(event) => setModuleFilter(event.target.value)}
-            data-testid="logs-module-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-path`}>Cesta</label>
-          <input
-            id={`${scopeKey}-log-path`}
-            type="text"
-            value={pathFilter}
-            placeholder="/api/invites, /dashboard"
-            onChange={(event) => setPathFilter(event.target.value)}
-            data-testid="logs-path-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-status`}>Status</label>
-          <input
-            id={`${scopeKey}-log-status`}
-            type="text"
-            inputMode="numeric"
-            value={statusFilter}
-            placeholder="500"
-            onChange={(event) => setStatusFilter(event.target.value)}
-            data-testid="logs-status-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor={`${scopeKey}-log-search`}>Text</label>
-          <input
-            id={`${scopeKey}-log-search`}
-            type="text"
-            value={searchFilter}
-            placeholder="invite, SMTP, galerie"
-            onChange={(event) => setSearchFilter(event.target.value)}
-            data-testid="logs-search-input"
-          />
-        </div>
-
-        <div className="admin-log-actions">
+        <div className="col-span-full flex flex-wrap justify-end gap-2">
           {hasActiveFilters && (
-            <button
-              type="button"
-              className="btn btn-secondary admin-log-refresh"
-              onClick={resetFilters}
-              data-testid="logs-reset-filters-button"
-            >
+            <Button type="button" variant="secondary" className="flex-1 md:flex-none" onClick={resetFilters} data-testid="logs-reset-filters-button">
               Vyčistit filtry
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary admin-log-refresh"
+            variant="secondary"
+            className="flex-1 md:flex-none"
             onClick={() => {
               void filesQuery.refetch()
               void logsQuery.refetch()
@@ -396,7 +352,7 @@ export function LogsPanel({
             data-testid="logs-refresh-button"
           >
             Obnovit logy
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -417,15 +373,9 @@ export function LogsPanel({
           title="Logy se nepodařilo načíst"
         />
       ) : logsQuery.isLoading ? (
-        <div className="admin-inline-loader">
-          <div className="spinner" />
-          <span>Načítám logy…</span>
-        </div>
+        <p role="status" className="text-meta text-(--text-muted)">Načítám logy…</p>
       ) : logs.length === 0 ? (
-        <div className="admin-empty-state">
-          <h3>Žádné logy pro tento filtr</h3>
-          <p>Vyzkoušej jiný den, jinou úroveň logu nebo větší rozsah řádků.</p>
-        </div>
+        <EmptyState icon={ScrollText} message="Pro tento filtr tu nejsou žádné logy." />
       ) : (
         <>
           <div className="admin-log-summary" data-testid="logs-summary">
@@ -465,6 +415,6 @@ export function LogsPanel({
           </div>
         </>
       )}
-    </section>
+    </Card>
   )
 }

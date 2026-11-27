@@ -55,7 +55,7 @@
   },
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/ConfirmDialog.tsx", "components/shared/LogsPanel.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
+      "components/shared/ConfirmDialog.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/UploadModal.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",
@@ -64,7 +64,6 @@
   },
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/LogsPanel.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
@@ -72,7 +71,6 @@
   },
   "legacyEmptyState": {
     "Jednorázový prázdný stav *-empty-*, nahradí ho <EmptyState> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/LogsPanel.tsx",
       "features/gallery/FolderGrid.tsx",
       "features/shopping/ListDetail.tsx", "features/shopping/ListMaster.tsx", "features/shopping/PantryView.tsx"
     ]
