@@ -103,5 +103,10 @@
       "styles/skeleton.css"
     ],
     "Dekorativní smyčka z doby před #565 (pulzující tečka stavu, landing page), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/landing.css", "styles/reservations.css"]
+  },
+  "uiDingbat": {
+    "Trvalá výjimka (#165): reakce na zprávy jsou feature emoji": ["features/notes/MessageContextMenu.tsx"],
+    "Trvalá výjimka (#165): legacy zvířecí avatary uložené jako emoji": ["lib/utils.ts"],
+    "Trvalá výjimka (#165): text zprávy, kterou si uživatel zkopíruje do WhatsAppu": ["features/dashboard/nudges.ts"]
   }
 }

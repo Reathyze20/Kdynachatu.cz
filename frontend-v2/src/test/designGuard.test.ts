@@ -44,6 +44,11 @@ describe('designGuard: pravidlo s allowlistem, který se smí jen zmenšovat', (
     expect(evaluateRule(HEX, { 'a.css': css, 'b.ts': ts }, {}).violations).toEqual(['a.css:3  #abc', 'b.ts:3  #123'])
   })
 
+  it('pravidlo s keepComments vidí i komentáře (guard, který dřív četl celý zdroják)', () => {
+    const rule: DesignRule = { ...HEX, keepComments: true }
+    expect(evaluateRule(rule, { 'a.css': '/* #fff */ .a {}' }, {}).violations).toEqual(['a.css:1  #fff'])
+  })
+
   it('"/*" uvnitř řetězce komentář neotevírá', () => {
     const tsx = '<input accept="image/*" />\n<p style={{ color: "#fff" }} />\n{/* náhledy */}'
     expect(evaluateRule(HEX, { 'a.tsx': tsx }, {}).violations).toEqual(['a.tsx:2  #fff'])
@@ -67,6 +72,10 @@ describe('designGuard: pravidlo s allowlistem, který se smí jen zmenšovat', (
     expect(files).toContain('styles/variables.css')
     expect(files).toContain('main.tsx')
     expect(files).toContain('lib/utils.ts')
+    // Dřív hlídaly vlastní globy uiIconography, noEmeraldTeal a noLeftStripes (#459).
+    for (const file of ['components/layout/MobileHeader.tsx', 'features/reservations/ui/ReservationList.tsx', 'features/dashboard/DashboardPage.tsx', 'styles/dashboard.css']) {
+      expect(files).toContain(file)
+    }
     expect(files.some((f) => f.startsWith('test/') || /\.test\.tsx?$/.test(f))).toBe(false)
   })
 })

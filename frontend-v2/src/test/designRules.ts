@@ -1,4 +1,4 @@
-import type { DesignRule } from './designGuard'
+import { stripComments, type DesignRule } from './designGuard'
 
 /** Strojově ověřitelná pravidla z DESIGN.md (§1–§4, §9, §10). Nové pravidlo přibude sem a do `designAllowlist.json`. */
 
@@ -50,6 +50,39 @@ function iconSizes(code: string): string[] {
     if (px.every((n) => ICON_PX.has(n)) && tw.every((t) => ICON_TW.has(t))) return []
     return [`ř. ${code.slice(0, m.index).split('\n').length}  ${text.replace(/\s+/g, ' ').slice(0, 100)}`]
   })
+}
+
+
+/** Řádky zdrojáku, které vyhoví `test`, jako `ř. N  řádek` (guardy, které hlídaly po řádcích, #459). */
+const lineHits = (code: string, test: (line: string) => boolean) =>
+  code.split('\n').flatMap((line, i) => (test(line) ? [`ř. ${i + 1}  ${line.trim()}`] : []))
+
+/** Emoji a dingbaty místo ikon (#165): Misc Symbols, Dingbats, Braille (⠿), bílé šipky (⇨), Misc Symbols & Arrows (⭐), emoji. */
+const DINGBAT = /[\u2600-\u27BF\u2800-\u28FF\u21D0-\u21FF\u2B00-\u2BFF\u{1F000}-\u{1FAFF}]/u
+/** `×`, `←`, `→` jako jediný obsah JSX prvku = ikona (`>×</button>`, řádek jen s `←`). */
+const GLYPH_ONLY = /(^|>)\s*[\u00D7\u2190\u2192]\s*($|<)/
+const isCommentLine = (line: string) => /^\s*(\/\/|\/\*|\*)/.test(line)
+
+/** Levý okraj v CSS (#355): vlastnost a viditelná hodnota (`none`, `0`, `transparent` proužek nejsou). */
+const LEFT_BORDER_PROP = /^border-(left|inline-start)(-(width|color|style))?$/
+const INVISIBLE_VALUE = /^(none|0(px)?)$|transparent/
+/** Tailwind levý okraj s barvou nebo šířkou (`border-l-4`, `md:border-s-amber-400`); `border-l-transparent` je neviditelný. */
+const TW_LEFT_BORDER = /\bborder-[ls]-(?!(transparent|0)\b)[\w[\]/#.%-]+/
+/** Inline styl levého okraje (`borderLeft`, `borderLeftColor`, `borderInlineStart…`). */
+const INLINE_LEFT_BORDER = /\bborder(Left|InlineStart)\w*\s*:/
+
+/** Barevný proužek vlevo: v CSS deklarace levého okraje (jsdom kaskádu nepočítá), v TSX řádek s Tailwind třídou nebo inline stylem. */
+function leftStripes(code: string, file: string): string[] {
+  if (file.endsWith('.tsx')) return lineHits(code, (line) => TW_LEFT_BORDER.test(line) || INLINE_LEFT_BORDER.test(line))
+  return [...stripComments(code, file).matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap((rule) =>
+    rule[2].split(';').flatMap((decl) => {
+      const i = decl.indexOf(':')
+      if (i < 0) return []
+      const prop = decl.slice(0, i).trim()
+      const value = decl.slice(i + 1).replace('!important', '').trim()
+      return LEFT_BORDER_PROP.test(prop) && !INVISIBLE_VALUE.test(value) ? [`${rule[1].split(',').map((s) => s.trim()).join(', ')} { ${prop}: ${value} }`] : []
+    }),
+  )
 }
 
 export const DESIGN_RULES: DesignRule[] = [
@@ -182,5 +215,28 @@ export const DESIGN_RULES: DesignRule[] = [
       ].join('|'),
       'g',
     ),
+  },
+  {
+    name: 'uiDingbat',
+    hint: 'UI ikona je komponenta z lucide-react, ne emoji ani unicode dingbat; samotné ×, ← nebo → jako obsah prvku taky ne (#165). Šipka v textu odkazu („← Zpět“) a „3×“ v textu projdou',
+    scope: (file) => /\.tsx?$/.test(file),
+    // Čte celý zdroják a vynechá jen řádek, který začíná komentářem (rámečky ─); komentář za kódem se hlídá.
+    keepComments: true,
+    match: (code) => lineHits(code, (line) => !isCommentLine(line) && (DINGBAT.test(line) || GLYPH_ONLY.test(line))),
+  },
+  {
+    name: 'emeraldTeal',
+    hint: 'emerald-* a teal-* táhnou do tyrkysova (#429); zelená jde přes tokeny: bg-primary, hover:bg-(--brand-primary-hover), bg-accent, text-primary. green-* (stav úspěchu) se nehlídá',
+    // Celý zdroják včetně komentářů a souborů s definicí tokenů: emerald/teal nemá mít ani zmínka.
+    keepComments: true,
+    match: /\b(?:emerald|teal)-\d+/g,
+  },
+  {
+    name: 'leftStripe',
+    hint: 'žádný barevný proužek vlevo (#355): tón nese ikona, štítek nebo jemné pozadí z tokenů, ne border-left / border-l-* / borderLeft',
+    scope: (file) => file.endsWith('.css') || file.endsWith('.tsx'),
+    // CSS bez komentářů po deklaracích, TSX celý po řádcích (i zakomentovaná třída se hlídá).
+    keepComments: true,
+    match: leftStripes,
   },
 ]

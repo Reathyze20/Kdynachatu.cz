@@ -112,6 +112,18 @@ const EXAMPLES: Record<string, { bad: string[]; good: string[] }> = {
     ],
     good: ['animation: fade-in 0.2s ease-out;', 'useInfiniteQuery({', '// infinite query cache', 'staleTime: Infinity', 'className="animate-in"'],
   },
+  uiDingbat: {
+    bad: ['<button>✓ Uložit</button>', "label: '⚠ Pozor'", '<span>★</span>', '<button>×</button>', '  ←', "const icon = '🏠'", 'x = 1 // ✎'],
+    good: ['<Link>← Zpět</Link>', '<Link>Vše →</Link>', '<p>3× týdně</p>', '// ─── sekce ───', ' * ✓ hotovo v komentáři', '/* ⚠ */', '<X size={16} />'],
+  },
+  emeraldTeal: {
+    bad: ['className="bg-emerald-50"', 'className="hover:text-teal-700"', 'className="ring-emerald-200/50"', 'color: var(--color-teal-500);', '// teal-500'],
+    good: ['className="text-green-700"', 'className="bg-primary hover:bg-(--brand-primary-hover)"', 'className="teal"'],
+  },
+  leftStripe: {
+    bad: ['className="border-l-4 border-amber-400"', 'className="md:border-s-amber-400"', 'style={{ borderLeft: "3px solid red" }}', 'style={{ borderInlineStartColor: c }}'],
+    good: ['className="border-l-transparent"', 'className="border-l-0"', 'className="border border-rule-soft"', 'className="rounded-l-xl"'],
+  },
 }
 
 describe('pravidla DESIGN.md rozpoznají porušení', () => {
@@ -140,6 +152,19 @@ describe('pravidla DESIGN.md rozpoznají porušení', () => {
   it('formátovat smí jen lib/format.ts a jen v TS/TSX', () => {
     const sources = { 'lib/format.ts': "new Intl.DateTimeFormat('cs-CZ')", 'a.css': '.a { content: "Leden"; }', 'b.ts': "d.toLocaleDateString()" }
     expect(evaluateRule(rule('localFormatter'), sources).violations).toEqual(['b.ts:1  .toLocaleDateString('])
+  })
+
+  it('uiDingbat hlídá jen TS/TSX, emeraldTeal i CSS a definice tokenů', () => {
+    expect(evaluateRule(rule('uiDingbat'), { 'a.css': '.a { content: "✓"; }', 'b.ts': "const ok = '✓'" }).violations).toEqual(["b.ts  ř. 1  const ok = '✓'"])
+    expect(evaluateRule(rule('emeraldTeal'), { 'styles/variables.css': '--x: var(--color-teal-500);' }).violations).toHaveLength(1)
+  })
+
+  it('leftStripe v CSS chytí viditelný levý okraj, neviditelný a zakomentovaný ne', () => {
+    const css = '.a { border-left: 4px solid red; }\n.b { border-left: none; border-inline-start-color: transparent !important; }\n/* .c { border-left: 1px solid } */\n.d { border-left-width: 0; border-inline-start: 3px solid var(--x); }'
+    expect(evaluateRule(rule('leftStripe'), { 'a.css': css, 'b.ts': 'borderLeft: 1' }).violations).toEqual([
+      'a.css  .a { border-left: 4px solid red }',
+      'a.css  .d { border-inline-start: 3px solid var(--x) }',
+    ])
   })
 
   it('newCssFile chytí nový .css soubor, vstup Tailwindu a definice tokenů ne', () => {

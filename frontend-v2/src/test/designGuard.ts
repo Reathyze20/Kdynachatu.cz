@@ -15,8 +15,10 @@ export interface DesignRule {
   hint: string
   /** Trvalý rozsah pravidla (např. bez souborů s definicí tokenů). Výchozí: všechny soubory. */
   scope?: (file: string) => boolean
-  /** Globální regex (flag `g`), nebo funkce vracející výskyty. Dostane zdroják bez komentářů. */
+  /** Globální regex (flag `g`), nebo funkce vracející výskyty. Dostane zdroják bez komentářů (s `keepComments` celý). */
   match: RegExp | ((source: string, file: string) => string[])
+  /** Pravidlo vidí i komentáře, jako guard testy, které četly celý zdroják (#459). Výchozí: bez komentářů. */
+  keepComments?: boolean
 }
 
 export interface GuardReport {
@@ -45,7 +47,7 @@ export function stripComments(source: string, file: string): string {
 }
 
 function find(rule: DesignRule, source: string, file: string): string[] {
-  const code = stripComments(source, file)
+  const code = rule.keepComments ? source : stripComments(source, file)
   if (typeof rule.match === 'function') return rule.match(code, file).map((hit) => `${file}  ${hit}`)
   return [...code.matchAll(rule.match)].map((m) => `${file}:${code.slice(0, m.index).split('\n').length}  ${m[0]}`)
 }
