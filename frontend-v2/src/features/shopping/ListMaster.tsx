@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { ShoppingList } from '@/api/shopping'
 import { useAuth } from '@/context/AuthContext'
 import { Archive, Send, Trash2 } from 'lucide-react'
+import { EmptyStateImage } from '@/components/shared/EmptyState'
+import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
 
 interface Props {
   lists: ShoppingList[]
@@ -38,7 +40,7 @@ export function ListMaster({
       <ul className="master-list" id="master-list">
         {lists.length === 0 && (
           <li className="master-empty">
-            <img src="/icons/empty_basket.svg" alt="" aria-hidden="true" style={{ maxHeight: 72, width: 'auto', opacity: 0.65, marginBottom: '0.25rem' }} />
+            <EmptyStateImage src={dormouseBasket} />
             <p>Žádné aktivní nákupy</p>
             <p className="master-empty-hint">Klikni na „+ Nový seznam"</p>
           </li>
