@@ -58,8 +58,8 @@ export function FeedbackField({ taskId, label }: FeedbackFieldProps) {
         <Button type="submit" variant="secondary" size="sm" disabled={!text.trim() || send.isPending}>
           {send.isPending ? 'Odesílám…' : 'Odeslat'}
         </Button>
-        {status === 'saved' && <p role="status" className="text-sm font-medium text-green-600">Díky, uloženo</p>}
-        {status === 'error' && <p role="alert" className="text-sm text-destructive">Nepodařilo se odeslat. Text zůstal v poli, zkus to znovu.</p>}
+        {status === 'saved' && <p role="status" className="text-sm font-medium text-[rgb(var(--ok))]">Díky, uloženo</p>}
+        {status === 'error' && <p role="alert" className="text-sm text-(--status-error-dark)">Nepodařilo se odeslat. Text zůstal v poli, zkus to znovu.</p>}
       </div>
     </form>
   )

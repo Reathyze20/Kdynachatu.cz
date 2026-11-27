@@ -596,7 +596,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full text-destructive"
+                className="w-full text-(--status-error-dark)"
                 onClick={() => {
                   setLogoutEverywhereError('')
                   setShowLogoutEverywhereConfirm(true)
