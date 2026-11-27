@@ -188,7 +188,7 @@ export function ShoppingPage() {
       <div className="shopping-layout" id="shopping-layout">
         <div className="shopping-right-col">
           {activeView === 'pantry' ? (
-            <PantryView />
+            <PantryView currentList={isLoading || isError ? undefined : selectedList} />
           ) : selectedList ? (
             <ListDetail
               list={selectedList}

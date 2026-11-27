@@ -1,29 +1,35 @@
 /**
  * PantryView.tsx — Inventář / zásoby na chatě
  * Formulář přidání + seznam položek seskupených dle kategorie
+ * „+“ a „Vše do nákupu“ přidávají do aktuálního seznamu Nákupu, bez něj nejdřív do nového (#225)
  */
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { ChevronDown, CircleCheck, Package, Plus } from 'lucide-react'
-import type { InventoryItem } from '@/api/shopping'
-import { useInventory, useCreateInventoryItem, useDeleteInventoryItem } from './hooks/useInventory'
+import type { InventoryItem, ShoppingList } from '@/api/shopping'
+import { useInventory, useCreateInventoryItem, useDeleteInventoryItem, useAddInventoryToCart, useBulkAddToCart, type CartTarget } from './hooks/useInventory'
 import { useAuth } from '@/context/AuthContext'
 import { InventoryRow } from './InventoryRow'
 import { EditInventoryModal } from './EditInventoryModal'
-import { AddToCartModal } from './AddToCartModal'
-import { BulkAddToCartModal } from './BulkAddToCartModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { PromptDialog } from '@/components/shared/PromptDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { showToast } from '@/lib/toast'
+import { formatCount } from '@/lib/format'
 import { CATEGORY_ORDER, CATEGORY_LABELS, INVENTORY_STATUSES, INVENTORY_STATUS_LABELS, isMissingStock } from './constants'
 import { ShoppingErrorState } from './ShoppingErrorState'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 
 type FilterKey = 'all' | 'missing'
 
-export function PantryView() {
+interface Props {
+  /** Aktuální seznam Nákupu; `null` = žádný aktivní seznam, `undefined` = seznamy se ještě načítají */
+  currentList: Pick<ShoppingList, 'id' | 'name'> | null | undefined
+}
+
+export function PantryView({ currentList }: Props) {
   const {
     data: inventory = [],
     isLoading,
@@ -33,18 +39,21 @@ export function PantryView() {
   } = useInventory()
   const createItem = useCreateInventoryItem()
   const deleteStock = useDeleteInventoryItem()
+  const addToCart = useAddInventoryToCart()
+  const bulkAdd = useBulkAddToCart()
   const { user } = useAuth()
   const isGuest = user?.role === 'guest'
 
   const [editItem, setEditItem] = useState<InventoryItem | null>(null)
-  const [cartItem, setCartItem] = useState<InventoryItem | null>(null)
+  /** Zásoby čekající na název nového seznamu (žádný aktivní seznam); `null` = dialog zavřený */
+  const [newListFor, setNewListFor] = useState<InventoryItem[] | null>(null)
+  const [confirmBulk, setConfirmBulk] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const addToggleRef = useRef<HTMLButtonElement>(null)
   // Kam po zavření potvrzení smazání vrátit fokus, aby nespadl na <body>
   const focusAfterConfirm = useRef<HTMLElement | null>(null)
-  const [showBulkAdd, setShowBulkAdd] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
 
   // New item form state
@@ -91,6 +100,21 @@ export function PantryView() {
         ),
       )
     }
+  }
+
+  function addItems(items: InventoryItem[], target: CartTarget) {
+    if (items.length === 1) addToCart.mutate({ item: items[0], target })
+    else bulkAdd.mutate({ items, target })
+  }
+
+  function handleAddToCart(item: InventoryItem) {
+    if (currentList) addItems([item], { listId: currentList.id, listName: currentList.name })
+    else setNewListFor([item])
+  }
+
+  function handleAddAll() {
+    if (currentList) setConfirmBulk(true)
+    else setNewListFor(missingNotInCart)
   }
 
   function askDelete(item: InventoryItem) {
@@ -185,7 +209,7 @@ export function PantryView() {
                 </button>
               ))}
               {missingNotInCart.length > 0 && (
-                <Button variant="secondary" size="sm" className="ml-auto" onClick={() => setShowBulkAdd(true)}>
+                <Button variant="secondary" size="sm" className="ml-auto" disabled={currentList === undefined} onClick={handleAddAll}>
                   <Plus aria-hidden="true" />
                   Vše do nákupu · {missingNotInCart.length}
                 </Button>
@@ -329,7 +353,7 @@ export function PantryView() {
                           item={item}
                           onEdit={setEditItem}
                           onDelete={askDelete}
-                          onAddToCart={setCartItem}
+                          onAddToCart={currentList === undefined ? undefined : handleAddToCart}
                         />
                       ))}
                     </ul>
@@ -360,19 +384,31 @@ export function PantryView() {
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
       />
-      {cartItem && (
-        <AddToCartModal
-          invId={cartItem.id}
-          invName={cartItem.name}
-          onClose={() => setCartItem(null)}
-        />
-      )}
-      {showBulkAdd && (
-        <BulkAddToCartModal
-          items={missingNotInCart}
-          onClose={() => setShowBulkAdd(false)}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={confirmBulk}
+        title="Přidat do nákupu"
+        message={`Přidat ${formatCount(missingNotInCart.length, 'položku', 'položky', 'položek')} do seznamu „${currentList?.name ?? ''}“?`}
+        confirmLabel="Přidat"
+        onConfirm={() => {
+          if (currentList) addItems(missingNotInCart, { listId: currentList.id, listName: currentList.name })
+          setConfirmBulk(false)
+        }}
+        onCancel={() => setConfirmBulk(false)}
+      />
+      <PromptDialog
+        isOpen={newListFor !== null}
+        title="Nový nákupní seznam"
+        description="Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj."
+        label="Název seznamu"
+        initialValue="Nákup"
+        maxLength={100}
+        submitLabel="Vytvořit a přidat"
+        onSubmit={(name) => {
+          if (newListFor) addItems(newListFor, { newListName: name })
+          setNewListFor(null)
+        }}
+        onCancel={() => setNewListFor(null)}
+      />
     </div>
     </section>
   )

@@ -14,7 +14,8 @@ interface Props {
   item: InventoryItem
   onEdit: (item: InventoryItem) => void
   onDelete: (item: InventoryItem) => void
-  onAddToCart: (item: InventoryItem) => void
+  /** Bez handleru je „+“ vypnuté (seznamy se ještě načítají) */
+  onAddToCart?: (item: InventoryItem) => void
 }
 
 const STATUS_TONES: Record<InventoryItem['status'], string> = {
@@ -65,7 +66,7 @@ export function InventoryRow({ item, onEdit, onDelete, onAddToCart }: Props) {
         {item.inCart ? (
           <ShoppingCart role="img" aria-label="V nákupu" className="size-5 text-[rgb(var(--ok))]" />
         ) : isMissingStock(item) ? (
-          <Button variant="secondary" size="icon" aria-label="Přidat do nákupu" onClick={() => onAddToCart(item)}>
+          <Button variant="secondary" size="icon" aria-label="Přidat do nákupu" disabled={!onAddToCart} onClick={() => onAddToCart?.(item)}>
             <Plus aria-hidden="true" />
           </Button>
         ) : null}
