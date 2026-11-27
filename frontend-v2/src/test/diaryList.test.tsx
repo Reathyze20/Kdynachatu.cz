@@ -29,7 +29,7 @@ function renderPage() {
   render(<QueryClientProvider client={qc}><DiaryPage /></QueryClientProvider>)
 }
 
-const names = (cards: HTMLElement[]) => cards.map(c => c.dataset.folderId)
+const folderIds = (cards: HTMLElement[]) => cards.map(c => c.dataset.folderId)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -44,7 +44,7 @@ describe('Deník: seznam pobytů (#520)', () => {
       folder('zima', '2024-12-27', '2024-12-30', '2025-10-01T10:00:00.000Z'),
     ]
     render(<DiaryFolders folders={folders} onOpen={vi.fn()} onRename={vi.fn()} onDelete={vi.fn()} onNewFolder={vi.fn()} />)
-    expect(names(screen.getAllByTestId('diary-folder-card'))).toEqual(['leto', 'jaro', 'zima', 'bez'])
+    expect(folderIds(screen.getAllByTestId('diary-folder-card'))).toEqual(['leto', 'jaro', 'zima', 'bez'])
   })
 
   it('karta pobytu jde otevřít z klávesnice', () => {

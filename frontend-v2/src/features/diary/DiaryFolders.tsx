@@ -55,7 +55,8 @@ interface Props {
 export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder, canManage = () => false }: Props) {
   const [period, setPeriod] = useState<PeriodFilter>('all')
 
-  const visible = filterFolders(folders, period).sort(byStayDate)
+  // Kopie: filtr „Vše“ vrací pole z cache dotazu a sort() by ho přeskládal na místě.
+  const visible = [...filterFolders(folders, period)].sort(byStayDate)
   const emptyMessage = folders.length === 0 ? PERIODS[0].empty : PERIODS.find(p => p.value === period)!.empty
 
   return (
@@ -108,7 +109,7 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder,
                 )}
               </div>
               {canManage(folder) && (
-                <div className="-my-2 -mr-2 flex shrink-0" onClick={e => e.stopPropagation()}>
+                <div className="-my-2 -mr-2 flex shrink-0 gap-2" onClick={e => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" aria-label="Přejmenovat" onClick={() => onRename(folder)}>
                     <Pencil aria-hidden="true" />
                   </Button>

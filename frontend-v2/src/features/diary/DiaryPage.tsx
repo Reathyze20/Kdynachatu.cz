@@ -265,7 +265,8 @@ export function DiaryPage() {
         )}
       </Card>
 
-      <Card>
+      {/* Dny pobytu mají zatím vlastní odsazení z diary.css (převod dne zbývá z #520), proto karta bez něj. */}
+      <Card flush={view === 'entries'} className={view === 'entries' ? 'overflow-hidden' : undefined}>
         {/* ── FOLDERS VIEW ─────────────────────────────────────────────── */}
         {view === 'folders' && (
           foldersLoading ? (
