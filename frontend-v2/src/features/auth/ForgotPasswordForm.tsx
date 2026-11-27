@@ -89,7 +89,7 @@ export function ForgotPasswordForm({ onShowLogin }: ForgotPasswordFormProps) {
           <p
             className="message"
             role="status"
-            style={{ marginTop: '.75rem', color: 'var(--status-success)' }}
+            style={{ marginTop: '.75rem', color: 'rgb(var(--ok))' }}
             data-testid="forgot-password-message"
           >
             {message.text}

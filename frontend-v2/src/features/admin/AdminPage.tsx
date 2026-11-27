@@ -206,7 +206,7 @@ const DANGER_ACTIONS: Array<{
     label: 'Smazat rezervace',
     hint: 'Smaže všechny jeho rezervace, účet zůstane.',
     variant: 'ghost',
-    className: 'text-destructive',
+    className: 'text-(--status-error-dark)',
     testId: 'edit-user-delete-reservations-button',
   },
   {
@@ -794,7 +794,7 @@ function InvitesSection({ invites, isLoading, isError, error, onRetry }: Invites
                 as="li"
                 key={inv.id}
                 action={
-                  <Button variant="secondary" size="sm" className="text-destructive" onClick={() => setRevokeTarget(inv)} disabled={revokeInvite.isPending} data-testid="invite-archive-delete-button">
+                  <Button variant="secondary" size="sm" className="text-(--status-error-dark)" onClick={() => setRevokeTarget(inv)} disabled={revokeInvite.isPending} data-testid="invite-archive-delete-button">
                     Odstranit
                   </Button>
                 }

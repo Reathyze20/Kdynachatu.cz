@@ -196,7 +196,7 @@ export function ResetPasswordPage() {
             <p className="mb-4 text-label text-(--text-muted)">Heslo musí mít alespoň 8 znaků.</p>
 
             {(message || passwordMismatch) && (
-              <p className="mb-4 text-label text-(--status-error)" data-testid="reset-password-message">
+              <p className="mb-4 text-label text-(--status-error-dark)" data-testid="reset-password-message">
                 {passwordMismatch ? 'Hesla se neshodují.' : message}
               </p>
             )}

@@ -218,7 +218,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
             {entry?.id && (
               <Button
                 variant="ghost"
-                className="mr-auto text-destructive"
+                className="mr-auto text-(--status-error-dark)"
                 onClick={handleDeleteClick}
                 disabled={deleteEntry.isPending}
                 data-testid="diary-delete-entry-button"

@@ -218,10 +218,10 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
             style={{
               marginTop: '.5rem',
               color: message.type === 'error'
-                ? 'var(--status-error)'
+                ? 'var(--status-error-dark)'
                 : message.type === 'warning'
-                  ? 'var(--status-warning)'
-                  : 'var(--status-success)',
+                  ? 'rgb(var(--low))'
+                  : 'rgb(var(--ok))',
               display: 'block',
             }}
             data-testid="register-message"

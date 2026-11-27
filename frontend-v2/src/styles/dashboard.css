@@ -796,7 +796,7 @@
 
 .is-occupied .status-badge-pill {
   background: var(--status-error-light, #fee2e2);
-  color: var(--status-error, #dc2626);
+  color: var(--status-error-dark);
 }
 
 .is-occupied .status-badge-pill .status-dot {
@@ -882,8 +882,8 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
-  background: rgba(234, 88, 12, 0.08);
-  color: var(--status-warning);
+  background: var(--low-bg);
+  color: rgb(var(--low));
   white-space: nowrap;
 }
 

@@ -210,7 +210,7 @@ function CharCounter({ value, max }: { value: string; max: number }) {
   const isNear = len > max * 0.9
   return (
     <span className="cs-counter">
-      <span className={cn(isNear && 'text-(--status-error)')}>{len}</span>/{max}
+      <span className={cn(isNear && 'text-(--status-error-dark)')}>{len}</span>/{max}
     </span>
   )
 }

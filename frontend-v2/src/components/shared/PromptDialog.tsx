@@ -32,6 +32,7 @@ interface PromptDialogProps {
   cancelLabel?: string
   danger?: boolean
   loading?: boolean
+  /** Popisek tlačítka při odesílání („Mažu…“). Bez něj zůstane `submitLabel`, stav nese spinner `pending`. */
   loadingLabel?: string
   trimValue?: boolean
   canSubmit?: (value: string) => boolean
@@ -54,7 +55,7 @@ export function PromptDialog({
   cancelLabel = 'Zrušit',
   danger = false,
   loading = false,
-  loadingLabel = '…',
+  loadingLabel,
   trimValue = true,
   canSubmit,
   onSubmit,
@@ -96,7 +97,7 @@ export function PromptDialog({
             pending={loading}
             disabled={!canSubmitValue}
           >
-            {loading ? loadingLabel : submitLabel}
+            {loading && loadingLabel ? loadingLabel : submitLabel}
           </Button>
         </div>
       }
@@ -125,7 +126,7 @@ export function PromptDialog({
           autoFocus
         />
         {errorMessage ? (
-          <p id={errorId} role="alert" className="mt-2 text-label text-(--status-error)">
+          <p id={errorId} role="alert" className="mt-2 text-label text-(--status-error-dark)">
             {errorMessage}
           </p>
         ) : null}

@@ -273,7 +273,7 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
                   textAlign: 'left',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-all',
-                  color: 'var(--status-error)',
+                  color: 'var(--status-error-dark)',
                   maxHeight: 180,
                   overflowY: 'auto',
                   margin: '4px 0 0 0',

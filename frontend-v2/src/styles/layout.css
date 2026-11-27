@@ -286,7 +286,7 @@
   border-radius: 8px;
   background: var(--status-error-light);
   border: 1px solid color-mix(in srgb, var(--status-error) 35%, transparent);
-  color: var(--status-error);
+  color: var(--status-error-dark);
 }
 
 #register-message {

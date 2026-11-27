@@ -91,7 +91,7 @@ export function FeatureErrorFallback({
             flexShrink: 0,
           }}
         >
-          <AlertTriangle style={{ width: 24, height: 24, color: 'var(--status-error)' }} />
+          <AlertTriangle aria-hidden="true" style={{ width: 24, height: 24, color: 'var(--status-error)' }} />
         </div>
 
         {/* Titulek */}
@@ -220,7 +220,7 @@ export function FeatureErrorFallback({
                     textAlign: 'left',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-all',
-                    color: 'var(--status-error)',
+                    color: 'var(--status-error-dark)',
                     maxHeight: 180,
                     overflowY: 'auto',
                     margin: 'var(--space-xs) 0 0 0',

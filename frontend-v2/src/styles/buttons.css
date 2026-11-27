@@ -177,7 +177,7 @@ button:not(:disabled):active,
 
 .btn-outline-danger {
   background: transparent;
-  color: var(--color-danger);
+  color: var(--status-error-dark);
   border: 1px solid var(--color-danger);
 }
 
@@ -350,7 +350,7 @@ button:not(:disabled):active,
 }
 
 .delete-btn {
-  color: var(--color-danger);
+  color: var(--status-error-dark);
 }
 
 .delete-btn:hover {
@@ -373,7 +373,7 @@ button:not(:disabled):active,
 }
 
 .btn-ghost-danger:hover {
-  color: var(--color-danger);
+  color: var(--status-error-dark);
   background: var(--color-danger-bg);
 }
 

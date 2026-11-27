@@ -118,7 +118,7 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder,
                   <Button variant="ghost" size="icon" aria-label="Přejmenovat" onClick={() => onRename(folder)}>
                     <Pencil aria-hidden="true" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-destructive" aria-label="Smazat" onClick={() => onDelete(folder)}>
+                  <Button variant="ghost" size="icon" className="text-(--status-error-dark)" aria-label="Smazat" onClick={() => onDelete(folder)}>
                     <Trash2 aria-hidden="true" />
                   </Button>
                 </div>

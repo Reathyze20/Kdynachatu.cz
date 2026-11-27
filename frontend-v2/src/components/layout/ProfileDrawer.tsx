@@ -467,7 +467,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                       data-testid="profile-email-password-input"
                     />
                     <p id="profile-email-password-hint" className="mt-1 text-label text-(--text-muted)">Na původní adresu pošleme upozornění o změně.</p>
-                    {emailPasswordError && <p id="profile-email-password-error" className="mt-1 text-label text-(--status-error)" role="alert">{emailPasswordError}</p>}
+                    {emailPasswordError && <p id="profile-email-password-error" className="mt-1 text-label text-(--status-error-dark)" role="alert">{emailPasswordError}</p>}
                   </div>
                 )}
               </div>
@@ -548,7 +548,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 {securityMessage && (
                   <p
                     id="profile-security-message"
-                    className={`message ${securityError ? 'text-(--status-error)' : 'text-(--status-success)'}`}
+                    className={`message ${securityError ? 'text-(--status-error-dark)' : 'text-[rgb(var(--ok))]'}`}
                   >
                     {securityMessage}
                   </p>
@@ -583,7 +583,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full text-destructive"
+                className="w-full text-(--status-error-dark)"
                 onClick={() => {
                   setLogoutEverywhereError('')
                   setShowLogoutEverywhereConfirm(true)

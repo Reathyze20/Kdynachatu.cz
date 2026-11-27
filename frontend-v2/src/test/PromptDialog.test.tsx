@@ -128,4 +128,12 @@ describe('PromptDialog', () => {
 
     expect(onSubmit).toHaveBeenCalledWith('  moje heslo  ')
   })
+
+  // #661: při odesílání nese stav Button (`pending`), popisek tlačítka zůstává, ne „…“
+  it('while loading without loadingLabel keeps the submit label and reports busy', () => {
+    render(<PromptDialog isOpen title="Nová složka" label="Název" submitLabel="Vytvořit" loading onSubmit={vi.fn()} onCancel={() => {}} />)
+    const submit = screen.getByRole('button', { name: 'Vytvořit' })
+    expect(submit).toHaveAttribute('aria-busy', 'true')
+    expect(submit).toBeDisabled()
+  })
 })
