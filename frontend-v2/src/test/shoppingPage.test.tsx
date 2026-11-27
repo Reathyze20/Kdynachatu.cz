@@ -25,7 +25,7 @@ const { api } = vi.hoisted(() => ({
 vi.mock('@/api/client', () => ({ default: api }))
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 const { auth } = vi.hoisted(() => ({ auth: { role: 'member' } }))
-vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { userId: 'u-me', role: auth.role } }) }))
+vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { userId: 'u-me', role: auth.role }, isAdmin: auth.role === 'admin' }) }))
 
 const { socketHandlers } = vi.hoisted(() => ({ socketHandlers: new Map<string, (data?: unknown) => void>() }))
 vi.mock('@/hooks/useSocket', () => ({
@@ -477,7 +477,11 @@ describe('shopping page: current list header and menu', () => {
   })
 
   it('renames, closes and deletes the list from its menu, each through a dialog', async () => {
+    let gone = false
+    api.delete.mockImplementationOnce(() => { gone = true; return Promise.resolve({ data: {} }) })
     renderPage([item({ id: 'a', name: 'Mléko', status: 'purchased' })])
+    const getLists = api.get.getMockImplementation()!
+    api.get.mockImplementation((path: string) => (gone && path === '/shopping-lists' ? Promise.resolve({ data: [] }) : getLists(path)))
     const { user } = await listMenu()
     await user.click(screen.getByRole('menuitem', { name: 'Přejmenovat' }))
     const rename = await dialog('Přejmenovat seznam')
@@ -499,6 +503,9 @@ describe('shopping page: current list header and menu', () => {
     expect(api.delete).not.toHaveBeenCalled()
     await user.click(confirm.getByRole('button', { name: 'Smazat' }))
     expect(api.delete).toHaveBeenCalledWith('/shopping-lists/list-1')
+    // Smazaný byl poslední seznam: zapamatovaná volba z prohlížeče zmizí a ukáže se prázdný stav
+    expect(await screen.findByRole('button', { name: 'Založit nákupní seznam' })).toBeInTheDocument()
+    expect(localStorage.getItem('shoppingSelectedListId')).toBeNull()
   })
 
   it('opens an empty "Nový seznam" from the page header, only in the Nákup mode', async () => {

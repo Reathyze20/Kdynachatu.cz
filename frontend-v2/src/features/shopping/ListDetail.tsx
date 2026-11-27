@@ -72,7 +72,7 @@ export function ListDetail({ list, header }: Props) {
         {/* Centered max-width container — matches PantryView */}
         <div className="detail-inner-container">
 
-          {/* HEADER — compact: title + inline form row */}
+          {/* Hlavička seznamu (slot `header`) a pole „Přidat položku“ */}
           <div className="detail-page-header">
             {header}
             <div className="detail-header-row">

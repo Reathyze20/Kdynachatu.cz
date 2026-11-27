@@ -26,8 +26,8 @@ interface Props extends ListHeaderActions {
 const pendingCount = (list: ShoppingList) => list.items.filter(i => i.status === 'pending').length
 
 export function ListHeader({ list, lists, onSelect, onRename, onShare, onArchive, onDelete }: Props) {
-  const { user } = useAuth()
-  const canEdit = list.createdById === user?.userId || user?.role === 'admin'
+  const { user, isAdmin } = useAuth()
+  const canEdit = list.createdById === user?.userId || isAdmin
   const total = list.items.length
   const done = total - pendingCount(list)
   const canArchive = total > 0 && done === total && !list.isResolved

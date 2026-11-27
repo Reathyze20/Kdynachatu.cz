@@ -26,10 +26,8 @@ import { Card } from '@/components/shared/Card'
 import { EmptyState } from '@/components/shared/EmptyState'
 import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import {
-  ShoppingErrorState,
-  getShoppingActionErrorMessage,
-} from './ShoppingErrorState'
+import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
+import { getShoppingActionErrorMessage } from './ShoppingErrorState'
 
 /** Aktuální seznam se pamatuje v tomto prohlížeči (#224). */
 const SELECTED_LIST_KEY = 'shoppingSelectedListId'
@@ -216,10 +214,11 @@ export function ShoppingPage() {
                     </div>
                   ))
                 ) : isError ? (
-                  <ShoppingErrorState
+                  <FeatureErrorFallback
+                    bare
                     title="Seznamy se nepodařilo načíst"
                     error={listsError}
-                    onRetry={() => {
+                    resetErrorBoundary={() => {
                       void refetchLists()
                     }}
                   />
