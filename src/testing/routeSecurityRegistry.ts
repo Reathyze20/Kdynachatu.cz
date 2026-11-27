@@ -162,12 +162,12 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "POST /api/shopping-list/:listId/items": WRITERS,
   "PUT /api/shopping-list/:itemId/purchase": WRITERS,
   "PATCH /api/shopping-list/:itemId/toggle-essential": WRITERS,
-  "DELETE /api/shopping-list/:itemId": WRITERS,
+  "DELETE /api/shopping-list/:itemId": WRITERS, // + jen autor položky, zakladatel seznamu nebo admin (#679, shopping.itest.ts)
   // shoppingLists.ts
   "GET /api/shopping-lists": WRITERS,
   "POST /api/shopping-lists": WRITERS,
   "PATCH /api/shopping-lists/:id/rename": WRITERS,
-  "DELETE /api/shopping-lists/:id": WRITERS,
+  "DELETE /api/shopping-lists/:id": WRITERS, // + jen zakladatel seznamu nebo admin
   "PATCH /api/shopping-lists/:id/resolve": WRITERS,
   // stagingFeedback.ts (jen na stagingu; čtení vrací ne-adminovi 404)
   "POST /api/staging-feedback": WRITERS,

@@ -1043,6 +1043,34 @@ const paths: Record<string, OpenApiObject> = {
       },
     },
   },
+  "/api/shopping-lists/{id}": {
+    delete: {
+      tags: ["Shopping"],
+      summary: "Smaz nakupni seznam i s polozkami (zakladatel seznamu nebo admin)",
+      security: bearerSecurity,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {
+        "200": jsonResponse(ref("MessageResponse"), "Seznam byl smazan"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Host, nebo clen, ktery seznam nezalozil a neni admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Seznam neni v chate uzivatele"),
+      },
+    },
+  },
+  "/api/shopping-list/{itemId}": {
+    delete: {
+      tags: ["Shopping"],
+      summary: "Smaz polozku nakupu (autor polozky, zakladatel seznamu nebo admin)",
+      security: bearerSecurity,
+      parameters: [{ name: "itemId", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+      responses: {
+        "200": jsonResponse({ type: "object", properties: { success: { type: "boolean" } } }, "Polozka byla smazana"),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Host, nebo clen, ktery polozku nepridal, seznam nezalozil a neni admin"),
+        "404": jsonResponse(ref("ErrorResponse"), "Polozka neni v chate uzivatele"),
+      },
+    },
+  },
   "/api/inventory": {
     get: {
       tags: ["Inventory"],

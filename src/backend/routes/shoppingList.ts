@@ -62,7 +62,13 @@ router.post("/:listId/items", protect, requireCabin, validate(createShoppingItem
 function findCabinItem(cabinId: string, itemId: string) {
   return prisma.shoppingListItem.findFirst({
     where: { id: itemId, list: { cabinId } },
+    include: { list: { select: { createdById: true } } },
   });
+}
+
+// Who may delete an item: its author, the founder of its list or a cabin admin (#679, same rule as ItemRow in the UI).
+function canDeleteItem(user: { userId: string; role: string }, item: { addedById: string; list: { createdById: string } | null }) {
+  return item.addedById === user.userId || item.list?.createdById === user.userId || user.role === "admin";
 }
 
 // ============================================================================
@@ -204,6 +210,9 @@ async function deleteItem(req: Request, res: Response) {
 
     if (!item) {
       return res.status(404).json({ message: "Položka nenalezena" });
+    }
+    if (!canDeleteItem(req.user!, item)) {
+      return res.status(403).json({ message: "Tuhle položku může smazat jen ten, kdo ji přidal, zakladatel seznamu nebo správce chaty." });
     }
 
     const cabinId = req.user!.cabinId!;
