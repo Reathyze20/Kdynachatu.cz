@@ -979,6 +979,63 @@ const paths: Record<string, OpenApiObject> = {
       },
     },
   },
+  "/api/handover": {
+    get: {
+      tags: ["Reservations"],
+      summary: "Tab Predavka: muj pobyt k predani a posledni predavka v chate (den v Europe/Prague); host jen sve pobyty",
+      security: bearerSecurity,
+      responses: {
+        "200": jsonResponse(
+          {
+            type: "object",
+            required: ["myStay", "lastHandover"],
+            properties: {
+              myStay: {
+                type: "object",
+                nullable: true,
+                description: "Muj primary pobyt (organizator nebo spolucestujici). Prednost: departure nedokoncena, departure dokoncena, ongoing, nejblizsi upcoming",
+                properties: {
+                  reservationId: { type: "string" },
+                  from: { type: "string", format: "date" },
+                  to: { type: "string", format: "date" },
+                  phase: { type: "string", enum: ["upcoming", "ongoing", "departure"], description: "departure = den odjezdu nebo den po nem" },
+                  isCheckoutCompleted: { type: "boolean" },
+                },
+              },
+              lastHandover: {
+                type: "object",
+                nullable: true,
+                description: "Posledni dokoncena predavka v chate (dateTo <= dnes) mimo myStay, razeni dateTo a checkoutCompletedAt sestupne",
+                properties: {
+                  reservationId: { type: "string" },
+                  from: { type: "string", format: "date" },
+                  to: { type: "string", format: "date" },
+                  organizer: { type: "object", properties: { username: { type: "string" }, userColor: { type: "string", nullable: true }, userAnimalIcon: { type: "string", nullable: true } } },
+                  completedByUsername: { type: "string", nullable: true, description: "Kdo predavku dokoncil" },
+                  completedAt: { type: "string", format: "date-time", nullable: true },
+                  checkoutState: {
+                    type: "object",
+                    description: "Stav chaty; chybejici klic = neuvedeno",
+                    properties: {
+                      gas: { type: "string", enum: ["full", "half", "low", "empty"] },
+                      heatingOff: { type: "boolean" },
+                      waterOff: { type: "boolean" },
+                      broken: { type: "string" },
+                      leftBehind: { type: "string" },
+                      note: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "Prehled predavky pro prihlaseneho uzivatele",
+        ),
+        "401": jsonResponse(ref("ErrorResponse"), "Chybi nebo je neplatny token"),
+        "403": jsonResponse(ref("ErrorResponse"), "Uzivatel nema prirazenou chatu"),
+      },
+    },
+  },
   "/api/dashboard/shopping": {
     get: {
       tags: ["Dashboard"],

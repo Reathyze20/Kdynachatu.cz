@@ -1,3 +1,5 @@
+import type { CheckoutStateShape } from "./backend/routes/reservationHelpers";
+
 // JWT Payload
 export interface JwtPayload {
   userId: string;
@@ -43,6 +45,24 @@ export interface Reservation {
   checkoutCompletedAt?: string | null;
   /** Co-occupants (spolucestujici); organizer is userId above */
   participants?: ReservationParticipant[];
+}
+
+/** Tab Předávka, `GET /api/handover` (spec #173). Zdvojené ve `frontend-v2/src/api/handover.ts`. */
+export type HandoverPhase = "upcoming" | "ongoing" | "departure";
+
+export interface HandoverOverview {
+  /** Můj pobyt (organizátor nebo spolucestující); `departure` = den odjezdu nebo den po něm */
+  myStay: { reservationId: string; from: string; to: string; phase: HandoverPhase; isCheckoutCompleted: boolean } | null;
+  /** Poslední dokončená předávka v chatě mimo `myStay` */
+  lastHandover: {
+    reservationId: string;
+    from: string;
+    to: string;
+    organizer: { username: string; userColor: string | null; userAnimalIcon: string | null };
+    completedByUsername: string | null;
+    completedAt: string | null;
+    checkoutState: CheckoutStateShape;
+  } | null;
 }
 
 export interface ShoppingListItem {
