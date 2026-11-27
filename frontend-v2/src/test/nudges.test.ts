@@ -133,13 +133,14 @@ describe('buildNudges', () => {
     const supply = ns.find((n) => n.id.startsWith('supply-'))
     expect(supply).toBeDefined()
     expect(supply?.detail).toContain('toaleťák')
-    expect(supply?.href).toBe('/shopping')
+    expect(supply?.href).toBe('/shopping?view=pantry')
     expect(supply?.whatsapp).toContain('Na chatě dochází')
   })
 
   it('warns when the last checkout reported gas low or empty', () => {
     const low = buildNudges({ reservations: reservations({ lastStay: lastStay({ checkoutState: { gas: 'low' } }) }) })
     expect(low.find((n) => n.id.startsWith('gas-'))?.title).toBe('Plynová bomba: Dochází')
+    expect(low.find((n) => n.id.startsWith('gas-'))?.href).toBe('/shopping?view=pantry')
 
     const empty = buildNudges({ reservations: reservations({ lastStay: lastStay({ checkoutState: { gas: 'empty' } }) }) })
     expect(empty.find((n) => n.id.startsWith('gas-'))?.whatsapp).toContain('Plynová bomba: Došlo')

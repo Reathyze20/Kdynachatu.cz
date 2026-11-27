@@ -85,7 +85,7 @@ export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesI
       icon: ShoppingCart,
       title: `Na chatě ${low.count === 1 ? "dochází položka" : "docházejí položky"}`,
       detail: lowItems.join(", "),
-      href: "/shopping",
+      href: "/shopping?view=pantry",
       whatsapp: `🛒 Na chatě dochází: ${lowItems.join(", ")}. Kdo pojede příště, doplní?`,
     });
   }
@@ -100,7 +100,7 @@ export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesI
       icon: Flame,
       title: gasTitle,
       detail: "Nahlásila to poslední návštěva při odjezdu.",
-      href: "/shopping",
+      href: "/shopping?view=pantry",
       whatsapp: `🔥 ${gasTitle}. Přiveze někdo na chatu novou?`,
     });
   }

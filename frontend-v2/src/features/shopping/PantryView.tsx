@@ -3,7 +3,7 @@
  * Formulář přidání + seznam položek seskupených dle kategorie
  */
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { ChevronDown, ChevronLeft, CircleCheck, Package, Plus } from 'lucide-react'
+import { ChevronDown, CircleCheck, Package, Plus } from 'lucide-react'
 import type { InventoryItem } from '@/api/shopping'
 import { useInventory, useCreateInventoryItem, useDeleteInventoryItem } from './hooks/useInventory'
 import { useAuth } from '@/context/AuthContext'
@@ -14,6 +14,8 @@ import { BulkAddToCartModal } from './BulkAddToCartModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { showToast } from '@/lib/toast'
 import { CATEGORY_ORDER, CATEGORY_LABELS, INVENTORY_STATUSES, INVENTORY_STATUS_LABELS, isMissingStock } from './constants'
 import { ShoppingErrorState } from './ShoppingErrorState'
@@ -21,11 +23,7 @@ import { getNetworkAwareActionMessage } from '@/lib/networkError'
 
 type FilterKey = 'all' | 'missing'
 
-interface Props {
-  onBack: () => void
-}
-
-export function PantryView({ onBack }: Props) {
+export function PantryView() {
   const {
     data: inventory = [],
     isLoading,
@@ -167,15 +165,7 @@ export function PantryView({ onBack }: Props) {
 
         {/* ─── STICKY HEADER (never scrolls) ─── */}
         <div className="pantry-sticky-header">
-          {/* HEADER — back + title inline on mobile */}
           <div className="detail-page-header pantry-header-compact">
-            <button
-              onClick={onBack}
-              className="detail-back-btn"
-            >
-              <ChevronLeft aria-hidden="true" className="size-4" />
-              Zpět
-            </button>
             <h2 className="detail-page-title">Zásoby na chatě</h2>
             <p className="detail-page-subtitle">Rychlý přehled všeho, co nesmí chybět.</p>
           </div>
@@ -227,9 +217,9 @@ export function PantryView({ onBack }: Props) {
                 >
             {/* NÁZEV */}
             <div className="pantry-form-col-4">
-              <label className="detail-form-label">Název</label>
-              <input
-                type="text"
+              <label className="mb-2 block text-label text-(--text-muted)" htmlFor="pantry-new-name">Název</label>
+              <Input
+                id="pantry-new-name"
                 placeholder="např. Sůl, Káva"
                 value={newName}
                 onChange={e => {
@@ -239,16 +229,15 @@ export function PantryView({ onBack }: Props) {
                 maxLength={100}
                 autoComplete="off"
                 required
-                className="detail-form-input"
               />
             </div>
 
             {/* UMÍSTĚNÍ */}
             <div className="pantry-form-col-3">
-              <label className="detail-form-label">Kde to leží?</label>
-              <input
-                type="text"
-                placeholder="Kumbál, Police..."
+              <label className="mb-2 block text-label text-(--text-muted)" htmlFor="pantry-new-location">Kde to leží (nepovinné)</label>
+              <Input
+                id="pantry-new-location"
+                placeholder="Kumbál, police…"
                 value={newLocation}
                 onChange={e => {
                   if (addItemError) setAddItemError(null)
@@ -256,52 +245,46 @@ export function PantryView({ onBack }: Props) {
                 }}
                 maxLength={100}
                 autoComplete="off"
-                className="detail-form-input"
               />
             </div>
 
             {/* KATEGORIE */}
             <div className="pantry-form-col-2">
-              <label className="detail-form-label">Kategorie</label>
-              <select
+              <label className="mb-2 block text-label text-(--text-muted)" htmlFor="pantry-new-category">Kategorie</label>
+              <Select
+                id="pantry-new-category"
                 value={newCategory}
                 onChange={e => {
                   if (addItemError) setAddItemError(null)
                   setNewCategory(e.target.value as typeof CATEGORY_ORDER[number])
                 }}
-                className="detail-form-input"
               >
                 {CATEGORY_ORDER.map(cat => (
                   <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* STAV */}
             <div className="pantry-form-col-2">
-              <label className="detail-form-label" htmlFor="pantry-new-status">Stav</label>
-              <select
+              <label className="mb-2 block text-label text-(--text-muted)" htmlFor="pantry-new-status">Stav</label>
+              <Select
                 id="pantry-new-status"
                 value={newStatus}
                 onChange={e => {
                   if (addItemError) setAddItemError(null)
                   setNewStatus(e.target.value as InventoryItem['status'])
                 }}
-                className="detail-form-input"
               >
                 {INVENTORY_STATUSES.map(s => <option key={s} value={s}>{INVENTORY_STATUS_LABELS[s]}</option>)}
-              </select>
+              </Select>
             </div>
 
             {/* SUBMIT BUTTON */}
             <div className="pantry-form-col-1">
-              <button
-                type="submit"
-                disabled={createItem.isPending || !newName.trim()}
-                className="add-form-submit-btn add-form-submit-btn--full-width"
-              >
-                +
-              </button>
+              <Button type="submit" aria-label="Přidat" className="w-full" disabled={createItem.isPending || !newName.trim()}>
+                <Plus aria-hidden="true" />
+              </Button>
             </div>
           </form>
           {addItemError ? (

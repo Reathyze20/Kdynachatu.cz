@@ -19,7 +19,7 @@ const VISIBLE_COUNT = 2;
 /** Název akce podle cíle upozornění; bez názvu (např. odkaz na Přehled) se tlačítko neukáže. */
 const ACTION_LABEL: Record<string, string> = {
   "/reservations": "Otevřít kalendář",
-  "/shopping": "Otevřít Zásoby",
+  "/shopping?view=pantry": "Otevřít Zásoby",
   "/handover": "Předat chatu",
 };
 

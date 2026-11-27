@@ -1,46 +1,38 @@
 /**
- * ViewSwitcher.tsx — iOS-style pill toggle pro Shopping / Pantry view
+ * ViewSwitcher.tsx — přepínač režimů „Zásoby / Nákup · N“ (#224): segmenty na vnořené dráze, vybraný je papír
  */
-import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export type ActiveView = 'shopping' | 'pantry'
 
 interface Props {
   activeView: ActiveView
-  onShowLists: () => void
-  onShowPantry: () => void
-  missingCount?: number
+  onChange: (view: ActiveView) => void
+  /** Položky ve stavu Koupit ve všech aktivních seznamech; bez čísla, dokud se seznamy nenačtou. */
+  pendingCount?: number
 }
 
-export function ViewSwitcher({ activeView, onShowLists, onShowPantry, missingCount }: Props) {
+export function ViewSwitcher({ activeView, onChange, pendingCount }: Props) {
+  const views: { id: ActiveView; label: string }[] = [
+    { id: 'pantry', label: 'Zásoby' },
+    { id: 'shopping', label: pendingCount === undefined ? 'Nákup' : `Nákup · ${pendingCount}` },
+  ]
   return (
-    <div className="detail-view-switcher">
-      <div className="detail-view-switcher-track">
-        {(['shopping', 'pantry'] as const).map((viewId) => {
-          const isActive = activeView === viewId
-          return (
-            <button
-              key={viewId}
-              onClick={viewId === 'shopping' ? onShowLists : onShowPantry}
-              className={`detail-view-switcher-btn${isActive ? ' is-active' : ''}`}
-            >
-              <span className="detail-view-switcher-label">
-                {viewId === 'shopping' ? 'Nákupní seznamy' : 'Zásoby na chatě'}
-              </span>
-              {viewId === 'pantry' && missingCount != null && missingCount > 0 && (
-                <span className="switcher-badge-count">{missingCount}</span>
-              )}
-              {isActive && (
-                <motion.div
-                  layoutId="shoppingActiveTab"
-                  className="detail-view-switcher-pill"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
-            </button>
-          )
-        })}
-      </div>
+    <div className="grid grid-cols-2 gap-1 rounded-xl bg-inset p-1 md:w-80" role="group" aria-label="Režim">
+      {views.map(({ id, label }) => (
+        <Button
+          key={id}
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-pressed={activeView === id}
+          className={cn('px-3 text-(--text-muted)', activeView === id && 'bg-sheet text-(--text-main) shadow-xs hover:bg-sheet')}
+          onClick={() => onChange(id)}
+        >
+          {label}
+        </Button>
+      ))}
     </div>
   )
 }

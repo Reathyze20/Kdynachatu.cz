@@ -46,11 +46,11 @@ export const HELP_PAGES: Record<string, ReactNode> = {
   '/shopping': (
     <>
       <h3>Zásoby</h3>
-      <p>Co je na chatě a co je potřeba dovézt. Nahoře přepínáš mezi nákupními seznamy a zásobami na chatě.</p>
+      <p>Co je na chatě a co je potřeba dovézt. Nahoře přepínáš mezi Zásobami a Nákupem, číslo u Nákupu říká, kolik věcí zbývá koupit.</p>
       <ul>
-        <li><strong>Nákupní seznamy</strong> – vyber seznam a přidej položky. Klepnutím na položku ji označíš jako koupenou.</li>
+        <li><strong>Nákup</strong> – vyber seznam a přidej položky. Klepnutím na položku ji označíš jako koupenou.</li>
         <li><strong>Přivezu z domova</strong> – ikona domečku dá ostatním vědět, že věc vezeš ty. Hvězdička ji označí jako důležitou.</li>
-        <li><strong>Zásoby na chatě</strong> – u každé věci vidíš, jestli je jí dost, málo, nebo došla. Co chybí, přidáš do nákupu jedním klepnutím, nebo všechno najednou přes „Vše do nákupu“.</li>
+        <li><strong>Zásoby</strong> – u každé věci vidíš, jestli je jí dostatek, dochází, nebo došla. Co chybí, přidáš do nákupu jedním klepnutím, nebo všechno najednou přes „Vše do nákupu“.</li>
       </ul>
     </>
   ),
