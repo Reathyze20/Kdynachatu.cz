@@ -609,3 +609,78 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
     expect(screen.queryByRole('region', { name: 'Visí na tobě' })).not.toBeInTheDocument()
   })
 })
+
+// #425: Přehled neukazuje stejný obsah dvakrát. Stav, který nese akční karta, je v „Od minule“ jen tlumeně.
+describe('Přehled: žádná duplicita (#425)', () => {
+  const FAULT = { text: 'Kape kohoutek.', reportedBy: 'Jana', reportedAt: '2026-12-02T12:00:00.000Z' }
+  const handover = (checkoutState: Record<string, unknown>, daysEmpty = 8) => reservations({
+    upcomingReservations: [upcoming('r-petr', 'Petr', '2026-12-28', '2026-12-30')],
+    lastStay: { username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-30', to: '2026-12-02', daysEmpty, isCheckoutCompleted: true, checkoutState },
+  })
+  const briefingRow = async (text: string) => {
+    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
+    return within(header).getByText(text).closest('li') as HTMLElement
+  }
+  const emphasized = (row: HTMLElement) => row.classList.contains('arrival-briefing-item--warn')
+
+  it('plyn, na který upozorňuje „Visí na tobě“, je v „Od minule“ jen tlumeně, po skrytí upozornění zase zvýrazněný', async () => {
+    renderOverview(handover({ gas: 'low', heatingOff: true }))
+
+    const tray = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(within(tray).getByText('Plynová bomba: Dochází')).toBeInTheDocument()
+    expect(emphasized(await briefingRow('Plynová bomba: Dochází'))).toBe(false)
+
+    fireEvent.click(within(tray).getByRole('button', { name: 'Skrýt' }))
+    expect(screen.queryByRole('region', { name: 'Visí na tobě' })).not.toBeInTheDocument()
+    expect(emphasized(await briefingRow('Plynová bomba: Dochází'))).toBe(true)
+  })
+
+  it('odjezd dnes připomene jen banner s předávkou, „Visí na tobě“ ho neopakuje', async () => {
+    renderOverview(reservations({
+      activeReservation: { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY },
+      departingToday: true,
+      departingReservationId: 'r-now',
+    }))
+
+    expect(await screen.findByText('Dnes odjíždíš!')).toBeInTheDocument()
+    expect(screen.queryByText('Dnes odjíždíš z chaty')).not.toBeInTheDocument()
+  })
+
+  it('závada z „Potřebuje pozornost“ je v „Od minule“ jen tlumeně, bez karty pozornosti zůstane zvýrazněná', async () => {
+    renderOverview({ ...handover({ broken: 'Kape kohoutek.' }), lastFault: FAULT })
+
+    const attention = await screen.findByRole('region', { name: 'Potřebuje pozornost' })
+    expect(attention).toHaveTextContent('Kape kohoutek.')
+    expect(emphasized(await briefingRow('Kape kohoutek.'))).toBe(false)
+
+    cleanup()
+    renderOverview(handover({ broken: 'Kape kohoutek.' }))
+    expect(emphasized(await briefingRow('Kape kohoutek.'))).toBe(true)
+  })
+
+  it('každé „Zkopírovat pro WhatsApp“ kopíruje jiný obsah, docházející zásoby jen souhrn karty pozornosti', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    renderOverview(
+      { ...handover({ gas: 'empty', broken: 'Kape kohoutek.' }, 20), lastFault: FAULT, myNextReservation: { from: '2026-12-11', to: '2026-12-13', purpose: 'Víkend' } },
+      {
+        ...NO_SHOPPING,
+        essentialWarning: { count: 1, items: [{ name: 'Káva' }] },
+        attention: [{ name: 'Káva', isEmpty: false, isEssential: true, inventoryId: 'inv-k', shoppingItemId: null }],
+      },
+    )
+
+    const tray = await screen.findByRole('region', { name: 'Visí na tobě' })
+    fireEvent.click(within(tray).getByRole('button', { name: /Zobrazit víc/ }))
+    const buttons = screen.getAllByRole('button', { name: 'Zkopírovat pro WhatsApp' })
+    for (const button of buttons) fireEvent.click(button)
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(buttons.length))
+
+    const texts = writeText.mock.calls.map(([text]) => text)
+    expect(buttons.length).toBeGreaterThan(1)
+    expect(new Set(texts).size).toBe(texts.length)
+    expect(texts.filter((t) => /dochází:.*Káva/i.test(t))).toHaveLength(1)
+    expect(texts.filter((t) => t.includes('Kape kohoutek.'))).toHaveLength(1)
+    expect(texts.filter((t) => t.includes('Plynová bomba: Došlo'))).toHaveLength(1)
+  })
+})

@@ -4,17 +4,15 @@
  * rovnou do úkolu;
  * nejvýš dvě jsou vidět, zbytek je za „Zobrazit víc“. Upozornění, která stojí za to poslat
  * rodině, mají „Zkopírovat pro WhatsApp“ (zpráva + odkaz, #264), dokud nepřijde bot (fáze 3).
- * Docházející zásoby tu nejsou: ukazuje je karta „Potřebuje pozornost“ (bez duplicity).
+ * Která upozornění se ukážou a jejich skrývání drží `useTrayNudges` (bez duplicity s jinými kartami, #425).
  * Když nic nevisí, karta se nevykreslí.
  */
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 import { whatsAppMessage } from "@/lib/whatsapp";
 import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
-import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
-import { buildNudges, type Nudge } from "./nudges";
+import type { Nudge } from "./nudges";
 
 const VISIBLE_COUNT = 2;
 
@@ -25,51 +23,26 @@ const ACTION_LABEL: Record<string, string> = {
   "/handover": "Předat chatu",
 };
 
-const storageKey = (username?: string | null) => `dismissedNudges:${username ?? "anon"}`;
-
-function readDismissed(username?: string | null): string[] {
-  try {
-    const raw = localStorage.getItem(storageKey(username));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 interface Props {
-  reservations?: DashboardReservationsData;
-  shopping?: DashboardShoppingData;
+  /** Upozornění z `useTrayNudges`, už bez skrytých a duplicitních. */
+  nudges: Nudge[];
+  onDismiss: (id: string) => void;
 }
 
-export function NudgeTray({ reservations, shopping }: Props) {
+export function NudgeTray({ nudges: shown, onDismiss }: Props) {
   const headingId = useId();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [dismissed, setDismissed] = useState<string[]>(() => readDismissed(user?.username));
   const [expanded, setExpanded] = useState(false);
 
   const hasAction = (n: Nudge) => n.href in ACTION_LABEL;
-  const nudges = buildNudges({ reservations, shopping, myUsername: user?.username })
-    .filter((n) => !n.id.startsWith("supply-") && !dismissed.includes(n.id))
-    .sort((a, b) => Number(hasAction(b)) - Number(hasAction(a)));
+  const nudges = [...shown].sort((a, b) => Number(hasAction(b)) - Number(hasAction(a)));
   if (nudges.length === 0) return null;
   const visible = expanded ? nudges : nudges.slice(0, VISIBLE_COUNT);
   const hiddenCount = nudges.length - VISIBLE_COUNT;
 
-  const dismiss = (id: string) => {
-    const next = [...dismissed, id];
-    setDismissed(next);
-    try {
-      localStorage.setItem(storageKey(user?.username), JSON.stringify(next));
-    } catch {
-      // storage unavailable — nudge just won't stay dismissed across reloads
-    }
-  };
-
   return (
     <section className="glass-card your-tasks" aria-labelledby={headingId} data-testid="dashboard-nudge-tray">
-      <h2 id={headingId} className="dashboard-card-header-title">Visí na tobě</h2>
+      <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Visí na tobě</h2>
       <ul className="your-tasks__list">
         {visible.map(({ icon: Icon, ...n }, i) => {
           const action = ACTION_LABEL[n.href];
@@ -92,7 +65,7 @@ export function NudgeTray({ reservations, shopping }: Props) {
                   </div>
                 )}
               </div>
-              <button className="nudge-btn" onClick={() => dismiss(n.id)} title="Skrýt" aria-label="Skrýt">
+              <button className="nudge-btn" onClick={() => onDismiss(n.id)} title="Skrýt" aria-label="Skrýt">
                 <X size={16} />
               </button>
             </li>

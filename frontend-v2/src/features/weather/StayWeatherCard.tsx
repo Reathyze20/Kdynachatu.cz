@@ -146,8 +146,8 @@ export function StayWeatherCard({ from, to, title, frame = "rounded-[20px] borde
     <section aria-labelledby={headingId} className={`flex flex-col gap-3 p-4 ${frame}`} data-testid="stay-weather-card">
       <div className="flex flex-wrap items-center justify-between gap-x-3">
         <div className="min-w-0">
-          <h3 id={headingId} className="text-sm font-bold uppercase tracking-wide text-slate-600">Počasí na pobyt</h3>
-          {title && <p className="mt-1 text-[17px] font-bold text-[var(--text-main)]">{title}</p>}
+          <h3 id={headingId} className="m-0 text-card-title text-(--text-main)">Počasí na pobyt</h3>
+          {title && <p className="mt-1 text-body text-(--text-main)">{title}</p>}
         </div>
         {chartToggle}
       </div>

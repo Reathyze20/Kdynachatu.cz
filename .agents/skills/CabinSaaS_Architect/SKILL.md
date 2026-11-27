@@ -20,6 +20,7 @@ Hotovo, když u každého prvku obrazovky víš, která existující komponenta 
 ## 2. Použij kanonickou komponentu
 
 - Prvek, který má řádek v tabulce `DESIGN.md` §6, se staví jen touto komponentou. Vzor z §7 (hlavička, vytvoření, akce nad položkou, mazání, formulář, stavy) se staví přesně podle §7.
+- Nadpis karty stojí na roli „Nadpis karty“ z typové škály (`DESIGN.md` §3, rozhodnutí #425), ne na vlastní třídě v CSS.
 - Řádek se stavem **Cíl** ještě není hotový. Co do té doby platí, říká úvod `DESIGN.md`. Redesign ticket čeká, až se zavřou jeho blokery (§11).
 - Opakující se vzor bez kanonické komponenty popiš v PR jako návrh změny `DESIGN.md`.
 - Struktura dat a stavů: `references/recipes.md` (stránka se stavy, query hook s optimistickou mutací, formulář, API modul, master-detail). Z receptů ber strukturu, vzhled ber z `DESIGN.md`.

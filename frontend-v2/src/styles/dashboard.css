@@ -13,14 +13,6 @@
   line-height: 1.45;
 }
 
-.arrival-briefing-title {
-  font-size: max(0.875rem, var(--font-size-sm));
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-}
-
 .arrival-briefing-body {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -488,13 +480,6 @@
   gap: var(--space-sm);
 }
 
-.overview-invite__title {
-  margin: var(--space-sm) 0 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
 .overview-invite__text {
   margin: 0;
   font-size: 0.875rem;
@@ -597,14 +582,6 @@
   flex-shrink: 0;
 }
 
-.dashboard-card-header-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-main, #374151);
-  text-transform: none;
-  letter-spacing: 0.01em;
-}
-
 .dashboard-card-header-link {
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -654,13 +631,6 @@
   flex-direction: column;
   gap: 6px;
   min-width: 0;
-}
-
-.dashboard-activation-inline-title {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.35;
-  color: var(--text-main, #1f2937);
 }
 
 .dashboard-activation-inline-lead {
@@ -1954,10 +1924,6 @@
   .status-handover {
     font-size: var(--font-size-sm);
     padding: 8px 10px;
-  }
-
-  .dashboard-card-header-title {
-    font-size: var(--font-size-sm);
   }
 
   .dashboard-card-header-link {

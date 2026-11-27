@@ -84,8 +84,8 @@ export function AdminActivationChecklist({ data }: Props) {
           <div className="dashboard-activation-inline-copy">
             <div className="dashboard-activation-inline-head">
               <div className="dashboard-activation-inline-text">
-                <span className="dashboard-card-header-title">Poznámka pro správce</span>
-                <h2 className="dashboard-activation-inline-title">{title}</h2>
+                <span className="text-eyebrow uppercase text-(--text-muted)">Poznámka pro správce</span>
+                <h2 className="m-0 text-card-title text-(--text-main)">{title}</h2>
               </div>
 
               <div className="dashboard-activation-progress" aria-label={`Hotovo ${data.completedCount} z ${data.totalCount} kroků`}>
