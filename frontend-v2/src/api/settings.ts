@@ -2,6 +2,7 @@
  * api/settings.ts — Cabin settings API
  */
 import apiClient from './client'
+import type { DashboardNotesData } from './dashboard'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,9 @@ export interface SetCabinCoverPhotoRequest {
   photoId: string
 }
 
+/** Vzkaz na nástěnce (AppSettings.pinnedHandoverNote) s autorem a časem poslední úpravy. */
+export type HandoverNote = Omit<DashboardNotesData, 'latestNotes'>
+
 // ─── API functions ─────────────────────────────────────────────────────────────
 
 export const settingsApi = {
@@ -61,4 +65,7 @@ export const settingsApi = {
 
   removeCoverPhoto: () =>
     apiClient.delete<CabinConfig>('/cabin/cover-photo').then((r) => r.data),
+
+  updateHandoverNote: (note: string) =>
+    apiClient.patch<HandoverNote>('/workspace/handover-note', { note }).then((r) => r.data),
 }

@@ -1,7 +1,7 @@
 /**
  * attention.ts — co patří do bloku „Důležité“ na Přehledu (#682, spec #677).
- * Pevné pořadí: výstraha před bouřkou → plyn a závada z poslední předávky → Došlo u zásoby s ★.
- * Běžné Dochází a položky bez ★ na Přehled nepatří.
+ * Pevné pořadí: výstraha před bouřkou → plyn a závada z poslední předávky → Došlo u zásoby s ★ →
+ * vzkaz z nástěnky mladší než 14 dní. Běžné Dochází a položky bez ★ na Přehled nepatří.
  * Host vidí jen výstrahu před bouřkou. Rozhoduje se tady, karta jen vykresluje.
  */
 import type { AttentionItem, HandoverFault, WeatherData } from "@/api/dashboard";
@@ -9,13 +9,14 @@ import { GAS_LABEL, gasStateLabel, type GasValue } from "@/lib/gasLevel";
 import { formatDayMonth } from "@/lib/dateUtils";
 
 export const MAX_ATTENTION_ROWS = 3;
+const NOTE_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
-/** Tón štítku a ikony (DESIGN.md §2): varování nebo došlo. */
-export type AttentionTone = "low" | "empty";
+/** Tón štítku a ikony (DESIGN.md §2): varování, došlo, nebo tiché info. */
+export type AttentionTone = "low" | "empty" | "info";
 
 interface RowBase { key: string; label: string; tone: AttentionTone; text: string; meta?: string }
 export type AttentionRow =
-  | (RowBase & { kind: "storm" | "gas" })
+  | (RowBase & { kind: "storm" | "gas" | "note" })
   | (RowBase & { kind: "fault"; fault: HandoverFault })
   | (RowBase & { kind: "supply"; item: AttentionItem });
 
@@ -34,13 +35,14 @@ export interface AttentionInput {
   gas?: GasValue | null;
   fault?: HandoverFault | null;
   supplies?: AttentionItem[];
+  note?: { text: string | null; author: string | null; updatedAt: string | null };
   isGuest?: boolean;
 }
 
 /** Stabilní klíč věci (řádek React, optimistické odebrání). */
 export const attentionKey = (item: AttentionItem): string => item.inventoryId ?? item.shoppingItemId ?? item.name;
 
-export function buildAttention({ storm, gas, fault, supplies = [], isGuest }: AttentionInput): Attention {
+export function buildAttention({ storm, gas, fault, supplies = [], note, isGuest }: AttentionInput): Attention {
   const all: AttentionRow[] = [];
   if (storm) all.push({ kind: "storm", key: "storm", label: "Výstraha", tone: "low", text: `${storm.day}: ${storm.description}` });
   if (!isGuest) {
@@ -52,6 +54,11 @@ export function buildAttention({ storm, gas, fault, supplies = [], isGuest }: At
     }
     for (const item of supplies.filter((i) => i.isEmpty && i.isEssential)) {
       all.push({ kind: "supply", key: attentionKey(item), label: "Došlo", tone: "empty", text: item.name, item });
+    }
+    const noteText = note?.text?.trim();
+    const noteAge = note?.updatedAt ? Date.now() - new Date(note.updatedAt).getTime() : Infinity;
+    if (noteText && noteAge < NOTE_MAX_AGE_MS) {
+      all.push({ kind: "note", key: "note", label: "Vzkaz", tone: "info", text: noteText, meta: note?.author ?? undefined });
     }
   }
   const rows = all.slice(0, MAX_ATTENTION_ROWS);
