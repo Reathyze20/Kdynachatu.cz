@@ -24,7 +24,7 @@ export default defineConfig({
         id: '/',
         name: 'Kdy na chatu',
         short_name: 'Kdy na chatu',
-        description: 'Rodinná aplikace pro správu chaty — rezervace, galerie, deník, nástěnka',
+        description: 'Kdo kdy jede, v jakém stavu chatu nechal a co dochází. Na jednom místě, pro všechny rodiny, co se na chatě střídají.',
         lang: 'cs',
         dir: 'ltr',
         // Ladí s --brand-primary / --bg-app z variables.css
