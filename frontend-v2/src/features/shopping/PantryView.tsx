@@ -2,16 +2,17 @@
  * PantryView.tsx — Inventář / zásoby na chatě
  * Formulář přidání + seznam položek seskupených dle kategorie
  */
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { ChevronDown, ChevronLeft, CircleCheck, Package, Plus } from 'lucide-react'
 import type { InventoryItem } from '@/api/shopping'
-import { useInventory, useCreateInventoryItem } from './hooks/useInventory'
+import { useInventory, useCreateInventoryItem, useDeleteInventoryItem } from './hooks/useInventory'
 import { useAuth } from '@/context/AuthContext'
 import { InventoryRow } from './InventoryRow'
 import { EditInventoryModal } from './EditInventoryModal'
 import { AddToCartModal } from './AddToCartModal'
 import { BulkAddToCartModal } from './BulkAddToCartModal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { showToast } from '@/lib/toast'
 import { CATEGORY_ORDER, CATEGORY_LABELS, INVENTORY_STATUSES, INVENTORY_STATUS_LABELS, isMissingStock } from './constants'
@@ -33,11 +34,18 @@ export function PantryView({ onBack }: Props) {
     refetch: refetchInventory,
   } = useInventory()
   const createItem = useCreateInventoryItem()
+  const deleteStock = useDeleteInventoryItem()
   const { user } = useAuth()
   const isGuest = user?.role === 'guest'
 
   const [editItem, setEditItem] = useState<InventoryItem | null>(null)
   const [cartItem, setCartItem] = useState<InventoryItem | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  const addToggleRef = useRef<HTMLButtonElement>(null)
+  // Kam po zavření potvrzení smazání vrátit fokus, aby nespadl na <body>
+  const focusAfterConfirm = useRef<HTMLElement | null>(null)
   const [showBulkAdd, setShowBulkAdd] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
 
@@ -86,6 +94,49 @@ export function PantryView({ onBack }: Props) {
       )
     }
   }
+
+  function askDelete(item: InventoryItem) {
+    setDeleteError(null)
+    setDeleteTarget(item)
+  }
+
+  /** Menu ⋮ zásoby `id` (offset 0) nebo jejího souseda v seznamu (±1). */
+  function stockMenu(id: string, offset = 0) {
+    const rows = Array.from(listRef.current?.querySelectorAll<HTMLElement>('li[data-item-id]') ?? [])
+    const index = rows.findIndex(row => row.dataset.itemId === id)
+    return index < 0 ? null : rows[index + offset]?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ?? null
+  }
+
+  function cancelDelete() {
+    if (deleteTarget) focusAfterConfirm.current = stockMenu(deleteTarget.id)
+    setDeleteTarget(null)
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setDeleteError(null)
+    // Po smazání fokus na menu následující zásoby, jinak předchozí, jinak na „Přidat zásobu“
+    const nextFocus = stockMenu(deleteTarget.id, 1) ?? stockMenu(deleteTarget.id, -1) ?? addToggleRef.current
+    try {
+      await deleteStock.mutateAsync(deleteTarget.id)
+      focusAfterConfirm.current = nextFocus
+      setDeleteTarget(null)
+    } catch (error) {
+      setDeleteError(
+        getNetworkAwareActionMessage(
+          error,
+          'Zásobu se nepodařilo smazat. Zkus to znovu.',
+          'Spojení vypadlo dřív, než se zásoba stihla smazat. Zkus to znovu po obnovení připojení.',
+        ),
+      )
+    }
+  }
+
+  useEffect(() => {
+    if (deleteTarget) return
+    focusAfterConfirm.current?.focus()
+    focusAfterConfirm.current = null
+  }, [deleteTarget])
 
   // Skupiny dle kategorie (from filteredInventory)
   const grouped: Record<string, InventoryItem[]> = {}
@@ -157,6 +208,7 @@ export function PantryView({ onBack }: Props) {
           <div className="pantry-add-section">
             <button
               type="button"
+              ref={addToggleRef}
               className="pantry-add-toggle"
               onClick={() => setShowAddForm(v => !v)}
               aria-expanded={showAddForm}
@@ -262,7 +314,7 @@ export function PantryView({ onBack }: Props) {
         </div>{/* end pantry-sticky-header */}
 
         {/* ─── SCROLLABLE LIST AREA ─── */}
-        <div className="pantry-scroll-area">
+        <div className="pantry-scroll-area" ref={listRef}>
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
               <div className="spinner" />
@@ -293,6 +345,7 @@ export function PantryView({ onBack }: Props) {
                           key={item.id}
                           item={item}
                           onEdit={setEditItem}
+                          onDelete={askDelete}
                           onAddToCart={setCartItem}
                         />
                       ))}
@@ -313,6 +366,17 @@ export function PantryView({ onBack }: Props) {
           onClose={() => setEditItem(null)}
         />
       )}
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title="Smazat zásobu"
+        message="Opravdu chceš tuto zásobu smazat? Tato akce je nevratná."
+        confirmLabel="Smazat"
+        danger
+        loading={deleteStock.isPending}
+        errorMessage={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
       {cartItem && (
         <AddToCartModal
           invId={cartItem.id}

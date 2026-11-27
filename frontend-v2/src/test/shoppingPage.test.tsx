@@ -268,22 +268,24 @@ const stockRow = (name: string) => within(screen.getByText(name).closest<HTMLEle
 const options = (select: HTMLElement) => within(select).getAllByRole('option').map((o) => o.textContent)
 
 describe('shopping page: readable inventory states', () => {
-  it('names the states in the row, the add form and the edit dialog opened by a tap, under readable category headings', async () => {
+  it('names the states in the row, the add form and the edit dialog opened from the item menu, under readable category headings', async () => {
     const user = await renderPantry()
 
     expect(['Sůl', 'Káva', 'Cukr'].map((name) => stockRow(name).getByText(/Dostatek|Dochází|Došlo/).textContent)).toEqual(['Dostatek', 'Dochází', 'Došlo'])
     expect(screen.queryByText('Málo')).not.toBeInTheDocument()
     expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Trvanlivé', 'Nápoje', 'Ostatní'])
-    // Úprava a mazání se otevírají klepnutím na zásobu; jméno posledního upravovatele v řádku není, umístění ano.
+    // Úprava a mazání jsou v menu ⋮ zásoby (#676); jméno posledního upravovatele v řádku není, umístění ano.
     expect(screen.queryByRole('button', { name: /Upravit zásobu|Smazat zásobu/ })).not.toBeInTheDocument()
     expect(screen.queryByText('Jana')).not.toBeInTheDocument()
     expect(stockRow('Sůl').getByText('Kumbál')).toBeInTheDocument()
     expect(options(screen.getByRole('combobox', { name: 'Stav' }))).toEqual(['Dostatek', 'Dochází', 'Došlo'])
 
-    await user.click(screen.getByRole('button', { name: /Káva/ }))
+    await user.click(stockRow('Káva').getByRole('button', { name: 'Akce se zásobou Káva' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Upravit' }))
     const dialog = await screen.findByRole('dialog', { name: 'Upravit zásobu' })
     expect(options(within(dialog).getByRole('combobox', { name: 'Stav zásoby' }))).toEqual(['Dostatek', 'Dochází', 'Došlo'])
-    expect(within(dialog).getByRole('button', { name: 'Smazat zásobu' })).toBeInTheDocument()
+    // Smazání je jen v menu ⋮ (#676), ne v dialogu úpravy.
+    expect(within(dialog).queryByRole('button', { name: /Smazat/ })).not.toBeInTheDocument()
   })
 
   it('filters "Chybí · N" to Dochází and Došlo without category chips', async () => {
@@ -305,12 +307,60 @@ describe('shopping page: readable inventory states', () => {
     expect(await screen.findByRole('dialog', { name: 'Přidat 2 chybějících zásob do nákupu' })).toBeInTheDocument()
   })
 
-  it('lets a guest see the stocks but not open the edit dialog or the add form; no "Vše do nákupu" when all is in the list', async () => {
+  it('lets a guest see the stocks but not the item menu, the edit dialog or the add form; no "Vše do nákupu" when all is in the list', async () => {
     const user = await renderPantry([pantry[0], pantry[3]], 'guest')
 
     expect(stockRow('Čaj').getByText('Došlo')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Přidat zásobu|Sůl|Vše do nákupu/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Přidat zásobu|Akce se zásobou|Vše do nákupu/ })).not.toBeInTheDocument()
     await user.click(screen.getByText('Sůl'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+// #676: úprava a mazání zásoby jen v menu ⋮ (DESIGN.md §7), mazání s potvrzením, klepnutí na řádek nic neotevírá.
+describe('shopping page: stock item menu', () => {
+  beforeEach(() => { api.delete.mockClear() })
+
+  it('opens nothing on a tap on the row and offers Upravit and Smazat in the menu of each stock', async () => {
+    const user = await renderPantry()
+
+    await user.click(screen.getByText('Káva'))
+    await user.click(screen.getByText('Kumbál'))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Akce se zásobou / })).toHaveLength(pantry.length)
+    // Menu je navíc, sloupec „+“ / „V nákupu“ zůstává.
+    expect(stockRow('Čaj').getByRole('img', { name: 'V nákupu' })).toBeInTheDocument()
+    expect(stockRow('Káva').getByRole('button', { name: 'Přidat do nákupu' })).toBeInTheDocument()
+
+    await user.click(stockRow('Čaj').getByRole('button', { name: 'Akce se zásobou Čaj' }))
+    expect(within(screen.getByRole('menu')).getAllByRole('menuitem').map((el) => el.textContent)).toEqual(['Upravit', 'Smazat'])
+  })
+
+  it('deletes a stock only after confirmation, keeping focus off <body> on cancel and after the delete', async () => {
+    const inventory = [...pantry]
+    api.delete.mockImplementationOnce(() => {
+      inventory.splice(inventory.findIndex((s) => s.id === 's-low'), 1)
+      return Promise.resolve({ data: {} })
+    })
+    const user = await renderPantry(inventory)
+    const askDelete = async () => {
+      await user.click(stockRow('Káva').getByRole('button', { name: 'Akce se zásobou Káva' }))
+      await user.click(screen.getByRole('menuitem', { name: 'Smazat' }))
+      const dialog = await screen.findByRole('dialog', { name: 'Smazat zásobu' })
+      // Modal přesouvá fokus dovnitř až po 50 ms; člověk neklikne dřív, test na to počká
+      await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement))
+      return dialog
+    }
+
+    await user.click(within(await askDelete()).getByRole('button', { name: 'Zrušit' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(api.delete).not.toHaveBeenCalled()
+    await waitFor(() => expect(stockRow('Káva').getByRole('button', { name: 'Akce se zásobou Káva' })).toHaveFocus())
+
+    await user.click(within(await askDelete()).getByRole('button', { name: 'Smazat' }))
+    expect(api.delete).toHaveBeenCalledWith('/inventory/s-low')
+    await waitFor(() => expect(screen.queryByText('Káva')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(stockRow('Cukr').getByRole('button', { name: 'Akce se zásobou Cukr' })).toHaveFocus())
   })
 })

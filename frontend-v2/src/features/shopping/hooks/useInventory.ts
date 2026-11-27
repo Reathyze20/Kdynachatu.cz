@@ -7,7 +7,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
-import { inventoryApi } from '@/api/shopping'
+import { inventoryApi, type InventoryItem } from '@/api/shopping'
 import { showToast } from '@/lib/toast'
 import { handleMutationError } from '@/lib/mutationError'
 import { SHOPPING_KEY } from './useShoppingLists'
@@ -58,7 +58,9 @@ export function useDeleteInventoryItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => inventoryApi.delete(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
+      // Server smazání potvrdil: zásoba zmizí hned, ne až po novém načtení (DESIGN.md §7 Mazání)
+      qc.setQueryData<InventoryItem[]>(INVENTORY_KEY, items => items?.filter(item => item.id !== id))
       void qc.invalidateQueries({ queryKey: INVENTORY_KEY })
     },
     onError: handleMutationError('Chyba při mazání zásoby'),
