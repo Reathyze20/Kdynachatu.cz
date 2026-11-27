@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { formatCount, formatShortDate, formatTime } from '@/lib/format'
 import type { LogEntry, LogQueryParams, LogResponse } from '@/api/admin'
 
@@ -265,7 +266,7 @@ export function LogsPanel({
 
       <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 lg:grid-cols-4" data-testid="logs-toolbar">
         <Field id={`${scopeKey}-log-date`} label="Den">
-          <select
+          <Select
             id={`${scopeKey}-log-date`}
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
@@ -281,11 +282,11 @@ export function LogsPanel({
                 </option>
               ))
             )}
-          </select>
+          </Select>
         </Field>
 
         <Field id={`${scopeKey}-log-level`} label="Úroveň">
-          <select
+          <Select
             id={`${scopeKey}-log-level`}
             value={level}
             onChange={(event) => setLevel(event.target.value as 'all' | 'debug' | 'error' | 'warn' | 'info')}
@@ -296,11 +297,11 @@ export function LogsPanel({
             <option value="error">Jen chyby</option>
             <option value="warn">Jen warningy</option>
             <option value="info">Jen info</option>
-          </select>
+          </Select>
         </Field>
 
         <Field id={`${scopeKey}-log-source`} label="Zdroj">
-          <select
+          <Select
             id={`${scopeKey}-log-source`}
             value={source}
             onChange={(event) => setSource(event.target.value as 'all' | 'backend' | 'frontend')}
@@ -309,11 +310,11 @@ export function LogsPanel({
             <option value="all">Backend + frontend</option>
             <option value="backend">Jen backend</option>
             <option value="frontend">Jen frontend</option>
-          </select>
+          </Select>
         </Field>
 
         <Field id={`${scopeKey}-log-lines`} label="Rozsah">
-          <select
+          <Select
             id={`${scopeKey}-log-lines`}
             value={String(lines)}
             onChange={(event) => setLines(Number(event.target.value))}
@@ -323,7 +324,7 @@ export function LogsPanel({
             <option value="100">100 řádků</option>
             <option value="200">200 řádků</option>
             <option value="500">500 řádků</option>
-          </select>
+          </Select>
         </Field>
 
         {textFilters.map((filter) => (
