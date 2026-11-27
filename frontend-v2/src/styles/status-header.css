@@ -48,7 +48,7 @@
 
 /* Telefon (mobilní shell, nav.css): sloupce pod sebou, šipky pryč. Místo šipek řekne „příště“ / „pak“
    předpona řádku „kdy“; je jen vizuální, čtečka má název skupiny (aria-label). */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .status-header__row { flex-direction: column; align-items: stretch; gap: 10px; }
   .status-header__arrow { display: none; }
   .status-header__side--next .status-header__when::before { content: "příště "; }

@@ -46,7 +46,7 @@
   color: var(--brand-primary-hover);
   font-size: 1.15rem;
   font-weight: 700;
-  border: 2px solid var(--bg-card);
+  border: 2px solid rgb(var(--sheet));
   box-shadow: var(--shadow-xs);
   line-height: 1;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -154,7 +154,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 2px solid var(--bg-card);
+  border: 2px solid rgb(var(--sheet));
   background: rgb(var(--inset));
   border-radius: 50%;
   cursor: pointer;
@@ -167,7 +167,7 @@
 
 .mobile-menu-trigger:active {
   transform: scale(0.93);
-  background: var(--border-light);
+  background: rgb(var(--rule));
 }
 
 .mobile-menu-trigger img {

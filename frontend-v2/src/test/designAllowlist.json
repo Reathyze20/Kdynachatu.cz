@@ -44,7 +44,7 @@
       "styles/dashboard.css", "styles/dialogs.css", "styles/forms.css", "styles/gallery.css",
       "styles/help.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
-      "styles/reservations.css", "styles/shopping.css"
+      "styles/reservations.css", "styles/shopping.css", "styles/status-header.css"
     ],
     "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"]
   },
