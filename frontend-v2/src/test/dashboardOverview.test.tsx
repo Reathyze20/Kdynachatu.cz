@@ -88,8 +88,9 @@ const NOVAKOVI_NOW = {
 }
 
 describe('Přehled: hlavička teď → příště (#272)', () => {
-  // #366: hlavička je osa teď → příště → pak; účel a spolucestující z ní zmizely (změna zadání #272).
-  it('teď, příště a pak jsou sloupce v jedné kartě s avatarem, jménem a jedním řádkem „kdy“', async () => {
+  // #366: hlavička je osa teď → příště; účel a spolucestující z ní zmizely (změna zadání #272).
+  // Spec #677 (#273): sloupec „pak“ z karty zmizel, další pobyty nese blok „Potom a volno“.
+  it('teď a příště jsou sloupce v jedné kartě s avatarem, jménem a jedním řádkem „kdy“', async () => {
     renderOverview(reservations({
       activeReservation: NOVAKOVI_NOW,
       upcomingReservations: [
@@ -112,11 +113,11 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     expect(header).not.toHaveTextContent('Řezání dřeva')
     expect(within(header).queryAllByTitle('Petr')).toHaveLength(0)
     // Jméno a datum dalšího pobytu jsou jen v hlavičce (upřesnění 1), karta „Další příjezd“ zanikla.
-    const later = within(header).getByRole('group', { name: 'Pak' })
-    expect(later).toHaveTextContent(/Ty\s*od po 28\. 12\./)
+    expect(within(header).queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Řetězec turnusu' })).not.toBeInTheDocument()
     expect(document.body.textContent?.match(/14\. 12\./g)).toHaveLength(1)
-    expect(screen.queryByText(/Tvůj pobyt/)).not.toBeInTheDocument()
+    // Můj pobyt za „příště“ už v kartě jako „pak“ není, ukáže ho řádek „Tvůj pobyt“ (#677)
+    expect(header).toHaveTextContent('Tvůj pobyt za 18 dní')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
   })
 
@@ -179,29 +180,17 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
     expect(within(header).queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
   })
 
-  it('sloupec „Pak“ ukáže první další pevný pobyt a počet dalších za ním', async () => {
-    renderOverview(reservations({
-      upcomingReservations: [
-        upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'),
-        upcoming('r-petr', 'Petr', '2026-12-20', '2026-12-22'),
-        upcoming('r-ota', 'Ota', '2026-12-20', '2026-12-21'),
-        upcoming('r-ida', 'Ida', '2027-01-02', '2027-01-04'),
-      ],
-    }))
-
-    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
-    const later = within(header).getByRole('group', { name: 'Pak' })
-    expect(later).toHaveTextContent(/Ota\s*od ne 20\. 12\.\s*\+2/)
-    expect(later).not.toHaveTextContent('a víc')
-  })
-
-  it('když API pošle plný seznam pěti pobytů, „Pak“ přizná, že jich může být víc', async () => {
+  // Spec #677 (#273): „pak/+N“ a „Volný víkend“ z karty zmizely, obojí nese blok „Potom a volno“.
+  it('karta nemá sloupec „Pak“, počet dalších pobytů ani „Volný víkend“', async () => {
     renderOverview(reservations({
       upcomingReservations: ['14', '16', '18', '20', '22'].map((day, i) => upcoming(`r-${i}`, `Host${i}`, `2026-12-${day}`, `2026-12-${Number(day) + 1}`)),
+      nextFreeWeekend: { start: '2026-12-26', end: '2026-12-27' },
     }))
 
     const header = await screen.findByRole('region', { name: 'Na chatě teď' })
-    expect(within(header).getByRole('group', { name: 'Pak' })).toHaveTextContent(/Host1\s*od st 16\. 12\.\s*\+3 a víc/)
+    expect(within(header).queryByRole('group', { name: 'Pak' })).not.toBeInTheDocument()
+    expect(header).not.toHaveTextContent(/Host1|\+\d|a víc|Volný víkend/)
+    expect(within(header).getByRole('button', { name: 'Kalendář' })).toBeInTheDocument()
   })
 
   it('když není nic naplánováno, zůstane prázdný stav Přehledu bez hlavičky', async () => {
@@ -229,6 +218,45 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
 
     await screen.findByText('Chata zatím čeká')
     expect(screen.queryByText(/Tvůj pobyt/)).not.toBeInTheDocument()
+  })
+})
+
+// #273 (spec #677): pobyty po „příště“ a volno k zabrání; do #685 se blok ukazuje všem členům pod kartou Kdo jede.
+describe('Přehled: „Potom a volno“ (#273)', () => {
+  const stay = (id: string, username: string, from: string, to: string, status: 'primary' | 'soft' | 'backup' = 'primary') =>
+    ({ id, userId: `u-${username}`, username, from, to, purpose: 'Víkend', status })
+  const calendar = (...stays: ReturnType<typeof stay>[]) => responses.set('/reservations', { reservations: stays, availabilities: [] })
+  const JANA = stay('r-jana', 'Jana', '2026-12-14', '2026-12-16')
+
+  it('ukáže pobyty po „příště“ a mezi nimi volno; „Zabrat“ vede na formulář s od–do', async () => {
+    calendar(JANA, stay('r-ida', 'Ida', '2026-12-19', '2026-12-20', 'soft'), stay('r-eva', 'Eva', '2026-12-28', '2026-12-30'))
+    renderOverview(reservations({ upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16')] }))
+
+    const block = await screen.findByRole('region', { name: 'Potom a volno' })
+    const rows = within(block).getAllByRole('listitem').map((li) => li.textContent)
+    expect(rows).toEqual([
+      expect.stringMatching(/^Volno · 1 noc\s*17\.–18\. 12\.\s*Zabrat$/),
+      expect.stringMatching(/Ida\s*19\.–20\. 12\. · 1 noc · předběžně/),
+      expect.stringMatching(/^Volno · 6 nocí\s*21\.–27\. 12\./),
+      expect.stringMatching(/Ty\s*28\.–30\. 12\. · 2 noci/),
+    ])
+    expect(block).not.toHaveTextContent('Jana')
+    expect(within(block).getByRole('link', { name: 'Zabrat 17.–18. 12.' })).toHaveAttribute('href', '/reservations?from=2026-12-17&to=2026-12-18')
+    expect(within(block).getByRole('link', { name: 'Celý kalendář' })).toHaveAttribute('href', '/reservations')
+  })
+
+  it('bez pobytů po „příště“ se blok nevykreslí; host ho nevidí', async () => {
+    calendar(JANA)
+    renderOverview(reservations({ upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16')] }))
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(screen.queryByRole('region', { name: 'Potom a volno' })).not.toBeInTheDocument()
+
+    cleanup()
+    auth.isGuest = true
+    calendar(JANA, stay('r-eva', 'Eva', '2026-12-28', '2026-12-30'))
+    renderOverview(reservations({ upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16')] }))
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(screen.queryByRole('region', { name: 'Potom a volno' })).not.toBeInTheDocument()
   })
 })
 
