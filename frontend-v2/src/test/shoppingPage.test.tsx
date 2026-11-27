@@ -611,6 +611,7 @@ describe('shopping page: add from the pantry in one tap', () => {
     await user.click(stockRow('Káva').getByRole('button', { name: 'Přidat do nákupu' }))
     const prompt = await dialog('Nový nákupní seznam')
     expect(prompt.getByRole('textbox', { name: 'Název seznamu' })).toHaveValue('Nákup')
+    expect(prompt.getByText('Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj „Káva“.')).toBeInTheDocument()
     await user.click(prompt.getByRole('button', { name: 'Vytvořit a přidat' }))
 
     expect(api.post).toHaveBeenCalledWith('/inventory/s-low/add-to-cart', { newListName: 'Nákup' })

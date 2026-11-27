@@ -398,7 +398,7 @@ export function PantryView({ currentList }: Props) {
       <PromptDialog
         isOpen={newListFor !== null}
         title="Nový nákupní seznam"
-        description="Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj."
+        description={`Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj ${newListFor?.length === 1 ? `„${newListFor[0].name}“` : formatCount(newListFor?.length ?? 0, 'položku', 'položky', 'položek')}.`}
         label="Název seznamu"
         initialValue="Nákup"
         maxLength={100}
