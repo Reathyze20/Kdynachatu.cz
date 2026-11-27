@@ -72,8 +72,6 @@ const G3_DEBT: Record<string, number> = {
 
 /** Totéž pro TSX (Tailwind a inline styly). */
 const G3_DEBT_TSX: Record<string, number> = {
-  '../components/shared/FeatureErrorFallback.tsx': 4,
-  '../components/shared/GlobalFallback.tsx': 5,
   '../features/gallery/UploadModal.tsx': 1,
   '../features/landing/LandingPage.tsx': 3,
   '../features/reservations/ui/BookingForm.tsx': 2,
