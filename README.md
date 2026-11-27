@@ -86,6 +86,7 @@ npm run prisma:generate  # vygeneruje Prisma klienta
 npm run prisma:migrate   # vytvoří migraci
 npm run prisma:studio    # otevře Prisma Studio (DB GUI)
 npm run db:seed          # fiktivní data pro staging (jen DEPLOY_TARGET=staging, DB *_staging)
+npm run demo:seed        # fiktivní „Chata Pod Lipou“ pro screenshoty a demo (jen DB s „demo“/„test“ v názvu)
 npm run db:migrate-json  # naimportuje archivní JSON data (dřív db:seed)
 
 # Testování & validace
@@ -118,6 +119,20 @@ npm run docker:logs      # zobrazí logy aplikace
 4. **Přihlaš se:**
    - Username: `admin`
    - Password: hodnota `LEARNING_ADMIN_PASSWORD` z `.env`
+
+## Fiktivní chata pro screenshoty a demo
+
+Screenshoty pro landing page (`frontend-v2/public/landing/`) a ukázky se dělají jen z fiktivní „Chaty Pod Lipou“ v **oddělené dočasné DB**, nikdy z lokální DB s daty rodiny. Seed (`src/scripts/seedDemo.ts`) odmítne DB, jejíž název neobsahuje „demo“ nebo „test“, a `cabin_reservation` vždy. `.env` nečte, `DATABASE_URL` se mu předává výslovně.
+
+```bash
+docker run -d --name kdynachatu-demo -e POSTGRES_PASSWORD=demo -e POSTGRES_DB=kdynachatu_demo -p 5435:5432 postgres:16
+export DATABASE_URL=postgresql://postgres:demo@localhost:5435/kdynachatu_demo   # má přednost před .env
+npx prisma migrate deploy
+DEMO_SEED_PASSWORD='<min. 12 znaků>' npm run demo:seed   # jde spustit opakovaně
+npm run dev
+```
+
+Přihlas se jako `Svobodovi` (správce), `Novákovi`, `Dvořákovi` nebo `Krejčovi` s heslem z `DEMO_SEED_PASSWORD`. Data se tvoří relativně ke dnešku. Screenshoty na šířku 390 px: Kalendář (další měsíc), Přehled (karta „Na chatě teď“ s „Od minule“), Zásoby s filtrem „Chybí“; převod do webp třeba přes `sharp` (je v závislostech backendu). Nakonec `docker rm -f kdynachatu-demo`. Screenshoty nesou data z doby pořízení; na obnovu stačí zopakovat tento postup. Na stagingu seed poběží jen proti samostatné DB s „demo“ v názvu (třeba `kdynachatu_demo`), staging DB `*_staging` odmítne.
 
 ## Učení a testování
 
