@@ -89,6 +89,7 @@ function ToastCard({
   // Potvrzení čtečka přečte, až domluví; naléhavě jen chybu (#513).
   const isError = item.type === 'error'
 
+  // Plovoucí papírová karta: povrch jako `Card`, ale `motion.div` s animací a stínem plovoucí vrstvy (--shadow-lg).
   return (
     <motion.div
       layout
@@ -102,7 +103,7 @@ function ToastCard({
       role={isError ? 'alert' : 'status'}
       aria-live={isError ? 'assertive' : 'polite'}
     >
-      <Icon aria-hidden="true" className={`mt-0.5 size-5 shrink-0 ${ICON_COLOURS[item.type] ?? ICON_COLOURS.info}`} />
+      <Icon aria-hidden="true" className={`mt-0.5 size-5 shrink-0 ${ICON_COLOURS[item.type]}`} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="m-0 text-card-title text-(--text-main)">{item.title}</p>
@@ -208,7 +209,7 @@ export function Toast() {
   return (
     // Mobil nad spodní lištou, desktop vpravo dole; na stagingu nad kartou „Co vyzkoušet“ (#399, TestingChecklist).
     <div
-      className="pointer-events-none fixed inset-x-3 bottom-[max(calc(80px_+_env(safe-area-inset-bottom,0px)),var(--testing-card-clearance,0px))] z-(--z-toast) flex flex-col-reverse gap-2 md:left-auto md:right-5 md:bottom-[max(20px,var(--testing-card-clearance,0px))] md:w-[calc(100%-40px)] md:max-w-[440px]"
+      className="pointer-events-none fixed inset-x-3 bottom-[max(calc(var(--mobile-nav-height,71px)_+_8px_+_env(safe-area-inset-bottom,0px)),var(--testing-card-clearance,0px))] z-(--z-toast) flex flex-col-reverse gap-2 md:left-auto md:right-5 md:bottom-[max(20px,var(--testing-card-clearance,0px))] md:w-[calc(100%-40px)] md:max-w-[440px]"
       data-testid="toast-container"
     >
       <AnimatePresence mode="popLayout">
