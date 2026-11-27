@@ -35,6 +35,7 @@
     "backup:all": "tsx src/scripts/backupManager.ts backup all",
     "backup:smoke": "tsx src/scripts/backupRestoreSmoke.ts",
     "uploads:strip-exif": "tsx src/scripts/stripLegacyExif.ts",
+    "diary:fix-dates": "tsx src/scripts/fixDiaryEntryDates.ts",
     "migration:rehearsal": "tsx src/scripts/migrationRehearsalSmoke.ts",
     "migration:remove-admin": "tsx src/scripts/removeWeakAdmin.ts",
     "docker:up": "docker compose up -d --build",

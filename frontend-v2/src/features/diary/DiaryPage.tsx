@@ -24,7 +24,7 @@ import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import { isAuthorOrAdmin } from '@/lib/permissions'
 import { formatDateRange } from '@/lib/format'
-import { formatStayRange } from '@/lib/dateUtils'
+import { formatStayRange, isoDaysBetween, toIsoDate } from '@/lib/dateUtils'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -118,15 +118,7 @@ export function DiaryPage() {
   // ── allDates for notebook navigation ─────────────────────────────────────
   const allDates = useMemo((): string[] => {
     if (!currentFolder?.startDate || !currentFolder?.endDate) return []
-    const dates: string[] = []
-    const start = new Date(currentFolder.startDate); start.setHours(0,0,0,0)
-    const end   = new Date(currentFolder.endDate);   end.setHours(0,0,0,0)
-    const cur = new Date(start)
-    while (cur <= end) {
-      dates.push(cur.toISOString().slice(0, 10))
-      cur.setDate(cur.getDate() + 1)
-    }
-    return dates
+    return isoDaysBetween(currentFolder.startDate.slice(0, 10), currentFolder.endDate.slice(0, 10))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFolder?.id])
 
@@ -157,7 +149,7 @@ export function DiaryPage() {
 
   // Called from NotebookModal when prev/next is pressed (after auto-save)
   function handleNotebookNavigate(newDate: Date) {
-    const key = newDate.toISOString().slice(0, 10)
+    const key = toIsoDate(newDate)
     const newEntry = entryByDate.get(key)
     setNotebookState({ dateObj: newDate, entry: newEntry })
   }
