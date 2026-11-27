@@ -4,10 +4,10 @@ import assert from "node:assert/strict";
 import type { Express } from "express";
 import prisma from "../../utils/prisma";
 import { addDaysIso, calendarTodayIso } from "../../backend/routes/reservationHelpers";
-import { as, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
+import { addGuests, as, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorldWithGuests } from "./harness";
 
 let app: Express;
-let world: TestWorld;
+let world: TestWorldWithGuests;
 
 /** Den posunutý od dneška (pražský kalendářní den, stejně jako route). */
 const day = (offset: number) => new Date(addDaysIso(calendarTodayIso(new Date()), offset));
@@ -24,7 +24,9 @@ const handedOverBy = (by: TestUser, checkoutState: object) => ({
 const overview = (user: TestUser) => as(app, user).get("/api/handover");
 
 before(async () => {
-  ({ app, world } = await setupIntegrationFile());
+  const setup = await setupIntegrationFile();
+  app = setup.app;
+  world = await addGuests(setup.world);
 });
 
 after(teardownIntegrationFile);
@@ -78,5 +80,15 @@ describe("GET /api/handover: lastHandover", () => {
     const resB = await overview(world.memberB);
     assert.equal(resB.body.lastHandover, null);
     assert.equal(resB.body.myStay.reservationId, foreign);
+  });
+});
+
+describe("GET /api/handover: guest (#484)", () => {
+  test("a guest gets their own stay, but not the last handover of other members' stays", async () => {
+    const ownStay = await stay(world.guestA, 3, 5);
+    const res = await overview(world.guestA);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.myStay.reservationId, ownStay);
+    assert.equal(res.body.lastHandover, null);
   });
 });
