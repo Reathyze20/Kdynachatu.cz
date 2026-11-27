@@ -49,10 +49,14 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 | Karta | `bg-sheet` + `border-rule-soft` + `shadow-lift` |
 | Vnořené pole v kartě (dny, záložky) | `bg-inset` |
 | Podklad pod kartami | `--bg-app-backdrop` (řeší shell, stránka ho nenastavuje) |
-| Chyba, úspěch, varování, info | `--status-error` / `-success` / `-warning` / `-info`, podbarvení `-light` |
-| Štítky zásob a plynu (Dostatek · Dochází · Došlo) | text `rgb(var(--ok))` / `--low` / `--empty`, podbarvení `--ok-bg` / `--low-bg` / `--empty-bg` |
+| Chyba, úspěch, varování, info: ikona a rámeček | `--status-error` / `-success` / `-warning` / `-info`. Úspěch a varování mají na papíře jen 2,9 / 2,8 : 1, jejich ikona proto nenese význam sama (vždy s textem); samostatná ikona nebo rámeček stavu bere `rgb(var(--ok))` / `rgb(var(--low))` (5,5 / 6,0 : 1). Plnou výplň s textem má jen chyba: `bg-destructive` + `--text-on-danger` (4,8 : 1); bílá na úspěchu a varování neprojde (3,3 / 3,2 : 1), info by prošlo (5,2 : 1), ale plná výplň je vyhrazená chybě (tichý tón, §1) |
+| Text chyby na světlém podbarvení (souhrnná hláška formuláře) | `--status-error-dark` na `--status-error-light` (6,8 : 1) |
+| Text chyby na papíře (chyba pole, `role="alert"`) | `--status-error-dark` (7,3 : 1). `--status-error` jako text na papíře nestačí (4,3 : 1) |
+| Stavové štítky: zásoby a plyn (Dostatek · Dochází · Došlo), úrovně logu (chyba · varování · info) | v pořádku `rgb(var(--ok))` na `--ok-bg`, dochází / varování `--low` na `--low-bg`, došlo / chyba `--empty` na `--empty-bg`, info `--text-muted` na `bg-sheet` |
 
 `--bg-card` (bílá) je legacy povrch. Nová karta je papír, ne bílá.
+
+**Proč štítek nebere `--status-*`:** text v barvě stavu na jejím `-light` podbarvení nedosáhne kontrastu 4,5 : 1 (WCAG AA): úspěch 3,0, varování 2,9, chyba pod 4 a info 4,2 : 1. Štítky proto berou tóny `--ok` / `--low` / `--empty`, ztmavené tak, aby na svém podbarvení (14 % tónu v papíru karty) měly 4,6 / 4,9 / 4,6 : 1; hlídá to `statusBadgeContrast.test.ts`. Info nemá vlastní tón, je tichý: tlumený text na papíře. `--status-*` zůstává pro ikony a rámečky.
 
 ### Co se nepíše
 
@@ -84,7 +88,7 @@ Vybírá se role, ne velikost v pixelech. Utilita `text-<role>` nastaví velikos
 | Tělo | `text-body` | odstavec, položka seznamu | `--font-size-base` (16 px) | 400 | `--text-main` |
 | Popisek | `text-label` | popisek pole, nápověda, text pod hodnotou | `--font-size-sm` (14 px) | 500 | `--text-muted` |
 | Meta | `text-meta` | čas, autor, počet | `--font-size-sm` (14 px) | 400 | `--text-muted` |
-| Eyebrow | `text-eyebrow uppercase` | krátký štítek nad nadpisem nebo hodnotou, stavový štítek | `--font-size-sm` (14 px) | 700, kapitálky, prostrkání 0,06em | `--text-muted` |
+| Eyebrow | `text-eyebrow uppercase` | krátký štítek nad nadpisem nebo hodnotou, stavový štítek (ten bere tón z §2) | `--font-size-sm` (14 px) | 700, kapitálky, prostrkání 0,06em | `--text-muted` |
 
 - Minimum je 14 px, běžný text 16 px (G3). `--font-size-xs` je alias pro 14 px a ani utilita `text-xs` menší písmo nedá (`textAndTouchTokens.test.ts`).
 - **Nadpisy karet ve větné velikosti písmen** („Visí na tobě“, „Na chatě teď“). Kapitálky s prostrkáním patří jen eyebrow štítku a stavovému štítku (rozhodnutí #425).
