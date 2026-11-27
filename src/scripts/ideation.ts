@@ -207,6 +207,7 @@ function pairwise(root: string): CommandResult {
 }
 
 const BLIND_FILE = "slepe.json";
+const KEY_SUFFIX = ".klic.json";
 const MAX_PER_SIDE = 5;
 const RUN_NAME = /^\d{4}-\d{2}-\d{2}(-\d+)?$/;
 
@@ -287,7 +288,7 @@ function blind(root: string, args: string[]): CommandResult {
   if (!existsSync(inputPath)) {
     return { code: 1, lines: [`Chybí ${inputPath}. Zapiš do něj kandidáty pipeline a baseline a spusť znovu.`] };
   }
-  const keyPath = path.join(root, "runs", `${runName}.klic.json`);
+  const keyPath = path.join(root, "runs", `${runName}${KEY_SUFFIX}`);
   if (existsSync(keyPath)) {
     return { code: 1, lines: [`Klíč ${keyPath} už existuje a nepřepisuje se. Zvol další název běhu (-2, -3…).`] };
   }
@@ -326,16 +327,18 @@ function blind(root: string, args: string[]): CommandResult {
   return { code: 0, lines: [mixed.map(({ id, c }) => renderCandidate(id, c)).join("\n\n")] };
 }
 
-const KEY_SUFFIX = ".klic.json";
 const VERDICT_HEADING = /^## B\./;
 const VERDICT_LINE = /^- (\S+) (K\d+) \| [^|]*\| ([^|]*)(\|.*)?$/;
 const VERDICTS = ["chtějí", "nechtějí", "použili"] as const;
 type Verdict = (typeof VERDICTS)[number];
+const NO_ANSWER = "bez odpovědi";
 
-const BlindKey = z.object({
+const RunKeyFile = z.object({
   run: z.string(),
   candidates: z.array(z.object({ id: z.string(), origin: z.enum(["pipeline", "baseline"]), title: z.string() })),
 });
+
+type RunKey = { run: string; candidates: z.infer<typeof RunKeyFile>["candidates"] };
 
 /** Řádky sekce B `lessons.md` od nadpisu `## B.` do dalšího nadpisu `## `; bez nadpisu `undefined`. */
 function verdictSection(lessons: string): string[] | undefined {
@@ -347,26 +350,62 @@ function verdictSection(lessons: string): string[] | undefined {
   return end === -1 ? rest : rest.slice(0, end);
 }
 
-type RunKey = { run: string; candidates: z.infer<typeof BlindKey>["candidates"] };
-
 /** Všechny klíče `runs/*.klic.json` seřazené podle názvu běhu, nebo hláška, co je špatně. */
 function readKeys(runsDir: string): RunKey[] | string {
-  const files = existsSync(runsDir) ? readdirSync(runsDir).filter((f) => f.endsWith(KEY_SUFFIX)).sort() : [];
-  if (files.length === 0) return `V ${runsDir} není žádný klíč *${KEY_SUFFIX}. Vyhodnocovat jde až po běhu /ideation.`;
+  // Běh se jmenuje podle souboru: tak ho správce vidí v runs/ a tak ho píše do sekce B.
+  const runs = existsSync(runsDir)
+    ? readdirSync(runsDir)
+        .filter((f) => f.endsWith(KEY_SUFFIX))
+        .map((f) => f.slice(0, -KEY_SUFFIX.length))
+        .sort()
+    : [];
+  if (runs.length === 0) return `V ${runsDir} není žádný klíč *${KEY_SUFFIX}. Vyhodnocovat jde až po běhu /ideation.`;
   const keys: RunKey[] = [];
-  for (const file of files) {
-    const keyPath = path.join(runsDir, file);
-    let parsed: ReturnType<typeof BlindKey.safeParse>;
+  for (const run of runs) {
+    const keyPath = path.join(runsDir, `${run}${KEY_SUFFIX}`);
+    let parsed: ReturnType<typeof RunKeyFile.safeParse>;
     try {
-      parsed = BlindKey.safeParse(JSON.parse(readFileSync(keyPath, "utf8")));
+      parsed = RunKeyFile.safeParse(JSON.parse(readFileSync(keyPath, "utf8")));
     } catch {
       return `${keyPath} není platný JSON.`;
     }
     if (!parsed.success) return `${keyPath} nemá tvar klíče { run, candidates: [{ id, origin: pipeline / baseline, title }] }.`;
-    // Běh se jmenuje podle souboru: tak ho správce vidí v runs/ a tak ho píše do sekce B.
-    keys.push({ run: file.slice(0, -KEY_SUFFIX.length), candidates: parsed.data.candidates });
+    const ids = parsed.data.candidates.map(({ id }) => id);
+    const repeated = ids.find((id, i) => ids.indexOf(id) !== i);
+    if (repeated) return `${keyPath}: K-ID ${repeated} je v klíči víckrát.`;
+    keys.push({ run, candidates: parsed.data.candidates });
   }
   return keys;
+}
+
+type VerdictEntry = { run: string; id: string; verdict: Verdict | undefined };
+
+/**
+ * Verdikty ze sekce B podle „<běh> <K-ID>“. Prázdná buňka verdiktu je platný řádek „bez odpovědi“
+ * (`verdict: undefined`), takže taky přepisuje dřívější řádek a kontroluje se proti klíči.
+ */
+function readVerdicts(section: string[]): { verdicts: Map<string, VerdictEntry>; problems: string[] } {
+  const verdicts = new Map<string, VerdictEntry>();
+  const problems: string[] = [];
+  for (const raw of section) {
+    const line = raw.trim().normalize("NFC");
+    if (!/^[-*+] /.test(line)) continue;
+    const match = VERDICT_LINE.exec(line);
+    if (!match) {
+      problems.push(`- „${line}“: řádek není ve formátu \`- <běh> <K-ID> | <název> | <verdikt> | <důvod>\``);
+      continue;
+    }
+    const [, run, id, verdictCell] = match;
+    const cell = verdictCell.trim();
+    const verdict = VERDICTS.find((v) => v === cell.toLowerCase());
+    if (cell !== "" && verdict === undefined) {
+      problems.push(`- ${run} ${id}: neznámý verdikt „${cell}“ (čekám ${VERDICTS.join(" / ")})`);
+      continue;
+    }
+    if (verdicts.has(`${run} ${id}`)) problems.push(`- ${run} ${id}: verdikt je tu víckrát, počítá se poslední`);
+    verdicts.set(`${run} ${id}`, { run, id, verdict });
+  }
+  return { verdicts, problems };
 }
 
 /**
@@ -383,59 +422,36 @@ function evaluate(root: string): CommandResult {
   if (section === undefined) return { code: 1, lines: [`V ${lessonsPath} chybí nadpis \`## B. Verdikty rodiny\`.`] };
   const keys = readKeys(path.join(root, "runs"));
   if (typeof keys === "string") return { code: 1, lines: [keys] };
+  const { verdicts, problems } = readVerdicts(section);
 
-  // Řádek s prázdnou buňkou verdiktu je „bez odpovědi“ a nehlásí se; vše ostatní mimo formát se hlásí.
-  const verdicts = new Map<string, Verdict>();
-  const problems: string[] = [];
-  for (const raw of section) {
-    const line = raw.trim();
-    if (!line.startsWith("- ")) continue;
-    const match = VERDICT_LINE.exec(line);
-    if (!match) {
-      problems.push(`- „${line}“: řádek není ve formátu \`- <běh> <K-ID> | <název> | <verdikt> | <důvod>\``);
-      continue;
-    }
-    const [, run, id, verdictCell] = match;
-    const entry = `${run} ${id}`;
-    const verdict = verdictCell.trim().toLowerCase();
-    if (verdict === "") continue;
-    if (!(VERDICTS as readonly string[]).includes(verdict)) {
-      problems.push(`- ${entry}: neznámý verdikt „${verdictCell.trim()}“ (čekám ${VERDICTS.join(" / ")})`);
-      continue;
-    }
-    if (verdicts.has(entry)) problems.push(`- ${entry}: verdikt je tu víckrát, počítá se poslední`);
-    verdicts.set(entry, verdict as Verdict);
-  }
-
-  const runs = keys.map(({ run }) => run);
-  const counted = new Set<string>();
-  const counts = {
-    pipeline: { proposed: 0, wanted: 0, used: 0, unwanted: 0, noAnswer: 0 },
-    baseline: { proposed: 0, wanted: 0, used: 0, unwanted: 0, noAnswer: 0 },
-  };
+  const tally = () => ({ proposed: 0, wanted: 0, used: 0, unwanted: 0, noAnswer: 0 });
+  const counts: Record<Origin, ReturnType<typeof tally>> = { pipeline: tally(), baseline: tally() };
+  const reveal: string[] = [];
   for (const { run, candidates } of keys) {
-    for (const { id, origin } of candidates) {
+    for (const { id, origin, title } of candidates) {
+      const entry = verdicts.get(`${run} ${id}`);
+      verdicts.delete(`${run} ${id}`);
+      const verdict = entry?.verdict;
       const side = counts[origin];
       side.proposed++;
-      const verdict = verdicts.get(`${run} ${id}`);
-      counted.add(`${run} ${id}`);
       if (verdict === undefined) side.noAnswer++;
       else if (verdict === "nechtějí") side.unwanted++;
       else {
         side.wanted++;
         if (verdict === "použili") side.used++;
       }
+      reveal.push(`- ${run} ${id} – ${title}: ${origin}, ${verdict ?? NO_ANSWER}`);
     }
   }
 
-  for (const entry of verdicts.keys()) {
-    if (counted.has(entry)) continue;
-    problems.push(`- ${entry}: ${runs.includes(entry.split(" ")[0]) ? "K-ID není v klíči běhu" : "běh nemá klíč"}`);
+  const runs = keys.map(({ run }) => run);
+  for (const { run, id } of verdicts.values()) {
+    problems.push(`- ${run} ${id}: ${runs.includes(run) ? "K-ID není v klíči běhu" : "běh nemá klíč"}`);
   }
 
-  const row = (name: Origin) => {
-    const c = counts[name];
-    return `| ${name} | ${c.proposed} | ${c.wanted} | ${c.used} | ${c.unwanted} | ${c.noAnswer} |`;
+  const row = (origin: Origin) => {
+    const c = counts[origin];
+    return `| ${origin} | ${c.proposed} | ${c.wanted} | ${c.used} | ${c.unwanted} | ${c.noAnswer} |`;
   };
   const notes = problems.length > 0 ? ["", "Nezapočteno (oprav řádek v sekci B):", ...problems] : [];
   return {
@@ -448,7 +464,10 @@ function evaluate(root: string): CommandResult {
       row("pipeline"),
       row("baseline"),
       "",
-      "„Rodina chtěla“ zahrnuje i „použila“. Kandidát bez verdiktu v sekci B je „bez odpovědi“, ne „nechtěla“.",
+      `„Rodina chtěla“ zahrnuje i „použila“. Kandidát bez verdiktu v sekci B je „${NO_ANSWER}“, ne „nechtěla“.`,
+      "",
+      "Kandidáti:",
+      ...reveal,
       ...notes,
     ],
   };

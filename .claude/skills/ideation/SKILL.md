@@ -17,7 +17,7 @@ Lokální databáze obsahuje produkční data rodiny a autopilot postaví cokoli
 - Zapisuješ jen do `<kořen>/` (gitignored). Na GitHub nezapisuješ nic: žádné `gh issue create` / `edit` / `comment` / `close`, žádné labely, PR ani `gh api` mimo GET. Z `<kořen>/` nic necommituješ.
 - Žádné `psql`, `docker`, `prisma`, žádné čtení `.env*`, žádný jiný přístup k databázi.
 - Ve výstupech jen role (prarodič, rodič…), nikdy jména.
-- Původ kandidátů znají jen helper a správce: klíč `<kořen>/runs/*.klic.json` čte jen helper (`blind` ho zapisuje, `evaluate` z něj počítá tabulku) a otevírá jen správce. Ty ani žádný subagent ho nečtete ani nevypisujete, jinak slepé míchání nedrží. Původ odkrývá jen výstup `evaluate` v režimu `vyhodnoť`.
+- Původ kandidátů znají jen helper a správce: klíč `<kořen>/runs/*.klic.json` čte jen helper a otevírá jen správce. Ty ani žádný subagent ho nečtete ani nevypisujete, jinak slepé míchání nedrží. Původ odkrývá jen výstup helperu v režimu `vyhodnoť`.
 
 Na začátek promptu každého subagenta kromě kritiků a rozhodčích (ti mají přísnější blok v [kritik.md](kritik.md) a [parove.md](parove.md)) vlož doslova tento blok:
 
