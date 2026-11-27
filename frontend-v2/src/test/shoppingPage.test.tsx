@@ -508,6 +508,27 @@ describe('shopping page: current list header and menu', () => {
     expect(localStorage.getItem('shoppingSelectedListId')).toBeNull()
   })
 
+  it('creates a new list next to an existing one and switches to it, remembering it in the browser', async () => {
+    renderPage([item({ id: 'a', name: 'Mléko' })])
+    const created = { id: 'list-2', name: 'Chata', createdById: 'u-me', isResolved: false, items: [] }
+    const getLists = api.get.getMockImplementation()!
+    api.post.mockImplementationOnce(() => {
+      // Nové seznamy chodí se zpožděním sítě, ne ve stejném okamžiku jako odpověď na založení
+      api.get.mockImplementation(async (path: string) => path === '/shopping-lists'
+        ? new Promise((done) => setTimeout(() => done({ data: [created, { id: 'list-1', name: 'Víkend', createdById: 'u-me', isResolved: false, items: [item({ id: 'a', name: 'Mléko' })] }] }), 30))
+        : getLists(path))
+      return Promise.resolve({ data: created })
+    })
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Nový seznam' }))
+    await user.type((await dialog('Nový nákupní seznam')).getByRole('textbox', { name: 'Název seznamu' }), 'Chata{Enter}')
+
+    expect(api.post).toHaveBeenCalledWith('/shopping-lists', { name: 'Chata' })
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Nákupní seznam' })).toHaveValue('list-2'))
+    expect(screen.queryByText('Mléko')).not.toBeInTheDocument()
+    expect(localStorage.getItem('shoppingSelectedListId')).toBe('list-2')
+  })
+
   it('opens an empty "Nový seznam" from the page header, only in the Nákup mode', async () => {
     renderPage([item({ id: 'a', name: 'Mléko' })])
     const user = userEvent.setup()

@@ -2,7 +2,7 @@
  * ShoppingPage.tsx — Zásoby a nákupy: přepínač „Zásoby / Nákup · N“ (#224), režim v URL (`?view=pantry|shopping`),
  * bez parametru Nákup. Nákup = rovnou aktuální seznam s hlavičkou a menu ⋮, Zásoby = spíž na chatě.
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { ViewSwitcher, type ActiveView } from './ViewSwitcher'
@@ -75,7 +75,7 @@ export function ShoppingPage() {
   // Bez volby, nebo když zapamatovaný seznam zmizel (smazaný, uzavřený), platí nejnovější aktivní (API řadí od nejnovějšího)
   const selectedList = lists.find(l => l.id === selectedListId) ?? lists[0] ?? null
 
-  function rememberList(id: string | null) {
+  const rememberList = useCallback((id: string | null) => {
     setSelectedListId(id)
     try {
       if (id) localStorage.setItem(SELECTED_LIST_KEY, id)
@@ -83,13 +83,13 @@ export function ShoppingPage() {
     } catch {
       // Bez úložiště platí volba jen do obnovení stránky
     }
-  }
+  }, [])
 
   // Náhradní volbu zapíše i do prohlížeče (také po smazání nebo uzavření seznamu), ať se příště neotevře zmizelý seznam
   const shownListId = selectedList?.id ?? null
   useEffect(() => {
     if (!isLoading && !isError && shownListId !== selectedListId) rememberList(shownListId)
-  }, [isLoading, isError, shownListId, selectedListId])
+  }, [isLoading, isError, shownListId, selectedListId, rememberList])
 
   function handleChangeView(view: ActiveView) {
     if (view === activeView) return

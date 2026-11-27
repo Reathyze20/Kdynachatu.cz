@@ -39,9 +39,8 @@ export function useCreateList() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (name: string) => shoppingApi.createList(name),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: SHOPPING_KEY })
-    },
+    // Vrací promise: mutateAsync počká na nové seznamy, aby stránka mohla nový seznam hned vybrat (#224)
+    onSuccess: () => qc.invalidateQueries({ queryKey: SHOPPING_KEY }),
     onError: handleMutationError('Chyba při vytváření seznamu'),
   })
 }
