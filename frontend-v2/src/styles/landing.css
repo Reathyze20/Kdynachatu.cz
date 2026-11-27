@@ -1523,8 +1523,28 @@ body {
     display: none;
   }
 
+  /* „Přihlásit se“ je na mobilu vidět přímo v liště (#695), „Vyzkoušet zdarma“ jen v menu */
   .landing-nav-actions {
+    margin-left: auto;
+    margin-right: var(--touch-target-gap);
+  }
+
+  .landing-nav-trial {
     display: none;
+  }
+
+  .landing-nav-login {
+    min-height: var(--touch-target-min);
+    padding: 0 var(--space-lg);
+    color: var(--text-main);
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-strong);
+  }
+
+  /* hover ghost tlačítka by na dotyku po klepnutí zprůhlednil pozadí */
+  .landing-nav-login:hover {
+    color: var(--text-main);
+    background: var(--bg-card);
   }
 
   .landing-nav-hamburger {
