@@ -29,6 +29,13 @@ describe('Button', () => {
     expect(button.className).toContain(tokenClass)
   })
 
+  // Varianta čitelná bez vazby na CSS třídy: testy obrazovek hlídají chování, ne zápis stylu (#526)
+  it('vystaví svou variantu v data-variant, výchozí je primary', () => {
+    render(<><Button variant="danger">Smazat</Button><Button>Uložit</Button></>)
+    expect(screen.getByRole('button', { name: 'Smazat' })).toHaveAttribute('data-variant', 'danger')
+    expect(screen.getByRole('button', { name: 'Uložit' })).toHaveAttribute('data-variant', 'primary')
+  })
+
   it('bez varianty je primární akce', () => {
     render(<Button>Uložit</Button>)
     expect(screen.getByRole('button', { name: 'Uložit' }).className).toContain('bg-primary')

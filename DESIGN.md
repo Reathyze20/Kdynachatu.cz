@@ -42,7 +42,7 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 | Hlavní text | `--text-main` (teplý inkoust) |
 | Vedlejší text, popisky | `--text-muted` (kontrast ≥ 4,5 : 1 hlídá `mutedTextContrast.test.ts`) |
 | Placeholder, zakázaný text | `--text-placeholder`, `--text-disabled` |
-| Text na zelené / červené | `--text-on-primary`, `--text-on-danger` |
+| Text na zelené / červené / barvě člena | `--text-on-primary`, `--text-on-danger`, `--text-on-member` (iniciála v avataru) |
 | Hlavní akce, aktivní navigace, odkaz | `bg-primary` / `text-primary`, hover `--brand-primary-hover` |
 | Zvýrazněná / vybraná plocha | `bg-accent` (`--brand-primary-light`, 10 % Jedle v papíru) |
 | Hover řádku | `--bg-hover` |
@@ -110,7 +110,7 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 
 | Komponenta | Kde | Kdy a jak | Stav |
 |---|---|---|---|
-| `Button` | `ui/` | Každá akce. `variant` `primary` (výchozí), `secondary`, `ghost`, `danger`. `size` `default` a `sm` (48 px, `sm` s menším odsazením), `lg` = hlavní akce obrazovky 56 px a plně kulatá, `icon` = 48 × 48 px s ikonou 20 px a povinným `aria-label`. `disabled`, `pending` (spinner, `aria-busy`, nejde stisknout znovu), `asChild` pro odkaz se vzhledem tlačítka. `default` a `outline` jsou zastaralé aliasy, nový kód je nepíše. | existuje (#452) |
+| `Button` | `ui/` | Každá akce. `variant` `primary` (výchozí), `secondary`, `ghost`, `danger`. `size` `default` a `sm` (48 px, `sm` s menším odsazením), `lg` = hlavní akce obrazovky 56 px a plně kulatá, `icon` = 48 × 48 px s ikonou 20 px a povinným `aria-label`. `disabled`, `pending` (spinner, `aria-busy`, nejde stisknout znovu), `asChild` pro odkaz se vzhledem tlačítka. Varianta je i v `data-variant`; testy obrazovek čtou ji, ne třídy. `default` a `outline` jsou zastaralé aliasy, nový kód je nepíše. | existuje (#452) |
 | `Input` | `ui/` | Pole formuláře, výška 48 px. `invalid` nastaví `aria-invalid` a červený rámeček, text chyby je pod polem a propojí se přes `aria-describedby`. | existuje (#452) |
 | `Textarea` | `ui/` | Víceřádkové pole, vzhled a `invalid` jako `Input`. Výšku řídí `rows`, nejméně 48 px. | existuje (#526) |
 | `Checkbox` | `ui/` | Zaškrtávací políčko 20 px v barvě Jedle. Obalí ho `<label>` s `min-h-(--touch-target-min)`, text labelu je jeho jméno. | existuje (#526) |

@@ -18,14 +18,6 @@ interface AnimalAvatarProps {
   className?: string;
 }
 
-function hexToRgba(hex: string | undefined, alpha = 1): string {
-  if (!hex || !/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) return `rgba(128,128,128,${alpha})`;
-  let c = hex.substring(1).split("");
-  if (c.length === 3) c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-  const n = parseInt(c.join(""), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-}
-
 export function AnimalAvatar({ icon, username, color: storedColor, size = 48, className = "" }: AnimalAvatarProps) {
   const color = toMemberColor(storedColor);
   const avatarDef = isAvatarId(icon) ? getAvatarById(icon!) : undefined;
@@ -70,7 +62,8 @@ export function AnimalAvatar({ icon, username, color: storedColor, size = 48, cl
           alignItems: "center",
           justifyContent: "center",
           fontSize: size * 0.5,
-          backgroundColor: hexToRgba(color, 0.08),
+          // Subtle 8% tint of the member colour under the emoji
+          backgroundColor: `color-mix(in srgb, ${color} 8%, transparent)`,
         }}
       >
         {icon}
@@ -92,7 +85,7 @@ export function AnimalAvatar({ icon, username, color: storedColor, size = 48, cl
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: color,
-        color: "var(--raw-white)",
+        color: "var(--text-on-member)",
         fontSize: size * 0.45,
         fontWeight: 700,
         lineHeight: 1,
