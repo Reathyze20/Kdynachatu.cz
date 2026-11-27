@@ -2,7 +2,7 @@
  * attention.ts — co patří do bloku „Důležité“ na Přehledu (#682, spec #677).
  * Pevné pořadí: výstraha před bouřkou → plyn a závada z poslední předávky → Došlo u zásoby s ★ →
  * vzkaz z nástěnky mladší než 14 dní. Běžné Dochází a položky bez ★ na Přehled nepatří.
- * Došlo ★, kterou si někdo vzal přes „Koupím já“, vidí ostatní s „Koupí: <jméno>“, ten, kdo ji koupí, ne (#683).
+ * Na konci ★ zásoby, které si někdo vzal přes „Koupím já“: ostatní vidí „Koupí: <jméno>“, ten, kdo je koupí, nic (#683).
  * Host vidí jen výstrahu před bouřkou. Rozhoduje se tady, karta jen vykresluje.
  */
 import type { AttentionItem, ClaimedItem, HandoverFault, WeatherData } from "@/api/dashboard";
@@ -60,14 +60,14 @@ export function buildAttention({ storm, gas, fault, supplies = [], claimed = [],
     for (const item of supplies.filter((i) => i.isEmpty && i.isEssential)) {
       all.push({ kind: "supply", key: attentionKey(item), label: "Došlo", tone: "empty", text: item.name, item });
     }
-    // Vyřešené tiše: štítek bez tónu varování
-    for (const { inventoryId, name, buyer } of claimed.filter((c) => c.buyer !== myUsername)) {
-      all.push({ kind: "claimed", key: `claimed-${inventoryId}`, label: "Došlo", tone: "info", text: name, buyer });
-    }
     const noteText = note?.text?.trim();
     const noteAge = note?.updatedAt ? Date.now() - new Date(note.updatedAt).getTime() : Infinity;
     if (noteText && noteAge < NOTE_MAX_AGE_MS) {
       all.push({ kind: "note", key: "note", label: "Vzkaz", tone: "info", text: noteText, meta: note?.author ?? undefined });
+    }
+    // Vyřešené až na konci a tiše, aby nevytlačilo nic otevřeného. Slib nese i ★ zásobu, která jen docházela, proto ne „Došlo“.
+    for (const { inventoryId, name, buyer } of claimed.filter((c) => c.buyer !== myUsername)) {
+      all.push({ kind: "claimed", key: `claimed-${inventoryId}`, label: "Vyřešeno", tone: "info", text: name, buyer });
     }
   }
   const rows = all.slice(0, MAX_ATTENTION_ROWS);

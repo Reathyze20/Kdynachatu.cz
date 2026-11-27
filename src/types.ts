@@ -250,7 +250,7 @@ export interface ClaimedItem {
   name: string;
   inventoryId: string;
   shoppingItemId: string;
-  buyer: string; // username toho, kdo věc slíbil (unikátní napříč účty)
+  buyer: string; // username toho, kdo věc slíbil a koupí (unikátní napříč účty)
 }
 
 // Preference Přehledu uložené u uživatele, ne u chaty (#681, spec #677). Všechny klíče jsou volitelné:

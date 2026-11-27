@@ -941,12 +941,15 @@ describe('Přehled: „Koupí: <jméno>“ u slíbené Došlo ★ (#683)', () =>
   const shoppingFetches = () => vi.mocked(apiClient.get).mock.calls.filter(([url]) => url === '/dashboard/shopping').length
   const nextArrival = (username: string) => reservations({ upcomingReservations: [upcoming('r-next', username, '2026-12-14', '2026-12-16')] })
 
-  it('ostatní vidí u věci „Koupí: Jana“ místo tlačítka', async () => {
-    renderOverview(reservations(), claimedBy('Jana'))
+  it('ostatní vidí u věci „Koupí: Jana“ místo tlačítka, vyřešené až za otevřenými věcmi a vzkazem', async () => {
+    responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: 'Klíč je u sousedů.', handoverNoteAuthor: 'Jana', handoverNoteUpdatedAt: '2026-12-09T08:00:00.000Z' })
+    renderOverview(reservations(), { ...claimedBy('Jana'), attention: [{ ...toiletPaper, name: 'Sirky', inventoryId: 'inv-s' }] })
 
     const card = await screen.findByRole('region', { name: 'Důležité' })
-    expect(within(card).getAllByRole('listitem').map((r) => r.textContent)).toEqual(['DošloToaleťákKoupí: Jana'])
-    expect(within(card).queryByRole('button', { name: /Koupím já/ })).not.toBeInTheDocument()
+    await waitFor(() => expect(within(card).getAllByRole('listitem').map((r) => r.textContent)).toEqual([
+      'DošloSirkyKoupím já', 'VzkazKlíč je u sousedů. · Jana', 'VyřešenoToaleťákKoupí: Jana',
+    ]))
+    expect(within(card).queryByRole('button', { name: 'Koupím já: Toaleťák' })).not.toBeInTheDocument()
   })
 
   it('kdo věc slíbil, tomu po „Koupím já“ zmizí a nevrátí se ani jako „Koupí: Eva“', async () => {
