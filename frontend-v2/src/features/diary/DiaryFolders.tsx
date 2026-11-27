@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { formatCount } from '@/lib/format'
 import { formatStayRange } from '@/lib/dateUtils'
 import { cn } from '@/lib/utils'
+import dormouseNotebook from '@/features/dashboard/scene/dormouse-notebook.png'
 
 type PeriodFilter = 'all' | 'current_year' | 'last_year' | 'older'
 
@@ -58,6 +59,7 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder,
   // Kopie: filtr „Vše“ vrací pole z cache dotazu a sort() by ho přeskládal na místě.
   const visible = [...filterFolders(folders, period)].sort(byStayDate)
   const emptyMessage = folders.length === 0 ? PERIODS[0].empty : PERIODS.find(p => p.value === period)!.empty
+  const newFolderAction = { label: 'Nový pobyt', icon: Plus, onClick: onNewFolder }
 
   return (
     <div className="flex flex-col gap-4" data-testid="diary-folders-view">
@@ -79,7 +81,10 @@ export function DiaryFolders({ folders, onOpen, onRename, onDelete, onNewFolder,
       </div>
 
       {visible.length === 0 ? (
-        <EmptyState icon={BookOpen} message={emptyMessage} action={{ label: 'Nový pobyt', icon: Plus, onClick: onNewFolder }} />
+        // Plch jen v prázdném deníku (#655); prázdný výsledek filtru má dál ikonu.
+        folders.length === 0
+          ? <EmptyState image={dormouseNotebook} message={emptyMessage} action={newFolderAction} />
+          : <EmptyState icon={BookOpen} message={emptyMessage} action={newFolderAction} />
       ) : (
         <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {visible.map(folder => (

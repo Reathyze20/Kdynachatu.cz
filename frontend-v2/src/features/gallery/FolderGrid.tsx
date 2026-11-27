@@ -8,6 +8,8 @@ import { motion } from 'framer-motion'
 import { Search, Plus, FolderOpen, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import type { GalleryFolder } from '@/api/gallery'
 import { formatCount, formatDate } from '@/lib/format'
+import { EmptyStateImage } from '@/components/shared/EmptyState'
+import dormouseCamera from '@/features/dashboard/scene/dormouse-camera.png'
 
 interface Props {
   folders: GalleryFolder[]
@@ -164,7 +166,7 @@ export function FolderGrid({
         {/* Empty states */}
         {folders.length === 0 && (
           <div className="gallery-empty-state" style={{ gridColumn: '1 / -1' }}>
-            <FolderOpen size={48} strokeWidth={1} style={{ color: 'var(--text-placeholder)' }} />
+            <EmptyStateImage src={dormouseCamera} />
             <p className="gallery-empty-title">Zatím nemáš žádná alba</p>
             <p className="gallery-empty-subtitle">Začni nahrávat fotky z chaty!</p>
             {!isGuest && (
