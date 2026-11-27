@@ -7,7 +7,9 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Plus, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/shared/Card'
 import { ListRow } from '@/components/shared/ListRow'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -188,9 +190,7 @@ function FeatureToggles({ features, onChange }: FeatureTogglesProps) {
               <span className="block font-semibold">{f.label}</span>
               <span className="block text-label text-(--text-muted)">{f.description}</span>
             </span>
-            <input
-              type="checkbox"
-              className="size-5 shrink-0 cursor-pointer accent-(--brand-primary)"
+            <Checkbox
               data-feature={f.key}
               checked={features[f.key] !== false}
               onChange={(e) => toggle(f.key, e.target.checked)}
@@ -488,7 +488,7 @@ export function CabinSettingsPanel({
                     <label htmlFor="cs-description">
                       Popis <span className="cs-optional">(nepovinné)</span>
                     </label>
-                    <textarea
+                    <Textarea
                       id="cs-description"
                       maxLength={2000}
                       rows={3}
@@ -533,7 +533,7 @@ export function CabinSettingsPanel({
                     <label htmlFor="cs-welcome">
                       Uvítací zpráva nebo motto <span className="cs-optional">(nepovinné)</span>
                     </label>
-                    <textarea
+                    <Textarea
                       id="cs-welcome"
                       maxLength={300}
                       rows={2}
@@ -549,7 +549,7 @@ export function CabinSettingsPanel({
                     <label htmlFor="cs-rules">
                       Domácí řád <span className="cs-optional">(nepovinné)</span>
                     </label>
-                    <textarea
+                    <Textarea
                       id="cs-rules"
                       maxLength={5000}
                       rows={6}
@@ -577,10 +577,9 @@ export function CabinSettingsPanel({
 
                 <FormSection title="Zazimování" description="Stav chaty v zimním období">
                   <label className="flex min-h-(--touch-target-min) cursor-pointer items-start gap-3 py-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="cs-winterized"
-                      className="mt-0.5 size-5 shrink-0 cursor-pointer accent-(--brand-primary)"
+                      className="mt-0.5"
                       checked={isWinterized}
                       onChange={(e) => setIsWinterized(e.target.checked)}
                       data-testid="cabin-settings-winterized-toggle"
