@@ -25,7 +25,7 @@ export interface Nudge {
   detail?: string;
   /** In-app navigation target. */
   href: string;
-  /** Název tlačítka, které vede na `href`; bez něj se tlačítko neukáže. */
+  /** Label of the button leading to `href`; without it no button is shown. */
   action?: string;
   /** Optional message to copy into the family chat. Presence enables the button. */
   whatsapp?: string;
@@ -36,19 +36,19 @@ interface BuildNudgesInput {
   shopping?: DashboardShoppingData;
   /** Přihlášený člen; upomínka na odjezd patří jen tomu, kdo dnes odjíždí (#255). */
   myUsername?: string | null;
-  /** Host dostane jen výzvu k vlastnímu odjezdu (#274). */
+  /** A guest gets only the prompt for their own departure (#274). */
   isGuest?: boolean;
-  /** Předávka mého odjezdu čeká v offline frontě na signál (#276). */
+  /** My departure handover waits in the offline queue for signal (#276). */
   departurePending?: boolean;
 }
 
 type Stay = { username: string; participants?: ReservationParticipantLite[] };
 
-/** Organizátor nebo spolucestující; uživatelská jména jsou napříč účty jedinečná. */
+/** Organizer or co-traveller; usernames are unique across accounts. */
 const isMine = (stay: Stay | null | undefined, myUsername?: string | null): boolean =>
   !!stay && !!myUsername && (stay.username === myUsername || !!stay.participants?.some((p) => p.username === myUsername));
 
-/** Můj dnes končící pobyt s nevyplněnou předávkou chaty, jinak `null` (#255, #274). */
+/** My stay ending today with the handover not filled yet, else `null` (#255, #274). */
 export function myDepartureId(reservations: DashboardReservationsData | undefined, myUsername?: string | null): string | null {
   if (reservations?.departingToday && reservations.departingReservationId) return reservations.departingReservationId;
   const active = reservations?.activeReservation;
@@ -60,11 +60,11 @@ export function buildNudges({ reservations, shopping, myUsername, isGuest, depar
   const nudges: Nudge[] = [];
 
   // 1. Departure today — prompt the leaving occupant (and only them) to fill the handover.
-  // Než bude obrazovka Předávky (#220), vede tlačítko na formulář odjezdu v detailu pobytu.
+  // Until the handover screen exists (#220), the button opens the departure form in the stay detail.
   const departureId = myDepartureId(reservations, myUsername);
   if (departureId) {
     nudges.push(departurePending
-      ? { id: `departure-${departureId}`, tone: "info", icon: Clock, title: "Předávka chaty je vyplněná", detail: "Odešle se, jakmile bude signál.", href: "/dashboard" }
+      ? { id: `departure-pending-${departureId}`, tone: "info", icon: Clock, title: "Předávka chaty je vyplněná", detail: "Odešle se, jakmile bude signál.", href: "/dashboard" }
       : {
           id: `departure-${departureId}`,
           tone: "action",
@@ -110,7 +110,7 @@ export function buildNudges({ reservations, shopping, myUsername, isGuest, depar
     });
   }
 
-  // Plyn a Došlo ★ koupí jen ten, kdo přijede příště; ostatní je vidí jen v Důležité (#274).
+  // Gas and Došlo ★ go only to the next arrival; everyone else sees them in Důležité (#274).
   const active = reservations?.activeReservation;
   const next = reservations?.upcomingReservations.find((r) => r.status === "primary" && r.id !== active?.id);
   if (!isMine(next, myUsername)) return nudges;
@@ -131,7 +131,7 @@ export function buildNudges({ reservations, shopping, myUsername, isGuest, depar
     });
   }
 
-  // 3c. Došlo u nezbytné zásoby (★).
+  // 3c. Essential (★) supplies that ran out.
   const starred = (shopping?.attention ?? []).filter((i) => i.isEmpty && i.isEssential).map((i) => i.name);
   if (starred.length > 0) {
     nudges.push({

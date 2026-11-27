@@ -188,13 +188,11 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     const checkoutDone = !!now && "isCheckoutCompleted" in now && now.isCheckoutCompleted;
 
     let checkoutReminderNode: React.ReactNode = null;
-    // Připomínku odjezdu nese výzva ve „Visí na tobě“, karta ji neopakuje (#274)
-    if (departingToday && hasCheckoutTasks && !(shownElsewhere.departure && !checkoutDone)) {
+    // Výzvu k předávce nese jen „Visí na tobě“ odjíždějícího (#274), karta ukáže jen stav
+    if (departingToday && hasCheckoutTasks && (checkoutDone || (departed && !shownElsewhere.departure))) {
       checkoutReminderNode = checkoutDone
         ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
-        : departed
-          ? <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>
-          : <div className="checkout-reminder checkout-reminder-warn"><span>Před odjezdem vyplň <a href="/reservations">odjezdový checklist</a></span></div>;
+        : <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>;
     }
 
     // Můj pevný pobyt, který hlavička ani řetězec neukazují.

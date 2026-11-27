@@ -64,9 +64,9 @@ export function NudgeTray({ nudges: shown, onDismiss }: Props) {
         ))}
       </ul>
       {hiddenCount > 0 && (
-        <button className="your-tasks__more" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}>
+        <Button variant="ghost" size="sm" className="self-start text-primary" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}>
           {expanded ? "Zobrazit méně" : `Zobrazit víc (${hiddenCount})`}
-        </button>
+        </Button>
       )}
     </Card>
   );

@@ -839,10 +839,11 @@ describe('Přehled: „Visí na tobě“ jen pro toho, kdo může jednat (#274)'
   it.each([
     ['člen, který dnes neodjíždí', { ...NOVAKOVI_NOW, to: TODAY }],
     ['po vyplnění předávky', { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY, isCheckoutCompleted: true }],
-  ])('%s: výzva k předávce není', async (_who, activeReservation) => {
-    renderOverview(reservations({ activeReservation }))
+  ])('%s: výzva k předávce není ani v kartě „Na chatě teď“', async (_who, activeReservation) => {
+    renderOverview(reservations({ activeReservation }), NO_SHOPPING, { departureChecklist: ['Zavřít okna'] })
     await screen.findByRole('region', { name: 'Na chatě teď' })
     expect(tray()).not.toBeInTheDocument()
+    expect(screen.queryByText(/vyplň odjezdový checklist/i)).not.toBeInTheDocument()
   })
 
   it('plyn a Došlo ★ jsou výzvou jen pro toho, kdo přijede příště, a v Důležité je znovu nevidí', async () => {
