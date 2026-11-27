@@ -456,6 +456,96 @@ export const sendFrostAlertEmail = async (
   }
 };
 
+// ─── Waitlist: potvrzení návštěvníkovi a upozornění správci (#696) ─────────
+
+const WAITLIST_SEGMENT_LABELS: Record<string, string> = {
+  rodina: "Rodina",
+  spolek: "Oddíl nebo spolek",
+  firma: "Firma",
+  pronajimatel: "Pronajímám chatu",
+  jine: "Jiné",
+};
+
+export interface WaitlistSignupEmailData {
+  email: string;
+  segment: string;
+  households: string | null;
+  willingnessToPay: string | null;
+  painPoint: string | null;
+  rentalIntent: string | null;
+  rentalNeeds: string[];
+  ref: string | null;
+  createdAt: Date;
+}
+
+const simpleEmailHtml = (paragraphs: string[]) => `<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="UTF-8" /></head>
+<body style="margin: 0; padding: 40px 20px; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', Arial, sans-serif;">
+  <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; padding: 32px;">
+    <h1 style="margin: 0 0 24px 0; color: #111827; font-size: 24px; font-weight: 600; text-align: center;">${EMAIL_APP_NAME}</h1>
+    ${paragraphs.map((text) => `<p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">${text}</p>`).join("\n    ")}
+  </div>
+</body>
+</html>`;
+
+/** Jediný e-mail návštěvníkovi po zápisu; odpověď jde na veřejnou kontaktní adresu. */
+export const sendWaitlistConfirmationEmail = async (email: string, contactEmail: string): Promise<void> => {
+  ensureEmailTransport("Waitlist confirmation");
+  if (!transporter) {
+    logger.warn("EMAIL", "[SIMULATION] Waitlist confirmation");
+    return;
+  }
+
+  const paragraphs = [
+    "Ahoj,",
+    "Díky, jsi na seznamu. Odpověz mi na tenhle e-mail, jak to u tebe na chatě funguje.",
+    "Až bude Kdy na chatu připravená pro další chaty, ozvu se ti. Jiné e-maily ti posílat nebudu, žádný newsletter.",
+    "Kdykoli ti zápis smažu, stačí odpovědět na tenhle e-mail. Jinak ho smažu nejpozději po 24 měsících.",
+    `Tomáš, ${EMAIL_APP_NAME}`,
+  ];
+  const info = await transporter.sendMail({
+    from: EMAIL_FROM,
+    to: email,
+    replyTo: contactEmail,
+    subject: `Jsi na seznamu — ${EMAIL_APP_NAME}`,
+    text: paragraphs.join("\n\n"),
+    html: simpleEmailHtml(paragraphs),
+  });
+  logger.info("EMAIL", "Waitlist confirmation sent", { messageId: info.messageId });
+};
+
+/** Upozornění správci na nový zápis se všemi poli; odpověď jde rovnou návštěvníkovi. */
+export const sendWaitlistAdminNotice = async (notifyEmail: string, signup: WaitlistSignupEmailData): Promise<void> => {
+  ensureEmailTransport("Waitlist admin notice");
+  if (!transporter) {
+    logger.warn("EMAIL", "[SIMULATION] Waitlist admin notice");
+    return;
+  }
+
+  const missing = "neuvedeno";
+  const fields: [string, string][] = [
+    ["E-mail", signup.email],
+    ["Kdo je", WAITLIST_SEGMENT_LABELS[signup.segment] ?? signup.segment],
+    ["Domácností", signup.households ?? missing],
+    ["Ochota platit ročně", signup.willingnessToPay ?? missing],
+    ["Co štve", signup.painPoint ?? missing],
+    ["Pronájem cizím", signup.rentalIntent ?? missing],
+    ["Co by pomohlo s pronájmem", signup.rentalNeeds.length > 0 ? signup.rentalNeeds.join(", ") : missing],
+    ["Odkud přišel (ref)", signup.ref ?? missing],
+    ["Zapsáno", signup.createdAt.toISOString()],
+  ];
+  const info = await transporter.sendMail({
+    from: EMAIL_FROM,
+    to: notifyEmail,
+    replyTo: signup.email,
+    subject: `Nový zápis do waitlistu: ${WAITLIST_SEGMENT_LABELS[signup.segment] ?? signup.segment}`,
+    text: fields.map(([label, value]) => `${label}: ${value}`).join("\n"),
+    html: simpleEmailHtml(fields.map(([label, value]) => `<strong>${label}:</strong> ${escapeHtml(value)}`)),
+  });
+  logger.info("EMAIL", "Waitlist admin notice sent", { messageId: info.messageId });
+};
+
 // ─── Generic send email ──────────────────────────────────────────────────────
 
 export const sendEmail = async (opts: { to: string; subject: string; html: string }): Promise<void> => {

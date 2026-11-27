@@ -595,3 +595,23 @@ model ThreadReadStatus {
   @@index([cabinId, userId])
   @@map("thread_read_statuses")
 }
+
+// ============================================================================
+// WAITLIST SIGNUP (Zápis zájemce z landing page, #696, spec #692)
+// Není data chaty: nemá cabinId a nepatří žádné chatě. Hodnoty výčtů hlídá Zod (src/validators/schemas.ts).
+// ============================================================================
+model WaitlistSignup {
+  id               String   @id @default(uuid())
+  email            String   @unique // normalizovaný na malá písmena
+  segment          String // rodina | spolek | firma | pronajimatel | jine
+  households       String? // 2 | 3-4 | 5+
+  willingnessToPay String?  @map("willingness_to_pay") // 0 | do-500 | 500-1000 | nad-1000
+  painPoint        String?  @map("pain_point") @db.Text
+  rentalIntent     String?  @map("rental_intent") // ne | obcas | ano
+  rentalNeeds      String[] @default([]) @map("rental_needs") // jen při rentalIntent obcas/ano
+  ref              String?  @db.VarChar(64) // odkud návštěvník přišel (?ref=), očištěný
+  consentedAt      DateTime @map("consented_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("waitlist_signups")
+}

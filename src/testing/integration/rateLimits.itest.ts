@@ -111,6 +111,26 @@ describe("rate limits: anonymous client logs (10 per minute per IP)", () => {
   });
 });
 
+describe("rate limits: waitlist signup (5 per hour per IP, #696)", () => {
+  let signupCounter = 0;
+  const signUp = (realIp: string) =>
+    request(limitedApp)
+      .post("/api/waitlist")
+      .set("X-Forwarded-For", forwardedFor(realIp))
+      .send({ email: `zajemce-limit-${++signupCounter}@example.test`, segment: "rodina", consent: true });
+
+  test("the 6th signup returns 429 with a Czech message despite a changing X-Forwarded-For, another client is unaffected", async () => {
+    const realIp = "203.0.113.70";
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      assert.equal((await signUp(realIp)).status, 200, `attempt ${attempt}`);
+    }
+    const blocked = await signUp(realIp);
+    assert.equal(blocked.status, 429);
+    assert.match(blocked.body.message, /zápis/i);
+    assert.equal((await signUp("203.0.113.71")).status, 200);
+  });
+});
+
 describe("client logs: context size is bounded", () => {
   /** Rezerva na obálku `{ truncated, preview }` a escapování náhledu nad `maxTotalLength`. */
   const maxLoggedLength = CLIENT_LOG_CONTEXT_LIMITS.maxTotalLength + 100;

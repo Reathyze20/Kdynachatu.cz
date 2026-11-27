@@ -40,6 +40,7 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "GET /api/openapi.json": PUBLIC, // jen s ENABLE_API_DOCS
   "GET /api/demo-accounts": PUBLIC, // neprázdné jen na stagingu
   "GET /api/municipalities": PUBLIC,
+  "POST /api/waitlist": PUBLIC, // zápis zájemce z landing page (#696)
   // auth.ts
   "POST /api/login": PUBLIC,
   "GET /api/signup-status": PUBLIC,

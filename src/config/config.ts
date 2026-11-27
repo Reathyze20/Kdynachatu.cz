@@ -86,6 +86,16 @@ export const SMTP_USER = process.env.SMTP_USER || "";
 export const SMTP_PASS = process.env.SMTP_PASS || "";
 export const EMAIL_FROM = process.env.EMAIL_FROM || '"Kdy na chatu" <noreply@kdynachatu.cz>';
 
+// Waitlist z landing page (#696): veřejná kontaktní adresa (reply-to potvrzení návštěvníkovi) a adresa
+// pro upozornění správce na nový zápis. Prázdná = e-mail se přeskočí s varováním, zápis se uloží i tak.
+// Čte se při každém zápisu, ne při startu: integrační test ověřuje i běh bez nastavených adres.
+export function waitlistEmails(): { contactEmail: string; notifyEmail: string } {
+  return {
+    contactEmail: process.env.WAITLIST_CONTACT_EMAIL?.trim() ?? "",
+    notifyEmail: process.env.WAITLIST_NOTIFY_EMAIL?.trim() ?? "",
+  };
+}
+
 // Frontend URL (for verification links in emails)
 const DEFAULT_FRONTEND_URL = "http://localhost:5173";
 export const FRONTEND_URL = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
