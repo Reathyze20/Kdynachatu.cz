@@ -214,6 +214,22 @@
     20%, 100% { transform: translate(670px, 0); }
   }
 }
+/* ── Plch s mapou na 404 (#657, DESIGN.md §5): jediný průchod, žádná smyčka. Pás MAPA-4 má 26 snímků po 85 ms
+   (snímek 50 × 41 px vykreslený 2×, tedy 100 px). Prvních 16 snímků plch jde zleva na střed po 6 px (3 pixely
+   spritu), pak stojí, otočí mapu a `forwards` ho nechá na posledním snímku. Hýbe jen transform. */
+@theme {
+  --animate-not-found-pass: not-found-pass 2210ms forwards;
+  --animate-not-found-frames: not-found-frames 2210ms steps(26, jump-none) forwards;
+
+  @keyframes not-found-pass {
+    0% { transform: translateX(-96px); animation-timing-function: steps(16, jump-end); }
+    61.54%, 100% { transform: translateX(0); }
+  }
+  /* Posun pásu o 25 snímků: s jump-none se ukáže všech 26 včetně prvního i posledního. */
+  @keyframes not-found-frames {
+    to { transform: translateX(-2500px); }
+  }
+}
 @theme inline {
   /* Pás snímků (plch z PixelLabu, mávání křídel ptáčka): délku, počet snímků a cíl posunu nastaví pás v proměnných
      --scene-strip-ms, --scene-strip-frames a --scene-strip-end. `inline`, aby se proměnné
