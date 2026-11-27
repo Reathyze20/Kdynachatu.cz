@@ -49,15 +49,17 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, pending = false, children, ...props }, ref) => {
     const classes = cn(buttonVariants({ variant, size, className }))
+    // Zastaralé aliasy hlásí variantu, jak vypadají: `outline` = secondary, `default` = primary
+    const dataVariant = variant === "outline" ? "secondary" : !variant || variant === "default" ? "primary" : variant
     if (asChild) {
       return (
-        <Slot className={classes} ref={ref} data-variant={variant ?? "primary"} aria-busy={pending || undefined} {...props}>
+        <Slot className={classes} ref={ref} data-variant={dataVariant} aria-busy={pending || undefined} {...props}>
           {children}
         </Slot>
       )
     }
     return (
-      <button className={classes} ref={ref} data-variant={variant ?? "primary"} aria-busy={pending || undefined} {...props} disabled={props.disabled || pending}>
+      <button className={classes} ref={ref} data-variant={dataVariant} aria-busy={pending || undefined} {...props} disabled={props.disabled || pending}>
         {pending && <LoaderCircle aria-hidden="true" className="animate-spin motion-reduce:animate-none" />}
         {children}
       </button>

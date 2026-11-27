@@ -28,6 +28,7 @@ describe('ConfirmDialog (#526)', () => {
     const { onConfirm, onCancel } = renderDialog({ loading: true })
     const confirm = screen.getByTestId('confirm-dialog-confirm-button')
     expect(confirm).toHaveAttribute('aria-busy', 'true')
+    expect(confirm).toHaveTextContent('Smazat')
     await userEvent.click(confirm)
     await userEvent.click(screen.getByTestId('confirm-dialog-cancel-button'))
     expect(onConfirm).not.toHaveBeenCalled()

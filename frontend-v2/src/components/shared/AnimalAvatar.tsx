@@ -62,7 +62,7 @@ export function AnimalAvatar({ icon, username, color: storedColor, size = 48, cl
           alignItems: "center",
           justifyContent: "center",
           fontSize: size * 0.5,
-          // Jemný nádech barvy člena (8 %) pod emoji
+          // Subtle 8% tint of the member colour under the emoji
           backgroundColor: `color-mix(in srgb, ${color} 8%, transparent)`,
         }}
       >
@@ -85,7 +85,7 @@ export function AnimalAvatar({ icon, username, color: storedColor, size = 48, cl
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: color,
-        color: "var(--text-on-primary)",
+        color: "var(--text-on-member)",
         fontSize: size * 0.45,
         fontWeight: 700,
         lineHeight: 1,

@@ -67,6 +67,8 @@
   /* Zvýšen kontrast: #9ca3af → #6b7280 pro WCAG AA */
   /* Placeholder inputů — viditelný, odlišený */
   --text-on-primary: var(--raw-white);
+  /* Iniciála na barvě člena: kontrast ≥ 4,5 : 1 proti bílé hlídá paleta (lib/memberPalette.ts, G4) */
+  --text-on-member: var(--raw-white);
   /* Text NA barevném pozadí     */
 
   /* ── Brand ─────────────────────────────────────────────────────────── */
