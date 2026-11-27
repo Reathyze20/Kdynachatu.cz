@@ -110,8 +110,8 @@ export function LandingPage() {
         </div>
 
         <div className="landing-nav-actions">
-          <button className="landing-btn landing-btn-ghost" onClick={goToLogin} data-testid="landing-login-button">Přihlásit se</button>
-          <button className="landing-btn landing-btn-primary landing-btn-sm" onClick={goToLogin} data-testid="landing-trial-button">Vyzkoušet zdarma</button>
+          <button className="landing-btn landing-btn-ghost landing-nav-login" onClick={goToLogin} data-testid="landing-login-button">Přihlásit se</button>
+          <button className="landing-btn landing-btn-primary landing-btn-sm landing-nav-trial" onClick={goToLogin} data-testid="landing-trial-button">Vyzkoušet zdarma</button>
         </div>
 
         {/* Mobile hamburger */}
