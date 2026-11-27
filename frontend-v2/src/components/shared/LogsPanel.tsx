@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ScrollText } from 'lucide-react'
+import { ChevronDown, ScrollText } from 'lucide-react'
 import { Card } from '@/components/shared/Card'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
@@ -19,12 +19,18 @@ interface LogsPanelProps {
   loadLogs: (params: LogQueryParams) => Promise<LogResponse>
 }
 
-function getLevelBadgeClass(level: string | undefined): string {
-  const normalized = level?.toLowerCase() ?? 'info'
+// Úrovně na tokenech s ověřeným kontrastem (statusBadgeContrast): chyba jako „Došlo“, varování „Dochází“, info tiše.
+const LEVEL_TONES = {
+  error: 'bg-(--empty-bg) text-[rgb(var(--empty))]',
+  warn: 'bg-(--low-bg) text-[rgb(var(--low))]',
+  info: 'bg-sheet text-(--text-muted)',
+}
+const PILL_CLASS = 'inline-flex items-center rounded-full px-3 py-1 text-eyebrow uppercase'
 
-  if (normalized === 'error') return 'admin-log-level admin-log-level--error'
-  if (normalized === 'warn') return 'admin-log-level admin-log-level--warn'
-  return 'admin-log-level admin-log-level--info'
+function getLevelBadgeClass(level: string | undefined): string {
+  const normalized = level?.toLowerCase()
+  const tone = normalized === 'error' || normalized === 'warn' ? LEVEL_TONES[normalized] : LEVEL_TONES.info
+  return `${PILL_CLASS} min-w-19 shrink-0 justify-center ${tone}`
 }
 
 function getLevelLabel(level: string | undefined): string {
@@ -378,38 +384,37 @@ export function LogsPanel({
         <EmptyState icon={ScrollText} message="Pro tento filtr tu nejsou žádné logy." />
       ) : (
         <>
-          <div className="admin-log-summary" data-testid="logs-summary">
-            <span className="admin-log-summary-pill admin-log-summary-pill--error">{errorCount} error</span>
-            <span className="admin-log-summary-pill admin-log-summary-pill--warn">{warnCount} warn</span>
-            <span className="admin-log-summary-pill admin-log-summary-pill--info">{infoCount} info</span>
+          <div className="flex flex-wrap gap-2" data-testid="logs-summary">
+            <span className={`${PILL_CLASS} ${LEVEL_TONES.error}`}>{errorCount} error</span>
+            <span className={`${PILL_CLASS} ${LEVEL_TONES.warn}`}>{warnCount} warn</span>
+            <span className={`${PILL_CLASS} ${LEVEL_TONES.info}`}>{infoCount} info</span>
           </div>
 
-          <div className="admin-log-list" data-testid="logs-list">
+          <div className="flex max-h-136 flex-col gap-3 overflow-auto overscroll-contain" data-testid="logs-list">
             {logs.map((entry, index) => (
-              <details key={`${entry.time ?? 'time'}-${entry.msg ?? 'msg'}-${index}`} className="admin-log-item" data-testid="log-entry" data-log-index={String(index)}>
-                <summary>
-                  <div className="admin-log-item-main">
-                    <span className={getLevelBadgeClass(typeof entry.level === 'string' ? entry.level : undefined)}>
-                      {getLevelLabel(typeof entry.level === 'string' ? entry.level : undefined)}
+              <details key={`${entry.time ?? 'time'}-${entry.msg ?? 'msg'}-${index}`} className="group rounded-xl border border-rule-soft bg-inset" data-testid="log-entry" data-log-index={String(index)}>
+                <summary className="flex min-h-(--touch-target-min) cursor-pointer list-none items-start gap-3 p-3 md:p-4 [&::-webkit-details-marker]:hidden">
+                  <span className={getLevelBadgeClass(typeof entry.level === 'string' ? entry.level : undefined)}>
+                    {getLevelLabel(typeof entry.level === 'string' ? entry.level : undefined)}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <strong className="text-body font-semibold break-words text-(--text-main)">{entry.msg || 'Záznam bez zprávy'}</strong>
+                    <span className="text-meta text-(--text-muted)">
+                      {formatLogTime(typeof entry.time === 'string' || typeof entry.time === 'number' ? entry.time : undefined)}
                     </span>
-                    <div className="admin-log-copy">
-                      <strong>{entry.msg || 'Záznam bez zprávy'}</strong>
-                      <span>
-                        {formatLogTime(typeof entry.time === 'string' || typeof entry.time === 'number' ? entry.time : undefined)}
-                      </span>
-                      {buildMetaPills(entry).length > 0 && (
-                        <div className="admin-log-meta">
-                          {buildMetaPills(entry).map((pill) => (
-                            <span key={pill} className="admin-log-meta-pill">
-                              {pill}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {buildMetaPills(entry).length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {buildMetaPills(entry).map((pill) => (
+                          <span key={pill} className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-meta text-(--text-main)">
+                            {pill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                  <ChevronDown aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-(--text-muted) transition-transform group-open:rotate-180 motion-reduce:transition-none" />
                 </summary>
-                <pre className="admin-log-detail">{formatLogDetail(entry)}</pre>
+                <pre className="m-0 px-3 pb-3 text-meta break-words whitespace-pre-wrap text-(--text-main) md:px-4 md:pb-4">{formatLogDetail(entry)}</pre>
               </details>
             ))}
           </div>

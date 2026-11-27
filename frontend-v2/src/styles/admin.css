@@ -44,11 +44,11 @@
   align-items: center;
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
-  background: rgba(63, 123, 99, 0.12);
+  background: var(--brand-primary-light);
   color: rgb(var(--ok));
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -131,11 +131,11 @@
 }
 
 .admin-card-eyebrow {
-  font-size: 0.72rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-primary, #3f7b63);
+  color: rgb(var(--ok));
   margin-bottom: 0.45rem;
 }
 
@@ -148,10 +148,10 @@
 
 .admin-card-title {
   margin: 0;
-  font-size: 1.32rem;
+  font-size: var(--font-size-xl);
   line-height: 1.2;
   font-weight: 700;
-  color: var(--text-main, #1a2721);
+  color: var(--text-main);
 }
 
 .admin-card-counter {
@@ -160,17 +160,17 @@
   justify-content: center;
   padding: 0.36rem 0.8rem;
   border-radius: 999px;
-  background: rgba(63, 123, 99, 0.12);
+  background: var(--brand-primary-light);
   color: rgb(var(--ok));
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
 .admin-card-description {
   margin: 0.45rem 0 0;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   line-height: 1.62;
-  font-size: 0.92rem;
+  font-size: var(--font-size-sm);
 }
 
 /* Štítky role a stavu: typografie stavového štítku (DESIGN.md §3 Eyebrow), barvy z rolí §2.
@@ -252,9 +252,9 @@
   gap: 0.7rem;
   align-items: flex-start;
   padding: 0.85rem 0.9rem;
-  border-radius: 16px;
-  background: rgba(248, 251, 249, 0.92);
-  border: 1px solid rgba(63, 123, 99, 0.1);
+  border-radius: var(--radius-lg);
+  background: rgb(var(--inset));
+  border: 1px solid rgb(var(--rule-soft));
 }
 
 .admin-support-steps strong {
@@ -264,14 +264,14 @@
   min-width: 2rem;
   min-height: 2rem;
   border-radius: 999px;
-  background: rgba(63, 123, 99, 0.12);
+  background: var(--brand-primary-light);
   color: rgb(var(--ok));
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .admin-support-steps span {
-  color: var(--text-muted, #6b7280);
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
   line-height: 1.6;
 }
 
@@ -287,7 +287,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
 }
 
 .admin-inline-loader .spinner {
@@ -297,20 +297,20 @@
 
 .admin-empty-state {
   padding: 1.2rem 1.15rem;
-  border: 1px dashed rgba(63, 123, 99, 0.24);
-  border-radius: 18px;
-  background: rgba(248, 251, 249, 0.92);
+  border: 1px dashed rgb(var(--rule-soft));
+  border-radius: var(--radius-lg);
+  background: rgb(var(--inset));
 }
 
 .admin-empty-state h3 {
   margin: 0 0 0.35rem;
-  color: var(--text-main, #1a2721);
-  font-size: 1.02rem;
+  color: var(--text-main);
+  font-size: var(--font-size-base);
 }
 
 .admin-empty-state p {
   margin: 0;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
@@ -378,201 +378,7 @@
   font-size: var(--font-size-sm);
 }
 
-.admin-logs-card {
-  gap: 1rem;
-}
-
-.admin-log-toolbar {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
-  align-items: end;
-}
-
-.admin-log-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  grid-column: 1 / -1;
-}
-
-.admin-log-refresh {
-  min-height: 46px;
-  align-self: end;
-}
-
-.admin-log-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-}
-
-.admin-log-summary-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0.3rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.79rem;
-  font-weight: 700;
-}
-
-.admin-log-summary-pill--error {
-  background: rgba(254, 226, 226, 0.95);
-  color: #b91c1c;
-}
-
-.admin-log-summary-pill--warn {
-  background: rgba(254, 243, 199, 0.95);
-  color: #9a4d00;
-}
-
-.admin-log-summary-pill--info {
-  background: rgba(219, 234, 254, 0.94);
-  color: #1d4ed8;
-}
-
-.admin-log-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  max-height: 34rem;
-  overflow: auto;
-  padding-right: 0.1rem;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.admin-log-item {
-  border: 1px solid rgba(63, 123, 99, 0.12);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.admin-log-item summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 0.9rem 1rem;
-  position: relative;
-  padding-right: 2.4rem;
-}
-
-.admin-log-item summary::-webkit-details-marker {
-  display: none;
-}
-
-.admin-log-item summary::after {
-  content: '▾';
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted, #6b7280);
-  font-size: 0.9rem;
-}
-
-.admin-log-item[open] summary::after {
-  transform: translateY(-50%) rotate(180deg);
-}
-
-.admin-log-item-main {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.8rem;
-}
-
-.admin-log-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.admin-log-copy strong {
-  color: var(--text-main, #1a2721);
-  font-size: 0.95rem;
-  line-height: 1.45;
-}
-
-.admin-log-copy span {
-  color: var(--text-muted, #6b7280);
-  font-size: 0.86rem;
-}
-
-.admin-log-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.admin-log-meta-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0.18rem 0.6rem;
-  border-radius: 999px;
-  background: rgba(232, 244, 239, 0.92);
-  color: #285943;
-  font-size: 0.74rem;
-  font-weight: 700;
-}
-
-.admin-log-level {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 4.75rem;
-  min-height: 30px;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.admin-log-level--error {
-  background: rgba(254, 226, 226, 0.95);
-  color: #b91c1c;
-}
-
-.admin-log-level--warn {
-  background: rgba(254, 243, 199, 0.95);
-  color: #9a4d00;
-}
-
-.admin-log-level--info {
-  background: rgba(219, 234, 254, 0.94);
-  color: #1d4ed8;
-}
-
-.admin-log-detail {
-  margin: 0;
-  padding: 0 1rem 1rem;
-  color: var(--text-main, #1a2721);
-  font-size: 0.82rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-@media (max-width: 900px) {
-  .admin-log-toolbar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-log-actions {
-    grid-column: 1 / -1;
-    justify-content: stretch;
-  }
-
-  .admin-log-refresh {
-    flex: 1 1 12rem;
-  }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .main-content-admin {
     padding: 0.75rem;
     gap: 0.9rem;
@@ -600,16 +406,6 @@
     align-items: flex-start;
   }
 
-  .admin-log-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-log-actions {
-    justify-content: stretch;
-  }
-}
-
-@media (max-width: 480px) {
   .admin-section-link-meta {
     display: none;
   }
