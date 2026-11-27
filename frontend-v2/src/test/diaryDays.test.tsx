@@ -50,6 +50,7 @@ describe('Deník: pobyt po dnech (#520)', () => {
     expect(days).toHaveLength(2)
     fireEvent.click(days[1])
     expect(onOpenNotebook).toHaveBeenCalledTimes(1)
+    expect((onOpenNotebook.mock.calls[0][0] as Date).getDate()).toBe(11)
   })
 
   it('pobyt bez termínu ukáže prázdný stav', () => {

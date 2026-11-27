@@ -56,14 +56,14 @@ export function DiaryCalendar({ folder, entries, onOpenNotebook }: Props) {
             {/* Den se zápisem je zvýrazněná plocha; číslo dne stojí v řádku nad textem, nic nepřekrývá. */}
             <button
               type="button"
-              className={`flex h-full min-h-28 w-full flex-col gap-1 rounded-xl p-3 text-left transition-colors hover:bg-(--bg-hover) focus-visible:outline-2 focus-visible:outline-ring ${entry ? 'bg-accent' : 'bg-inset'}`}
+              className={`flex h-full min-h-28 w-full flex-col gap-1 rounded-xl p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring ${entry ? 'bg-accent' : 'bg-inset hover:bg-(--bg-hover)'}`}
               onClick={() => onOpenNotebook(day, entry)}
               data-testid="diary-day-card"
               data-date={key}
             >
               <span className="flex items-baseline justify-between gap-2">
                 <span className="text-eyebrow text-(--text-muted) uppercase">{capitalize(weekdayName(toIsoDate(day)))}</span>
-                <span className={`day-number text-page-title ${entry ? 'text-primary' : 'text-(--text-main)'}`}>{day.getDate()}</span>
+                <span className="day-number text-card-title text-(--text-main)">{day.getDate()}</span>
               </span>
               {preview && (
                 <span className="entry-preview text-meta text-(--text-main) [overflow-wrap:anywhere]">
