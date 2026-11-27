@@ -20,6 +20,11 @@ export type Precipitation = "none" | "drizzle" | "rain" | "storm";
 export type Wind = "none" | "wind" | "strong";
 /** Soumrak (#610) od `DUSK_MIN` minut před západem slunce do západu, svítání od východu `DAWN_MIN` minut. */
 export type Twilight = "none" | "dusk" | "dawn";
+/** Roční období podle data zařízení (#656): jaro 1. 3.–31. 5., léto 1. 6.–31. 8., podzim 1. 9.–15. 11., potom do konce
+ * února holá krajina. Nečte počasí, takže funguje i bez obce chaty. */
+export type Season = "spring" | "summer" | "autumn" | "bare";
+/** Pozadí krajiny: období, nebo sníh, když leží (sněhová pokrývka má přednost). */
+export type Backdrop = Season | "snow";
 const DUSK_MIN = 45;
 const DAWN_MIN = 30;
 export const WIND_KMH = 20;
@@ -47,6 +52,8 @@ export interface CabinSceneState {
   wind: Wind;
   /** Jen když jsou známé oba časy slunce a není zataženo (srážky, sněžení, mlha); zazimování ho neruší. */
   twilight: Twilight;
+  /** Roční období z data zařízení; jaké pozadí se kreslí, říká `sceneBackdrop` (sníh má přednost). */
+  season: Season;
 }
 
 const isSnowCode = (code: number) => (code >= 71 && code <= 77) || code === 85 || code === 86;
@@ -57,6 +64,14 @@ function precipitationOf(code: number): Precipitation {
 }
 const minutesOf = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3, 5));
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+function seasonOf(d: Date): Season {
+  const month = d.getMonth() + 1;
+  if (month >= 3 && month <= 5) return "spring";
+  if (month >= 6 && month <= 8) return "summer";
+  if (month === 9 || month === 10 || (month === 11 && d.getDate() <= 15)) return "autumn";
+  return "bare";
+}
 
 const windOf = (kmh: number): Wind => (kmh >= STRONG_WIND_KMH ? "strong" : kmh >= WIND_KMH ? "wind" : "none");
 
@@ -107,8 +122,12 @@ export function deriveCabinScene(data: DashboardReservationsData, winterized: bo
     overcast,
     twilight,
     wind: forecast ? windOf(forecast.windSpeed) : "none",
+    season: seasonOf(now),
   };
 }
+
+/** Pozadí krajiny: při sněhové pokrývce zasněžené, jinak podle ročního období (#656). */
+export const sceneBackdrop = (s: CabinSceneState): Backdrop => (s.snowCover ? "snow" : s.season);
 
 /** Kouř z komína (jen u obsazené chaty) se ve větru stáčí po větru. */
 export const smokeCurls = (s: CabinSceneState) => s.occupied && s.wind !== "none";
@@ -143,6 +162,14 @@ const POSE_TEXT: Record<MascotPose, string> = {
   shelter: "Plch se schoval před deštěm pod střechu.",
 };
 
+/** Věta k pozadí krajiny; holá krajina žádnou nemá, sníh popisuje věta „Leží sníh“. */
+const BACKDROP_TEXT: Record<Backdrop, string> = {
+  spring: "Je jaro, louka se zelená.",
+  summer: "Je léto, louka je sytě zelená.",
+  autumn: "Je podzim, louka zlátne a listnáče žloutnou.",
+  bare: "",
+  snow: "",
+};
 const PRECIPITATION_TEXT: Record<Precipitation, string> = { none: "", drizzle: "Mrholí.", rain: "Prší.", storm: "Bouřka." };
 const TWILIGHT_TEXT: Record<Twilight, string> = { none: "", dusk: "Zapadá slunce.", dawn: "Svítá." };
 
@@ -157,6 +184,7 @@ export function cabinSceneLabel(s: CabinSceneState): string {
     POSE_TEXT[mascotPose(s)],
     !s.frost ? "" : "Mrzne a stromy pokrývá jinovatka.",
     s.snowCover ? "Leží sníh, střecha je bílá." : "",
+    BACKDROP_TEXT[sceneBackdrop(s)],
     // Při sněžení, srážkách a mlze je zataženo: noc bez hvězd.
     !s.night ? "" : s.snowing || s.overcast ? "Je noc." : "Je noc, na nebi svítí hvězdy.",
     TWILIGHT_TEXT[s.twilight],
