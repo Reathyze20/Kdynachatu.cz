@@ -3,14 +3,14 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
+      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
       "components/shared/GlobalFallback.tsx",
-      "features/gallery/FolderGrid.tsx", "features/invite/InvitePage.tsx",
+      "features/gallery/FolderGrid.tsx",
       "features/landing/LandingPage.tsx"
     ],
     "Barva člena a avatara je uložená data (#271), převod hex → rgba a paleta zatím mimo tokeny": [
@@ -19,20 +19,20 @@
     "Barvy ikon počasí natvrdo v datové vrstvě, přesunout do tokenů": ["api/dashboard.ts"]
   },
   "rawPalette": {
-    "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": ["styles/gallery.css", "styles/invite.css", "styles/shopping.css"],
+    "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": ["styles/gallery.css", "styles/shopping.css"],
     "Inline styl s --raw-white, převede se s komponentou": ["components/shared/AnimalAvatar.tsx"]
   },
   "legacyColorAlias": {
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css",
+      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css", "styles/layout.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reservations.css",
       "styles/shopping.css", "styles/skeleton.css", "styles/status-header.css"
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
-      "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx", "features/invite/InvitePage.tsx",
+      "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx",
       "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
     ]
   },
@@ -49,7 +49,7 @@
     "Legacy media query (páry 768/769 px a další šířky), sjednotí se při převodu obrazovky": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css",
       "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
-      "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
+      "styles/help.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
       "styles/reservations.css", "styles/shopping.css", "styles/status-header.css"
     ],
@@ -85,7 +85,7 @@
     "Stávající legacy CSS, zmizí, až se jeho obrazovky převedou na utility (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
       "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
+      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",
       "styles/status-header.css", "styles/view-transitions.css"
@@ -108,14 +108,14 @@
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
       "features/gallery/FolderGrid.tsx", "features/gallery/UploadModal.tsx",
-      "features/invite/InvitePage.tsx", "features/shopping/PantryView.tsx"
+      "features/shopping/PantryView.tsx"
     ]
   },
   "loopAnimation": {
     "Indikátor načítání nebo odesílání (spinner, skeleton): smyčka běží jen do konce načítání": [
       "components/ui/button.tsx", "features/reconstruction/ReconstructionSkeleton.tsx",
       "features/reservations/Reservations.module.css", "features/weather/StayWeatherCard.tsx", "styles/base.css", "styles/gallery.css",
-      "styles/invite.css", "styles/skeleton.css"
+      "styles/skeleton.css"
     ],
     "Dekorativní smyčka z doby před #565 (pulzující tečka stavu, landing page), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/landing.css", "styles/reservations.css"]
   }

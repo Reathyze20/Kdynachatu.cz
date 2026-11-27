@@ -74,7 +74,7 @@ const usesBlur = (body: string) => /(?:^|[;\s{])(?:-webkit-)?backdrop-filter\s*:
 const usesPhoto = (body: string) => /--bg-image|bg-hero|url\(\s*["']?[^"')]*\.jpe?g/i.test(body)
 
 /** Veřejné stránky před přihlášením: fotka i sklo nad ní tu zůstávají. */
-const PUBLIC_FILES = ['/styles/landing.css', '/styles/legal.css', '/styles/invite.css']
+const PUBLIC_FILES = ['/styles/landing.css', '/styles/legal.css']
 
 describe('Design tokeny povrchů z mocku (C1)', () => {
   const variables = fileRules('variables.css')

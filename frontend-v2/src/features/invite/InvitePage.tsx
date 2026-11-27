@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CircleX } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, CircleX } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import apiClient from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { AvatarPicker } from '@/components/shared/AvatarPicker';
 import { ColorPicker } from '@/components/shared/ColorPicker';
 import { MEMBER_PALETTE } from '@/lib/memberPalette';
 import { SignupConsent } from '@/components/shared/SignupConsent';
-import cabinBg from '@/img/olivier-guillard-FKJgBUDoVC0-unsplash.jpg';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { Button } from '@/components/ui/button';
 
 interface ValidateResponse {
   valid: boolean;
@@ -52,12 +53,6 @@ export function InvitePage() {
   });
   
   const [submitting, setSubmitting] = useState(false);
-
-  const bgStyle: React.CSSProperties = {
-    backgroundImage: `url(${cabinBg})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  };
 
   useEffect(() => {
     async function validateToken() {
@@ -107,28 +102,24 @@ export function InvitePage() {
 
   if (loading) {
     return (
-      <div className="invite-page" style={bgStyle} data-testid="invite-page" data-invite-step="loading">
-        <div style={{ textAlign: 'center' }}>
-          <div className="invite-spinner" />
-          <p style={{ color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>Ověřuji pozvánku…</p>
-        </div>
-      </div>
+      <AuthLayout data-testid="invite-page" data-invite-step="loading">
+        <p role="status" className="text-center text-body text-(--text-muted)">Ověřuji pozvánku…</p>
+      </AuthLayout>
     );
   }
 
   if (error || !inviteInfo) {
     return (
-      <div className="invite-page" style={bgStyle} data-testid="invite-page" data-invite-step="invalid">
-        <div className="invite-card invite-card-narrow" data-testid="invite-invalid-card">
-          <div className="invite-icon" aria-hidden="true" style={{ color: 'var(--status-error)' }}><CircleX size={48} style={{ display: 'block', margin: '0 auto' }} /></div>
-          <h1 className="invite-title">Neplatná pozvánka</h1>
-          <p className="invite-text">{error}</p>
-          <p className="invite-text">Požádej toho, kdo tě zval, o nový odkaz.</p>
-          <button className="invite-btn invite-btn-primary invite-btn-full" onClick={() => navigate('/login')} data-testid="invite-invalid-login-button">
-            Přejít na přihlášení
-          </button>
+      <AuthLayout title="Neplatná pozvánka" data-testid="invite-page" data-invite-step="invalid">
+        <div className="flex flex-col items-center gap-3 text-center" data-testid="invite-invalid-card">
+          <CircleX size={24} aria-hidden="true" className="text-(--status-error)" />
+          <p className="text-body text-(--text-main)">{error}</p>
+          <p className="text-body text-(--text-muted)">Požádej toho, kdo tě zval, o nový odkaz.</p>
+          <Button asChild size="lg" className="mt-3 w-full">
+            <Link to="/login" data-testid="invite-invalid-login-button">Přejít na přihlášení</Link>
+          </Button>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
@@ -137,144 +128,118 @@ export function InvitePage() {
   // ── Step 1: Welcome ──────────────────────────────────────────────────
   if (step === 'welcome') {
     return (
-      <div className="invite-page" style={bgStyle} data-testid="invite-page" data-invite-step="welcome">
-        <div className="invite-card invite-card-narrow" data-testid="invite-welcome-card">
-          <h1 className="invite-heading" style={{ fontSize: '1.5rem' }}>
-            Pozvánka na chatu
-          </h1>
-          <p className="invite-text" style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
+      <AuthLayout title="Pozvánka na chatu" data-testid="invite-page" data-invite-step="welcome">
+        <div className="flex flex-col items-center gap-2 text-center" data-testid="invite-welcome-card">
+          <p className="text-body text-(--text-main)">
             <strong>{inviteInfo.invitedBy}</strong> tě zve na chatu
           </p>
-          <p style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text, #1a2721)', margin: '0 0 16px' }}>
-            „{inviteInfo.cabinName}"
-          </p>
-          <span className="invite-role-badge" style={{ marginBottom: '16px', display: 'inline-block' }}>{roleLabel}</span>
+          <p className="text-card-title text-(--text-main)">„{inviteInfo.cabinName}“</p>
+          <span className="rounded-full bg-(--bg-hover) px-3 py-1 text-eyebrow uppercase text-(--text-muted)">{roleLabel}</span>
           {inviteInfo.welcomeMessage && (
-            <p className="invite-text invite-text-muted" style={{ marginTop: '8px', fontStyle: 'italic' }}>
-              „{inviteInfo.welcomeMessage}"
-            </p>
+            <p className="mt-2 text-body italic text-(--text-muted)">„{inviteInfo.welcomeMessage}“</p>
           )}
-          <div style={{ marginTop: '24px' }}>
-            <button
-              className="invite-btn invite-btn-primary invite-btn-full"
-              onClick={() => setStep('register')}
-              data-testid="invite-continue-button"
-            >
-              Pokračovat →
-            </button>
-          </div>
-          <div className="invite-back-link">
-            Už máš účet? <a onClick={() => navigate('/login')} data-testid="invite-existing-login-link">Přihlásit se</a>
-          </div>
+          <Button size="lg" className="mt-6 w-full" onClick={() => setStep('register')} data-testid="invite-continue-button">
+            Pokračovat
+            <ArrowRight aria-hidden="true" />
+          </Button>
         </div>
-      </div>
+        <p className="toggle-form-text">
+          Už máš účet? <Link to="/login" data-testid="invite-existing-login-link">Přihlásit se</Link>
+        </p>
+      </AuthLayout>
     );
   }
 
   // ── Step 2: Registration form ────────────────────────────────────────
   return (
-    <div className="invite-page" style={bgStyle} data-testid="invite-page" data-invite-step="register">
-      <div className="invite-card invite-card-compact" data-testid="invite-register-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <button
-            type="button"
-            className="invite-back-btn"
-            onClick={() => setStep('welcome')}
-            title="Zpět"
-            aria-label="Zpět"
-            data-testid="invite-back-button"
-          >
-            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
-          </button>
-          <h2 className="invite-heading" style={{ margin: 0, fontSize: '1.15rem' }}>
-            Vytvoř si účet — {inviteInfo.cabinName}
-          </h2>
+    <AuthLayout title="Vytvoř si účet" subtitle={`„${inviteInfo.cabinName}“`} className="relative" data-testid="invite-page" data-invite-step="register">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute top-4 left-4"
+        onClick={() => setStep('welcome')}
+        aria-label="Zpět"
+        data-testid="invite-back-button"
+      >
+        <ArrowLeft aria-hidden="true" />
+      </Button>
+
+      <form onSubmit={handleSubmit} data-testid="invite-register-form">
+        <div className="form-group">
+          <label htmlFor="invite-username">Uživatelské jméno (tím se budeš přihlašovat)</label>
+          <input
+            type="text"
+            id="invite-username"
+            name="username"
+            autoComplete="username"
+            required
+            minLength={3}
+            maxLength={50}
+            placeholder="Např. Tomáš"
+            value={formData.username}
+            onChange={e => setFormData({ ...formData, username: e.target.value })}
+            autoFocus
+            data-testid="invite-username-input"
+          />
         </div>
 
-        {registerError && <div className="invite-error-msg" role="alert" data-testid="invite-register-error">{registerError}</div>}
+        <div className="form-group">
+          <label htmlFor="invite-password">Heslo</label>
+          <input
+            type="password"
+            id="invite-password"
+            name="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            maxLength={100}
+            placeholder="Min. 8 znaků"
+            value={formData.password}
+            onChange={e => setFormData({ ...formData, password: e.target.value })}
+            data-testid="invite-password-input"
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} data-testid="invite-register-form">
-          <div className="invite-form-group">
-            <label htmlFor="invite-username">Uživatelské jméno (tím se budeš přihlašovat)</label>
-            <input 
-              type="text" 
-              id="invite-username"
-              name="username"
-              autoComplete="username" 
-              required 
-              minLength={3}
-              maxLength={50}
-              placeholder="Např. Tomáš"
-              value={formData.username}
-              onChange={e => setFormData({ ...formData, username: e.target.value })}
-              autoFocus
-              data-testid="invite-username-input"
-            />
-          </div>
+        <div className="form-group">
+          <label htmlFor="invite-email">E-mail (nepovinné)</label>
+          <input
+            type="email"
+            id="invite-email"
+            name="email"
+            autoComplete="email"
+            placeholder="tvuj@email.cz"
+            value={formData.email}
+            onChange={e => setFormData({ ...formData, email: e.target.value })}
+            data-testid="invite-email-input"
+          />
+        </div>
 
-          <div className="invite-form-row">
-            <div className="invite-form-group">
-              <label htmlFor="invite-password">Heslo</label>
-              <input 
-                type="password" 
-                id="invite-password"
-                name="password"
-                autoComplete="new-password" 
-                required 
-                minLength={8}
-                maxLength={100}
-                placeholder="Min. 8 znaků"
-                value={formData.password}
-                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                data-testid="invite-password-input"
-              />
-            </div>
-            <div className="invite-form-group">
-              <label htmlFor="invite-email">E-mail <span className="invite-optional">(nepovinné)</span></label>
-              <input 
-                type="email" 
-                id="invite-email"
-                name="email"
-                autoComplete="email"
-                placeholder="tvuj@email.cz"
-                value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                data-testid="invite-email-input"
-              />
-            </div>
-          </div>
+        <div className="form-group">
+          <label>Avatar</label>
+          <AvatarPicker
+            value={formData.animalIcon}
+            onChange={val => setFormData({ ...formData, animalIcon: val })}
+            compact
+          />
+        </div>
 
-          <div className="invite-form-row">
-            <div className="invite-form-group" style={{ flex: '1 1 60%' }}>
-              <label>Avatar</label>
-              <AvatarPicker 
-                value={formData.animalIcon}
-                onChange={val => setFormData({ ...formData, animalIcon: val })}
-                compact
-              />
-            </div>
-            <div className="invite-form-group" style={{ flex: '1 1 35%' }}>
-              <label>Barva</label>
-              <ColorPicker 
-                value={formData.color}
-                onChange={val => setFormData({ ...formData, color: val })}
-                size={26}
-              />
-            </div>
-          </div>
+        <div className="form-group">
+          <label>Barva</label>
+          <ColorPicker
+            value={formData.color}
+            onChange={val => setFormData({ ...formData, color: val })}
+          />
+        </div>
 
-          <SignupConsent />
+        <SignupConsent />
 
-          <button 
-            type="submit" 
-            className="invite-btn invite-btn-primary invite-btn-full"
-            disabled={submitting}
-            data-testid="invite-submit-button"
-          >
-            {submitting ? 'Připojuji…' : 'Připojit se k chatě →'}
-          </button>
-        </form>
-      </div>
-    </div>
+        {registerError && <p className="error-message show" role="alert" data-testid="invite-register-error">{registerError}</p>}
+
+        <Button type="submit" size="lg" className="mt-4 w-full" pending={submitting} data-testid="invite-submit-button">
+          {submitting ? 'Připojuji…' : 'Připojit se k chatě'}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }
