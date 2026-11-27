@@ -54,9 +54,22 @@ const STATUS_TONE = {
   neutral: 'text-(--text-muted)',
 }
 
-interface AuthStatusProps {
-  icon: LucideIcon
-  tone: keyof typeof STATUS_TONE
+/** Ikona, nebo místo ní obrázek či animovaný prvek, nikdy obojí (DESIGN.md §6). */
+type AuthStatusVisual =
+  | {
+      /** Ikona lucide, vykreslí se 24 px v barvě `tone` a čtečka ji přeskočí. */
+      icon: LucideIcon
+      tone: keyof typeof STATUS_TONE
+      image?: never
+    }
+  | {
+      /** Dekorativní obrázek nebo animovaný prvek místo ikony (plch s mapou na 404, #657); sám nese `aria-hidden`. */
+      image: ReactNode
+      icon?: never
+      tone?: never
+    }
+
+type AuthStatusProps = AuthStatusVisual & {
   /** Co se stalo, jako `h2` pod názvem appky. */
   title: string
   /** Jedna nebo dvě věty: proč a co dělat dál. */
@@ -65,11 +78,14 @@ interface AuthStatusProps {
   actions: ReactNode
 }
 
-/** Výsledek nebo slepá ulička v rámu (odkaz vypršel, účet ověřen, stránka neexistuje): ikona, nadpis, text, cesta dál. */
-export function AuthStatus({ icon: Icon, tone, title, children, actions }: AuthStatusProps) {
+/**
+ * Výsledek nebo slepá ulička v rámu (odkaz vypršel, účet ověřen, stránka neexistuje): ikona (nebo obrázek), nadpis,
+ * text, cesta dál.
+ */
+export function AuthStatus({ icon: Icon, tone, image, title, children, actions }: AuthStatusProps) {
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      <Icon size={24} aria-hidden="true" className={STATUS_TONE[tone]} />
+      {image ?? (Icon && tone && <Icon size={24} aria-hidden="true" className={STATUS_TONE[tone]} />)}
       <h2 className="text-card-title text-(--text-main)">{title}</h2>
       <p className="text-body text-(--text-muted)">{children}</p>
       <div className="mt-3 flex w-full flex-col items-center gap-2">{actions}</div>
