@@ -9,6 +9,7 @@ import { showToast } from '@/lib/toast'
 import { ArrowLeft, Eye, EyeOff, Mail } from 'lucide-react'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { MEMBER_PALETTE } from '@/lib/memberPalette'
+import { ColorPicker } from '@/components/shared/ColorPicker'
 import type { MunicipalityOption } from '@/api/municipalities'
 import { MunicipalityPicker } from '@/components/shared/MunicipalityPicker'
 import { tooManyAttemptsMessage } from './tooManyAttempts'
@@ -192,24 +193,10 @@ export function RegisterForm({ onShowLogin }: RegisterFormProps) {
         </div>
 
         <div className="form-group">
-          <label>Barva profilu</label>
-          <div className="color-picker-swatches" id="register-color-swatches" data-testid="register-color-swatches">
-            {MEMBER_PALETTE.map(({ hex, name }) => (
-              <button
-                key={hex}
-                type="button"
-                className={`color-swatch${selectedColor === hex ? ' active' : ''}`}
-                style={{ backgroundColor: hex }}
-                data-color={hex}
-                aria-label={`Barva ${name}`}
-                aria-pressed={selectedColor === hex}
-                title={name}
-                data-testid={`register-color-swatch-${hex.slice(1).toLowerCase()}`}
-                onClick={() => setSelectedColor(hex)}
-              />
-            ))}
+          <label id="register-color-label">Barva profilu</label>
+          <div id="register-color-swatches" data-testid="register-color-swatches" role="group" aria-labelledby="register-color-label">
+            <ColorPicker value={selectedColor} onChange={setSelectedColor} />
           </div>
-          <input type="hidden" name="color" id="register-color" value={selectedColor} />
         </div>
 
         <SignupConsent />

@@ -17,7 +17,8 @@ import { useLogout } from '@/hooks/useLogout'
 import { LogoutPendingChangesDialog } from '@/components/layout/LogoutPendingChangesDialog'
 import { showToast } from '@/lib/toast'
 import { AVATARS } from '@/lib/avatars'
-import { FALLBACK_MEMBER_COLOR, MEMBER_PALETTE, toMemberColor } from '@/lib/memberPalette'
+import { FALLBACK_MEMBER_COLOR } from '@/lib/memberPalette'
+import { ColorPicker } from '@/components/shared/ColorPicker'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { listRowLinkClass } from '@/components/shared/ListRow'
 import { useNavigate } from 'react-router-dom'
@@ -476,23 +477,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               <h3 className="text-card-title text-(--text-main)">Vzhled profilu</h3>
               <div className="form-group">
                 <p id="profile-color-label" className="text-label text-(--text-muted)">Barva</p>
-                <div id="profile-color-grid" className="swatch-grid" role="group" aria-labelledby="profile-color-label">
-                  {MEMBER_PALETTE.map(({ hex, name }) => (
-                    <div
-                      key={hex}
-                      className={`color-swatch${toMemberColor(selectedColor) === hex ? ' active' : ''}`}
-                      style={{ backgroundColor: hex }}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={name}
-                      aria-pressed={toMemberColor(selectedColor) === hex}
-                      title={name}
-                      onClick={() => handleColorSelect(hex)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleColorSelect(hex) } }}
-                    />
-                  ))}
+                <div id="profile-color-grid" role="group" aria-labelledby="profile-color-label">
+                  <ColorPicker value={selectedColor} onChange={handleColorSelect} />
                 </div>
-                <input type="hidden" id="profile-color" value={selectedColor} readOnly />
               </div>
 
               <div className="form-group" style={{ marginTop: '1.5rem' }}>

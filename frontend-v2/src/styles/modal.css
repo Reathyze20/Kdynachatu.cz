@@ -315,32 +315,10 @@
   margin-bottom: var(--space-md);
 }
 
-/* Avatar and Color grids */
-.swatch-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.color-swatch {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: transform 0.2s, border-color 0.2s;
-  outline: none;
-}
-
-.color-swatch:focus-visible,
+/* Avatar grid */
 .avatar-icon:focus-visible {
   outline: 2px dashed var(--color-primary);
   outline-offset: 4px;
-}
-
-.color-swatch.active {
-  border-color: var(--color-text-dark);
-  transform: scale(1.1);
 }
 
 .avatar-grid {
