@@ -562,17 +562,6 @@
   gap: 2px;
 }
 
-/* „Potřebuje pozornost“ (#275): štítek stavu · celý název · akce; cíle dotyku ≥ 48 px */
-.attention-card { gap: var(--space-sm); }
-.attention-list { list-style: none; margin: 0; padding: 0; }
-.attention-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); padding: var(--space-xs) 0; border-top: 1px solid rgb(var(--rule-soft)); }
-.attention-row:first-child { border-top: 0; }
-.attention-name { flex: 1; min-width: 0; font-weight: 600; color: var(--text-main); overflow-wrap: anywhere; }
-.attention-meta { font-weight: 500; color: var(--text-muted); }
-.attention-pledge { min-height: var(--touch-target-min); }
-.attention-more { display: inline-flex; align-items: center; gap: var(--space-xs); align-self: flex-start; min-height: var(--touch-target-min); font-size: var(--font-size-sm); font-weight: 600; color: var(--brand-primary); }
-.badge-fault { background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
-
 /* ── Standardizovaná hlavička karet ──────────────────────────────────── */
 
 .dashboard-card-header {

@@ -1,5 +1,5 @@
 /**
- * AttentionCard — „Potřebuje pozornost“ na Přehledu (#275, návrh #6 díl 4 = A + C).
+ * AttentionCard — „Důležité“ na Přehledu (#682, dřív „Potřebuje pozornost“ #275), tichý tón s ikonou a štítkem.
  * Nejvýš tři řádky se stavem slovem, u zásob „Koupím já“ = slib „Přivezu z domova“ s mým jménem
  * (#167) s toastem „Zpět“ (#511), u víc věcí souhrn do Zásob. Nahoře „Zkopírovat pro WhatsApp“ zkopíruje celý seznam (#264).
  * Když nic nepotřebuje pozornost, karta se nevykreslí.
@@ -7,12 +7,11 @@
 import { useId } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
-import type { AttentionItem, DashboardShoppingData, HandoverFault } from "@/api/dashboard";
+import { ChevronRight, CloudLightning, Flame, Star, Wrench, type LucideIcon } from "lucide-react";
+import type { AttentionItem, DashboardShoppingData } from "@/api/dashboard";
 import { inventoryApi, shoppingApi, type InventoryItem } from "@/api/shopping";
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
 import { INVENTORY_KEY } from "@/features/shopping/hooks/useInventory";
-import { formatDayMonth } from "@/lib/dateUtils";
 import { handleMutationError } from "@/lib/mutationError";
 import { isNetworkError } from "@/lib/networkError";
 import { isQueuedOffline } from "@/lib/offlineQueue";
@@ -20,7 +19,32 @@ import { pluralize } from "@/lib/format";
 import { showToast } from "@/lib/toast";
 import { whatsAppMessage } from "@/lib/whatsapp";
 import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
-import { attentionKey, attentionWhatsApp, buildAttention, supplyStatus } from "./attention";
+import { Card } from "@/components/shared/Card";
+import { ListRow } from "@/components/shared/ListRow";
+import { Button } from "@/components/ui/button";
+import { attentionKey, attentionWhatsApp, type Attention, type AttentionRow, type AttentionTone } from "./attention";
+
+// Tóny s ověřeným kontrastem (statusBadgeContrast, DESIGN.md §2): varování a došlo
+const TONES: Record<AttentionTone, { pill: string; icon: string }> = {
+  low: { pill: "bg-(--low-bg) text-[rgb(var(--low))]", icon: "text-[rgb(var(--low))]" },
+  empty: { pill: "bg-(--empty-bg) text-[rgb(var(--empty))]", icon: "text-[rgb(var(--empty))]" },
+};
+const ICONS: Record<AttentionRow["kind"], LucideIcon> = { storm: CloudLightning, gas: Flame, fault: Wrench, supply: Star };
+
+function RowContent({ row }: { row: AttentionRow }) {
+  const Icon = ICONS[row.kind];
+  const tone = TONES[row.tone];
+  return (
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <Icon className={`size-4 shrink-0 ${tone.icon}`} aria-hidden="true" />
+      <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-eyebrow uppercase ${tone.pill}`}>{row.label}</span>
+      <span className="min-w-0 break-words text-body text-(--text-main)">
+        {row.text}
+        {row.meta && <span className="text-meta text-(--text-muted)"> · {row.meta}</span>}
+      </span>
+    </span>
+  );
+}
 
 const sameRow = (a: AttentionItem, b: AttentionItem) => attentionKey(a) === attentionKey(b);
 
@@ -118,49 +142,41 @@ function usePledge() {
 }
 
 interface Props {
-  shopping?: DashboardShoppingData;
-  fault?: HandoverFault | null;
+  attention: Attention;
 }
 
-export function AttentionCard({ shopping, fault }: Props) {
+export function AttentionCard({ attention: { rows, more, all } }: Props) {
   const headingId = useId();
   const pledge = usePledge();
-  const { rows, more, all } = buildAttention(shopping?.attention, fault);
   if (all.length === 0) return null;
 
   return (
-    <section className="glass-card attention-card" aria-labelledby={headingId} data-testid="dashboard-attention">
-      <div className="dashboard-card-header">
-        <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Potřebuje pozornost</h2>
+    <Card as="section" flush className="flex flex-col pb-2" aria-labelledby={headingId} data-testid="dashboard-attention">
+      <div className="flex items-center justify-between gap-2 px-4 pt-4 md:px-6 md:pt-6">
+        <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Důležité</h2>
         <CopyForWhatsAppButton text={whatsAppMessage(attentionWhatsApp(all), "/shopping")} />
       </div>
-      <ul className="attention-list">
-        {rows.map((row) =>
-          row.kind === "fault" ? (
-            <li key="fault" className="attention-row">
-              <span className="badge badge-fault">Závada</span>
-              <span className="attention-name">
-                {row.text}
-                <span className="attention-meta"> · {row.reportedBy} {formatDayMonth(row.reportedAt)}</span>
-              </span>
-            </li>
-          ) : (
-            <li key={attentionKey(row)} className="attention-row">
-              <span className={`badge ${supplyStatus(row.isEmpty).badge}`}>{supplyStatus(row.isEmpty).label}</span>
-              <span className="attention-name">{row.name}</span>
-              <button type="button" className="status-cta status-cta-neutral attention-pledge" aria-label={`Koupím já: ${row.name}`} onClick={() => pledge.mutate(row)}>
+      <ul className="m-0 list-none divide-y divide-rule-soft p-0">
+        {rows.map((row) => (
+          <ListRow
+            as="li"
+            key={row.key}
+            action={row.kind === "supply" && (
+              <Button variant="secondary" size="sm" aria-label={`Koupím já: ${row.text}`} onClick={() => pledge.mutate(row.item)}>
                 Koupím já
-              </button>
-            </li>
-          ),
-        )}
+              </Button>
+            )}
+          >
+            <RowContent row={row} />
+          </ListRow>
+        ))}
       </ul>
       {more > 0 && (
-        <Link to="/shopping" className="attention-more">
-          + {more} {pluralize(more, "další potřebuje", "další potřebují", "dalších potřebuje")} pozornost
-          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+        <Link to="/shopping?view=pantry" className="flex min-h-(--touch-target-min) items-center gap-1 self-start px-4 text-meta font-semibold text-primary md:px-6">
+          + {more} {pluralize(more, "další", "další", "dalších")}
+          <ChevronRight className="size-4" aria-hidden="true" />
         </Link>
       )}
-    </section>
+    </Card>
   );
 }
