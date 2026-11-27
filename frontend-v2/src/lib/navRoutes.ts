@@ -3,7 +3,7 @@
  * Hlavní sekce podle cyklu turnusu (Přehled · Kalendář · Předávka · Zásoby), doplňky pod „Víc“.
  * Admin a backoffice nejsou sekce chaty, žijí v profilovém menu (SidebarProfileMenu, ProfileDrawer);
  * na mobilu je správa navíc v menu Víc (#524).
- * Host (`guest`) vidí jen svůj pobyt (#484, PRODUCT.md „Role na chatě“): Přehled, Kalendář a Předávku.
+ * Host (`guest`) vidí jen svůj pobyt (#484, PRODUCT.md „Role na chatě“): Přehled a Kalendář. Předávku ne (403, #216).
  */
 import type { LucideIcon } from 'lucide-react'
 import { Home, CalendarDays, KeyRound, ShoppingCart, MessageCircle, Images, BookOpen, Hammer, Settings } from 'lucide-react'
@@ -23,15 +23,11 @@ export interface NavItem {
   forGuest?: true
 }
 
-/**
- * Předávka a Zásoby zatím nemají vlastní obrazovku (T3b, T6b). Do té doby vedou na dnešní ekvivalent:
- * Předávka na stránku rezervací (formulář odjezdu je v detailu pobytu), Zásoby na Nákupy (se spíží).
- * `?sekce=predavka` stránka nečte, jen odliší aktivní tab od Kalendáře.
- */
+/** Zásoby zatím nemají vlastní obrazovku (T6b), do té doby vedou na Nákupy (se spíží). */
 export const PRIMARY_NAV: NavItem[] = [
   { to: '/dashboard',                   label: 'Přehled',  icon: Home, forGuest: true },
   { to: '/reservations',                label: 'Kalendář', icon: CalendarDays, featureKey: 'reservations', forGuest: true },
-  { to: '/reservations?sekce=predavka', label: 'Předávka', fullLabel: 'Předávka chaty', icon: KeyRound, featureKey: 'reservations', forGuest: true },
+  { to: '/handover',                    label: 'Předávka', fullLabel: 'Předávka chaty', icon: KeyRound, featureKey: 'reservations' },
   { to: '/shopping',                    label: 'Zásoby',   icon: ShoppingCart, featureKey: 'shopping' },
 ]
 
@@ -58,7 +54,7 @@ export function isGuestAllowedPath(pathname: string): boolean {
 
 /**
  * Najde aktivní položku: cesta musí sedět (i podstránky) a všechny query parametry odkazu musí být v URL.
- * Když sedí víc položek (Kalendář i Předávka), vyhraje ta s víc parametry — aktivní je vždy nejvýš jedna.
+ * Když by sedělo víc položek, vyhraje ta s víc parametry v odkazu, aktivní je vždy nejvýš jedna.
  */
 export function findActiveNavItem(
   items: NavItem[],

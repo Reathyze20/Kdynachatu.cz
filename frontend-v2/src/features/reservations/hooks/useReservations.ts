@@ -13,6 +13,7 @@ import type {
   UserAvailability,
 } from "@/api/reservations";
 import { completeCheckout } from "@/api/reservations";
+import { fetchHandoverOverview } from "@/api/handover";
 
 // ─── Query Keys ───────────────────────────────────────────────────────
 
@@ -21,9 +22,15 @@ import { completeCheckout } from "@/api/reservations";
 // mutation or socket event refreshes the calendar and the dashboard alike.
 export const RESERVATIONS_KEY = ["reservations"] as const;
 export const DASHBOARD_RESERVATIONS_KEY = [...RESERVATIONS_KEY, "dashboard"] as const;
+export const HANDOVER_KEY = [...RESERVATIONS_KEY, "handover"] as const;
 export const USERS_KEY = ["users"] as const;
 
 // ─── Data hooks ───────────────────────────────────────────────────────
+
+/** Tab Předávka a později příjezdová karta (#174); `reservation:updated` ho obnoví přes RESERVATIONS_KEY. */
+export function useHandoverOverview() {
+  return useQuery({ queryKey: HANDOVER_KEY, queryFn: fetchHandoverOverview });
+}
 
 export function useReservationsData() {
   return useQuery<ReservationsApiResponse>({

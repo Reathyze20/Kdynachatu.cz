@@ -51,11 +51,11 @@ describe('MobileNav — dolní lišta (#171)', () => {
     const nav = screen.getByRole('navigation', { name: 'Hlavní navigace' })
     const tab = within(nav).getByRole('link', { name: 'Předávka chaty' })
     expect(tab).toHaveTextContent(/^Předávka$/)
-    expect(tab).toHaveAttribute('href', '/reservations?sekce=predavka')
+    expect(tab).toHaveAttribute('href', '/handover')
   })
 
   it('aktivní tab má aria-current="page", ostatní ne', () => {
-    renderNav('/reservations?sekce=predavka')
+    renderNav('/handover')
     const nav = screen.getByRole('navigation', { name: 'Hlavní navigace' })
     // Čtečka slyší celý název záložky (#688, spec #677), proto se hledá podle něj
     expect(within(nav).getByRole('link', { name: 'Předávka chaty' })).toHaveAttribute('aria-current', 'page')

@@ -54,7 +54,7 @@ const UpcomingReservationSchema = z.object({
   participants: z.array(ReservationParticipantLiteSchema).optional(),
 })
 
-const CheckoutStateLiteSchema = z.object({
+export const CheckoutStateLiteSchema = z.object({
   gas: z.enum(["full", "half", "low", "empty"]).nullable().optional(),
   heatingOff: z.boolean().optional(),
   waterOff: z.boolean().optional(),
