@@ -22,6 +22,7 @@ vi.mock('@/api/client', () => ({
     put: vi.fn(() => new Promise<never>(() => {})),
     post: vi.fn(() => new Promise<never>(() => {})),
     delete: vi.fn(() => new Promise<never>(() => {})),
+    patch: vi.fn(() => new Promise<never>(() => {})),
   },
 }))
 vi.mock('@/api/dashboard', () => ({ fetchWeather: vi.fn(() => Promise.resolve(weather.current)) }))
@@ -56,7 +57,7 @@ function renderOverview(data: DashboardReservationsData, shopping: DashboardShop
   responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], ...cabin })
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', shopping)
-  responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
+  if (!responses.has('/dashboard/notes')) responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={qc}>
@@ -253,6 +254,7 @@ describe('Přehled: „Důležité“ (#682)', () => {
   const withAttention = (...attention: AttentionItem[]): DashboardShoppingData => ({ ...NO_SHOPPING, attention })
   const STORM = { temp: 12, description: 'Oblačno', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
   const gasEmpty = { username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-12-01', to: '2026-12-03', daysEmpty: 7, isCheckoutCompleted: true, checkoutState: { gas: 'empty' as const } }
+  const note = (updatedAt: string) => responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: 'Klíč je u sousedů.', handoverNoteAuthor: 'Jana', handoverNoteUpdatedAt: updatedAt })
   const important = () => screen.findByRole('region', { name: 'Důležité' })
   const rowTexts = (card: HTMLElement) => within(card).getAllByRole('listitem').map((r) => r.textContent)
 
@@ -296,9 +298,58 @@ describe('Přehled: „Důležité“ (#682)', () => {
     }
   })
 
-  it('host vidí jen výstrahu před bouřkou, zásoby ani závadu ne', async () => {
+  // #702: čerstvý vzkaz z nástěnky je poslední řádek Důležité, ťuknutí otevře nástěnku k úpravě
+  it('vzkaz z nástěnky mladší než 14 dní je poslední řádek, starší se neukáže', async () => {
+    note('2026-11-27T12:00:00.000Z') // 13 dní
+    renderOverview(reservations(), withAttention(supply('Toaleťák')))
+    await waitFor(async () => expect(rowTexts(await important())).toEqual(['DošloToaleťákKoupím já', 'VzkazKlíč je u sousedů. · Jana']))
+
+    cleanup()
+    note('2026-11-25T12:00:00.000Z') // 15 dní
+    renderOverview(reservations())
+    // Karta nástěnky vzkaz pořád ukazuje, jen v Důležité už není
+    await waitFor(() => expect(screen.getByTestId('dashboard-handover-widget')).toHaveTextContent('Klíč je u sousedů.'))
+    expect(screen.queryByRole('region', { name: 'Důležité' })).not.toBeInTheDocument()
+  })
+
+  it('ťuknutí na řádek vzkazu otevře nástěnku, uložená úprava se hned ukáže v Důležité', async () => {
+    note('2026-12-09T08:00:00.000Z')
+    vi.mocked(apiClient.patch).mockResolvedValueOnce({
+      data: { pinnedHandoverNote: 'Klíč je pod rohožkou.', handoverNoteAuthor: 'Eva', handoverNoteUpdatedAt: '2026-12-10T09:00:00.000Z' },
+    } as never)
+    renderOverview(reservations())
+
+    fireEvent.click(await within(await important()).findByRole('button', { name: /Vzkaz/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Vzkaz' })
+    const textbox = within(sheet).getByRole('textbox', { name: 'Vzkaz' })
+    expect(textbox).toHaveValue('Klíč je u sousedů.')
+    fireEvent.change(textbox, { target: { value: 'Klíč je pod rohožkou.' } })
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Uložit vzkaz' }))
+
+    await waitFor(() => expect(apiClient.patch).toHaveBeenCalledWith('/workspace/handover-note', { note: 'Klíč je pod rohožkou.' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Vzkaz' })).not.toBeInTheDocument())
+    expect(rowTexts(await important())).toEqual(['VzkazKlíč je pod rohožkou. · Eva'])
+  })
+
+  it('když se vzkaz nepodaří uložit, nástěnka zůstane otevřená s rozepsaným textem a ukáže chybu', async () => {
+    note('2026-12-09T08:00:00.000Z')
+    vi.mocked(apiClient.patch).mockRejectedValueOnce(new Error('Chyba serveru'))
+    render(<Toast />)
+    renderOverview(reservations())
+
+    fireEvent.click(await within(await important()).findByRole('button', { name: /Vzkaz/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Vzkaz' })
+    fireEvent.change(within(sheet).getByRole('textbox', { name: 'Vzkaz' }), { target: { value: 'Nový vzkaz' } })
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Uložit vzkaz' }))
+
+    expect(await screen.findByTestId('toast')).toHaveTextContent('Vzkaz se nepodařilo uložit')
+    expect(within(screen.getByRole('dialog', { name: 'Vzkaz' })).getByRole('textbox', { name: 'Vzkaz' })).toHaveValue('Nový vzkaz')
+  })
+
+  it('host vidí jen výstrahu před bouřkou, zásoby, závadu ani vzkaz ne', async () => {
     auth.isGuest = true
     weather.current = STORM
+    note('2026-12-09T08:00:00.000Z')
     renderOverview(reservations({ lastStay: gasEmpty, lastFault: FAULT }), withAttention(supply('Toaleťák')))
 
     const card = await important()

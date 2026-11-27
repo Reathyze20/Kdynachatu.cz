@@ -7,7 +7,7 @@
 import { useId } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, CloudLightning, Flame, Star, Wrench, type LucideIcon } from "lucide-react";
+import { ChevronRight, CloudLightning, Flame, Star, StickyNote, Wrench, type LucideIcon } from "lucide-react";
 import type { AttentionItem, DashboardShoppingData } from "@/api/dashboard";
 import { inventoryApi, shoppingApi, type InventoryItem } from "@/api/shopping";
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from "@/features/shopping/hooks/useShoppingLists";
@@ -20,16 +20,17 @@ import { showToast } from "@/lib/toast";
 import { whatsAppMessage } from "@/lib/whatsapp";
 import { CopyForWhatsAppButton } from "@/components/shared/CopyForWhatsAppButton";
 import { Card } from "@/components/shared/Card";
-import { ListRow } from "@/components/shared/ListRow";
+import { ListRow, listRowLinkClass } from "@/components/shared/ListRow";
 import { Button } from "@/components/ui/button";
 import { attentionKey, attentionWhatsApp, type Attention, type AttentionRow, type AttentionTone } from "./attention";
 
-// Tóny s ověřeným kontrastem (statusBadgeContrast, DESIGN.md §2): varování a došlo
+// Tóny s ověřeným kontrastem (statusBadgeContrast, DESIGN.md §2): varování, došlo, tiché info
 const TONES: Record<AttentionTone, { pill: string; icon: string }> = {
   low: { pill: "bg-(--low-bg) text-[rgb(var(--low))]", icon: "text-[rgb(var(--low))]" },
   empty: { pill: "bg-(--empty-bg) text-[rgb(var(--empty))]", icon: "text-[rgb(var(--empty))]" },
+  info: { pill: "border border-rule-soft text-(--text-muted)", icon: "text-(--text-muted)" },
 };
-const ICONS: Record<AttentionRow["kind"], LucideIcon> = { storm: CloudLightning, gas: Flame, fault: Wrench, supply: Star };
+const ICONS: Record<AttentionRow["kind"], LucideIcon> = { storm: CloudLightning, gas: Flame, fault: Wrench, supply: Star, note: StickyNote };
 
 function RowContent({ row }: { row: AttentionRow }) {
   const Icon = ICONS[row.kind];
@@ -38,7 +39,7 @@ function RowContent({ row }: { row: AttentionRow }) {
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <Icon className={`size-4 shrink-0 ${tone.icon}`} aria-hidden="true" />
       <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-eyebrow uppercase ${tone.pill}`}>{row.label}</span>
-      <span className="min-w-0 break-words text-body text-(--text-main)">
+      <span className={`min-w-0 break-words text-body text-(--text-main) ${row.kind === "note" ? "line-clamp-2" : ""}`}>
         {row.text}
         {row.meta && <span className="text-meta text-(--text-muted)"> · {row.meta}</span>}
       </span>
@@ -143,9 +144,10 @@ function usePledge() {
 
 interface Props {
   attention: Attention;
+  onOpenNote: () => void;
 }
 
-export function AttentionCard({ attention: { rows, more, all } }: Props) {
+export function AttentionCard({ attention: { rows, more, all }, onOpenNote }: Props) {
   const headingId = useId();
   const pledge = usePledge();
   if (all.length === 0) return null;
@@ -157,19 +159,27 @@ export function AttentionCard({ attention: { rows, more, all } }: Props) {
         <CopyForWhatsAppButton text={whatsAppMessage(attentionWhatsApp(all), "/shopping")} />
       </div>
       <ul className="m-0 list-none divide-y divide-rule-soft p-0">
-        {rows.map((row) => (
-          <ListRow
-            as="li"
-            key={row.key}
-            action={row.kind === "supply" && (
-              <Button variant="secondary" size="sm" aria-label={`Koupím já: ${row.text}`} onClick={() => pledge.mutate(row.item)}>
-                Koupím já
-              </Button>
-            )}
-          >
-            <RowContent row={row} />
-          </ListRow>
-        ))}
+        {rows.map((row) =>
+          row.kind === "note" ? (
+            <li key={row.key}>
+              <button type="button" className={listRowLinkClass} onClick={onOpenNote}>
+                <span className="min-w-0 flex-1 py-2"><RowContent row={row} /></span>
+              </button>
+            </li>
+          ) : (
+            <ListRow
+              as="li"
+              key={row.key}
+              action={row.kind === "supply" && (
+                <Button variant="secondary" size="sm" aria-label={`Koupím já: ${row.text}`} onClick={() => pledge.mutate(row.item)}>
+                  Koupím já
+                </Button>
+              )}
+            >
+              <RowContent row={row} />
+            </ListRow>
+          ),
+        )}
       </ul>
       {more > 0 && (
         <Link to="/shopping?view=pantry" className="flex min-h-(--touch-target-min) items-center gap-1 self-start px-4 text-meta font-semibold text-primary md:px-6">

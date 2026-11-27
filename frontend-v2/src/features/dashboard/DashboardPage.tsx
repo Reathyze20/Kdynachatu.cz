@@ -14,6 +14,7 @@ import { NudgeTray } from "./NudgeTray";
 import { useTrayNudges } from "./useTrayNudges";
 import { AttentionCard } from "./AttentionCard";
 import { buildAttention } from "./attention";
+import { NoteSheet } from "./NoteSheet";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
@@ -125,6 +126,12 @@ export function DashboardPage() {
   const [pinnedNote, setPinnedNote] = useState<string | null>(null);
   const [pinnedNoteAuthor, setPinnedNoteAuthor] = useState<string | null>(null);
   const [pinnedNoteUpdatedAt, setPinnedNoteUpdatedAt] = useState<string | null>(null);
+  const [noteSheetOpen, setNoteSheetOpen] = useState(false);
+  const updateNote = (newNote: string | null, author?: string | null, updatedAt?: string | null) => {
+    setPinnedNote(newNote);
+    setPinnedNoteAuthor(author ?? null);
+    setPinnedNoteUpdatedAt(updatedAt ?? null);
+  };
 
   // Cabin info
   const cabinQuery = useQuery<CabinSettings>({
@@ -211,6 +218,7 @@ export function DashboardPage() {
     gas: gasInTray ? null : reservationsQuery.data?.lastStay?.checkoutState?.gas,
     fault: reservationsQuery.data?.lastFault,
     supplies: shoppingQuery.data?.attention,
+    note: { text: pinnedNote, author: pinnedNoteAuthor, updatedAt: pinnedNoteUpdatedAt },
     isGuest,
   });
   // Co nese „Visí na tobě“ a „Důležité“, „Od minule“ zopakuje jen tlumeně (#425)
@@ -223,7 +231,7 @@ export function DashboardPage() {
       {shoppingQuery.isError && !manyFailed && (
         <FeatureErrorFallback title="Zásoby se nepodařilo načíst" error={shoppingQuery.error as Error} resetErrorBoundary={() => shoppingQuery.refetch()} />
       )}
-      {(isGuest || !shoppingQuery.isPending) && <AttentionCard attention={important} />}
+      {(isGuest || !shoppingQuery.isPending) && <AttentionCard attention={important} onOpenNote={() => setNoteSheetOpen(true)} />}
     </>
   );
 
@@ -334,11 +342,7 @@ export function DashboardPage() {
             note={pinnedNote}
             author={pinnedNoteAuthor}
             updatedAt={pinnedNoteUpdatedAt}
-            onNoteUpdate={(newNote, author, updatedAt) => {
-              setPinnedNote(newNote);
-              setPinnedNoteAuthor(author ?? null);
-              setPinnedNoteUpdatedAt(updatedAt ?? null);
-            }}
+            onNoteUpdate={updateNote}
           />
         ) : null}
       </div>}
@@ -350,6 +354,7 @@ export function DashboardPage() {
       <TwoColumnLayout aside={aside} asideLabel="Kontext chaty">{mainColumn}</TwoColumnLayout>
       {/* Výzva k instalaci jednou po 3. návštěvě, na konci stránky (#277) */}
       <InstallCard />
+      {noteSheetOpen && <NoteSheet note={{ pinnedHandoverNote: pinnedNote, handoverNoteAuthor: pinnedNoteAuthor, handoverNoteUpdatedAt: pinnedNoteUpdatedAt }} onClose={() => setNoteSheetOpen(false)} onSaved={updateNote} />}
     </div>
   );
 }
