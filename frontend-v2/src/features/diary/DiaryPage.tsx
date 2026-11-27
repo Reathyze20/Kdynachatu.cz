@@ -33,6 +33,20 @@ import { PageHeader } from '@/components/shared/PageHeader'
 
 type View = 'folders' | 'entries'
 
+/** Načítání ve tvaru výsledku: vnořené dlaždice jako pobyty nebo dny. */
+function TileSkeleton({ columns }: { columns: string }) {
+  return (
+    <div className={`grid gap-3 ${columns}`} aria-hidden="true">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="flex min-h-28 flex-col gap-2 rounded-xl bg-inset p-4">
+          <div className="skeleton skeleton-title" />
+          <div className="skeleton skeleton-text medium" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 interface NotebookState {
   dateObj: Date
   entry: DiaryEntry | undefined
@@ -265,19 +279,11 @@ export function DiaryPage() {
         )}
       </Card>
 
-      {/* Dny pobytu mají zatím vlastní odsazení z diary.css (převod dne zbývá z #520), proto karta bez něj. */}
-      <Card flush={view === 'entries'} className={view === 'entries' ? 'overflow-hidden' : undefined}>
+      <Card>
         {/* ── FOLDERS VIEW ─────────────────────────────────────────────── */}
         {view === 'folders' && (
           foldersLoading ? (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="flex min-h-28 flex-col gap-2 rounded-xl bg-inset p-4">
-                  <div className="skeleton skeleton-title" />
-                  <div className="skeleton skeleton-text medium" />
-                </div>
-              ))}
-            </div>
+            <TileSkeleton columns="md:grid-cols-2 lg:grid-cols-3" />
           ) : foldersFailed ? (
             <FeatureErrorFallback
               error={foldersError as Error}
@@ -301,9 +307,9 @@ export function DiaryPage() {
 
         {/* ── ENTRIES / CALENDAR VIEW ──────────────────────────────────── */}
         {view === 'entries' && currentFolder && (
-          <div className="diary-entries-view">
+          <>
             {entriesLoading ? (
-              <div className="spinner-container"><div className="spinner" /></div>
+              <TileSkeleton columns="grid-cols-2 md:grid-cols-3 lg:grid-cols-4" />
             ) : entriesFailed ? (
               <FeatureErrorFallback
                 error={entriesError as Error}
@@ -320,7 +326,7 @@ export function DiaryPage() {
                 onOpenNotebook={openNotebook}
               />
             )}
-          </div>
+          </>
         )}
 
       </Card>

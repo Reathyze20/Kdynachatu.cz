@@ -109,7 +109,7 @@ export function useDeleteDiaryEntry(folderId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: diaryEntriesKey(folderId) })
       void qc.invalidateQueries({ queryKey: DIARY_FOLDERS_KEY })
-      showToast('Vytrženo.', 'success')
+      showToast('Zápis smazán.', 'success')
     },
     onError: handleMutationError('Chyba při mazání záznamu'),
   })
