@@ -58,10 +58,6 @@
 }
 
 /* ── „Visí na vás“ (NudgeTray, #172): upozornění jako jedna akční karta ── */
-.your-tasks {
-  gap: var(--space-sm);
-}
-
 .your-tasks__list {
   display: flex;
   flex-direction: column;
@@ -75,22 +71,12 @@
   background: var(--brand-primary-light);
 }
 
-.nudge-cta {
-  align-self: flex-start;
-  min-height: var(--touch-target-min);
-  margin-top: var(--space-xs);
-}
-
 /* Akce upozornění vedle sebe, na úzkém displeji pod sebou (#264) */
 .nudge-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--touch-target-gap);
   margin-top: var(--space-xs);
-}
-
-.nudge-actions .nudge-cta {
-  margin-top: 0;
 }
 
 .your-tasks__more {
@@ -143,26 +129,6 @@
 .nudge-detail {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted, #6b7280);
-}
-
-.nudge-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--touch-target-min);
-  height: var(--touch-target-min);
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted, #6b7280);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.nudge-btn:hover {
-  background: color-mix(in srgb, var(--color-text-muted, #6b7280) 14%, transparent);
-  color: var(--color-text, inherit);
 }
 
 /* ── Base container ──────────────────────────────────────────────────── */

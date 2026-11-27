@@ -9,7 +9,6 @@ import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppi
 import { ActiveReservation } from "./ActiveReservation";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
-import { DepartureBanner } from "./DepartureBanner";
 import { NudgeTray } from "./NudgeTray";
 import { useTrayNudges } from "./useTrayNudges";
 import { AttentionCard } from "./AttentionCard";
@@ -211,13 +210,14 @@ export function DashboardPage() {
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const tray = useTrayNudges(reservationsQuery.data, shoppingQuery.data);
   const nudges = <NudgeTray nudges={tray.nudges} onDismiss={tray.dismiss} />;
-  // Důležité (#682): plyn jen tomu, komu ho nenese „Visí na tobě“; bouřka z počasí, i když karta počasí není vidět
-  const gasInTray = tray.nudges.some((n) => n.id.startsWith("gas-"));
+  // Důležité (#682): plyn a Došlo ★ jen tomu, komu je nenese „Visí na tobě“ (#274); bouřka z počasí, i když karta počasí není vidět
+  const inTray = (prefix: string) => tray.nudges.some((n) => n.id.startsWith(prefix));
+  const gasInTray = inTray("gas-");
   const important = buildAttention({
     storm: todayWeather && typeof todayWeather === "object" ? todayWeather.stormAlert : null,
     gas: gasInTray ? null : reservationsQuery.data?.lastStay?.checkoutState?.gas,
     fault: reservationsQuery.data?.lastFault,
-    supplies: shoppingQuery.data?.attention,
+    supplies: inTray("starred-") ? [] : shoppingQuery.data?.attention,
     note: { text: pinnedNote, author: pinnedNoteAuthor, updatedAt: pinnedNoteUpdatedAt },
     isGuest,
   });
@@ -225,6 +225,7 @@ export function DashboardPage() {
   const shownElsewhere = {
     gas: gasInTray || important.all.some((r) => r.kind === "gas"),
     faultText: important.all.find((r) => r.kind === "fault")?.text ?? null,
+    departure: inTray("departure-"),
   };
   const attention = (
     <>
@@ -263,16 +264,6 @@ export function DashboardPage() {
           <TriangleAlert className="w-5 h-5 inline-block align-middle mr-2" aria-hidden="true" style={{ color: 'var(--status-warning)' }} />
           <span>Nepodařilo se načíst nastavení chaty — některé widgety nemusí fungovat správně.</span>
         </div>
-      )}
-
-      {/* Warnings & Banners */}
-      {reservationsQuery.isSuccess && reservationsQuery.data?.departingToday && reservationsQuery.data.departingReservationId && (
-        <DepartureBanner
-          reservationId={reservationsQuery.data.departingReservationId}
-          departureChecklist={departureChecklist}
-          onRefresh={() => reservationsQuery.refetch()}
-          postToChat={!isGuest}
-        />
       )}
 
       {/* Nudge tray — timely coordination prompts derived from existing data */}

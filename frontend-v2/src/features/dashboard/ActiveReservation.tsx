@@ -21,8 +21,8 @@ interface Props {
   shownElsewhere?: ShownElsewhere;
 }
 
-/** Plyn ve „Visí na tobě“, text závady v „Potřebuje pozornost“. */
-interface ShownElsewhere { gas: boolean; faultText: string | null }
+/** Plyn ve „Visí na tobě“, text závady v „Důležité“, výzva k mému odjezdu ve „Visí na tobě“ (#274). */
+interface ShownElsewhere { gas: boolean; faultText: string | null; departure?: boolean }
 
 const NOTHING_ELSEWHERE: ShownElsewhere = { gas: false, faultText: null };
 
@@ -188,7 +188,8 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     const checkoutDone = !!now && "isCheckoutCompleted" in now && now.isCheckoutCompleted;
 
     let checkoutReminderNode: React.ReactNode = null;
-    if (departingToday && hasCheckoutTasks) {
+    // Připomínku odjezdu nese výzva ve „Visí na tobě“, karta ji neopakuje (#274)
+    if (departingToday && hasCheckoutTasks && !(shownElsewhere.departure && !checkoutDone)) {
       checkoutReminderNode = checkoutDone
         ? <div className="checkout-reminder checkout-reminder-done"><CircleCheck className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist splněn</div>
         : departed

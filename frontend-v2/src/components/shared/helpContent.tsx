@@ -10,10 +10,9 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <p>Na jednom místě vidíš, co se na chatě děje teď a co čeká na tebe.</p>
       <ul>
         <li><strong>Na chatě teď</strong> – kdo je zrovna na chatě, nebo kdy je další pobyt. U pobytu je i předpověď počasí.</li>
-        <li><strong>Visí na tobě</strong> – věci, které máš udělat. Tlačítko tě vezme rovnou k úkolu.</li>
+        <li><strong>Visí na tobě</strong> – věci, které můžeš udělat jen ty: v den odjezdu předávka chaty, když jedeš příště, plyn a došlé nezbytné zásoby. Tlačítko tě vezme rovnou k úkolu.</li>
         <li><strong>Důležité</strong> – výstraha před bouřkou, plyn a závada z poslední předávky chaty, došlé nezbytné zásoby a čerstvý vzkaz. „Koupím já“ dá ostatním vědět, že to přivezeš.</li>
         <li><strong>Vzkaz</strong> – připnutá zpráva pro každého, kdo na chatu přijede.</li>
-        <li><strong>Dnes odjíždíš!</strong> – v den odjezdu se nahoře objeví připomínka, ať nezapomeneš na předávku chaty.</li>
       </ul>
     </>
   ),
@@ -36,7 +35,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <p>Předávka chaty je krátký zápis o tom, v jakém stavu chatu necháváš. Kdo přijede po tobě, uvidí ho jako přivítání a ví, co ho čeká.</p>
       <ul>
         <li><strong>Kdy</strong> – během pobytu, nejlíp těsně před odjezdem. Nejpozději den po odjezdu.</li>
-        <li><strong>V den odjezdu</strong> – na Přehledu se objeví „Dnes odjíždíš!“. Odtud odškrtneš, co zkontrolovat před odjezdem, a necháš vzkaz.</li>
+        <li><strong>V den odjezdu</strong> – na Přehledu ti ji „Visí na tobě“ připomene. Tlačítko otevře tvůj pobyt, kde ji vyplníš.</li>
         <li><strong>Kdykoli jindy</strong> – v Kalendáři otevři svůj pobyt, dole najdeš „Stav chaty při odjezdu“. Jde to jen u pevné rezervace.</li>
         <li><strong>Co vyplnit</strong> – plynovou bombu, jestli je vypnuté topení a uzavřená voda, co je rozbité, co na chatě zůstalo (dřevo, jídlo…) a vzkaz pro dalšího. Všechno je nepovinné. Nakonec klepni na „Potvrdit odjezd“.</li>
         <li><strong>Bez signálu</strong> – předávka chaty počká v telefonu a odešle se, jakmile budeš online.</li>
@@ -128,7 +127,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       <ul>
         <li><strong>Titulní fotka a základní informace</strong> – jak se chata jmenuje a kde je.</li>
         <li><strong>Uvítání a pravidla</strong> – uvítací zpráva a pravidla chaty.</li>
-        <li><strong>Odjezdový checklist</strong> – co zkontrolovat před uzamčením chaty. Ukáže se v připomínce „Dnes odjíždíš!“.</li>
+        <li><strong>Odjezdový checklist</strong> – co zkontrolovat před uzamčením chaty.</li>
         <li><strong>Zazimování</strong> – zimní režim s mrazovými výstrahami.</li>
         <li><strong>Aktivní moduly</strong> – které části aplikace (třeba Galerie nebo Deník) se ukážou v navigaci.</li>
       </ul>
