@@ -54,7 +54,7 @@
   },
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
-      "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
+      "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/CabinToday.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
     ]
   },
@@ -84,7 +84,7 @@
   },
   "iconSize": {
     "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [
-      "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
+      "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
       "features/reservations/ui/BookingForm.tsx"
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [

@@ -12,6 +12,7 @@ import { PinnedNote } from "./PinnedNote";
 import { NudgeTray } from "./NudgeTray";
 import { useTrayNudges } from "./useTrayNudges";
 import { AttentionCard } from "./AttentionCard";
+import { LaterAndFreeCard } from "./LaterAndFreeCard";
 import { buildAttention } from "./attention";
 import { NoteSheet } from "./NoteSheet";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
@@ -290,6 +291,13 @@ export function DashboardPage() {
             <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} weather={todayWeather} shownElsewhere={shownElsewhere} />
           ) : null}
         </motion.div>
+
+        {/* Potom a volno (#273): do #685 všem členům pod kartou Kdo jede, host volitelné bloky nemá (#677) */}
+        {!isGuest && (
+          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-later-free-widget">
+            <LaterAndFreeCard />
+          </motion.div>
+        )}
 
         {stayPick && (
           <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-stay-weather-widget">

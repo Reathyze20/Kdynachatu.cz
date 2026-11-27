@@ -1,15 +1,17 @@
 import { useId } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation, WeatherResult } from "@/api/dashboard";
-import { daysUntil, formatDateRange, formatShortDayDate, formatWeekendRange, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
+import { daysUntil, formatDateRange, formatShortDayDate, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
 import { pluralize } from "@/lib/format";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
+import { Card } from "@/components/shared/Card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";
 import { gasLine } from "@/lib/gasLevel";
 import { CabinScene } from "./CabinScene";
 import { DEPARTURE_HOUR } from "./cabinSceneState";
-import { ArrowRight, CalendarPlus, CircleCheck, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowRight, CircleCheck, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
@@ -104,9 +106,6 @@ function dashboardChainStays(data: DashboardReservationsData, myUsername: string
 
 type HeaderStay = ActiveStay | UpcomingReservation;
 
-/** Kolik nadcházejících pevných pobytů posílá `/dashboard/reservations` (`take` v routě). */
-const UPCOMING_LIMIT = 5;
-
 function inDaysLabel(from: string): string {
   const days = daysUntil(from);
   if (days === 0) return "dnes";
@@ -144,9 +143,9 @@ function emptySinceLabel(lastStay: LastStay): React.ReactNode {
 }
 
 /**
- * Hlavička Přehledu jako osa teď → příště → pak (#366, dřív #272). Jediné místo se jménem a datem
- * dalších pobytů. Uzly počítá `buildTurnusChain` (jen pevné pobyty, střídací den); „pak“ ukáže první
- * a počet dalších pevných za ním. Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
+ * Hlavička Přehledu jako osa teď → příště (#366, dřív #272). Uzly počítá `buildTurnusChain` (jen pevné
+ * pobyty, střídací den). Pobyty za „příště“ a volno nese blok „Potom a volno“ (#273, spec #677).
+ * Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
  */
 export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized = false, weather, shownElsewhere = NOTHING_ELSEWHERE }: Props) {
   const navigate = useNavigate();
@@ -156,15 +155,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
   const chain = buildTurnusChain(dashboardChainStays(data, user?.username), todayStr);
   const currentHour = new Date().getHours();
   const active = data.activeReservation;
-
-  const freeWeekendNode = data.nextFreeWeekend ? (
-    <button 
-      className="status-cta status-cta-smart" 
-      onClick={() => navigate(`/reservations?from=${data.nextFreeWeekend!.start}&to=${data.nextFreeWeekend!.end}`)}
-    >
-      <CalendarPlus size={14} /> Volný víkend {formatWeekendRange(data.nextFreeWeekend.start, data.nextFreeWeekend.end)}
-    </button>
-  ) : null;
 
   const hasCheckoutTasks = cabinDepartureChecklist && cabinDepartureChecklist.length > 0;
 
@@ -176,11 +166,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     const nameOf = (s: HeaderStay) => (s.username === user?.username ? "Ty" : s.username);
     const now = stayOf(chain[0]);
     const next = stayOf(chain.find((n) => n.kind === "next"));
-    const later = stayOf(chain.find((n) => n.kind === "later"));
-    // Pevné pobyty za „pak“. API jich posílá nejvýš UPCOMING_LIMIT, plný seznam tedy může být delší.
-    const inChain = new Set(chain.map((n) => n.stay?.id));
-    const moreLater = later ? data.upcomingReservations.filter((r) => r.status === "primary" && r.from >= later.from && !inChain.has(r.id)).length : 0;
-    const maybeMore = data.upcomingReservations.length >= UPCOMING_LIMIT;
     const fromLabel = (s: HeaderStay) => (s.from === todayStr ? "od dneška" : `od ${formatShortDayDate(s.from)}`);
     const nextNights = next ? nightsBetween(next.from, next.to) : 0;
     const departingToday = !!now && now.to === todayStr;
@@ -195,12 +180,12 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
         : <div className="checkout-reminder checkout-reminder-missed"><TriangleAlert className="w-4 h-4 shrink-0" aria-hidden="true" />Odjezdový checklist nebyl vyplněn</div>;
     }
 
-    // Můj pevný pobyt, který hlavička ani řetězec neukazují.
+    // Můj pevný pobyt, který karta jako teď ani příště neukazuje.
     const mine = data.myNextReservation;
     const myNext = mine ? data.upcomingReservations.find((r) => r.status === "primary" && r.from === mine.from && r.to === mine.to) : undefined;
 
     return (
-      <section className="glass-card status-card status-header" id="dashboard-active-reservation" aria-labelledby={headingId}>
+      <Card as="section" className="flex flex-col status-card status-header" id="dashboard-active-reservation" aria-labelledby={headingId}>
         <div className="card-body-full status-content">
           <CabinScene data={data} winterized={isWinterized} weather={weather} />
           <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Na chatě teď</h2>
@@ -228,52 +213,34 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
                 <HeaderPerson mark="none" name="Zatím nikdo" />
               )}
             </div>
-            {later && (
-              <>
-                <ArrowRight className="status-header__arrow" aria-hidden="true" />
-                <div role="group" aria-label="Pak" className="status-header__side status-header__side--later">
-                  <HeaderPerson
-                    stay={later}
-                    name={nameOf(later)}
-                    when={<>{fromLabel(later)}{moreLater > 0 && <> <span className="status-header__more">+{moreLater}{maybeMore ? " a víc" : <span className="sr-only"> další</span>}</span></>}</>}
-                  />
-                </div>
-              </>
-            )}
           </div>
           {!now && data.lastStay && buildArrivalBriefing(data.lastStay, shownElsewhere)}
-          {myNext && !chain.some((n) => n.stay?.id === myNext.id) && (
+          {myNext && myNext.id !== now?.id && myNext.id !== next?.id && (
             <p className="status-header__mine">
               <strong>Tvůj pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}
             </p>
           )}
           {checkoutReminderNode}
           <div className="status-cta-row">
-            {freeWeekendNode}
-            <button onClick={() => navigate("/reservations")} className="status-cta status-cta-neutral">
-              Kalendář
-            </button>
+            <Button variant="secondary" size="sm" onClick={() => navigate("/reservations")}>Kalendář</Button>
           </div>
         </div>
-      </section>
+      </Card>
     );
   }
 
   // ── Stav A: nic se neděje → pozvánka (návrh #1 díl 5 = A, E2) ─────────
   return (
-    <section className="glass-card status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
+    <Card as="section" className="flex flex-col status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
       <div className="card-body-full status-content">
         <CabinScene data={data} winterized={isWinterized} weather={weather} />
         <h2 id="overview-invite-title" className="mt-2 mb-0 text-card-title text-(--text-main)">Chata zatím čeká</h2>
         <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
         {buildLastStayBlock(data.lastStay, shownElsewhere)}
         <div className="status-cta-row overview-invite__actions">
-          <button className="status-cta status-cta-primary" onClick={() => navigate("/reservations")}>
-            Zabrat termín
-          </button>
-          {freeWeekendNode}
+          <Button onClick={() => navigate("/reservations")}>Zabrat termín</Button>
         </div>
       </div>
-    </section>
+    </Card>
   );
 }
