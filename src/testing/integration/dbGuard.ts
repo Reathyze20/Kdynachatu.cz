@@ -5,7 +5,7 @@
  * Bez importů z aplikace, aby šel použít ještě před načtením config.ts (dotenv).
  */
 
-const KNOWN_PRODUCTION_DATABASES = new Set(["cabin_reservation"]);
+export const KNOWN_PRODUCTION_DATABASES: ReadonlySet<string> = new Set(["cabin_reservation"]);
 
 /** Vyhodí chybu, pokud název databáze nevypadá jako testovací. */
 export function assertSafeTestDatabaseName(name: string): void {

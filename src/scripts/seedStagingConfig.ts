@@ -46,7 +46,7 @@ function databaseName(url: string): string {
   }
 }
 
-function requirePassword(env: Env, key: string): string {
+export function requirePassword(env: Env, key: string): string {
   const value = env[key]?.trim() ?? "";
   if (value.length < MIN_PASSWORD_LENGTH || value.startsWith("CHANGE_ME")) {
     throw new Error(`Set ${key} (min ${MIN_PASSWORD_LENGTH} characters, not a CHANGE_ME placeholder).`);
