@@ -46,10 +46,19 @@ describe('MobileNav — dolní lišta (#171)', () => {
     expect(within(nav).getByRole('button', { name: /Víc/ })).toBeInTheDocument()
   })
 
+  it('záložka Předávka: na liště krátký popisek, čtečka slyší celý název „Předávka chaty“ (#688)', () => {
+    renderNav('/dashboard')
+    const nav = screen.getByRole('navigation', { name: 'Hlavní navigace' })
+    const tab = within(nav).getByRole('link', { name: 'Předávka chaty' })
+    expect(tab).toHaveTextContent(/^Předávka$/)
+    expect(tab).toHaveAttribute('href', '/reservations?sekce=predavka')
+  })
+
   it('aktivní tab má aria-current="page", ostatní ne', () => {
     renderNav('/reservations?sekce=predavka')
     const nav = screen.getByRole('navigation', { name: 'Hlavní navigace' })
-    expect(within(nav).getByRole('link', { name: 'Předávka' })).toHaveAttribute('aria-current', 'page')
+    // Čtečka slyší celý název záložky (#688, spec #677), proto se hledá podle něj
+    expect(within(nav).getByRole('link', { name: 'Předávka chaty' })).toHaveAttribute('aria-current', 'page')
     expect(within(nav).getByRole('link', { name: 'Kalendář' })).not.toHaveAttribute('aria-current')
   })
 

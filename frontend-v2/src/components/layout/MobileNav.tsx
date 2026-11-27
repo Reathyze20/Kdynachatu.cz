@@ -55,6 +55,7 @@ export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
       to={item.to}
       className={`${className}${item === active ? ' active' : ''}`}
       aria-current={item === active ? 'page' : undefined}
+      aria-label={item.fullLabel}
       data-testid="mobile-nav-link"
       data-route={item.to}
       onClick={onClick}

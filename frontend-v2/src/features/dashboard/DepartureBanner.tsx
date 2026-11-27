@@ -109,7 +109,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh, 
         <div className="departure-banner-content">
           <div className="departure-banner-icon" aria-hidden="true"><Clock className="w-5 h-5" /></div>
           <div className="departure-banner-text">
-            <h3>Předávka je vyplněná</h3>
+            <h3>Předávka chaty je vyplněná</h3>
             <p>Odešle se, jakmile bude signál.</p>
             <PendingSyncBadge />
           </div>
@@ -196,7 +196,7 @@ export function DepartureBanner({ reservationId, departureChecklist, onRefresh, 
           </button>
         }
       >
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: 12, fontSize: '0.9rem' }}>
+        <p className="mb-3 text-sm text-(--text-muted)">
           Před odjezdem, prosím, zkontroluj:
         </p>
         <div className="departure-checklist">

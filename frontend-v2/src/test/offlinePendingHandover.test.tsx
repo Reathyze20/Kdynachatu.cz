@@ -59,7 +59,7 @@ describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Odeslat a uzavřít pobyt' }))
 
     expect(await screen.findByText('Čeká na odeslání')).toBeTruthy()
-    expect(screen.getByText('Předávka je vyplněná')).toBeTruthy()
+    expect(screen.getByText('Předávka chaty je vyplněná')).toBeTruthy()
     expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Vyplnit protokol' })).toBeNull()
     // Zpráva by po odmítnuté předávce zůstala v chatu sama, proto se neposílá

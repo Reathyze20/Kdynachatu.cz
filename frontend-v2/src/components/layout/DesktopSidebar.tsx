@@ -36,20 +36,23 @@ export function DesktopSidebar({ onOpenProfileDrawer, today }: DesktopSidebarPro
   const active = findActiveNavItem([...primary, ...more], location)
   const homeTo = user?.isSuperAdmin && !hasCabin ? '/superadmin' : '/dashboard'
 
-  const renderLink = (item: NavItem) => (
-    <Link
-      key={item.to}
-      to={item.to}
-      className={`app-sidebar-link${item === active ? ' active' : ''}`}
-      aria-current={item === active ? 'page' : undefined}
-      data-testid="desktop-nav-link"
-      data-route={item.to}
-      title={item.label}
-    >
-      <item.icon size={20} aria-hidden="true" />
-      <span className="app-sidebar-label">{item.label}</span>
-    </Link>
-  )
+  const renderLink = (item: NavItem) => {
+    const name = item.fullLabel ?? item.label
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        className={`app-sidebar-link${item === active ? ' active' : ''}`}
+        aria-current={item === active ? 'page' : undefined}
+        data-testid="desktop-nav-link"
+        data-route={item.to}
+        title={name}
+      >
+        <item.icon size={20} aria-hidden="true" />
+        <span className="app-sidebar-label">{name}</span>
+      </Link>
+    )
+  }
 
   return (
     <aside className="app-sidebar" data-testid="desktop-sidebar">
