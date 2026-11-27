@@ -46,24 +46,30 @@ interface AdminSectionMenuProps {
 
 export function AdminSectionMenu({ active }: AdminSectionMenuProps) {
   return (
-    <nav className="admin-section-nav" aria-label="Sekce administrace" data-testid="admin-section-menu">
+    <nav className="flex flex-wrap items-center gap-2.5" aria-label="Sekce administrace" data-testid="admin-section-menu">
       {adminMenuItems.map((item) => {
         const Icon = item.icon
+        const isActive = active === item.key
 
         return (
           <Link
             key={item.key}
             to={item.to}
-            className={`admin-section-link ${active === item.key ? 'is-active' : ''}`}
-            aria-current={active === item.key ? 'page' : undefined}
+            className={`inline-flex min-h-(--touch-target-min) w-full items-center gap-3 rounded-full border px-3.5 py-2 text-(--text-main) no-underline transition-colors md:w-auto ${
+              isActive ? 'border-primary bg-accent' : 'border-rule-soft bg-sheet hover:bg-(--bg-hover)'
+            }`}
+            aria-current={isActive ? 'page' : undefined}
             data-testid="admin-section-link"
             data-section-key={item.key}
             data-route={item.to}
           >
-            <span className="admin-section-link-icon"><Icon size={16} /></span>
-            <span className="admin-section-link-copy">
-              <span className="admin-section-link-label">{item.label}</span>
-              <span className="admin-section-link-meta">{item.meta}</span>
+            {/* Vybraná sekce: zvýrazněná plocha (DESIGN.md §2), ikona v plné Jedli */}
+            <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full ${isActive ? 'bg-primary text-(--text-on-primary)' : 'bg-accent text-primary'}`}>
+              <Icon aria-hidden="true" className="size-4" />
+            </span>
+            <span className="flex flex-col">
+              <span className="whitespace-nowrap text-label font-bold leading-tight">{item.label}</span>
+              <span className="text-meta leading-tight text-(--text-muted) max-md:hidden">{item.meta}</span>
             </span>
           </Link>
         )
