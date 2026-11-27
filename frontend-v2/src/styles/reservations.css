@@ -1381,7 +1381,7 @@
 }
 
 /* Mobile Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .res-card:hover {
     transform: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
@@ -1486,10 +1486,10 @@
 }
 
 /* ============================================================================
-   MOBILE — Oprava kalendáře rezervací (max-width: 768px)
+   MOBILE — Oprava kalendáře rezervací (max-width: 767px)
    ============================================================================ */
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
   /* ── Layout: grid → jeden sloupec ────────────────────────────── */
 
@@ -1917,7 +1917,7 @@
 }
 
 /* ── Mobile: collapse dots ─────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .cal-avail-dots {
     gap: 2px;
     min-height: 8px;
@@ -2148,7 +2148,7 @@
 }
 
 /* ── Mobile adjustments ─────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .checkout-form {
     padding: 16px;
     border-radius: 12px;

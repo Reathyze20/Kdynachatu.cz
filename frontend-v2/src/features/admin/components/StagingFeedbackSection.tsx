@@ -16,8 +16,8 @@ import type { StagingFeedbackRecord } from '@/api/stagingFeedback'
 import { formatDate, formatTime } from '@/lib/format'
 import { AdminCardHeading } from './AdminCardHeading'
 
-/** Stejná hranice jako mobilní shell (`max-width: 768px` v styles/nav.css) */
-const MOBILE_MAX_WIDTH = 768
+/** Stejná hranice jako mobilní shell (`max-width: 767px` v styles/nav.css) */
+const MOBILE_MAX_WIDTH = 767
 
 function taskLabel(taskId: StagingFeedbackRecord['taskId']): string {
   return TESTING_TASKS.find((t) => t.id === taskId)?.title ?? GENERAL_FEEDBACK_LABEL

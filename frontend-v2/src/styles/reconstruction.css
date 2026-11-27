@@ -319,9 +319,9 @@
 }
 
 /* �� Responsive �������������������������������������������������������������� */
-/* Stejná hranice jako desktopový rám v layout.css (768/769 px): mobilní tabule v rámu
+/* Stejná hranice jako desktopový rám v layout.css (767/768 px): mobilní tabule v rámu
    s pevnou výškou zmáčkla kartu na 2 px. */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Na mobilu scrolluje celá stránka — karta nesmí mít fixní výšku
      s overflow:hidden, jinak se sloupce zmáčknou na nulovou výšku */
   .main-content-reconstruction,

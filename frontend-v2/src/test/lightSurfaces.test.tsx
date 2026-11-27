@@ -192,14 +192,14 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
 
   // Na mobilu nese povrch menu horní a spodní lišta (D3, #339), na desktopu .app-sidebar výš.
   it.each(['.mobile-header', '.mobile-nav'])('mobil: %s má plný papír karty --sheet', (selector) => {
-    const rules = rulesFor('nav.css', selector).filter((r) => r.media?.includes('max-width: 768px'))
+    const rules = rulesFor('nav.css', selector).filter((r) => r.media?.includes('max-width: 767px'))
     expect(rules.length).toBeGreaterThan(0)
     expect(lastDecl(rules, 'background')).toBe('rgb(var(--sheet))')
   })
 
   // Zubatá „silueta hor“ pod horní lištou působila jako natržený okraj (#438); lišty mají stejnou tenkou linku.
   it('mobil: horní lišta má dole linku --rule-soft jako spodní navigace nahoře, bez zubaté ozdoby', () => {
-    const mobile = (selector: string) => rulesFor('nav.css', selector).filter((r) => r.media?.includes('max-width: 768px'))
+    const mobile = (selector: string) => rulesFor('nav.css', selector).filter((r) => r.media?.includes('max-width: 767px'))
     expect(lastDecl(mobile('.mobile-header'), 'border-bottom')).toBe('1px solid rgb(var(--rule-soft))')
     expect(lastDecl(mobile('.mobile-nav'), 'border-top')).toBe('1px solid rgb(var(--rule-soft))')
     expect(rulesFor('nav.css', '.mobile-header::after')).toHaveLength(0)
@@ -212,7 +212,7 @@ describe('Plné obsahové karty, sklo jen jako akcent (C4a)', () => {
     expect(lastDecl(panel, 'box-shadow')).toBe('var(--lift)')
     expect(lastDecl(rulesFor('shopping.css', '.shopping-page').filter((r) => r.media === null), 'background')).toBe('rgb(var(--inset))')
     // Mobil: kalendář je papírová karta, Zásoby leží přímo na podkladu.
-    const mobile = (r: Rule) => r.media?.includes('max-width: 768px') ?? false
+    const mobile = (r: Rule) => r.media?.includes('max-width: 767px') ?? false
     const calendar = ALL_RULES.filter((r) => r.file.endsWith('/reservations/Reservations.module.css') && r.selectors.includes('.calendarCard') && mobile(r))
     expect(lastDecl(calendar, 'background')).toBe('rgb(var(--sheet))')
     expect(lastDecl(rulesFor('shopping.css', '.shopping-page').filter(mobile), 'background')).toBe('transparent')
@@ -295,7 +295,7 @@ describe('Kontrast textu na kartách a pozadí ≥ 4,5:1 (G1)', () => {
  * i poloprůhledné panely by ležely na fotce. Všechno s textem musí stát na plném papíře.
  */
 describe('Obrazovky s fotkou: text jen na plném papíře (#341)', () => {
-  const isMobile = (r: Rule) => r.media?.includes('max-width: 768px') ?? false
+  const isMobile = (r: Rule) => r.media?.includes('max-width: 767px') ?? false
   /** Výsledná hodnota na mobilu: výchozí pravidla, pak mobilní (pořadí ve zdroji). */
   const onMobile = (file: string, selector: string, prop: string) =>
     lastDecl(rulesFor(file, selector).filter((r) => r.media === null || isMobile(r)), prop)

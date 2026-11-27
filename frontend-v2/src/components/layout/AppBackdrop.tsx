@@ -48,7 +48,7 @@ function CoverBackdrop({ url, offPhotoPage }: CoverBackdropProps) {
   return (
     <div className="app-backdrop" data-testid="app-backdrop" data-visible={fitsBackground && !offPhotoPage} aria-hidden="true">
       <picture>
-        {small ? <source media="(max-width: 768px)" srcSet={small} /> : null}
+        {small ? <source media="(max-width: 767px)" srcSet={small} /> : null}
         <img
           src={url}
           alt=""

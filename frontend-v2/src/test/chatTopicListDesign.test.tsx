@@ -25,7 +25,7 @@ const threads = [
 
 function stubViewport(mobile: boolean) {
   vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: mobile && query === '(max-width: 768px)',
+    matches: mobile && query === '(max-width: 767px)',
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},

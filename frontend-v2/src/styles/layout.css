@@ -126,7 +126,7 @@
 }
 
 /* Mobile Layout Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Bez vlastního pozadí: pod kartami je i na mobilu podklad z body (D3, #339) */
   .app-container {
     padding: 0;
@@ -151,9 +151,9 @@
   }
 }
 
-/* ── Small-height desktop screens (laptops >768px wide but <800px tall) ── */
+/* ── Small-height desktop screens (laptops ≥768px wide but <800px tall) ── */
 /* Replace fixed height: 100vh + overflow: hidden with natural scroll       */
-@media (max-height: 800px) and (min-width: 769px) {
+@media (max-height: 800px) and (min-width: 768px) {
   .app-container {
     height: auto;
     min-height: 100dvh;
@@ -172,7 +172,7 @@
   /* mobil: banner, top bar a stránka zůstávají přímo v .app-container */
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .app-container {
     flex-direction: row;
     max-width: none;
@@ -424,7 +424,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .auth-card input:not([type="checkbox"]):not([type="hidden"]),
   .auth-card select {
     min-height: var(--touch-target-min);

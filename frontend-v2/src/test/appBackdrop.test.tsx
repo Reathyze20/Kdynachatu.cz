@@ -55,7 +55,7 @@ describe('Titulní fotka jako pozadí appky (#341)', () => {
     expect(img).toHaveAttribute('src', COVER)
     expect(img).toHaveAttribute('alt', '')
     expect(backdrop.querySelector('source')).toHaveAttribute('srcset', COVER_SM)
-    expect(backdrop.querySelector('source')).toHaveAttribute('media', '(max-width: 768px)')
+    expect(backdrop.querySelector('source')).toHaveAttribute('media', '(max-width: 767px)')
     expect(backdrop).toHaveAttribute('aria-hidden', 'true')
     expect(backdrop).toHaveAttribute('data-visible', 'false')
 

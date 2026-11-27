@@ -107,7 +107,7 @@ body {
 }
 
 /* Mobile Base Adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body {
     padding: 0;
   }

@@ -191,7 +191,7 @@ describe('Přehled — karty se ve sloupci s posuvníkem nesmrskávají', () => 
 })
 
 describe('Spodní mobilní lišta — zvýraznění aktivní záložky (#192)', () => {
-  it.each([360, 375, 768])('na šířce %i px má lišta odstup od všech okrajů, takže zvýraznění nesahá na hranu', (width) => {
+  it.each([360, 375, 767])('na šířce %i px má lišta odstup od všech okrajů, takže zvýraznění nesahá na hranu', (width) => {
     const padding = paddingAt(navCssRaw, '.mobile-nav', width)
     for (const side of SIDES) {
       expect(sumPxIgnoringEnv(padding[side]), side).toBeGreaterThanOrEqual(6)

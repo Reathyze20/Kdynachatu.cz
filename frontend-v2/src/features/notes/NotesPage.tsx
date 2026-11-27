@@ -10,7 +10,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useQuery } from "@tanstack/react-query";
 import { useThreads, useCreateThread, useDeleteThread, useMarkThreadRead } from "./hooks/useThreads";
 import { useThreadNotes } from "./hooks/useNotes";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { MOBILE_QUERY, useMediaQuery } from "@/hooks/useMediaQuery";
 import { ThreadList } from "./ThreadList";
 import { ChatView, ChatBackButton } from "./ChatView";
 import { MessageInput } from "./MessageInput";
@@ -60,7 +60,7 @@ export function NotesPage() {
     refetch: refetchNotes,
   } = useThreadNotes(activeThreadId);
   const [searchQuery, setSearchQuery] = useState("");
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useMediaQuery(MOBILE_QUERY);
   const [mobileShowChat, setMobileShowChat] = useState(false);
 
   // Context dialogs

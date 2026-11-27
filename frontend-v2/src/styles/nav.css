@@ -196,7 +196,7 @@
   display: none;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .app-sidebar {
     display: flex;
     flex-direction: column;
@@ -348,7 +348,7 @@
 }
 
 /* Úzký desktop: jen ikony, popisky zůstávají pro čtečky a v title */
-@media (min-width: 769px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .app-sidebar {
     flex-basis: 72px;
   }
@@ -382,7 +382,7 @@
   outline-offset: -2px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
   /* ── Mobile Header — fixed top ─────────────────────────────── */
   /* Menu surface = the full paper of the cards (D3, #339). */

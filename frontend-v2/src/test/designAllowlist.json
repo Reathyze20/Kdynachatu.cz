@@ -39,14 +39,11 @@
     ]
   },
   "breakpoint": {
-    "Legacy media query (páry 768/769 px a další šířky), sjednotí se při převodu obrazovky": [
-      "features/reservations/Reservations.module.css", "styles/base.css",
-      "styles/dashboard.css", "styles/dialogs.css", "styles/forms.css", "styles/gallery.css",
-      "styles/help.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
-      "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
-      "styles/reservations.css", "styles/shopping.css", "styles/status-header.css"
-    ],
-    "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"]
+    "Legacy media query (šířky mimo md/lg, v galerii ještě páry 768/769 px), sjednotí se při převodu obrazovky": [
+      "features/reservations/Reservations.module.css", "styles/dashboard.css", "styles/gallery.css",
+      "styles/landing.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css",
+      "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
+    ]
   },
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
