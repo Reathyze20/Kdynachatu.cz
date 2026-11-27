@@ -145,26 +145,6 @@
   color: var(--color-text-muted, #6b7280);
 }
 
-.nudge-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--touch-target-min);
-  height: var(--touch-target-min);
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted, #6b7280);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.nudge-btn:hover {
-  background: color-mix(in srgb, var(--color-text-muted, #6b7280) 14%, transparent);
-  color: var(--color-text, inherit);
-}
-
 /* ── Base container ──────────────────────────────────────────────────── */
 
 .nordic-dashboard {

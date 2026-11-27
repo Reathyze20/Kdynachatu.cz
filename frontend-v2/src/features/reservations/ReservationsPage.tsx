@@ -134,6 +134,18 @@ export function ReservationsPage() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Výzva k odjezdu na Přehledu (#274): ?pobyt=<id> otevře detail pobytu s formulářem odjezdu
+  useEffect(() => {
+    const id = searchParams.get("pobyt");
+    if (!id || !data) return;
+    const stay = data.reservations.find((r) => r.id === id);
+    if (stay) {
+      setSelectedReservation(stay);
+      if (!isWideDesktop) sidebarRef.current?.scrollIntoView?.({ block: "start" });
+    }
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, data, isWideDesktop]);
+
   // Escape → clear calendar range selection
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

@@ -1,12 +1,13 @@
 /**
  * useTrayNudges — upozornění, která ukáže „Visí na tobě“ (#172), a jejich skrývání.
  * Žije v Přehledu, ne v kartě, protože ostatní karty podle toho tlumí stejný obsah (#425).
- * Bez duplicity: docházející zásoby ukazuje „Potřebuje pozornost“, dnešní odjezd banner s předávkou.
+ * Bez duplicity: komu se ukáže výzva, tomu ji Důležité nezopakuje (#274); běžné Dochází na Přehled nepatří.
  */
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
-import { buildNudges, type Nudge } from "./nudges";
+import { useCheckoutPending } from "@/hooks/useOfflineQueue";
+import { buildNudges, myDepartureId, type Nudge } from "./nudges";
 
 const storageKey = (username?: string | null) => `dismissedNudges:${username ?? "anon"}`;
 
@@ -21,12 +22,12 @@ function readDismissed(username?: string | null): string[] {
 }
 
 export function useTrayNudges(reservations?: DashboardReservationsData, shopping?: DashboardShoppingData) {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [dismissed, setDismissed] = useState<string[]>(() => readDismissed(user?.username));
 
-  const departureBanner = !!reservations?.departingToday && !!reservations.departingReservationId;
-  const nudges: Nudge[] = buildNudges({ reservations, shopping, myUsername: user?.username }).filter(
-    (n) => !n.id.startsWith("supply-") && !(departureBanner && n.id.startsWith("departure-")) && !dismissed.includes(n.id),
+  const departurePending = useCheckoutPending(myDepartureId(reservations, user?.username) ?? "");
+  const nudges: Nudge[] = buildNudges({ reservations, shopping, myUsername: user?.username, isGuest, departurePending }).filter(
+    (n) => !n.id.startsWith("supply-") && !dismissed.includes(n.id),
   );
 
   const dismiss = (id: string) => {

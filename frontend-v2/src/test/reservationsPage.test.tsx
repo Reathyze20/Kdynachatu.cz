@@ -87,6 +87,15 @@ describe('reservations page: two-column frame', () => {
 })
 
 describe('reservations page: detail in the side panel', () => {
+  // #274: výzva k odjezdu na Přehledu vede na formulář odjezdu v detailu pobytu, dokud není obrazovka Předávky (#220)
+  it('the dashboard link ?pobyt=<id> opens the detail of that stay in the panel', async () => {
+    renderPage('/reservations?pobyt=r-1')
+    const panel = await findPanel()
+
+    const detail = await within(panel).findByTestId('reservation-detail-card')
+    expect(within(detail).getByText('Petr')).toBeInTheDocument()
+  })
+
   it('a list card opens the detail in the panel, keeps the calendar and marks the stay in the grid; "Zpět" returns the list', async () => {
     const user = renderPage()
     const panel = await findPanel()

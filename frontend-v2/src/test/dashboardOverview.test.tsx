@@ -623,27 +623,34 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
     username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-10', to: '2026-11-12',
     isCheckoutCompleted: true, daysEmpty, checkoutState: gas ? { gas } : null,
   })
+  // #677/#274: výzva „Chata je prázdná ≥ 14 dní“ zanikla a plyn je výzvou jen pro toho, kdo přijede příště
+  // (Eva), proto testy karty stojí na plynu a vlastním odjezdu místo dlouho prázdné chaty.
+  const gasForEva = () => reservations({ lastStay: lastStay(20, 'empty'), upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-11', '2026-12-13')] })
+  const leavingToday = () => reservations({ activeReservation: { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY }, departingToday: true, departingReservationId: 'r-now' })
 
   it('upozornění je v hlavním sloupci jako karta, první má tlačítko, které vede rovnou do úkolu', async () => {
-    renderOverview(reservations({ lastStay: lastStay(20) }))
+    renderOverview(gasForEva())
 
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     expect(screen.getByTestId('dashboard-page')).toContainElement(card)
-    expect(card).toHaveTextContent('Chata je prázdná 20 dní')
-    expect(within(card).getByRole('button', { name: 'Otevřít kalendář' })).toBeInTheDocument()
+    expect(card).toHaveTextContent('Plynová bomba: Došlo')
+    expect(within(card).getByRole('link', { name: 'Otevřít Zásoby' })).toHaveAttribute('href', '/shopping?view=pantry')
   })
 
   it('upozornění s akcí jdou napřed, vidět jsou nejvýš dvě, zbytek je za „Zobrazit víc“, zásoby jen v kartě „Dochází“', async () => {
     renderOverview(
-      reservations({ myNextReservation: { from: '2026-12-11', to: '2026-12-13', purpose: 'Víkend' }, lastStay: lastStay(20, 'empty') }),
-      { ...NO_SHOPPING, totalPendingShoppingCount: 1, essentialWarning: { count: 1, items: [{ name: 'Káva' }] } },
+      { ...gasForEva(), myNextReservation: { from: '2026-12-11', to: '2026-12-13', purpose: 'Víkend' } },
+      {
+        ...NO_SHOPPING, totalPendingShoppingCount: 1, essentialWarning: { count: 1, items: [{ name: 'Káva' }] },
+        attention: [{ name: 'Sirky', isEmpty: true, isEssential: true, inventoryId: 'inv-s', shoppingItemId: null }],
+      },
     )
 
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     const items = within(card).getAllByRole('listitem')
     expect(items).toHaveLength(2)
-    expect(within(items[0]).getByRole('button', { name: 'Otevřít Zásoby' })).toBeInTheDocument()
-    expect(card).toHaveTextContent('Chata je prázdná 20 dní')
+    expect(within(items[0]).getByRole('link', { name: 'Otevřít Zásoby' })).toBeInTheDocument()
+    expect(card).toHaveTextContent('Na chatě došlo: Sirky')
     expect(card).not.toHaveTextContent('Na chatě dochází')
     fireEvent.click(within(card).getByRole('button', { name: 'Zobrazit víc (1)' }))
     expect(within(card).getAllByRole('listitem')).toHaveLength(3)
@@ -654,14 +661,14 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
   it('upozornění pro rodinu má tlačítko s textem „Zkopírovat pro WhatsApp“, které zkopíruje zprávu s odkazem (#264)', async () => {
     const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
-    renderOverview(reservations({ lastStay: lastStay(20) }))
+    renderOverview(gasForEva())
 
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     const copy = within(card).getByRole('button', { name: 'Zkopírovat pro WhatsApp' })
     expect(copy).toHaveTextContent('Zkopírovat pro WhatsApp')
     fireEvent.click(copy)
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(
-      expect.stringMatching(new RegExp(`Na chatě už 20 dní nikdo nebyl\\. Nezajedeme\\?\\n${window.location.origin}/reservations$`)),
+      expect.stringMatching(new RegExp(`Plynová bomba: Došlo\\. Přivezu novou\\.\\n${window.location.origin}/shopping\\?view=pantry$`)),
     ))
     expect(await within(card).findByRole('button', { name: 'Zkopírováno' })).toBeInTheDocument()
   })
@@ -675,7 +682,7 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
   it('na desktopu je v bočním panelu nad „Důležité“, v hlavním sloupci není (#356)', async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
     try {
-      renderOverview(reservations({ lastStay: lastStay(20) }), oneAttentionRow)
+      renderOverview(leavingToday(), oneAttentionRow)
       const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
       const card = await within(aside).findByRole('region', { name: 'Visí na tobě' })
       const attention = within(aside).getByRole('region', { name: 'Důležité' })
@@ -687,7 +694,7 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
   })
 
   it('na mobilu zůstává nahoře v hlavním sloupci před „Důležité“ a „Na chatě teď“ (#356)', async () => {
-    renderOverview(reservations({ lastStay: lastStay(20), upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-17')] }), oneAttentionRow)
+    renderOverview({ ...leavingToday(), upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-17')] }, oneAttentionRow)
 
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     const page = screen.getByTestId('dashboard-page')
@@ -698,7 +705,7 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
   })
 
   it('skryté upozornění zmizí a když nic nevisí, karta se nevykreslí', async () => {
-    renderOverview(reservations({ lastStay: lastStay(20) }))
+    renderOverview(leavingToday())
 
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     fireEvent.click(within(card).getByRole('button', { name: 'Skrýt' }))
@@ -721,7 +728,8 @@ describe('Přehled: žádná duplicita (#425)', () => {
 
   // #677: po skrytí výzvy plyn nese „Důležité“, v „Od minule“ proto zůstane tlumeně (dřív se zase zvýraznil)
   it('plyn, na který upozorňuje „Visí na tobě“, je v „Od minule“ jen tlumeně, po skrytí upozornění ho nese „Důležité“', async () => {
-    renderOverview(handover({ gas: 'low', heatingOff: true }))
+    // #274: výzvu k plynu dostane jen ten, kdo přijede příště, proto je příští pobyt Evin
+    renderOverview({ ...handover({ gas: 'low', heatingOff: true }), upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-28', '2026-12-30')] })
 
     const tray = await screen.findByRole('region', { name: 'Visí na tobě' })
     expect(within(tray).getByText('Plynová bomba: Dochází')).toBeInTheDocument()
@@ -734,15 +742,17 @@ describe('Přehled: žádná duplicita (#425)', () => {
     expect(emphasized(await briefingRow('Plynová bomba: Dochází'))).toBe(false)
   })
 
-  it('odjezd dnes připomene jen banner s předávkou, „Visí na tobě“ ho neopakuje', async () => {
+  // #677/#274: velký banner s formulářem odjezdu z Přehledu zmizel, připomínku nese jen výzva ve „Visí na tobě“
+  it('odjezd dnes připomene jen výzva ve „Visí na tobě“, banner s formulářem není', async () => {
     renderOverview(reservations({
       activeReservation: { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY },
       departingToday: true,
       departingReservationId: 'r-now',
     }))
 
-    expect(await screen.findByText('Dnes odjíždíš!')).toBeInTheDocument()
-    expect(screen.queryByText('Dnes odjíždíš z chaty')).not.toBeInTheDocument()
+    const tray = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(within(tray).getByText('Dnes odjíždíš.')).toBeInTheDocument()
+    expect(screen.queryByText('Dnes odjíždíš!')).not.toBeInTheDocument()
   })
 
   it('předávka odeslaná bez signálu: Přehled píše „Předávka chaty je vyplněná“ (#688)', async () => {
@@ -753,7 +763,10 @@ describe('Přehled: žádná duplicita (#425)', () => {
       departingReservationId: 'r-now',
     }))
 
-    expect(await screen.findByRole('heading', { name: 'Předávka chaty je vyplněná' })).toBeInTheDocument()
+    // #274: stav nese výzva ve „Visí na tobě“ místo zaniklého banneru, už bez tlačítka k vyplnění
+    const tray = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(tray).toHaveTextContent('Předávka chaty je vyplněnáOdešle se, jakmile bude signál.')
+    expect(within(tray).queryByRole('link', { name: 'Vyplnit předávku chaty' })).not.toBeInTheDocument()
   })
 
   it('závada z „Důležité“ je v „Od minule“ jen tlumeně, bez karty pozornosti zůstane zvýrazněná', async () => {
@@ -768,11 +781,15 @@ describe('Přehled: žádná duplicita (#425)', () => {
     expect(emphasized(await briefingRow('Kape kohoutek.'))).toBe(true)
   })
 
-  it('každé „Zkopírovat pro WhatsApp“ kopíruje jiný obsah, Došlo ★ jen souhrn Důležité', async () => {
+  // #274: plyn a Došlo ★ jsou výzvou Evy, protože přijede příště; Důležité je pak nezopakuje, Došlo ★ kopíruje výzva
+  it('každé „Zkopírovat pro WhatsApp“ kopíruje jiný obsah, Došlo ★ jen jednou', async () => {
     const writeText = vi.fn((_text: string) => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     renderOverview(
-      { ...handover({ gas: 'empty', broken: 'Kape kohoutek.' }, 20), lastFault: FAULT, myNextReservation: { from: '2026-12-11', to: '2026-12-13', purpose: 'Víkend' } },
+      {
+        ...handover({ gas: 'empty', broken: 'Kape kohoutek.' }, 20), lastFault: FAULT, myNextReservation: { from: '2026-12-11', to: '2026-12-13', purpose: 'Víkend' },
+        upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-11', '2026-12-13')],
+      },
       {
         ...NO_SHOPPING,
         essentialWarning: { count: 1, items: [{ name: 'Káva' }] },
@@ -792,5 +809,84 @@ describe('Přehled: žádná duplicita (#425)', () => {
     expect(texts.filter((t) => /došlo:.*Káva/i.test(t))).toHaveLength(1)
     expect(texts.filter((t) => t.includes('- Závada: Kape kohoutek. (Jana, 2. 12.)'))).toHaveLength(1)
     expect(texts.filter((t) => t.includes('Plynová bomba: Došlo'))).toHaveLength(1)
+  })
+})
+
+// #274 (pravidlo E3, spec #677): výzva jen tomu, kdo ji může splnit, a na Přehledu jen jednou.
+describe('Přehled: „Visí na tobě“ jen pro toho, kdo může jednat (#274)', () => {
+  const tray = () => screen.queryByRole('region', { name: 'Visí na tobě' })
+  const leavingToday = (overrides: Partial<DashboardReservationsData> = {}) => reservations({
+    activeReservation: { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY },
+    departingToday: true,
+    departingReservationId: 'r-now',
+    ...overrides,
+  })
+  const gasEmpty = { username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-12-01', to: '2026-12-03', daysEmpty: 7, isCheckoutCompleted: true, checkoutState: { gas: 'empty' as const } }
+  const toiletPaper: DashboardShoppingData = { ...NO_SHOPPING, attention: [{ name: 'Toaleťák', isEmpty: true, isEssential: true, inventoryId: 'inv-t', shoppingItemId: null }] }
+  const nextArrival = (username: string) => reservations({ lastStay: gasEmpty, upcomingReservations: [upcoming('r-next', username, '2026-12-14', '2026-12-16')] })
+
+  it('v den mého odjezdu je výzva k předávce chaty jednou, jako řádek s tlačítkem do detailu pobytu; formulář odjezdu na Přehledu není', async () => {
+    renderOverview(leavingToday(), NO_SHOPPING, { departureChecklist: ['Zavřít okna'] })
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(card).toHaveTextContent('Dnes odjíždíš.Vyplň předávku chaty pro toho, kdo přijede po tobě.')
+    expect(within(card).getByRole('link', { name: 'Vyplnit předávku chaty' })).toHaveAttribute('href', '/reservations?pobyt=r-now')
+    expect(screen.getAllByText(/Dnes odjíždíš/)).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'Vyplnit protokol' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/vyplň odjezdový checklist/i)).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['člen, který dnes neodjíždí', { ...NOVAKOVI_NOW, to: TODAY }],
+    ['po vyplnění předávky', { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY, isCheckoutCompleted: true }],
+  ])('%s: výzva k předávce není ani v kartě „Na chatě teď“', async (_who, activeReservation) => {
+    renderOverview(reservations({ activeReservation }), NO_SHOPPING, { departureChecklist: ['Zavřít okna'] })
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(tray()).not.toBeInTheDocument()
+    expect(screen.queryByText(/vyplň odjezdový checklist/i)).not.toBeInTheDocument()
+  })
+
+  it('plyn a Došlo ★ jsou výzvou jen pro toho, kdo přijede příště, a v Důležité je znovu nevidí', async () => {
+    renderOverview(nextArrival('Eva'), toiletPaper)
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(card).toHaveTextContent('Plynová bomba: Došlo')
+    expect(card).toHaveTextContent('Na chatě došlo: Toaleťák')
+    expect(screen.queryByRole('region', { name: 'Důležité' })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['ostatní člen', false],
+    ['správce, který nikam nejede', true],
+  ])('%s vidí plyn a Došlo ★ jen v Důležité, výzvu nedostane', async (_who, isAdmin) => {
+    auth.isAdmin = isAdmin
+    renderOverview(nextArrival('Jana'), toiletPaper)
+
+    const important = await screen.findByRole('region', { name: 'Důležité' })
+    expect(important).toHaveTextContent('Plynová bomba')
+    expect(important).toHaveTextContent('Toaleťák')
+    expect(tray()).not.toBeInTheDocument()
+  })
+
+  it('když nic nevisí, „Visí na tobě“ se nevykreslí; dlouho prázdná chata výzvou není', async () => {
+    renderOverview(reservations({ lastStay: { ...gasEmpty, daysEmpty: 30, checkoutState: null }, upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16')] }))
+
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(tray()).not.toBeInTheDocument()
+    expect(screen.queryByText(/Chata je prázdná 30 dní/)).not.toBeInTheDocument()
+  })
+
+  it('host dostane výzvu k předávce v den svého odjezdu, jinak žádnou', async () => {
+    auth.isGuest = true
+    renderOverview(leavingToday({ lastStay: gasEmpty, myNextReservation: { from: '2026-12-11', to: '2026-12-12', purpose: 'Víkend' } }))
+
+    const card = await screen.findByRole('region', { name: 'Visí na tobě' })
+    expect(within(card).getAllByRole('listitem')).toHaveLength(1)
+    expect(card).toHaveTextContent('Dnes odjíždíš.')
+
+    cleanup()
+    renderOverview(nextArrival('Eva'))
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(tray()).not.toBeInTheDocument()
   })
 })

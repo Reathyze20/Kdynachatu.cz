@@ -2,15 +2,15 @@
  * nudges.ts — Nudge engine.
  *
  * A pure selector over data the dashboard already fetches. It produces timely,
- * actionable nudges (departure prompt, upcoming stay, low supplies, long-empty)
+ * actionable nudges only for whoever can act on them (rule E3, #274)
  * WITHOUT any new backend call. Each nudge carries an in-app `href` and, where
  * it's worth broadcasting, a `whatsapp` message for the "Zkopírovat pro WhatsApp"
  * bridge (the manual precursor to the Phase-3 bot).
  */
-import { Car, Flame, House, Luggage, ShoppingCart, type LucideIcon } from "lucide-react";
+import { Car, Clock, Flame, Luggage, ShoppingCart, Star, type LucideIcon } from "lucide-react";
 import { daysUntil, getLocalTodayIso } from "@/lib/dateUtils";
 import { gasLine } from "@/lib/gasLevel";
-import type { DashboardReservationsData, DashboardShoppingData } from "@/api/dashboard";
+import type { DashboardReservationsData, DashboardShoppingData, ReservationParticipantLite } from "@/api/dashboard";
 
 export type NudgeTone = "info" | "action" | "warn";
 
@@ -25,6 +25,8 @@ export interface Nudge {
   detail?: string;
   /** In-app navigation target. */
   href: string;
+  /** Label of the button leading to `href`; without it no button is shown. */
+  action?: string;
   /** Optional message to copy into the family chat. Presence enables the button. */
   whatsapp?: string;
 }
@@ -34,28 +36,46 @@ interface BuildNudgesInput {
   shopping?: DashboardShoppingData;
   /** Přihlášený člen; upomínka na odjezd patří jen tomu, kdo dnes odjíždí (#255). */
   myUsername?: string | null;
+  /** A guest gets only the prompt for their own departure (#274). */
+  isGuest?: boolean;
+  /** My departure handover waits in the offline queue for signal (#276). */
+  departurePending?: boolean;
 }
 
-export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesInput): Nudge[] {
-  const nudges: Nudge[] = [];
-  const todayStr = getLocalTodayIso();
+type Stay = { username: string; participants?: ReservationParticipantLite[] };
 
-  // 1. Departure today — prompt the leaving occupant (and only them) to fill the state.
+/** Organizer or co-traveller; usernames are unique across accounts. */
+const isMine = (stay: Stay | null | undefined, myUsername?: string | null): boolean =>
+  !!stay && !!myUsername && (stay.username === myUsername || !!stay.participants?.some((p) => p.username === myUsername));
+
+/** My stay ending today with the handover not filled yet, else `null` (#255, #274). */
+export function myDepartureId(reservations: DashboardReservationsData | undefined, myUsername?: string | null): string | null {
+  if (reservations?.departingToday && reservations.departingReservationId) return reservations.departingReservationId;
   const active = reservations?.activeReservation;
-  // Organizer or co-traveller; usernames are unique across accounts
-  const isMyStay =
-    !!myUsername &&
-    (active?.username === myUsername || !!active?.participants?.some((p) => p.username === myUsername));
-  if (active && isMyStay && active.to === todayStr && !active.isCheckoutCompleted) {
-    nudges.push({
-      id: `departure-${active.id}`,
-      tone: "action",
-      icon: Luggage,
-      title: "Dnes odjíždíš z chaty",
-      detail: "Vyplň stav chaty pro dalšího — zabere to 30 sekund.",
-      href: "/reservations",
-    });
+  if (active && isMine(active, myUsername) && active.to === getLocalTodayIso() && !active.isCheckoutCompleted) return active.id;
+  return null;
+}
+
+export function buildNudges({ reservations, shopping, myUsername, isGuest, departurePending }: BuildNudgesInput): Nudge[] {
+  const nudges: Nudge[] = [];
+
+  // 1. Departure today — prompt the leaving occupant (and only them) to fill the handover.
+  // Until the handover screen exists (#220), the button opens the departure form in the stay detail.
+  const departureId = myDepartureId(reservations, myUsername);
+  if (departureId) {
+    nudges.push(departurePending
+      ? { id: `departure-pending-${departureId}`, tone: "info", icon: Clock, title: "Předávka chaty je vyplněná", detail: "Odešle se, jakmile bude signál.", href: "/dashboard" }
+      : {
+          id: `departure-${departureId}`,
+          tone: "action",
+          icon: Luggage,
+          title: "Dnes odjíždíš.",
+          detail: "Vyplň předávku chaty pro toho, kdo přijede po tobě.",
+          href: `/reservations?pobyt=${departureId}`,
+          action: "Vyplnit předávku chaty",
+        });
   }
+  if (isGuest) return nudges;
 
   const lowItems = shopping?.essentialWarning?.items?.map((i) => i.name) ?? [];
 
@@ -90,6 +110,11 @@ export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesI
     });
   }
 
+  // Gas and Došlo ★ go only to the next arrival; everyone else sees them in Důležité (#274).
+  const active = reservations?.activeReservation;
+  const next = reservations?.upcomingReservations.find((r) => r.status === "primary" && r.id !== active?.id);
+  if (!isMine(next, myUsername)) return nudges;
+
   // 3b. Gas low/empty from the last checkout state.
   const gas = reservations?.lastStay?.checkoutState?.gas;
   const gasTitle = gas === "low" || gas === "empty" ? gasLine(gas) : null;
@@ -99,23 +124,25 @@ export function buildNudges({ reservations, shopping, myUsername }: BuildNudgesI
       tone: "warn",
       icon: Flame,
       title: gasTitle,
-      detail: "Nahlásila to poslední návštěva při odjezdu.",
+      detail: "Jedeš příště, přivez novou.",
       href: "/shopping?view=pantry",
-      whatsapp: `🔥 ${gasTitle}. Přiveze někdo na chatu novou?`,
+      action: "Otevřít Zásoby",
+      whatsapp: `🔥 ${gasTitle}. Přivezu novou.`,
     });
   }
 
-  // 4. Cabin empty for a long time.
-  const last = reservations?.lastStay;
-  if (last && last.daysEmpty >= 14) {
+  // 3c. Essential (★) supplies that ran out.
+  const starred = (shopping?.attention ?? []).filter((i) => i.isEmpty && i.isEssential).map((i) => i.name);
+  if (starred.length > 0) {
     nudges.push({
-      id: `empty-${Math.floor(last.daysEmpty / 7)}`, // re-appears weekly if still empty
-      tone: "info",
-      icon: House,
-      title: `Chata je prázdná ${last.daysEmpty} dní`,
-      detail: "Dlouho tam nikdo nebyl.",
-      href: "/reservations",
-      whatsapp: `🏡 Na chatě už ${last.daysEmpty} dní nikdo nebyl. Nezajedeme?`,
+      id: `starred-${starred.slice().sort().join("|")}`,
+      tone: "warn",
+      icon: Star,
+      title: `Na chatě došlo: ${starred.join(", ")}`,
+      detail: "Jedeš příště, přivez to.",
+      href: "/shopping?view=pantry",
+      action: "Otevřít Zásoby",
+      whatsapp: `🛒 Na chatě došlo: ${starred.join(", ")}. Přivezu to.`,
     });
   }
 
