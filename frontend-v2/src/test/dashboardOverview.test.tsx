@@ -7,6 +7,9 @@ import { CabinToday } from '@/features/dashboard/CabinToday'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { Toast } from '@/components/shared/Toast'
 import apiClient from '@/api/client'
+import type { InternalAxiosRequestConfig } from 'axios'
+import { checkoutPath } from '@/api/reservations'
+import { enqueueMutation } from '@/lib/offlineQueue'
 import type { AttentionItem, CabinSettings, DashboardReservationsData, DashboardShoppingData, UpcomingReservation } from '@/api/dashboard'
 
 // Fiktivní API Přehledu (redesign #172). Žádná reálná data chaty.
@@ -691,14 +694,15 @@ describe('Přehled: žádná duplicita (#425)', () => {
     expect(screen.queryByText('Dnes odjíždíš z chaty')).not.toBeInTheDocument()
   })
 
-  it('v den odjezdu Přehled zve k vyplnění předávky chaty (#688)', async () => {
+  it('předávka odeslaná bez signálu: Přehled píše „Předávka chaty je vyplněná“ (#688)', async () => {
+    enqueueMutation({ method: 'patch', url: checkoutPath('r-now'), data: {}, headers: {} } as InternalAxiosRequestConfig)
     renderOverview(reservations({
       activeReservation: { ...NOVAKOVI_NOW, username: 'Eva', to: TODAY },
       departingToday: true,
       departingReservationId: 'r-now',
     }))
 
-    expect(await screen.findByText(/Nezapomeň vyplnit předávku chaty/)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Předávka chaty je vyplněná' })).toBeInTheDocument()
   })
 
   it('závada z „Důležité“ je v „Od minule“ jen tlumeně, bez karty pozornosti zůstane zvýrazněná', async () => {
