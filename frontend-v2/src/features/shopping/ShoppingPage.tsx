@@ -1,9 +1,10 @@
 /**
  * ShoppingPage.tsx — Zásoby a nákupy: přepínač „Zásoby / Nákup · N“ (#224), režim v URL (`?view=pantry|shopping`),
- * bez parametru Nákup. Nákup = nákupní seznamy, Zásoby = spíž na chatě.
+ * bez parametru Nákup. Nákup = rovnou aktuální seznam s hlavičkou a menu ⋮, Zásoby = spíž na chatě.
  */
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { ViewSwitcher, type ActiveView } from './ViewSwitcher'
 import type { ShoppingList } from '@/api/shopping'
 import {
@@ -11,8 +12,9 @@ import {
   useCreateList,
   useDeleteList,
   useArchiveList,
+  useRenameList,
 } from './hooks/useShoppingLists'
-import { ListMaster } from './ListMaster'
+import { ListHeader } from './ListHeader'
 import { ListDetail } from './ListDetail'
 import { PantryView } from './PantryView'
 import { ShareListDialog } from './ShareListDialog'
@@ -21,6 +23,8 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PromptDialog } from '@/components/shared/PromptDialog'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Card } from '@/components/shared/Card'
+import { EmptyState } from '@/components/shared/EmptyState'
+import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   ShoppingErrorState,
@@ -52,6 +56,7 @@ export function ShoppingPage() {
   const createList = useCreateList()
   const deleteList = useDeleteList()
   const archiveList = useArchiveList()
+  const renameList = useRenameList()
 
   // Položky ve stavu Koupit ve všech aktivních seznamech; dokud se seznamy nenačtou, bez čísla
   const pendingCount = isLoading || isError
@@ -59,9 +64,10 @@ export function ShoppingPage() {
     : lists.reduce((sum, list) => sum + list.items.filter(i => i.status === 'pending').length, 0)
 
   const [selectedListId, setSelectedListId] = useState<string | null>(readSelectedListId)
-  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const [shareList, setShareList] = useState<ShoppingList | null>(null)
-  const [showNewListModal, setShowNewListModal] = useState(false)
+  const [renameTarget, setRenameTarget] = useState<ShoppingList | null>(null)
+  /** Předvyplněný název otevřeného dialogu „Nový nákupní seznam“; `null` = zavřený. */
+  const [newListName, setNewListName] = useState<string | null>(null)
   const [deleteListId, setDeleteListId] = useState<string | null>(null)
   const [archiveListId, setArchiveListId] = useState<string | null>(null)
   const [newListError, setNewListError] = useState<string | null>(null)
@@ -69,39 +75,27 @@ export function ShoppingPage() {
   const [archiveListError, setArchiveListError] = useState<string | null>(null)
 
   // Bez volby, nebo když zapamatovaný seznam zmizel (smazaný, uzavřený), platí nejnovější aktivní (API řadí od nejnovějšího)
-  useEffect(() => {
-    if (activeView === 'shopping' && !selectedListId && lists.length > 0) {
-      setSelectedListId(lists[0].id)
-    }
-    if (selectedListId && !lists.find(l => l.id === selectedListId) && lists.length > 0) {
-      setSelectedListId(lists[0].id)
-    }
-  }, [lists, selectedListId, activeView])
+  const selectedList = lists.find(l => l.id === selectedListId) ?? lists[0] ?? null
 
-  const selectedList = lists.find(l => l.id === selectedListId) ?? null
-
-  function rememberList(id: string) {
+  function rememberList(id: string | null) {
     setSelectedListId(id)
     try {
-      localStorage.setItem(SELECTED_LIST_KEY, id)
+      if (id) localStorage.setItem(SELECTED_LIST_KEY, id)
+      else localStorage.removeItem(SELECTED_LIST_KEY)
     } catch {
       // Bez úložiště platí volba jen do obnovení stránky
     }
   }
 
-  function handleSelectList(id: string) {
-    rememberList(id)
-    setMobileDetailOpen(true)
-  }
+  // Náhradní volbu zapíše i do prohlížeče (také po smazání nebo uzavření seznamu), ať se příště neotevře zmizelý seznam
+  const shownListId = selectedList?.id ?? null
+  useEffect(() => {
+    if (!isLoading && !isError && shownListId !== selectedListId) rememberList(shownListId)
+  }, [isLoading, isError, shownListId, selectedListId])
 
   function handleChangeView(view: ActiveView) {
     if (view === activeView) return
     setSearchParams({ view }, { replace: true })
-    setMobileDetailOpen(false)
-  }
-
-  function handleBack() {
-    setMobileDetailOpen(false)
   }
 
   function handleDeleteList(id: string) {
@@ -114,10 +108,6 @@ export function ShoppingPage() {
     setDeleteListError(null)
     try {
       await deleteList.mutateAsync(deleteListId)
-      if (selectedListId === deleteListId) {
-        setSelectedListId(null)
-        setMobileDetailOpen(false)
-      }
       showToast('Seznam smazán.', 'success')
       setDeleteListId(null)
     } catch (error) {
@@ -164,10 +154,9 @@ export function ShoppingPage() {
     setNewListError(null)
     try {
       const created = await createList.mutateAsync(cleanName)
-      setShowNewListModal(false)
+      setNewListName(null)
       showToast('Nákupní seznam vytvořen.', 'success')
       rememberList(created.id)
-      setMobileDetailOpen(true)
     } catch (error) {
       setNewListError(
         getShoppingActionErrorMessage(
@@ -179,83 +168,100 @@ export function ShoppingPage() {
     }
   }
 
+  function handleRenameList(name: string) {
+    if (renameTarget && name !== renameTarget.name) renameList.mutate({ id: renameTarget.id, name })
+    setRenameTarget(null)
+  }
+
   return (
     <div className="shopping-page" id="shopping-page" data-testid="shopping-page">
       {/* Page header inside the legacy master-detail frame, so it pads like the cards below it */}
       <div className="shrink-0 p-3 pb-0 md:p-6 md:pb-0">
         <Card className="flex flex-col gap-4">
-          <PageHeader title="Zásoby a nákupy" />
+          <PageHeader
+            title="Zásoby a nákupy"
+            primaryAction={activeView === 'shopping' ? { label: 'Nový seznam', icon: Plus, onClick: () => setNewListName('') } : undefined}
+          />
           <ViewSwitcher activeView={activeView} onChange={handleChangeView} pendingCount={pendingCount} />
         </Card>
       </div>
 
-      {/* Content; on mobile the detail (Zásoby or the open list) replaces the list panel */}
-      <div
-        className={`shopping-layout${mobileDetailOpen || activeView === 'pantry' ? ' detail-open' : ''}`}
-        id="shopping-layout"
-      >
-        {/* Master panel (only in shopping view) */}
-        {activeView !== 'pantry' && (
-          isLoading ? (
-            <aside className="shopping-master" id="shopping-master">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton-list-item skeleton-list-item--master">
-                  <div className="skeleton-list-text">
-                    <div className="skeleton skeleton-text medium"></div>
-                    <div className="skeleton skeleton-text short"></div>
-                  </div>
-                  <div className="skeleton skeleton-badge"></div>
-                </div>
-              ))}
-            </aside>
-          ) : isError ? (
-            <aside className="shopping-master" id="shopping-master">
-              <ShoppingErrorState
-                variant="master"
-                title="Seznamy se nepodařilo načíst"
-                error={listsError}
-                onRetry={() => {
-                  void refetchLists()
-                }}
-              />
-            </aside>
-          ) : (
-            <ListMaster
-              lists={lists}
-              selectedListId={selectedListId}
-              onSelect={handleSelectList}
-              onShare={list => setShareList(list)}
-              onArchive={handleArchiveList}
-              onDelete={handleDeleteList}
-              onNewList={() => setShowNewListModal(true)}
-            />
-          )
-        )}
-
-        {/* Right column: detail */}
+      {/* Obsah: Zásoby, nebo rovnou aktuální nákupní seznam */}
+      <div className="shopping-layout" id="shopping-layout">
         <div className="shopping-right-col">
           {activeView === 'pantry' ? (
             <PantryView />
+          ) : selectedList ? (
+            <ListDetail
+              list={selectedList}
+              header={
+                <ListHeader
+                  list={selectedList}
+                  lists={lists}
+                  onSelect={rememberList}
+                  onRename={setRenameTarget}
+                  onShare={setShareList}
+                  onArchive={handleArchiveList}
+                  onDelete={handleDeleteList}
+                />
+              }
+            />
           ) : (
-            <ListDetail list={selectedList} onBack={handleBack} />
+            <div className="p-3 md:p-6">
+              <Card>
+                {isLoading ? (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="skeleton-list-item">
+                      <div className="skeleton skeleton-text medium"></div>
+                    </div>
+                  ))
+                ) : isError ? (
+                  <ShoppingErrorState
+                    title="Seznamy se nepodařilo načíst"
+                    error={listsError}
+                    onRetry={() => {
+                      void refetchLists()
+                    }}
+                  />
+                ) : (
+                  <EmptyState
+                    image={dormouseBasket}
+                    message="Zatím tu není žádný nákupní seznam."
+                    action={{ label: 'Založit nákupní seznam', icon: Plus, onClick: () => setNewListName('Nákup') }}
+                  />
+                )}
+              </Card>
+            </div>
           )}
         </div>
       </div>
 
       <PromptDialog
-        isOpen={showNewListModal}
+        isOpen={newListName !== null}
         title="Nový nákupní seznam"
         label="Název seznamu"
         placeholder="Název seznamu…"
+        initialValue={newListName ?? ''}
         maxLength={100}
         submitLabel="Vytvořit"
         loading={createList.isPending}
         errorMessage={newListError}
         onSubmit={handleCreateList}
         onCancel={() => {
-          setShowNewListModal(false)
+          setNewListName(null)
           setNewListError(null)
         }}
+      />
+
+      <PromptDialog
+        isOpen={renameTarget !== null}
+        title="Přejmenovat seznam"
+        label="Název seznamu"
+        initialValue={renameTarget?.name ?? ''}
+        maxLength={100}
+        submitLabel="Uložit"
+        onSubmit={handleRenameList}
+        onCancel={() => setRenameTarget(null)}
       />
 
       {/* Share dialog */}

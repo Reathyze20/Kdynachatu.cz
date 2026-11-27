@@ -1,6 +1,7 @@
 /**
  * ViewSwitcher.tsx — přepínač režimů „Zásoby / Nákup · N“ (#224): segmenty na vnořené dráze, vybraný je papír
  */
+import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -14,12 +15,12 @@ interface Props {
 }
 
 export function ViewSwitcher({ activeView, onChange, pendingCount }: Props) {
-  const views: { id: ActiveView; label: string }[] = [
+  const views: { id: ActiveView; label: ReactNode }[] = [
     { id: 'pantry', label: 'Zásoby' },
-    { id: 'shopping', label: pendingCount === undefined ? 'Nákup' : `Nákup · ${pendingCount}` },
+    { id: 'shopping', label: pendingCount === undefined ? 'Nákup' : <>Nákup · {pendingCount} <span className="sr-only">ke koupi</span></> },
   ]
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-xl bg-inset p-1 md:w-80" role="group" aria-label="Režim">
+    <div className="grid grid-cols-2 gap-1 rounded-xl bg-inset p-1 md:w-80" role="group" aria-label="Zásoby nebo nákup">
       {views.map(({ id, label }) => (
         <Button
           key={id}

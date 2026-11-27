@@ -4,11 +4,9 @@ import { Images } from 'lucide-react'
 import type { DiaryFolder } from '@/api/diary'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { DiaryFolders } from '@/features/diary/DiaryFolders'
-import { ListMaster } from '@/features/shopping/ListMaster'
 import { FolderGrid } from '@/features/gallery/FolderGrid'
 import type { GalleryFolder } from '@/api/gallery'
 import dormouseNotebook from '@/features/dashboard/scene/dormouse-notebook.png'
-import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
 import dormouseCamera from '@/features/dashboard/scene/dormouse-camera.png'
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { userId: 'u-me', username: 'jana', role: 'user' } }) }))
@@ -52,20 +50,6 @@ describe('Deník pobytů: prázdný stav', () => {
     const empty = screen.getByText('Letos tu zatím žádný pobyt není.').parentElement!
     expect(container.querySelector('img')).toBeNull()
     expect(empty.querySelector(':scope > svg')).toHaveAttribute('aria-hidden', 'true')
-  })
-})
-
-describe('Nákupy: žádné aktivní nákupy', () => {
-  it('ukáže plcha s košíkem místo empty_basket.svg a text zůstává', () => {
-    const noop = () => {}
-    const { container } = render(
-      <ListMaster lists={[]} selectedListId={null} onSelect={noop} onShare={noop} onArchive={noop} onDelete={noop} onNewList={noop} />,
-    )
-    const imgs = container.querySelectorAll('img')
-    expect(imgs).toHaveLength(1)
-    expect(imgs[0]).toHaveAttribute('src', dormouseBasket)
-    expect(imgs[0]).toHaveAttribute('alt', '')
-    expect(screen.getByText('Žádné aktivní nákupy')).toBeInTheDocument()
   })
 })
 

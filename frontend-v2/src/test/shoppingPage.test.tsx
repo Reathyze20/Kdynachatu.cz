@@ -9,6 +9,7 @@ import { ShoppingPage } from '@/features/shopping/ShoppingPage'
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from '@/features/shopping/hooks/useShoppingLists'
 import { INVENTORY_KEY } from '@/features/shopping/hooks/useInventory'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
+import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
 
 // Seam celé stránky Zásoby a nákupy (#176): API klient a auth jsou namockované, zbytek je skutečný.
 const { api } = vi.hoisted(() => ({
@@ -401,7 +402,8 @@ describe('shopping page: pantry and shopping modes', () => {
   it('counts Koupit items of all active lists on the switcher and no longer badges missing stock on Zásoby', async () => {
     renderPage([], { lists: twoLists, inventory: [stock({ id: 's-empty', name: 'Cukr', status: 'EMPTY' })] })
 
-    expect(await screen.findByRole('button', { name: 'Nákup · 3' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Nákup · 3 ke koupi' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Zásoby nebo nákup' })).toBeInTheDocument()
     await userEvent.setup().click(mode(/^Zásoby/))
     await screen.findByText('Cukr')
     expect(mode(/^Zásoby/)).toHaveAccessibleName('Zásoby')
@@ -422,7 +424,9 @@ describe('shopping page: pantry and shopping modes', () => {
   it('remembers the chosen list in the browser and falls back to the newest active list once it is gone', async () => {
     renderPage([], { lists: twoLists })
     expect(await screen.findByText('Mléko')).toBeInTheDocument()
-    await userEvent.setup().click(screen.getByText('Grilovačka'))
+    const picker = screen.getByRole('combobox', { name: 'Nákupní seznam' })
+    expect(options(picker)).toEqual(['Víkend · 1 ke koupi', 'Grilovačka · 2 ke koupi'])
+    await userEvent.setup().selectOptions(picker, 'list-old')
     expect(await screen.findByText('Uhlí')).toBeInTheDocument()
 
     cleanup()
@@ -432,5 +436,93 @@ describe('shopping page: pantry and shopping modes', () => {
     cleanup()
     renderPage([], { lists: [twoLists[0]] })
     expect(await screen.findByText('Mléko')).toBeInTheDocument()
+    await waitFor(() => expect(localStorage.getItem('shoppingSelectedListId')).toBe('list-new'))
+  })
+})
+
+// #224: Nákup ukazuje rovnou aktuální seznam s hlavičkou a menu ⋮ seznamu, „Nový seznam“ je v hlavičce stránky.
+describe('shopping page: current list header and menu', () => {
+  beforeEach(() => { localStorage.clear(); api.post.mockClear(); api.patch.mockClear(); api.delete.mockClear() })
+  const listMenu = async () => {
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Akce se seznamem Víkend' }))
+    return { user, items: within(screen.getByRole('menu')).getAllByRole('menuitem').map((el) => el.textContent) }
+  }
+  const dialog = async (name: string) => {
+    const el = await screen.findByRole('dialog', { name })
+    // Modal přesouvá fokus dovnitř až po 50 ms; člověk neklikne dřív, test na to počká
+    await waitFor(() => expect(el).toContainElement(document.activeElement as HTMLElement))
+    return within(el)
+  }
+
+  it('shows the only list straight away with its name and progress, without a list panel, picker or "Zpět"', async () => {
+    renderPage([item({ id: 'a', name: 'Mléko' }), item({ id: 'b', name: 'Sůl', status: 'purchased' })])
+    expect(await screen.findByRole('heading', { level: 2, name: 'Víkend' })).toBeInTheDocument()
+    expect(within(screen.getByTestId('shopping-list-detail')).getByText('1/2')).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Nákupní seznam' })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('shopping-list-master')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Zpět/ })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['the founder', 'member', 'u-me', ['Přejmenovat', 'Sdílet na nástěnku', 'Smazat'], ['Přejmenovat', 'Sdílet na nástěnku', 'Uzavřít', 'Smazat']],
+    ['an admin', 'admin', 'u-other', ['Přejmenovat', 'Sdílet na nástěnku', 'Smazat'], ['Přejmenovat', 'Sdílet na nástěnku', 'Uzavřít', 'Smazat']],
+    ['another member', 'member', 'u-other', ['Sdílet na nástěnku'], ['Sdílet na nástěnku', 'Uzavřít']],
+  ])('offers %s only the allowed list actions, Uzavřít only once all is resolved', async (_who, role, listCreatedById, open, resolved) => {
+    renderPage([item({ id: 'a', name: 'Mléko' })], { role, listCreatedById })
+    expect((await listMenu()).items).toEqual(open)
+    cleanup()
+    renderPage([item({ id: 'a', name: 'Mléko', status: 'bring_from_home' })], { role, listCreatedById })
+    expect((await listMenu()).items).toEqual(resolved)
+  })
+
+  it('renames, closes and deletes the list from its menu, each through a dialog', async () => {
+    renderPage([item({ id: 'a', name: 'Mléko', status: 'purchased' })])
+    const { user } = await listMenu()
+    await user.click(screen.getByRole('menuitem', { name: 'Přejmenovat' }))
+    const rename = await dialog('Přejmenovat seznam')
+    expect(rename.getByRole('textbox', { name: 'Název seznamu' })).toHaveValue('Víkend')
+    await user.clear(rename.getByRole('textbox'))
+    await user.type(rename.getByRole('textbox'), 'Chata{Enter}')
+    expect(api.patch).toHaveBeenCalledWith('/shopping-lists/list-1/rename', { name: 'Chata' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await listMenu()
+    await user.click(screen.getByRole('menuitem', { name: 'Uzavřít' }))
+    await user.click((await dialog('Uzavřít seznam')).getByRole('button', { name: 'Uzavřít' }))
+    expect(api.patch).toHaveBeenCalledWith('/shopping-lists/list-1/resolve', { isResolved: true })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await listMenu()
+    await user.click(screen.getByRole('menuitem', { name: 'Smazat' }))
+    const confirm = await dialog('Smazat seznam')
+    expect(api.delete).not.toHaveBeenCalled()
+    await user.click(confirm.getByRole('button', { name: 'Smazat' }))
+    expect(api.delete).toHaveBeenCalledWith('/shopping-lists/list-1')
+  })
+
+  it('opens an empty "Nový seznam" from the page header, only in the Nákup mode', async () => {
+    renderPage([item({ id: 'a', name: 'Mléko' })])
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Nový seznam' }))
+    expect((await dialog('Nový nákupní seznam')).getByRole('textbox', { name: 'Název seznamu' })).toHaveValue('')
+    await user.click(screen.getByRole('button', { name: 'Zrušit' }))
+    await user.click(screen.getByRole('button', { name: 'Zásoby' }))
+    expect(screen.queryByRole('button', { name: 'Nový seznam' })).not.toBeInTheDocument()
+  })
+
+  // Přesunuto z dormouseEmptyStates.test.tsx (#655): plch s košíkem místo empty_basket.svg, teď v seamu stránky.
+  it('without an active list shows the dormouse with a basket and founds a list named "Nákup"', async () => {
+    renderPage([], { lists: [] })
+    const user = userEvent.setup()
+    const found = await screen.findByRole('button', { name: 'Založit nákupní seznam' })
+    const imgs = screen.getByTestId('shopping-page').querySelectorAll('img')
+    expect(imgs).toHaveLength(1)
+    expect(imgs[0]).toHaveAttribute('src', dormouseBasket)
+    expect(imgs[0]).toHaveAttribute('alt', '')
+    expect(screen.getByText('Zatím tu není žádný nákupní seznam.')).toBeInTheDocument()
+    await user.click(found)
+    await user.click((await dialog('Nový nákupní seznam')).getByRole('button', { name: 'Vytvořit' }))
+    expect(api.post).toHaveBeenCalledWith('/shopping-lists', { name: 'Nákup' })
   })
 })
