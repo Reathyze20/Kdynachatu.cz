@@ -61,8 +61,8 @@ Hodnoty tokenů žijí v kódu (`frontend-v2/src/styles/variables.css`, `shadcn-
 ### Co se nepíše
 
 - Surový hex nebo `rgb()`/`rgba()` s čísly mimo soubory s definicí tokenů. `rgb(var(--sheet))` je token, ne surová barva.
-- Barvy z palety Tailwindu (`slate-*`, `emerald-*`, `teal-*`, `red-600`, `bg-white` …). Nový kód bere barvu jen z tokenů. `emerald-*` a `teal-*` hlídá `noEmeraldTeal.test.ts`, `slate-*`, `emerald-*` a `bg-white` guard `coldPalette` a ESLint.
-- Barevný levý okraj karty, pole, citace nebo řádku (`noLeftStripes.test.ts`).
+- Barvy z palety Tailwindu (`slate-*`, `emerald-*`, `teal-*`, `red-600`, `bg-white` …). Nový kód bere barvu jen z tokenů. `emerald-*` a `teal-*` hlídá guard `emeraldTeal`, `slate-*`, `emerald-*` a `bg-white` guard `coldPalette` a ESLint.
+- Barevný levý okraj karty, pole, citace nebo řádku (guard `leftStripe`).
 - `backdrop-blur` na obsahové kartě. Sklo jen jako akcent: modál, overlay, toast, lišta (`lightSurfaces.test.tsx`).
 
 ### Breakpointy a styly
@@ -95,7 +95,7 @@ Vybírá se role, ne velikost v pixelech. Utilita `text-<role>` nastaví velikos
 
 ## 4. Ikony
 
-- Jen `lucide-react`. Jinou ikonovou sadu zakazuje ESLint `no-restricted-imports`. Emoji ani unicode dingbaty nejsou ikony (`uiIconography.test.ts`).
+- Jen `lucide-react`. Jinou ikonovou sadu zakazuje ESLint `no-restricted-imports`. Emoji ani unicode dingbaty nejsou ikony (guard `uiDingbat`).
 - Velikosti jen **16, 20 a 24 px**: 16 v textu a v tlačítku s textem, 20 jako samostatná ikona (ikonové tlačítko, navigace), 24 v `EmptyState`. Stávající 14, 18, 28, 48 px a další odchylky jsou v allowlistu (guard `iconSize`).
 - Inline `<svg>` jen z allowlistu: logo, ilustrace landing page, prázdné stavy, pixel art scény chaty (guard `inlineSvg`). Trvalou výjimkou je `GlobalFallback`, který nesmí záviset na lucide.
 - Každá ikona něco sděluje, dekorace to není. Ikona vedle textu má `aria-hidden`, ikonové tlačítko má `aria-label` a cíl 48 × 48 px.
@@ -232,7 +232,7 @@ Jediný jazyk je čeština (`cs-CZ`). Formátuje jeden modul na `Intl`, **`front
 
 Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Skenují zdrojáky přes `import.meta.glob` s `?raw` a běží v `npm test`, preflightu i CI. Zbytek posuzuje `/code-review` podle tohoto dokumentu (odkaz z `CODING_STANDARDS.md`).
 
-**Dnešní guardy:** `uiIconography` (emoji a dingbaty jako ikony), `noEmeraldTeal`, `noLeftStripes`, `lightSurfaces` (plné karty, sklo jen jako akcent), `textAndTouchTokens` (16/14 px, 48/56 px), `mutedTextContrast`, `statusBadgeContrast`, `brandGreen` (kontrast značkové zelené), `themeBridge` (most shadcn).
+**Další guardy:** `lightSurfaces` (plné karty, sklo jen jako akcent), `textAndTouchTokens` (16/14 px, 48/56 px), `mutedTextContrast`, `statusBadgeContrast`, `brandGreen` (kontrast značkové zelené), `themeBridge` (most shadcn).
 
 **Guard `designRules.test.ts`** (pravidla v `designRules.ts`, výjimky v `designAllowlist.json`, #450). Soubory s definicí tokenů (`styles/variables.css`, `styles/shadcn-tokens.css`) jsou mimo rozsah prvních tří pravidel.
 
@@ -254,19 +254,22 @@ Co jde ověřit strojově, hlídají guard testy ve `frontend-v2/src/test/`. Ske
 | `legacyEmptyState` | třída `<něco>-empty-<něco>` v TS/TSX (místo ní `EmptyState`) |
 | `themeVariant` | selektor `.dark`, varianta `dark:`, `@custom-variant dark`, `[data-theme]`, `prefers-color-scheme` nebo `next-themes`, i v souborech s definicí tokenů (kapitola 1) |
 | `loopAnimation` | smyčková animace (`infinite`, `repeat: Infinity`, `animate-spin`/`pulse`/`ping`/`bounce`, `animate-scene-*`) mimo Scénu chaty a maskota (kapitola 5) |
+| `uiDingbat` | emoji nebo unicode dingbat v TS/TSX mimo řádek komentáře, samotné `×`/`←`/`→` jako obsah prvku (kapitola 4) |
+| `emeraldTeal` | `emerald-*` a `teal-*` kdekoli, i v komentářích a definici tokenů |
+| `leftStripe` | viditelný levý okraj: `border-left`/`border-inline-start` v CSS, `border-l-*`/`border-s-*` nebo `borderLeft` v TSX |
 
 ESLint `no-restricted-imports` pouští jako ikonovou sadu jen `lucide-react`.
 
 **Přibude:** vykání v hláškách backendu (node:test, #457).
 
-Pravidla allowlistu (pomocník `designGuard.ts`, stávající guardy na něj převede #459):
+Pravidla allowlistu (pomocník `designGuard.ts`; guardy, které hlídají výskyt v souboru, na něm stojí od #459):
 
 - Stávající porušení jsou v jednom allowlistu **soubor → důvod**, v JSON seskupené `pravidlo → důvod → soubory`. Položka bez důvodu nebo soubor uvedený u pravidla dvakrát selže.
 - Guard selže na nový výskyt i na položku allowlistu, která už je čistá. Allowlist se tak smí jen **zmenšovat**.
 - Přidat položku jde jen v PR, které ji výslovně zdůvodní (např. nový soubor třetí strany). Review takové PR posuzuje zvlášť.
 - Výstup guardu ukazuje počet zbývajících výjimek u každého pravidla. Prázdný allowlist znamená, že „Krok 6 design systém“ v #69 je hotový.
 - **Jak allowlist zmenšit:** převeď soubor tak, aby pravidlo neporušoval, a smaž ho ze seznamu u daného pravidla (prázdnou skupinu i s důvodem). Výjimka platí pro celý soubor: dokud v něm zbývá jediný výskyt, položka zůstává, a jakmile je čistý, guard sám vyžádá její smazání. Seznam porušení ukáže dočasné odebrání souboru z allowlistu a `npx vitest run src/test/designRules.test.ts`.
-- **Nové pravidlo:** objekt `DesignRule` (jméno, nápověda, `scope`, regex nebo funkce `match`) v `designRules.ts`, příklady do `designRules.test.ts` a stávající porušení pod jeho jménem do `designAllowlist.json`.
+- **Nové pravidlo:** objekt `DesignRule` (jméno, nápověda, `scope`, regex nebo funkce `match`, `keepComments` pro pravidlo, které vidí i komentáře) v `designRules.ts`, příklady do `designRules.test.ts` a stávající porušení pod jeho jménem do `designAllowlist.json`.
 
 ## 11. Postup převodu obrazovky
 
