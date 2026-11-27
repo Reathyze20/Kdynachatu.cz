@@ -260,6 +260,15 @@ export interface SetCabinCoverPhotoRequest {
   photoId: string;
 }
 
+// GET /api/dashboard/shopping → claimed: Došlo ★, kterou si někdo vzal přes „Koupím já“ (#683). Zásoba je po slibu
+// doplněná, v `attention` už není; ostatní u ní místo tlačítka vidí „Koupí: <buyer>“.
+export interface ClaimedItem {
+  name: string;
+  inventoryId: string;
+  shoppingItemId: string;
+  buyer: string; // username toho, kdo věc slíbil a koupí (unikátní napříč účty)
+}
+
 // Preference Přehledu uložené u uživatele, ne u chaty (#681, spec #677). Všechny klíče jsou volitelné:
 // chybějící klíč nebo null = výchozí hodnota (Počasí zapnuté, ostatní bloky vypnuté, scéna animated).
 export type DashboardSceneMode = "animated" | "static";

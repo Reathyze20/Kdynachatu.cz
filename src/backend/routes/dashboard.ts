@@ -4,7 +4,10 @@ import { requireCabin, requireCabinAllowGuest } from "../../middleware/cabinMidd
 import prisma from "../../utils/prisma";
 import logger from "../../utils/logger";
 import { calendarTodayIso, departureGate, guestStayScope, handoverFault, isGuest, nextFreeWeekend } from "./reservationHelpers";
-import { attentionItems } from "./dashboardAttention";
+import { attentionItems, claimedItems } from "./dashboardAttention";
+
+// Jak dlouho Přehled ukazuje „Koupí: <jméno>“ (#683); slib „Přivezu z domova“ sám od sebe nezmizí.
+const CLAIM_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
 const router = Router();
 
@@ -189,7 +192,7 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
 
     // Nevyřízená položka = jen Koupit; „Přivezu z domova“ i Koupeno jsou vyřešené (#167 = A)
     const activeListFilter = { isResolved: false, isPantry: false, cabinId };
-    const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems, lowInventory, pendingForAttention] = await Promise.all([
+    const [pendingShoppingItems, totalPendingCount, totalItemsCount, essentialPendingItems, lowInventory, pendingForAttention, pledges, restockedEssential] = await Promise.all([
       prisma.shoppingListItem.findMany({
         where: { status: "pending", list: activeListFilter },
         include: { list: { select: { id: true, name: true } } },
@@ -218,6 +221,16 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
         select: { id: true, name: true, isEssential: true, linkedInventoryId: true },
         orderBy: { createdAt: "asc" },
       }),
+      // „Koupí: <jméno>“ (#683): čerstvé sliby zásob na aktivních seznamech chaty a ★ zásoby doplněné slibem
+      prisma.shoppingListItem.findMany({
+        where: { status: "bring_from_home", linkedInventoryId: { not: null }, purchasedAt: { gte: new Date(Date.now() - CLAIM_MAX_AGE_MS) }, list: activeListFilter },
+        select: { id: true, linkedInventoryId: true, purchasedBy: { select: { username: true } } },
+        orderBy: { purchasedAt: "desc" },
+      }),
+      prisma.inventoryItem.findMany({
+        where: { cabinId, isEssential: true, status: "OK" },
+        select: { id: true, name: true },
+      }),
     ]);
 
     res.json({
@@ -235,6 +248,7 @@ router.get("/shopping", protect, requireCabin, async (req: Request, res: Respons
         items: essentialPendingItems.map((i) => ({ id: i.id, name: i.name })),
       } : null,
       attention: attentionItems(lowInventory, pendingForAttention),
+      claimed: claimedItems(pledges, restockedEssential),
     });
   } catch (error) {
     logger.error("DASHBOARD", "Get shopping error", { error: String(error) });

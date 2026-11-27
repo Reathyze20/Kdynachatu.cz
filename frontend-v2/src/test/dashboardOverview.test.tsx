@@ -931,3 +931,63 @@ describe('Přehled: „Visí na tobě“ jen pro toho, kdo může jednat (#274)'
     expect(tray()).not.toBeInTheDocument()
   })
 })
+
+// #683 (spec #677): kdo si Došlo ★ vezme přes „Koupím já“, tomu zmizí; ostatní vidí, kdo ji koupí
+describe('Přehled: „Koupí: <jméno>“ u slíbené Došlo ★ (#683)', () => {
+  const toiletPaper: AttentionItem = { name: 'Toaleťák', isEmpty: true, isEssential: true, inventoryId: 'inv-t', shoppingItemId: null }
+  const claimedBy = (buyer: string): DashboardShoppingData => ({ ...NO_SHOPPING, claimed: [{ name: 'Toaleťák', inventoryId: 'inv-t', shoppingItemId: 's-t', buyer }] })
+  const important = () => screen.queryByRole('region', { name: 'Důležité' })
+  const tray = () => screen.queryByRole('region', { name: 'Visí na tobě' })
+  const shoppingFetches = () => vi.mocked(apiClient.get).mock.calls.filter(([url]) => url === '/dashboard/shopping').length
+  const nextArrival = (username: string) => reservations({ upcomingReservations: [upcoming('r-next', username, '2026-12-14', '2026-12-16')] })
+
+  it('ostatní vidí u věci „Koupí: Jana“ místo tlačítka, vyřešené až za otevřenými věcmi a vzkazem', async () => {
+    responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: 'Klíč je u sousedů.', handoverNoteAuthor: 'Jana', handoverNoteUpdatedAt: '2026-12-09T08:00:00.000Z' })
+    renderOverview(reservations(), { ...claimedBy('Jana'), attention: [{ ...toiletPaper, name: 'Sirky', inventoryId: 'inv-s' }] })
+
+    const card = await screen.findByRole('region', { name: 'Důležité' })
+    await waitFor(() => expect(within(card).getAllByRole('listitem').map((r) => r.textContent)).toEqual([
+      'DošloSirkyKoupím já', 'VzkazKlíč je u sousedů. · Jana', 'VyřešenoToaleťákKoupí: Jana',
+    ]))
+    expect(within(card).queryByRole('button', { name: 'Koupím já: Toaleťák' })).not.toBeInTheDocument()
+  })
+
+  it('kdo věc slíbil, tomu po „Koupím já“ zmizí a nevrátí se ani jako „Koupí: Eva“', async () => {
+    vi.mocked(apiClient.post).mockImplementationOnce(() => {
+      responses.set('/dashboard/shopping', claimedBy('Eva'))
+      return Promise.resolve({ data: { id: 's-t', status: 'bring_from_home', created: true, supplyStatusBefore: 'EMPTY' } } as never)
+    })
+    renderOverview(reservations(), { ...NO_SHOPPING, attention: [toiletPaper] })
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Koupím já: Toaleťák' }))
+    await waitFor(() => expect(shoppingFetches()).toBeGreaterThan(1))
+    await screen.findByText('Chata zatím čeká')
+    expect(important()).not.toBeInTheDocument()
+    expect(screen.queryByText(/Koupí:/)).not.toBeInTheDocument()
+  })
+
+  it('kdo přijede příště a věc slíbil, nemá ji ve „Visí na tobě“ ani v Důležité', async () => {
+    renderOverview(nextArrival('Eva'), claimedBy('Eva'))
+
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    await waitFor(() => expect(shoppingFetches()).toBeGreaterThan(0))
+    expect(tray()).not.toBeInTheDocument()
+    expect(important()).not.toBeInTheDocument()
+  })
+
+  it('kdo přijede příště a věc slíbil někdo jiný, nedostane výzvu, v Důležité vidí „Koupí: Jana“', async () => {
+    renderOverview(nextArrival('Eva'), claimedBy('Jana'))
+
+    const card = await screen.findByRole('region', { name: 'Důležité' })
+    expect(card).toHaveTextContent('ToaleťákKoupí: Jana')
+    expect(tray()).not.toBeInTheDocument()
+  })
+
+  it('host slib nevidí', async () => {
+    auth.isGuest = true
+    renderOverview(reservations(), claimedBy('Jana'))
+
+    await screen.findByText('Chata zatím čeká')
+    expect(important()).not.toBeInTheDocument()
+  })
+})

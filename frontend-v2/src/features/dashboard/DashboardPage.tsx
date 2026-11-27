@@ -219,6 +219,8 @@ export function DashboardPage() {
     gas: gasInTray ? null : reservationsQuery.data?.lastStay?.checkoutState?.gas,
     fault: reservationsQuery.data?.lastFault,
     supplies: inTray("starred-") ? [] : shoppingQuery.data?.attention,
+    claimed: shoppingQuery.data?.claimed,
+    myUsername: user?.username,
     note: { text: pinnedNote, author: pinnedNoteAuthor, updatedAt: pinnedNoteUpdatedAt },
     isGuest,
   });

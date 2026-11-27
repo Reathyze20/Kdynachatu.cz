@@ -23,6 +23,15 @@ export interface AttentionItem {
   shoppingItemId: string | null;
 }
 
+/** Došlo ★, kterou si někdo vzal přes „Koupím já“ (#683); ostatní vidí „Koupí: <buyer>“ */
+export interface ClaimedItem {
+  name: string;
+  inventoryId: string;
+  shoppingItemId: string;
+  /** Username toho, kdo věc koupí */
+  buyer: string;
+}
+
 /** Závada z poslední dokončené předávky (#275) */
 export interface HandoverFault {
   text: string;
@@ -116,6 +125,7 @@ export interface DashboardShoppingData {
   totalItemsCount: number;
   essentialWarning: { count: number; items: { name: string }[] } | null;
   attention?: AttentionItem[];
+  claimed?: ClaimedItem[];
 }
 
 export interface DashboardNotesData {
