@@ -282,6 +282,11 @@ router.delete("/:id/reservations", protect, requireCabin, adminOnly, async (req:
   const { id } = req.params;
 
   try {
+    const targetUser = await findCabinTarget(id, req.user);
+    if (!targetUser) {
+      return res.status(404).json({ message: "Uživatel nenalezen." });
+    }
+
     await prisma.reservation.deleteMany({
       where: { userId: id, cabinId: req.user.cabinId },
     });
