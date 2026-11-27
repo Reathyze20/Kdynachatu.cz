@@ -102,7 +102,7 @@ export function PantryView({ onBack }: Props) {
 
   /** Menu ⋮ zásoby `id` (offset 0) nebo jejího souseda v seznamu (±1). */
   function stockMenu(id: string, offset = 0) {
-    const rows = Array.from(listRef.current?.querySelectorAll<HTMLElement>('[data-testid="inventory-item-row"]') ?? [])
+    const rows = Array.from(listRef.current?.querySelectorAll<HTMLElement>('li[data-item-id]') ?? [])
     const index = rows.findIndex(row => row.dataset.itemId === id)
     return index < 0 ? null : rows[index + offset]?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ?? null
   }

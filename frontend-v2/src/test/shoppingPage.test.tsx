@@ -284,7 +284,8 @@ describe('shopping page: readable inventory states', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Upravit' }))
     const dialog = await screen.findByRole('dialog', { name: 'Upravit zásobu' })
     expect(options(within(dialog).getByRole('combobox', { name: 'Stav zásoby' }))).toEqual(['Dostatek', 'Dochází', 'Došlo'])
-    expect(within(dialog).getByRole('button', { name: 'Smazat zásobu' })).toBeInTheDocument()
+    // Smazání je jen v menu ⋮ (#676), ne v dialogu úpravy.
+    expect(within(dialog).queryByRole('button', { name: /Smazat/ })).not.toBeInTheDocument()
   })
 
   it('filters "Chybí · N" to Dochází and Došlo without category chips', async () => {
@@ -310,7 +311,7 @@ describe('shopping page: readable inventory states', () => {
     const user = await renderPantry([pantry[0], pantry[3]], 'guest')
 
     expect(stockRow('Čaj').getByText('Došlo')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Přidat zásobu|Sůl|Akce se zásobou|Vše do nákupu/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Přidat zásobu|Akce se zásobou|Vše do nákupu/ })).not.toBeInTheDocument()
     await user.click(screen.getByText('Sůl'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })

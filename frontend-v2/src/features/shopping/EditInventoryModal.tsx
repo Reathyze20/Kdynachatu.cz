@@ -1,12 +1,11 @@
 /**
- * EditInventoryModal.tsx — Modál pro úpravu zásoby v inventáři
+ * EditInventoryModal.tsx — Modál pro úpravu zásoby v inventáři (smazání je v menu ⋮ řádku, #676)
  */
 import { useState, useEffect, useRef } from 'react'
 import type { InventoryItem } from '@/api/shopping'
-import { useUpdateInventoryItem, useDeleteInventoryItem } from './hooks/useInventory'
+import { useUpdateInventoryItem } from './hooks/useInventory'
 import { useAuth } from '@/context/AuthContext'
 import { Modal } from '@/components/shared/Modal'
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { CATEGORY_ORDER, CATEGORY_LABELS, INVENTORY_STATUSES, INVENTORY_STATUS_LABELS } from './constants'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
@@ -23,14 +22,11 @@ export function EditInventoryModal({ item, onClose }: Props) {
   const [category, setCategory] = useState(item.category)
   const [isEssential, setIsEssential] = useState(item.isEssential)
   const updateItem = useUpdateInventoryItem()
-  const deleteItem = useDeleteInventoryItem()
   const { user } = useAuth()
   const isGuest = user?.role === 'guest'
   const nameRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     nameRef.current?.focus()
@@ -57,30 +53,7 @@ export function EditInventoryModal({ item, onClose }: Props) {
     }
   }
 
-  function handleDelete() {
-    setDeleteError(null)
-    setShowDeleteConfirm(true)
-  }
-
-  async function confirmDelete() {
-    setDeleteError(null)
-    try {
-      await deleteItem.mutateAsync(item.id)
-      setShowDeleteConfirm(false)
-      onClose()
-    } catch (error) {
-      setDeleteError(
-        getNetworkAwareActionMessage(
-          error,
-          'Zásobu se nepodařilo smazat. Zkus to znovu.',
-          'Spojení vypadlo dřív, než se zásoba stihla smazat. Zkus to znovu po obnovení připojení.',
-        ),
-      )
-    }
-  }
-
   return (
-    <>
     <Modal
       isOpen={true}
       onClose={onClose}
@@ -88,16 +61,6 @@ export function EditInventoryModal({ item, onClose }: Props) {
       maxWidth="max-w-md"
       footer={
         <div className="flex justify-between w-full items-center">
-          {!isGuest ? (
-            <Button
-              variant="ghost"
-              className="text-(--status-error-dark)"
-              onClick={handleDelete}
-              disabled={deleteItem.isPending}
-            >
-              Smazat zásobu
-            </Button>
-          ) : <span />}
           <div className="flex gap-2 ml-auto">
             <Button variant="secondary" onClick={onClose}>
               Zrušit
@@ -199,20 +162,5 @@ export function EditInventoryModal({ item, onClose }: Props) {
         </div>
       </form>
     </Modal>
-    <ConfirmDialog
-      isOpen={showDeleteConfirm}
-      title="Smazat zásobu"
-      message="Opravdu chceš tuto zásobu smazat? Tato akce je nevratná."
-      confirmLabel="Smazat"
-      danger
-      loading={deleteItem.isPending}
-      errorMessage={deleteError}
-      onConfirm={confirmDelete}
-      onCancel={() => {
-        setShowDeleteConfirm(false)
-        setDeleteError(null)
-      }}
-    />
-    </>
   )
 }
