@@ -5,7 +5,7 @@
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
-      "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/toast.css"
+      "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
       "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
@@ -52,7 +52,7 @@
       "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
       "styles/help.css", "styles/invite.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
-      "styles/reservations.css", "styles/shopping.css", "styles/status-header.css", "styles/toast.css"
+      "styles/reservations.css", "styles/shopping.css", "styles/status-header.css"
     ],
     "matchMedia s legacy šířkou 768 px, sjednotí se při převodu obrazovky": ["components/layout/AppBackdrop.tsx", "features/notes/NotesPage.tsx"],
     "Skeleton s mřížkou sm:/xl:, sjednotí se s rozvržením stránek": ["components/shared/RouteTransitionSkeleton.tsx"]
@@ -60,8 +60,7 @@
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
       "components/shared/ConfirmDialog.tsx", "components/shared/CopyForWhatsAppButton.tsx",
-      "components/shared/LogsPanel.tsx", "components/shared/PromptDialog.tsx",
-      "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
+      "components/shared/LogsPanel.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/UploadModal.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",
@@ -70,8 +69,7 @@
   },
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/GlobalFallback.tsx", "components/shared/InstallCard.tsx",
-      "components/shared/LogsPanel.tsx",
+      "components/shared/GlobalFallback.tsx", "components/shared/LogsPanel.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
@@ -92,7 +90,7 @@
       "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/invite.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",
-      "styles/status-header.css", "styles/toast.css", "styles/view-transitions.css"
+      "styles/status-header.css", "styles/view-transitions.css"
     ],
     "Duplicitní import hub, který nic neimportuje (vstup je src/index.css), smazat": ["styles/index.css"]
   },
@@ -107,7 +105,6 @@
   },
   "iconSize": {
     "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [
-      "components/shared/Toast.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
       "features/reservations/ui/BookingForm.tsx", "features/weather/StayWeatherCard.tsx"
     ],

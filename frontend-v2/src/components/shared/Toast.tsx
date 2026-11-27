@@ -1,7 +1,7 @@
 /**
  * components/shared/Toast.tsx
  * Globální toast systém — strukturované toasty s ikonou, close, copy support code.
- * Podporuje stacking (max 3), Framer Motion animace, a glassmorphism.
+ * Podporuje stacking (max 3) a Framer Motion animace. Papírová karta s tónovanou ikonou (DESIGN.md §1 a §2, #526).
  *
  * Naslouchá custom window eventu 'toast:show' s payloadem:
  *   { title: string; detail?: string; supportCode?: string; action?: ToastAction; type: ToastType }
@@ -28,6 +28,12 @@ const ICONS: Record<ToastType, typeof CheckCircle> = {
   success: CheckCircle,
   error: XCircle,
   info: Info,
+}
+
+const ICON_COLOURS: Record<ToastType, string> = {
+  success: 'text-(--status-success)',
+  error: 'text-(--status-error)',
+  info: 'text-(--status-info)',
 }
 
 const DURATIONS: Record<ToastType, number> = {
@@ -59,14 +65,16 @@ function CopyButton({ text }: { text: string }) {
   }, [])
 
   return (
-    <button
-      className="toast-support-copy"
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="-my-3 text-(--text-muted)"
       onClick={handleCopy}
       aria-label="Zkopírovat kód chyby"
-      type="button"
     >
-      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-    </button>
+      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+    </Button>
   )
 }
 
@@ -88,19 +96,19 @@ function ToastCard({
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 60, scale: 0.95, transition: { duration: 0.15, ease: 'easeIn' } }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className={`toast toast-${item.type}`}
+      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-2xl border border-rule-soft bg-sheet p-4 text-(--text-main) shadow-(--shadow-lg)"
       data-testid="toast"
       data-toast-type={item.type}
       role={isError ? 'alert' : 'status'}
       aria-live={isError ? 'assertive' : 'polite'}
     >
-      <Icon className="toast-icon" />
+      <Icon aria-hidden="true" className={`mt-0.5 size-5 shrink-0 ${ICON_COLOURS[item.type] ?? ICON_COLOURS.info}`} />
 
-      <div className="toast-body">
-        <p className="toast-title">{item.title}</p>
-        {item.detail && <p className="toast-detail">{item.detail}</p>}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="m-0 text-card-title text-(--text-main)">{item.title}</p>
+        {item.detail && <p className="m-0 text-meta text-(--text-muted)">{item.detail}</p>}
         {item.supportCode && (
-          <span className="toast-support">
+          <span className="flex items-center gap-1 text-meta text-(--text-muted)">
             Kód: {item.supportCode}
             <CopyButton text={item.supportCode} />
           </span>
@@ -112,7 +120,7 @@ function ToastCard({
           type="button"
           variant="ghost"
           size="sm"
-          className="toast-action"
+          className="-my-2 shrink-0 self-center"
           onClick={() => {
             item.action?.onClick()
             onDismiss(item.id)
@@ -122,14 +130,16 @@ function ToastCard({
         </Button>
       )}
 
-      <button
-        className="toast-close"
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="-my-3 -mr-3 shrink-0 text-(--text-muted)"
         onClick={() => onDismiss(item.id)}
         aria-label="Zavřít notifikaci"
-        type="button"
       >
-        <X className="w-4 h-4" />
-      </button>
+        <X aria-hidden="true" />
+      </Button>
     </motion.div>
   )
 }
@@ -196,7 +206,11 @@ export function Toast() {
   }, [dismiss])
 
   return (
-    <div className="toast-container" data-testid="toast-container">
+    // Mobil nad spodní lištou, desktop vpravo dole; na stagingu nad kartou „Co vyzkoušet“ (#399, TestingChecklist).
+    <div
+      className="pointer-events-none fixed inset-x-3 bottom-[max(calc(80px_+_env(safe-area-inset-bottom,0px)),var(--testing-card-clearance,0px))] z-(--z-toast) flex flex-col-reverse gap-2 md:left-auto md:right-5 md:bottom-[max(20px,var(--testing-card-clearance,0px))] md:w-[calc(100%-40px)] md:max-w-[440px]"
+      data-testid="toast-container"
+    >
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <ToastCard key={toast.id} item={toast} onDismiss={dismiss} />
