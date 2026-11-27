@@ -2,10 +2,13 @@ import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, 
 import type { DashboardReservationsData, WeatherResult } from "@/api/dashboard";
 import { useCabinSceneMode } from "@/hooks/useCabinSceneMode";
 import { cn } from "@/lib/utils";
-import { cabinSceneLabel, deriveCabinScene, fallsSlanted, mascotPose, smokeCurls, type CabinSceneState, type MascotPose } from "./cabinSceneState";
+import { cabinSceneLabel, deriveCabinScene, fallsSlanted, mascotPose, sceneBackdrop, smokeCurls, type Backdrop, type CabinSceneState, type MascotPose } from "./cabinSceneState";
 import { BIRD_FLAP, MOON, SCENE_PALETTE, SMOKE, SMOKE_WIND, ZZZ, type Sprite } from "./cabinSceneSprites";
+import bgAutumn from "./scene/bg-autumn.png";
 import bgBare from "./scene/bg-bare.png";
 import bgSnow from "./scene/bg-snow.png";
+import bgSpring from "./scene/bg-spring.png";
+import bgSummer from "./scene/bg-summer.png";
 import cabinBare from "./scene/cabin-bare.png";
 import cabinSnow from "./scene/cabin-snow.png";
 import carImg from "./scene/car.png";
@@ -97,6 +100,9 @@ function seededRandom(seed: number) {
   return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 }
 
+/** Pozadí krajiny (hory, les, louka) podle ročního období, při sněhové pokrývce zasněžené (#656). */
+const BACKDROP: Record<Backdrop, string> = { spring: bgSpring, summer: bgSummer, autumn: bgAutumn, bare: bgBare, snow: bgSnow };
+
 /** Sníh přebarví louku, střechu i stromy; v mrazu mají stromy zasněžené jehličí jako námrazu. Za zataženého dne leží
  * přes pozadí šedý závoj (stromy a chata před ním zůstanou syté); v noci ho nahradí noční clona. Mlha je před stromy. */
 function landscape(state: CabinSceneState): Layer[] {
@@ -107,7 +113,7 @@ function landscape(state: CabinSceneState): Layer[] {
     const href = big ? (white ? pineSnowLg : pineBareLg) : (white ? pineSnowSm : pineBareSm);
     return { href, x, y: GROUND - h + 1, w, h };
   });
-  const sky = [image("sky", { href: snowCover ? bgSnow : bgBare, x: 0, y: 0, w: W, h: H })];
+  const sky = [image("sky", { href: BACKDROP[sceneBackdrop(state)], x: 0, y: 0, w: W, h: H })];
   if (overcast && !night) sky.push(veil("overcast", "overcast", 0.35));
   // Mlha leží ve dvou pásech přes stromy a louku, každý pluje jinou rychlostí; noční clona ji v noci ztmaví.
   const fog = state.fog ? [fogBand("fog-trees", 29, 36, "animate-scene-fog-slow", 0.5), fogBand("fog-meadow", 31, GROUND - 7, "animate-scene-fog", 0.6)] : [];
