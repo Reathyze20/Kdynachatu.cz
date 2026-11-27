@@ -33,6 +33,13 @@ describe('Select', () => {
     expect(select).toHaveValue('100')
   })
 
+  it('className dostane obal, takže šipka zůstane v poli i u užšího výběru', () => {
+    render(<Select aria-label="Zdroj" className="md:w-48"><option>Vše</option></Select>)
+    const select = screen.getByRole('combobox', { name: 'Zdroj' })
+    expect(select.parentElement).toHaveClass('relative', 'md:w-48')
+    expect(select).not.toHaveClass('md:w-48')
+  })
+
   it('má dotykový cíl aspoň 48 px, písmo 16 px a šipku jen pro oko', () => {
     const { container } = render(<Select aria-label="Úroveň"><option>Vše</option></Select>)
     const { className } = screen.getByRole('combobox', { name: 'Úroveň' })
@@ -57,7 +64,10 @@ describe('Select', () => {
   it('disabled výběr nejde změnit', async () => {
     const onChange = vi.fn()
     render(<Select aria-label="Den" disabled onChange={onChange}><option>Dnes</option><option>Včera</option></Select>)
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Den' }), 'Včera').catch(() => {})
+    const select = screen.getByRole('combobox', { name: 'Den' })
+    await userEvent.selectOptions(select, 'Včera')
+    expect(select).toBeDisabled()
+    expect(select).toHaveValue('Dnes')
     expect(onChange).not.toHaveBeenCalled()
   })
 })
@@ -77,6 +87,7 @@ describe('filtry panelu logů (#651)', () => {
         />
       </QueryClientProvider>,
     )
+    expect(await screen.findByRole('option', { name: '2026-11-25' })).toBeInTheDocument()
     for (const name of ['Den', 'Úroveň', 'Zdroj', 'Rozsah']) {
       expect(screen.getByRole('combobox', { name }).className, name).toContain('min-h-(--touch-target-min)')
     }

@@ -13,7 +13,7 @@ Restyled on our tokens (#452); API and rules in `DESIGN.md` §6. Import from `@/
 | Button | `@/components/ui/button` | Every action. `variant` primary (default) / secondary / ghost / danger, `size` default / sm / lg (56 px main action) / icon (48 × 48, needs `aria-label`), `pending` (spinner, `aria-busy`), `asChild` |
 | Input | `@/components/ui/input` | Form field, 48 px; `invalid` sets `aria-invalid` + red border, error text below via `aria-describedby` |
 | Textarea | `@/components/ui/textarea` | Multi-line field like `Input` (same `invalid`), height from `rows`, at least 48 px |
-| Select | `@/components/ui/select` | Native select like `Input` (same `invalid`), 48 px, chevron icon; options as `<option>` children |
+| Select | `@/components/ui/select` | Single native select like `Input` (same `invalid`), 48 px, 16 px chevron; options as `<option>` children, `className` goes to the wrapper |
 | Checkbox | `@/components/ui/checkbox` | 20 px native checkbox in brand green; wrap in `<label>` with `min-h-(--touch-target-min)`, label text is its name |
 | DropdownMenu | `@/components/ui/dropdown-menu` | Kebab menu (Upravit / Smazat): Trigger, Content, Item (`variant="danger"`), Separator |
 | Dialog | `@/components/ui/dialog` | Base for `Modal` only (#453), screens use `Modal` |
