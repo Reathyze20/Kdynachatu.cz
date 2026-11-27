@@ -47,6 +47,7 @@
 }
 
 /* ── Paper: papír karty a teplé linky, žádná bílá (DESIGN.md §1, #650) ──────── */
+/* --sheet, protože tělo modálu je zatím --bg-card; až modál přejde na --sheet, papír přejde na --inset s tmavší linkou. */
 .notebook-paper {
   width: 100%;
   background-color: rgb(var(--sheet));
@@ -118,6 +119,12 @@
   overflow-y: auto;
 }
 
+/* forms.css tlumí placeholder na 70 %, na papíru by měl jen 3,4 : 1 */
+.notebook-body textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
 /* Textarea je bez rámečku, focus proto ukáže celý papír. */
 .notebook-paper:focus-within {
   border-color: var(--brand-primary);
@@ -136,7 +143,7 @@
 .notebook-attachments {
   margin-top: var(--space-md);
   padding: var(--space-md);
-  border-top: 2px dashed var(--border-strong);
+  border-top: 2px dashed rgb(var(--rule));
   min-height: 120px;
   display: flex;
   flex-wrap: wrap;

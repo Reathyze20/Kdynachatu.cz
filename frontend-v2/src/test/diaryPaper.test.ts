@@ -63,10 +63,11 @@ describe('papír zápisníku v deníku (#650)', () => {
 
   it.each([
     ['.notebook-body textarea', 'zápis', '--text-main'],
-    ['.notebook-date', 'datum', '--text-main'],
+    ['.notebook-body textarea::placeholder', 'placeholder', '--text-muted'],
     ['.char-counter', 'počítadlo znaků', '--text-muted'],
   ])('%s (%s) bere %s s kontrastem ≥ 4,5 : 1 na papíru', (selector, _what, token) => {
     expect(decl(diaryCssRaw, selector, 'color')).toBe(`var(${token})`)
+    expect(decl(diaryCssRaw, selector, 'opacity') ?? '1').toBe('1')
     expect(contrast(tokenRgb(token), tokenRgb('--sheet'))).toBeGreaterThanOrEqual(4.5)
   })
 })
