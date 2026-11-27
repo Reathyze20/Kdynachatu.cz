@@ -39,48 +39,6 @@
    Notebook Modal
    ============================================================================ */
 
-.notebook-modal-content {
-  width: 100%;
-  max-width: 800px;
-  height: 85vh;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  perspective: 1000px;
-  background: transparent;
-  gap: 20px;
-}
-
-.notebook-nav-btn {
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  color: var(--text-main);
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
-  z-index: 10;
-  flex-shrink: 0;
-}
-
-.notebook-nav-btn:hover:not(:disabled) {
-  background: white;
-  transform: scale(1.1);
-  color: var(--brand-primary);
-  box-shadow: var(--shadow-lg);
-}
-
-.notebook-nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
 .notebook-date {
   font-family: var(--font-diary);
   font-size: var(--font-size-base);
@@ -91,8 +49,8 @@
 /* ── Paper ──────────────────────────────────────────────────────────────────── */
 .notebook-paper {
   width: 100%;
-  background-color: var(--bg-page-diary, #fdfbf7);
-  background-image: linear-gradient(var(--border-strong, #e5e7eb) 1px, transparent 1px);
+  background-color: var(--bg-page-diary);
+  background-image: linear-gradient(var(--border-strong) 1px, transparent 1px);
   background-size: 100% 2rem;
   position: relative;
   border-radius: var(--radius-md);
@@ -100,7 +58,7 @@
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--border-strong, #e5e7eb);
+  border: 1px solid var(--border-strong);
   box-shadow: var(--shadow-sm);
 }
 
@@ -112,8 +70,8 @@
   bottom: 0;
   left: 4rem;
   width: 2px;
-  background-color: #fca5a5;
-  opacity: 0.5;
+  background-color: var(--status-error);
+  opacity: 0.3;
   z-index: 5;
   pointer-events: none;
 }
@@ -126,37 +84,11 @@
   bottom: 0;
   width: 20px;
   z-index: 6;
-  background: radial-gradient(circle at center, #333 30%, transparent 33%);
+  background: radial-gradient(circle at center, var(--text-main) 30%, transparent 33%);
   background-size: 100% 2rem;
   background-position: 0 1rem;
   opacity: 0.08;
   pointer-events: none;
-}
-
-.notebook-header {
-  height: 4rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 2rem 0.5rem 5rem;
-  font-family: var(--font-diary);
-  color: var(--status-error, #dc2626);
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-
-.notebook-close-button {
-  font-family: sans-serif;
-  font-size: 1.8rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  line-height: 1;
-  transition: color var(--transition-fast);
-  margin-bottom: 5px;
-}
-
-.notebook-close-button:hover {
-  color: var(--text-main);
 }
 
 .notebook-body {
@@ -192,22 +124,6 @@
   box-shadow: var(--focus-ring);
 }
 
-/* Legacy ID selector — keep for backward compat */
-#notebook-textarea {
-  width: 100%;
-  flex-grow: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: var(--font-diary);
-  font-size: 1.25rem;
-  line-height: 2rem;
-  color: var(--text-main);
-  padding-top: 0.1rem;
-  overflow-y: auto;
-}
-
 /* Char counter */
 .char-counter {
   font-size: var(--font-size-xs);
@@ -216,85 +132,18 @@
   padding: 4px 0 8px;
 }
 
-/* ── Notebook footer ───────────────────────────────────────────────────────── */
-.notebook-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-}
-
-.notebook-btn-save,
-.notebook-btn-delete {
-  background: none;
-  border: none;
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-}
-
-.notebook-btn-save {
-  color: var(--status-success, #16a34a);
-  border: 1px solid transparent;
-}
-
-.notebook-btn-save:hover {
-  border-color: var(--status-success);
-  background-color: var(--status-success-light);
-}
-
-.notebook-btn-delete {
-  color: var(--status-error, #dc2626);
-}
-
-.notebook-btn-delete:hover {
-  background: var(--status-error-light);
-}
-
-.notebook-btn-attach {
-  background: none;
-  border: 1px dashed var(--brand-primary);
-  color: var(--brand-primary);
-  font-weight: 600;
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: var(--font-size-sm);
-  transition: all var(--transition-fast);
-  margin-right: auto;
-}
-
-.notebook-btn-attach:hover {
-  background-color: var(--brand-primary-light);
-  border-style: solid;
-}
-
 /* ── Attachments ───────────────────────────────────────────────────────────── */
 .notebook-attachments {
   margin-top: var(--space-md);
   padding: var(--space-md);
-  border-top: 2px dashed var(--border-strong, #e5e7eb);
+  border-top: 2px dashed var(--border-strong);
   min-height: 120px;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
   overflow-y: auto;
   max-height: 200px;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgb(var(--sheet) / 0.3);
   border-radius: var(--radius-md);
   align-items: center;
 }
@@ -316,9 +165,9 @@
   height: 110px !important;
   object-fit: cover;
   border-radius: 2px;
-  border: 4px solid white;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-  background-color: white;
+  border: 4px solid rgb(var(--sheet));
+  box-shadow: var(--shadow-sm);
+  background-color: rgb(var(--sheet));
 }
 
 .attachment-remove-btn {
@@ -326,14 +175,15 @@
   top: -6px;
   right: -6px;
   background-color: var(--status-error);
-  color: white;
+  color: var(--text-on-danger);
   border-radius: 50%;
   width: 28px;
   height: 28px;
-  text-align: center;
-  line-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  border: 2px solid white;
+  border: 2px solid rgb(var(--sheet));
   box-shadow: var(--shadow-sm);
   z-index: 10;
   transition: background-color var(--transition-fast), transform var(--transition-fast);
@@ -351,7 +201,7 @@
 }
 
 .attachment-remove-btn:hover {
-  background-color: var(--status-error-dark, #991b1c);
+  background-color: var(--status-error-dark);
   transform: scale(1.1);
 }
 
@@ -359,45 +209,13 @@
    Responsive
    ============================================================================ */
 
-@media (max-width: 600px) {
-  .diary-folders-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-    padding: var(--space-md);
-  }
-
-  .folder-card.diary-folder {
-    min-height: 140px;
-    padding: var(--space-md) var(--space-md) var(--space-md) 22px;
-  }
-
+@media (max-width: 767px) {
   .folder-name {
     font-size: var(--font-size-sm);
   }
 
-  .diary-calendar {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--space-sm);
-  }
-
-  .diary-day-card {
-    min-height: 100px;
-    padding: var(--space-sm);
-  }
-
-  /* Period filter scrollable */
-  .period-filter {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
   .notebook-paper::before {
     left: 2rem;
-  }
-
-  .notebook-header {
-    padding-left: 2.5rem;
-    font-size: 1.1rem;
   }
 
   .notebook-body {
@@ -405,25 +223,8 @@
     padding-right: 1rem;
   }
 
-  .notebook-body textarea,
-  #notebook-textarea {
+  .notebook-body textarea {
     font-size: 1.05rem;
-  }
-
-  .notebook-footer {
-    flex-direction: column-reverse;
-    align-items: stretch;
-    gap: var(--space-sm);
-  }
-
-  .notebook-btn-save,
-  .notebook-btn-delete,
-  .notebook-btn-attach {
-    width: 100%;
-  }
-
-  .notebook-btn-attach {
-    margin-right: 0;
   }
 
   .attachment-thumbnail {
@@ -434,7 +235,5 @@
   .attachment-remove-btn {
     width: 36px;
     height: 36px;
-    line-height: 32px;
   }
 }
-
