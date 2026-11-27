@@ -1959,9 +1959,9 @@ button.btnReset {
 }
 
 /* ============================================================================
-   Mobile Responsive — Reservations Page (≤ 768px)
+   Mobile Responsive — Reservations Page (≤ 767px)
    ============================================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
   /* ── Main layout wrapper: stack cards vertically ──────────────── */
   .layout {

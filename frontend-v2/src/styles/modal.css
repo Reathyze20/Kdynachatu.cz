@@ -376,7 +376,7 @@
 }
 
 /* Mobile Bottom Sheet Layout */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .drawer-overlay {
     align-items: flex-end;
     /* snap bottom */
@@ -402,7 +402,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .modal-content {
     background-color: var(--bg-card) !important;
     border: 1px solid var(--border-strong, #e5e7eb) !important;

@@ -22,7 +22,7 @@
 }
 
 /* Chat: dole je pole zprávy, karta jde nahoru pod hlavičku chatu */
-@media (min-width: 769px) {
+@media (min-width: 768px) {
     body.page-notes .testing-card {
         top: 112px;
         bottom: auto;
@@ -146,7 +146,7 @@
 }
 
 /* ── Mobile adjustments ─────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .help-modal-card {
         max-height: 75vh;
     }

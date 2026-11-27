@@ -42,7 +42,7 @@
 .arrival-briefing-item--warn svg { color: var(--color-warning-text); }
 
 /* Telefon: jeden sloupec, stav chaty jako zalomená řada štítků */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .arrival-briefing-body { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .arrival-briefing-list--state { flex-direction: row; flex-wrap: wrap; gap: 6px; }
   .arrival-briefing-list--state .arrival-briefing-item {
@@ -505,7 +505,7 @@
   padding: 0 12px 12px;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .dashboard-aside {
     padding: 0 16px 16px;
   }
@@ -1636,7 +1636,7 @@
   line-height: 1.4;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .winter-banner {
     padding: 12px 16px;
   }
@@ -1715,7 +1715,7 @@
   width: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .departure-banner {
     flex-direction: column;
     align-items: stretch;
@@ -1867,7 +1867,7 @@
    MOBILE RESPONSIVE
    ============================================================================ */
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .nordic-dashboard {
     padding: 12px;
     gap: 12px;
@@ -2147,7 +2147,7 @@
   color: #991b1b;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .checkout-reminder {
     font-size: var(--font-size-sm);
     padding: 10px 12px;

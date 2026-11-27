@@ -182,7 +182,7 @@ describe('karta „Co vyzkoušet“ (staging)', () => {
   it('floats outside the page flow: fixed, above the bottom nav on mobile', () => {
     const css = helpCssRaw.replace(/\/\*[\s\S]*?\*\//g, '')
     expect(css).toMatch(/\.testing-card\s*\{[^}]*position:\s*fixed/)
-    const mobile = css.slice(css.indexOf('@media (max-width: 768px)'))
+    const mobile = css.slice(css.indexOf('@media (max-width: 767px)'))
     expect(mobile).toMatch(/\.testing-card\s*\{[^}]*bottom:\s*calc\(var\(--mobile-nav-height\)/)
   })
 })

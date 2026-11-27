@@ -2012,7 +2012,7 @@
    MOBILE RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
   /* Page container — no padding, full width, fill viewport */
   /* No card frame on mobile: the lists sit straight on the app underlay (#339) */

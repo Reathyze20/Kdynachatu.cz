@@ -33,9 +33,9 @@ function base(selector: string, prop: string): string | undefined {
   return lastDeclaration(css, selector, prop)
 }
 
-/** Hodnota vlastnosti v posledním pravidle s přesně tímto selektorem uvnitř `@media (max-width: 768px)`. */
+/** Hodnota vlastnosti v posledním pravidle s přesně tímto selektorem uvnitř `@media (max-width: 767px)`. */
 function onMobile(selector: string, prop: string): string | undefined {
-  const blocks = [...stripComments(notesCssRaw).matchAll(/@media\s*\(max-width:\s*768px\)\s*\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}/g)]
+  const blocks = [...stripComments(notesCssRaw).matchAll(/@media\s*\(max-width:\s*767px\)\s*\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}/g)]
   return lastDeclaration(blocks.map((b) => b[1]).join('\n'), selector, prop)
 }
 
@@ -137,7 +137,7 @@ describe('hlavička vlákna na mobilu', () => {
   describe('NotesPage na mobilu', () => {
     beforeEach(() => {
       vi.stubGlobal('matchMedia', (query: string) => ({
-        matches: query === '(max-width: 768px)',
+        matches: query === '(max-width: 767px)',
         media: query,
         addEventListener: () => {},
         removeEventListener: () => {},

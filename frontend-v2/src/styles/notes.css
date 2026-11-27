@@ -795,7 +795,7 @@
 /* ============================================================================
    Responsive (Mobile)
    ============================================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .notes-layout {
     grid-template-columns: 1fr;
     overflow-y: auto;
@@ -880,7 +880,7 @@
    layout.css na mobilu nastaví app-container na height:auto, což rozbije
    flex chain. page-notes class (přidaná v notes.ts) to přepíše.
    ============================================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.page-notes {
     overflow: hidden;
     height: 100dvh;
@@ -1395,7 +1395,7 @@
 }
 
 /* Touch-friendly context menu on mobile */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .message-context-menu {
     min-width: 220px;
     max-width: 260px;
