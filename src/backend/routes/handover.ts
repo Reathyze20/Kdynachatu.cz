@@ -12,11 +12,10 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 // GET /api/handover — tab Předávka: můj pobyt k předání a poslední předávka v chatě (spec #173)
 router.get("/", protect, requireCabinAllowGuest, async (req: Request, res: Response) => {
-  if (!req.user?.cabinId) {
-    return res.status(401).json({ message: "Neautorizováno" });
-  }
   try {
-    const { cabinId, userId } = req.user;
+    // protect + requireCabinAllowGuest zaručí přihlášeného uživatele s chatou
+    const cabinId = req.user!.cabinId!;
+    const userId = req.user!.userId;
     const today = calendarTodayIso(new Date());
     const mine = await prisma.reservation.findMany({
       where: {

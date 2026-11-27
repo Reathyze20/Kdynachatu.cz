@@ -1,5 +1,5 @@
 import "./env"; // musí zůstat první import
-import { test, describe, before, after } from "node:test";
+import { test, describe, before, beforeEach, after } from "node:test";
 import assert from "node:assert/strict";
 import type { Express } from "express";
 import prisma from "../../utils/prisma";
@@ -31,13 +31,19 @@ before(async () => {
 
 after(teardownIntegrationFile);
 
+// Každý test si data připraví sám
+beforeEach(() => prisma.reservation.deleteMany({}));
+
 describe("GET /api/handover: myStay", () => {
   test("follows the phases, including the day after departure and a stay where I am a co-traveller", async () => {
+    // Člen A dřív byl v chatě B: jeho otevřená předávka v B se v A ukázat nesmí
+    const inOldCabin = await stay(world.memberA, -1, 0, { cabinId: world.cabinB.id });
     const upcoming = await stay(world.memberA, 5, 7);
     let res = await overview(world.memberA);
     assert.equal(res.status, 200);
     assert.equal(res.body.myStay.reservationId, upcoming);
     assert.equal(res.body.myStay.phase, "upcoming");
+    assert.equal(JSON.stringify(res.body).includes(inOldCabin), false);
 
     const asCoTraveller = await stay(world.adminA, -2, 1, { participants: { create: { userId: world.memberA.id } } });
     res = await overview(world.memberA);
@@ -48,8 +54,6 @@ describe("GET /api/handover: myStay", () => {
     res = await overview(world.memberA);
     assert.equal(res.body.myStay.reservationId, dayAfter);
     assert.equal(res.body.myStay.phase, "departure");
-
-    await prisma.reservation.deleteMany({ where: { id: { in: [upcoming, asCoTraveller, dayAfter] } } });
   });
 });
 
@@ -57,7 +61,8 @@ describe("GET /api/handover: lastHandover", () => {
   test("is the newest completed handover, skips stays without one and my own stay, and never leaks the other cabin", async () => {
     const older = await stay(world.adminA, -10, -8, handedOverBy(world.memberA, { gas: "half", note: "Dřevo je u kamen" }));
     await stay(world.adminA, -6, -4);
-    const mine = await stay(world.memberA, -2, 0, handedOverBy(world.memberA, { waterOff: true }));
+    // Dokončil ji uživatel z chaty B: jméno autora se hledá jen mezi členy A
+    const mine = await stay(world.memberA, -2, 0, handedOverBy(world.memberB, { waterOff: true }));
     const foreign = await stay(world.memberB, -1, 0, handedOverBy(world.memberB, { note: "cizí vzkaz" }));
 
     const resA = await overview(world.memberA);
@@ -73,6 +78,7 @@ describe("GET /api/handover: lastHandover", () => {
     const resAdmin = await overview(world.adminA);
     assert.equal(resAdmin.body.myStay, null);
     assert.equal(resAdmin.body.lastHandover.reservationId, mine);
+    assert.equal(resAdmin.body.lastHandover.completedByUsername, null);
 
     for (const res of [resA, resAdmin]) {
       const body = JSON.stringify(res.body);
@@ -86,10 +92,25 @@ describe("GET /api/handover: lastHandover", () => {
 
 describe("GET /api/handover: guest (#484)", () => {
   test("a guest gets their own stay, but not the last handover of other members' stays", async () => {
+    const membersHandover = await stay(world.adminA, -3, -1, handedOverBy(world.adminA, { note: "Jen pro členy" }));
     const ownStay = await stay(world.guestA, 3, 5);
     const res = await overview(world.guestA);
     assert.equal(res.status, 200);
     assert.equal(res.body.myStay.reservationId, ownStay);
     assert.equal(res.body.lastHandover, null);
+    assert.equal(JSON.stringify(res.body).includes(membersHandover), false);
+  });
+
+  test("as a co-traveller the guest gets that stay, and the last handover only from their own earlier stay", async () => {
+    const membersHandover = await stay(world.adminA, -3, -1, handedOverBy(world.adminA, { note: "Jen pro členy" }));
+    const ownEarlier = await stay(world.guestA, -9, -7, handedOverBy(world.guestA, { note: "Od hosta" }));
+    const asCoTraveller = await stay(world.adminA, -1, 2, { participants: { create: { userId: world.guestA.id } } });
+
+    const res = await overview(world.guestA);
+    assert.equal(res.body.myStay.reservationId, asCoTraveller);
+    assert.equal(res.body.myStay.phase, "ongoing");
+    assert.equal(res.body.lastHandover.reservationId, ownEarlier);
+    assert.equal(res.body.lastHandover.completedByUsername, world.guestA.username);
+    assert.equal(JSON.stringify(res.body).includes(membersHandover), false);
   });
 });
