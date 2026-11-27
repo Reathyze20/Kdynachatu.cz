@@ -346,7 +346,10 @@ describe('shopping page: stock item menu', () => {
     const askDelete = async () => {
       await user.click(stockRow('Káva').getByRole('button', { name: 'Akce se zásobou Káva' }))
       await user.click(screen.getByRole('menuitem', { name: 'Smazat' }))
-      return screen.findByRole('dialog', { name: 'Smazat zásobu' })
+      const dialog = await screen.findByRole('dialog', { name: 'Smazat zásobu' })
+      // Modal přesouvá fokus dovnitř až po 50 ms; člověk neklikne dřív, test na to počká
+      await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement))
+      return dialog
     }
 
     await user.click(within(await askDelete()).getByRole('button', { name: 'Zrušit' }))
