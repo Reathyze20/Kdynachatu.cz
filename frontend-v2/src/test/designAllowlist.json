@@ -38,8 +38,7 @@
       "features/reservations/ui/BookingForm.tsx"
     ],
     "Studené slate/bg-white z doby před Jedlí, převede se s komponentou": [
-      "components/shared/RouteTransitionSkeleton.tsx",
-      "features/weather/StayHourlyChart.tsx", "features/weather/StayWeatherCard.tsx"
+      "components/shared/RouteTransitionSkeleton.tsx"
     ]
   },
   "breakpoint": {
@@ -98,7 +97,7 @@
   "iconSize": {
     "Ikona 12–18, 22 nebo 28 px mimo škálu 16/20/24, sjednotí se s obrazovkou": [
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/Lightbox.tsx",
-      "features/reservations/ui/BookingForm.tsx", "features/weather/StayWeatherCard.tsx"
+      "features/reservations/ui/BookingForm.tsx"
     ],
     "Velká ikona stavu (32–48 px) místo EmptyState s 24 px, převede se s obrazovkou (#454)": [
       "features/gallery/FolderGrid.tsx", "features/gallery/UploadModal.tsx",
@@ -108,7 +107,7 @@
   "loopAnimation": {
     "Indikátor načítání nebo odesílání (spinner, skeleton): smyčka běží jen do konce načítání": [
       "components/ui/button.tsx", "features/reconstruction/ReconstructionSkeleton.tsx",
-      "features/reservations/Reservations.module.css", "features/weather/StayWeatherCard.tsx", "styles/base.css", "styles/gallery.css",
+      "features/reservations/Reservations.module.css", "styles/base.css", "styles/gallery.css",
       "styles/skeleton.css"
     ],
     "Dekorativní smyčka z doby před #565 (pulzující tečka stavu, landing page), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/landing.css", "styles/reservations.css"]
