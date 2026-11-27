@@ -1,0 +1,223 @@
+<!doctype html>
+<!-- Picker k #652 / #653. Po výběru je to archiv – závazný je DESIGN.md a kód. Funguje offline: obrázky jsou relativní soubory ve složce 11-plch-mimo-scenu/. -->
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 · Plch mimo scénu chaty – picker</title>
+<style>
+/* Barvy stránky a maket z frontend-v2/src/styles/variables.css (papír, inkoust, jedle). */
+:root { --page: #f6f0e6; --ink: #26211c; --ink-2: #5e5246; --rule: #e6ddcf; --brand: #3e5c47; --brand-light: #e4e1d6; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 400 15px/1.5 system-ui, "Segoe UI", sans-serif; color: var(--ink); background: #ece6dc; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px; }
+h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -.02em; }
+h2 { margin: 40px 0 4px; font-size: 22px; }
+h3 { margin: 24px 0 8px; font-size: 17px; }
+.lead, .muted { color: var(--ink-2); max-width: 900px; margin: 0 0 12px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 6px 24px; padding: 8px 0; }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ctl > b { width: 104px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); }
+.ctl button { border: 1px solid var(--rule); background: #fffdf8; color: var(--ink); font: 600 14px/1.2 system-ui, "Segoe UI", sans-serif; padding: 6px 12px; border-radius: 999px; cursor: pointer; min-height: 36px; }
+.ctl button[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 1px; background: var(--brand-light); }
+.pick { position: sticky; top: 0; z-index: 10; margin: 8px 0; box-shadow: 0 4px 12px rgb(0 0 0 / .08); background: #fffdf8; border: 1px solid var(--rule); border-radius: 12px; padding: 8px 14px; font-weight: 600; }
+.pick code { background: var(--brand-light); padding: 2px 6px; border-radius: 6px; }
+.grid { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+figure { margin: 0; background: #fffdf8; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+figure.sel { outline: 3px solid var(--brand); }
+figcaption { padding: 8px 12px 10px; font-size: 14px; }
+figcaption b { font-size: 15px; }
+.px { image-rendering: pixelated; display: block; }
+/* Maketa prázdného stavu (EmptyState: obrázek místo ikony, věta, akce) ve světlém a tmavém podkladu. */
+.es { width: 311px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 16px; text-align: center; background: rgb(246 240 230); color: #5e5246; }
+.es.dark { background: #211c17; color: #cbbfae; }
+.es p { margin: 0; font-size: 16px; line-height: 24px; }
+.es .hint { font-size: 14px; line-height: 20px; margin-top: -8px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 0; border-radius: 10px; background: var(--brand); color: #fff; font: 600 16px/1.2 system-ui, "Segoe UI", sans-serif; }
+.btn.lg { width: 100%; min-height: 56px; border-radius: 999px; }
+.pair { display: flex; flex-direction: column; }
+/* Telefon a karta „Na chatě teď“ jako v pickeru 10. */
+.real { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.phone { position: relative; width: 395px; height: 460px; background: rgb(246 240 230); border: 10px solid #2b2621; border-radius: 34px; overflow: hidden; }
+.phone.dark { background: #211c17; color: #f3ece0; }
+.phone .top { padding: 14px 16px 6px; font-weight: 800; font-size: 20px; }
+.phone .es { width: auto; margin: 0 16px; border: 1px solid rgb(230 221 207); border-radius: 16px; }
+.phone.dark .es { border-color: #3d342b; }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: flex; background: #fffdf8; border-top: 1px solid var(--rule); }
+.phone.dark .bar { background: #2b251f; border-color: #3d342b; }
+.bar span { flex: 1; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.phone.dark .bar span { color: #cbbfae; }
+.card { background: #fff; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; margin: 0 16px; }
+.card .txt { padding: 12px 14px 14px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.desk { width: 648px; max-width: 100%; overflow-x: auto; background: var(--page); border: 1px solid var(--rule); border-radius: 14px; padding: 20px 4px; }
+.desk .card { margin: 0 16px; }
+.strip { display: block; line-height: 0; overflow: hidden; }
+.strip svg { display: block; width: 100%; height: 114px; }
+.srow { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.srow > b { width: 100%; }
+.srow figure { width: 345px; }
+/* 404 v rámu AuthLayout: pozadí (místo fotky jen teplý přechod, fotka by ukázala konkrétní místo), papírová karta. */
+.backdrop { padding: 28px 16px; background: linear-gradient(180deg, #b9a88f, #6f5f4c); width: 375px; max-width: 100%; }
+.acard { background: rgb(246 240 230); border: 1px solid rgb(230 221 207); border-radius: 16px; padding: 32px 24px; box-shadow: 0 14px 32px -16px rgb(30 20 10 / .45); text-align: center; }
+.acard .head { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; }
+.acard .head img { height: 48px; width: auto; }
+.acard .app { font-size: 24px; line-height: 30px; font-weight: 700; }
+.acard h2 { font-size: 16px; line-height: 22px; margin: 0; font-weight: 600; }
+.acard p { color: #5e5246; margin: 0; }
+.status { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.stage { position: relative; width: 100%; pointer-events: none; }
+.walker { position: absolute; left: 50%; bottom: 0; }
+.walker .cel { background-repeat: no-repeat; image-rendering: pixelated; }
+/* Jeden průchod: přepínání snímků (steps) a posun jen transformem, žádná smyčka. Chůze = prvních 16 z 26 snímků. */
+.walker.play { animation: pass var(--dur) 1 forwards; }
+.walker.play .cel { animation: cels var(--dur) steps(26, jump-none) 1 forwards; }
+@keyframes pass { 0% { transform: translateX(-96px); animation-timing-function: steps(16, jump-end); } 61.54%, 100% { transform: translateX(0); } }
+@media (max-width: 600px) { .wrap { padding: 12px; } .phone, .srow figure, figure { max-width: 100%; } .es { width: auto; } }
+@media (prefers-reduced-motion: reduce) { .walker.play, .walker.play .cel { animation-duration: 1ms; } }
+@keyframes cels { from { background-position: 0 0; } to { background-position: var(--end) 0; } }
+.film { max-width: calc(100vw - 32px); overflow-x: auto; background: repeating-conic-gradient(#efe8dc 0 25%, #fffdf8 0 50%) 0 0 / 16px 16px; padding: 6px; line-height: 0; }
+.replay { margin: 8px 12px 12px; border: 1px solid var(--rule); background: #fffdf8; font: 600 14px/1.2 system-ui, "Segoe UI", sans-serif; padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+</style>
+</head>
+<body>
+<p role="note" style="margin:0;padding:10px 16px;background:#fff3cd;color:#3b2f1e;font-weight:600;text-align:center;border-bottom:1px solid #e0c97a">Picker k #652. Vyber varianty a zapiš volbu do #652. Appka se zatím nemění.</p>
+<div class="wrap">
+  <h1>Plch mimo scénu chaty</h1>
+  <p class="lead">Stejný plch z PixelLabu jako ve scéně chaty na Přehledu, na třech místech, kde dnes stojí obecná ikona: prázdné stavy, roční období ve scéně a stránka 404. Plch ukazuje stav, nikdy nehodnotí uživatele: nemluví, neslaví, nemá odznaky. Všechny obrázky jsou PNG ve složce <code>11-plch-mimo-scenu/</code> pojmenované kódem varianty (<code>zap-2.png</code>, <code>jaro-1.png</code>, <code>mapa-3-pruh.png</code>), vykreslené ostře (<code>image-rendering: pixelated</code>). Varianty se dají míchat, klikem na náhled nebo tlačítkem nahoře ji vybereš.</p>
+  <div class="controls" id="controls"></div>
+  <div class="pick" id="pick"></div>
+
+  <h2>1 · Prázdné stavy</h2>
+  <p class="muted">Statický obrázek místo ikony v <code>EmptyState</code>: Deník pobytů (plch u zavřeného zápisníku), Nákupy (prázdný košík), Galerie (fotoaparát). Plátno každého obrázku je 56 × 40 px, postavička dole na střed; plch má ve všech stejnou velikost jako ve scéně, fotoaparát je jen menší rekvizita než kniha a košík. Měřítko 1× = 56 px na šířku (nejblíž „kolem 64 px“, ale pixel je 1 px, ve scéně 1,5 px), 2× = 112 px (pixel 2 px, blíž scéně, obrázek ale větší než 64 px). Texty a bloky jsou jako dnes: Deník má <code>EmptyState</code> s tlačítkem, Nákupy větu a nápovědu bez tlačítka, Galerie nadpis, podnadpis a tlačítko; mění se jen obrázek. Maketa má šířku obsahu karty na mobilu (311 px). Appka má jen světlý režim (DESIGN.md kap. 1), tmavý podklad tu je jen kontrola, že je plch vidět i na tmavém.</p>
+  <div id="empty"></div>
+  <h3>Na mobilu (vybrané varianty)</h3>
+  <div class="real" id="phones"></div>
+
+  <h2>2 · Roční období ve scéně</h2>
+  <p class="muted">Nové pozadí 640 × 76 px ve stejném formátu jako dnešní holá krajina (stejná kompozice hor a lesa, mění se louka, sníh na štítech a barvy). Chata, smrky a plch zůstávají. Náhledy mají reálný rozměr pruhu karty „Na chatě teď“ na mobilu (343 × 114 px, jednotka mřížky 1,5 px jako v appce; jediné místo pickeru bez celočíselného zvětšení, protože tak scénu kreslí appka, na displeji 2× jsou to celé 3 px). Den = prázdná chata, plch spí na střeše; Noc = plch hryže u chaty oříšek; Déšť = zatažená obloha, plch se schoval pod střechu (vidět je jen zZz). Vrstvy počasí jsou vektorové jako v appce, tady zjednodušené. Jaro je březen–květen, léto červen–srpen, podzim 1. 9.–15. 11., potom holá krajina; sníh má přednost.</p>
+  <div id="seasons"></div>
+  <h3>Reálná velikost: mobil a desktop</h3>
+  <p class="muted">Vlevo mobil (karta 343 px), vpravo desktop (karta 608 px). Období, počasí a varianta se berou z voleb nahoře.</p>
+  <div class="real" id="sceneReal"></div>
+
+  <h2>3 · Stránka 404</h2>
+  <p class="muted">Plch s mapou v rámu <code>AuthLayout</code> místo ikony. Ve stavu Animovaná jednou přejde (16 snímků), zastaví se (2) a otočí mapu (8), pak zůstane stát v poslední póze; celkem 26 snímků po 85 ms ≈ 2,2 s, žádná smyčka. Ve stavu Statická (a s <code>prefers-reduced-motion</code> bez uložené volby) je rovnou poslední póza. Skrytá vrací ikonu <code>MapPinOff</code>. Měřítko 2×. Nahoře pás snímků jednoho průchodu (<code>mapa-n-pruh.png</code>), poslední póza je zvlášť (<code>mapa-n-konec.png</code>).</p>
+  <div id="maps"></div>
+</div>
+<script>
+const DIR = "11-plch-mimo-scenu/";
+const EMPTY = [
+  { code: "ZAP", key: "zap", n: 7, title: "Deník pobytů", text: "Zatím tu nejsou žádné pobyty.", action: "Nový pobyt",
+    notes: ["kniha se záložkou", "skrčený, tlapka na knize", "kniha se znakem na desce", "kniha leží před ním", "kniha stojí", "zápisník s přezkou", "úprava spritu ze scény (PixelLab edit), zápisník s přezkou"] },
+  { code: "KOS", key: "kos", n: 6, title: "Nákupy", text: "Žádné aktivní nákupy", hint: "Klikni na „+ Nový seznam“",
+    notes: ["sedí u košíku", "zepředu", "ocas po zemi", "opřený o košík", "drží ouško", "leží za košíkem"] },
+  { code: "FOT", key: "fot", n: 6, title: "Galerie", text: "Zatím nemáš žádná alba", hint: "Začni nahrávat fotky z chaty!", action: "Vytvořit první album",
+    notes: ["malý fotoaparát", "objektiv k divákovi", "tmavý fotoaparát", "drží v tlapkách", "fotoaparát u břicha", "měchový fotoaparát"] }];
+const SEASONS = [
+  { code: "JARO", key: "jaro", name: "Jaro", notes: ["světle zelená louka s kvítky, menší sníh na štítech", "sytá zelená s pampeliškami, zelený les", "časné jaro: mladá tráva, loňská suchá, krokusy", "svěží zelená, růžové a bílé kvítky"] },
+  { code: "LETO", key: "leto", name: "Léto", notes: ["zelená louka s kopretinami, bez sněhu", "zralé seno s vlčími máky a chrpami", "olivová louka, teplejší obloha", "sytá zelená, tmavší hory"] },
+  { code: "PODZIM", key: "podzim", name: "Podzim", notes: ["okrová louka, oranžové listnáče v lese", "oranžová louka, listnáče v lese", "měděná louka, rezavé kopce", "zlatá louka, žluté břízy"] }];
+const MAPS = [{ w: 44, h: 37, note: "na konci drží mapu na výšku" }, { w: 48, h: 38, note: "otočí mapu před sebou" }, { w: 50, h: 43, note: "otočí mapu a podívá se k divákovi" }, { w: 50, h: 41, note: "rozložená mapa, otočí se k divákovi" }];
+const FRAMES = 26, MS = 85;
+const sel = { zap: 1, kos: 1, fot: 1, jaro: 1, leto: 1, podzim: 1, mapa: 1, scale: 2, theme: "light", season: "jaro", cond: "day" };
+
+// ---- Scéna: stejné vrstvy a souřadnice jako CabinScene.tsx (viewBox 640 × 76, pruh 114 px). ----
+const W = 640, H = 76, GROUND = 70, CAB = { x: 262, y: 5, w: 83, h: 65 };
+const PINES = [[14, 0], [40, 1], [78, 0], [104, 1], [146, 0], [176, 1], [446, 1], [484, 0], [512, 1], [552, 0], [580, 1], [612, 0]];
+let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const img = (f, x, y, w, h) => `<image href="${DIR}${f}.png" x="${x}" y="${y}" width="${w}" height="${h}" class="px"/>`;
+const box = (x, y, w, h, fill, op) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"${op ? ` opacity="${op}"` : ""}/>`;
+const frameCel = (f, frames, x, y) => `<svg x="${x}" y="${y}" width="40" height="40" viewBox="0 0 40 40" overflow="hidden">${img(f, 0, 0, frames * 40, 40)}</svg>`;
+const ZZZ = ["ooo", "..o", ".o.", "ooo"];
+function zzz(x, y, col) { let s = ""; ZZZ.forEach((r, j) => [...r].forEach((c, i) => { if (c === "o") s += box(x + i, y + j, 1, 1, col); })); return s; }
+/** `bg` = soubor pozadí bez přípony: období (jaro-1) nebo díl dnešní scény (scena-bg-bare, scena-bg-snow). */
+function scene(bg, cond) {
+  const snow = bg === "scena-bg-snow", night = cond === "night", rain = cond === "rain", o = [];
+  const pose = snow || rain ? "hidden" : night ? "nibble" : "sleep";
+  o.push(img(bg, 0, 0, W, H));
+  if (rain) o.push(box(0, 0, W, H, "#7d848c", .35));
+  PINES.forEach(([x, big]) => { const [w, h] = big ? [31, 58] : [23, 43]; o.push(img(`scena-pine-${snow ? "snow" : "bare"}-${big ? "lg" : "sm"}`, x, GROUND - h + 1, w, h)); });
+  if (pose === "sleep") o.push(frameCel("scena-dormouse-sleep", 6, CAB.x + 28, -12));
+  o.push(img(snow ? "scena-cabin-snow" : "scena-cabin-bare", CAB.x, CAB.y, CAB.w, CAB.h));
+  if (pose === "nibble") o.push(frameCel("scena-dormouse-nibble", 12, CAB.x + CAB.w - 6, GROUND - 31));
+  if (night) { o.push(box(CAB.x + 16, CAB.y + 41, 5, 9, "#3a332c"), box(CAB.x + 28, CAB.y + 42, 7, 9, "#3a332c"), box(0, 0, W, H, "#1c1712", .5));
+    seed = 11; for (let n = 0; n < W / 5; n++) o.push(box(Math.floor(rnd() * W), Math.floor(rnd() * 30), 1, 1, "#fef3c7"));
+    o.push(box(385, 4, 2, 1, "#fef3c7"), box(384, 5, 2, 2, "#fef3c7"), box(385, 7, 2, 1, "#fef3c7")); }
+  const zc = night ? "#fef3c7" : "#26211c";
+  if (pose === "sleep") o.push(zzz(CAB.x + 59, 2, zc)); else if (pose === "hidden") o.push(zzz(CAB.x + 44, 9, zc));
+  if (rain) { seed = 17; for (let n = 0; n < W * H / 80; n++) o.push(box(Math.floor(rnd() * W), Math.floor(rnd() * H), 1, n % 3 ? 2 : 3, "#7f9bb3"));
+    seed = 23; for (let n = 0; n < 14; n++) o.push(box(Math.floor(rnd() * (W - 3)), GROUND + Math.floor(rnd() * 6), 1 + n % 3, 1, "#7f9bb3")); }
+  const label = `${cond === "day" ? "Den" : night ? "Noc" : "Déšť"}, pozadí ${bg}`;
+  return `<svg role="img" aria-label="${label}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" shape-rendering="crispEdges">${o.join("")}</svg>`;
+}
+const CONDS = [["day", "Den"], ["night", "Noc"], ["rain", "Déšť"]];
+const EMPTY_CABIN = "Teď tam nikdo není. Další pobyt: Novákovi od pátku.";
+const CARD = { day: EMPTY_CABIN, night: EMPTY_CABIN, rain: "Teď tam nikdo není. Prší." };
+const selCls = (k, n) => (sel[k] === n ? "sel" : "");
+
+// ---- Prázdné stavy ----
+const esImg = (key, n) => `<img src="${DIR}${key}-${n}.png" alt="" class="px" width="${56 * sel.scale}" height="${40 * sel.scale}">`;
+const es = (m, n, dark) => `<div class="es${dark ? " dark" : ""}">${esImg(m.key, n)}<p>${m.text}</p>${m.hint ? `<p class="hint">${m.hint}</p>` : ""}${m.action ? `<span class="btn">+ ${m.action}</span>` : ""}</div>`;
+function renderEmpty() {
+  document.getElementById("empty").innerHTML = EMPTY.map((m) => `<h3>${m.title} · ${m.code}</h3><div class="grid">` + Array.from({ length: m.n }, (_, k) => k + 1).map((n) =>
+    `<figure data-k="${m.key}" data-v="${n}" class="${selCls(m.key, n)}"><div class="pair">${es(m, n)}${es(m, n, 1)}</div><figcaption><b>${m.code}-${n}</b> · ${m.notes[n - 1]}</figcaption></figure>`).join("") + "</div>").join("");
+  const dark = sel.theme === "dark";
+  document.getElementById("phones").innerHTML = EMPTY.map((m) => `<div class="phone${dark ? " dark" : ""}"><div class="top">${m.title}</div>${es(m, sel[m.key], dark)}
+    <nav class="bar" aria-label="Ukázka spodní lišty"><span>Přehled</span><span>Kalendář</span><span>Předávka</span><span>Zásoby</span><span>Víc</span></nav></div>`).join("");
+}
+// ---- Roční období ----
+function renderSeasons() {
+  const row = (label, bg, cls, key, n) => `<div class="srow"><b>${label}</b>` + CONDS.map(([c, t]) =>
+    `<figure${key ? ` data-k="${key}" data-v="${n}"` : ""} class="${cls}"><div class="strip">${scene(bg, c)}</div><figcaption>${t}</figcaption></figure>`).join("") + "</div>";
+  document.getElementById("seasons").innerHTML = SEASONS.map((s) => `<h3>${s.name} · ${s.code}</h3>` + s.notes.map((note, k) =>
+    row(`${s.code}-${k + 1} · ${note}`, `${s.key}-${k + 1}`, selCls(s.key, k + 1), s.key, k + 1)).join("")).join("")
+    + "<h3>Pro srovnání: dnešní scéna</h3>" + row("Holá krajina (pozdní podzim a zima bez sněhu, zůstává)", "scena-bg-bare", "") + row("Sníh (má přednost před obdobím, plch spí schovaný)", "scena-bg-snow", "");
+  const s = SEASONS.find((x) => x.key === sel.season);
+  const bg = s ? `${s.key}-${sel[s.key]}` : `scena-${sel.season}`;
+  const card = (w) => `<div class="card" style="width:${w}px"><div class="strip">${scene(bg, sel.cond)}</div><div class="txt"><div class="eyebrow">Na chatě teď</div>${CARD[sel.cond]}</div></div>`;
+  document.getElementById("sceneReal").innerHTML = `<div class="phone" style="height:330px"><div class="top">Přehled</div>${card(343)}</div><div class="desk">${card(608)}</div>`;
+}
+// ---- 404 ----
+function walker(n, play) {
+  const M = MAPS[n - 1], w = M.w * 2, h = M.h * 2;
+  const cel = `<div class="cel" style="width:${w}px;height:${h}px;background-image:url(${DIR}mapa-${n}-pruh.png);background-size:${w * FRAMES}px ${h}px"></div>`;
+  return `<div class="stage" style="height:${h}px" aria-hidden="true"><div class="walker${play ? " play" : ""}" style="margin-left:${-w / 2}px;--dur:${FRAMES * MS}ms;--end:${-w * (FRAMES - 1)}px">${cel}</div></div>`;
+}
+const still = (n) => { const M = MAPS[n - 1]; return `<img src="${DIR}mapa-${n}-konec.png" alt="" aria-hidden="true" class="px" width="${M.w * 2}" height="${M.h * 2}">`; };
+const authCard = (pic) => `<div class="backdrop"><div class="acard"><div class="head"><img src="${DIR}scena-logo.png" alt=""><div class="app">Kdy na chatu</div></div>
+  <div class="status">${pic}<h2>Stránka nenalezena</h2><p>Tato stránka neexistuje nebo jsme ji přesunuli. Zkontroluj adresu a zkus to znovu.</p><div style="margin-top:12px;width:100%"><span class="btn lg">Zpět na přehled</span></div></div></div></div>`;
+function renderMaps() {
+  document.getElementById("maps").innerHTML = MAPS.map((M, k) => { const n = k + 1; return `<h3>MAPA-${n} · ${M.note}</h3>
+    <figure data-k="mapa" data-v="${n}" class="${selCls("mapa", n)}" style="margin-bottom:10px"><div class="film"><img src="${DIR}mapa-${n}-pruh.png" alt="Pás snímků MAPA-${n}" class="px" width="${M.w * FRAMES * 2}" height="${M.h * 2}"></div><figcaption>Pás snímků: ${FRAMES} snímků ${M.w} × ${M.h} px</figcaption></figure>
+    <div class="real"><figure data-k="mapa" data-v="${n}" class="${selCls("mapa", n)}">${authCard(walker(n, true))}<button type="button" class="replay" data-replay>Přehrát znovu</button><figcaption><b>MAPA-${n}</b> · Animovaná (jeden průchod)</figcaption></figure>
+    <figure data-k="mapa" data-v="${n}" class="${selCls("mapa", n)}">${authCard(still(n))}<figcaption><b>MAPA-${n}</b> · Statická (poslední póza)</figcaption></figure></div>`; }).join("");
+}
+// ---- Ovládání ----
+const nums = (n) => Array.from({ length: n }, (_, k) => [k + 1, String(k + 1)]);
+const groups = [
+  ["Zápisník", "zap", nums(7)], ["Košík", "kos", nums(6)], ["Fotoaparát", "fot", nums(6)], ["Měřítko", "scale", [[1, "1× (56 px)"], [2, "2× (112 px)"]]], ["Téma telefonů", "theme", [["light", "Světlé"], ["dark", "Tmavé"]]],
+  ["Jaro", "jaro", nums(4)], ["Léto", "leto", nums(4)], ["Podzim", "podzim", nums(4)],
+  ["Scéna ukáže", "season", [["jaro", "Jaro"], ["leto", "Léto"], ["podzim", "Podzim"], ["bg-bare", "Holá krajina"], ["bg-snow", "Sníh"]]], ["Počasí", "cond", CONDS], ["Mapa (404)", "mapa", nums(4)]];
+function renderControls() {
+  document.getElementById("controls").innerHTML = groups.map(([label, key, opts]) => `<div class="ctl"><b>${label}</b>${opts.map(([v, t]) =>
+    `<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${String(sel[key]) === String(v)}">${t}</button>`).join("")}</div>`).join("");
+  document.getElementById("pick").innerHTML = `Tvoje volba do #652: <code>ZAP-${sel.zap}, KOS-${sel.kos}, FOT-${sel.fot}, JARO-${sel.jaro}, LETO-${sel.leto}, PODZIM-${sel.podzim}, MAPA-${sel.mapa}</code>`;
+}
+function render(what) {
+  renderControls();
+  renderEmpty(); renderSeasons();
+  if (what === "all") renderMaps(); // 404 se překreslí jen při volbě mapy, ať se animace nespouští znovu
+}
+document.body.addEventListener("click", (e) => {
+  const r = e.target.closest("[data-replay]");
+  if (r) { const w = r.parentElement.querySelector(".walker"); w.classList.remove("play"); void w.offsetWidth; w.classList.add("play"); return; }
+  const b = e.target.closest("[data-k]"); if (!b) return;
+  const k = b.dataset.k, v = b.dataset.v; sel[k] = /^\d+$/.test(v) ? Number(v) : v;
+  if (["jaro", "leto", "podzim"].includes(k)) sel.season = k;
+  render(k === "mapa" ? "all" : "rest");
+});
+render("all");
+</script>
+</body>
+</html>
