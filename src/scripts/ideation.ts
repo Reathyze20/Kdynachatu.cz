@@ -1,14 +1,16 @@
 /**
- * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank|pairwise|blind> [--root <dir>]`.
+ * Deterministický helper skillu `/ideation` (#367): `tsx src/scripts/ideation.ts <check|rank|pairwise|blind|evaluate> [--root <dir>]`.
  * `check` založí chybějící šablony (existující nikdy nepřepíše) a pod minimem ručních signálů skončí
  * exit kódem 1 s počtem chybějících. `rank` vypíše bloky shluků z `shluky.md` seřazené podle počtu
  * ručních signálů `S-n`; počet issues rozhoduje jen při shodě (#386). `pairwise` sečte verdikty
  * párového kola z `parove.json` a vybere nejvýš 5 postupujících (#370). `blind --run <běh> [--seed <n>]`
  * zamíchá kandidáty pipeline a baseline ze `slepe.json` do K1…Kn a klíč původu zapíše do
- * `runs/<běh>.klic.json` (#371). Bez sítě, DB a `.env`. Další podpříkazy patří do `COMMANDS`.
+ * `runs/<běh>.klic.json` (#371). `evaluate` spojí všechny klíče s verdikty rodiny ze sekce B
+ * `lessons.md` a vypíše tabulku pipeline vs. baseline (#372). Bez sítě, DB a `.env`. Další podpříkazy
+ * patří do `COMMANDS`.
  */
 import { randomInt } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
@@ -37,7 +39,9 @@ Výtky kritika, které se objevily aspoň ve 2 bězích. Zapisuje se sem jen po 
 
 ## B. Verdikty rodiny
 
-Jeden řádek na kandidáta, vyplňuje správce: \`- <běh> <K-ID> | <název> | chtějí / nechtějí / použili | <důvod>\`
+Jeden řádek na kandidáta, vyplňuje správce a čte \`/ideation vyhodnoť\`: \`- <běh> <K-ID> | <název> | chtějí / nechtějí / použili | <důvod>\`
+
+Běh je název souboru v \`runs/\` bez přípony (např. \`2026-11-24\`), K-ID a název jsou ze sekce Kandidáti tohoto běhu. Verdikt je právě jedno ze slov chtějí, nechtějí, použili; \`použili\` se počítá i jako \`chtějí\`. Kandidát bez řádku nebo s prázdným verdiktem je „bez odpovědi“. Když rodina funkci později použije, přepiš verdikt na existujícím řádku.
 `;
 
 const SIGNALS_FILE = "signals.md";
@@ -322,7 +326,135 @@ function blind(root: string, args: string[]): CommandResult {
   return { code: 0, lines: [mixed.map(({ id, c }) => renderCandidate(id, c)).join("\n\n")] };
 }
 
-const COMMANDS: Record<string, Command> = { check, rank, pairwise, blind };
+const KEY_SUFFIX = ".klic.json";
+const VERDICT_HEADING = /^## B\./;
+const VERDICT_LINE = /^- (\S+) (K\d+) \| [^|]*\| ([^|]*)(\|.*)?$/;
+const VERDICTS = ["chtějí", "nechtějí", "použili"] as const;
+type Verdict = (typeof VERDICTS)[number];
+
+const BlindKey = z.object({
+  run: z.string(),
+  candidates: z.array(z.object({ id: z.string(), origin: z.enum(["pipeline", "baseline"]), title: z.string() })),
+});
+
+/** Řádky sekce B `lessons.md` od nadpisu `## B.` do dalšího nadpisu `## `; bez nadpisu `undefined`. */
+function verdictSection(lessons: string): string[] | undefined {
+  const lines = lessons.split(/\r?\n/);
+  const start = lines.findIndex((line) => VERDICT_HEADING.test(line));
+  if (start === -1) return undefined;
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => line.startsWith("## "));
+  return end === -1 ? rest : rest.slice(0, end);
+}
+
+type RunKey = { run: string; candidates: z.infer<typeof BlindKey>["candidates"] };
+
+/** Všechny klíče `runs/*.klic.json` seřazené podle názvu běhu, nebo hláška, co je špatně. */
+function readKeys(runsDir: string): RunKey[] | string {
+  const files = existsSync(runsDir) ? readdirSync(runsDir).filter((f) => f.endsWith(KEY_SUFFIX)).sort() : [];
+  if (files.length === 0) return `V ${runsDir} není žádný klíč *${KEY_SUFFIX}. Vyhodnocovat jde až po běhu /ideation.`;
+  const keys: RunKey[] = [];
+  for (const file of files) {
+    const keyPath = path.join(runsDir, file);
+    let parsed: ReturnType<typeof BlindKey.safeParse>;
+    try {
+      parsed = BlindKey.safeParse(JSON.parse(readFileSync(keyPath, "utf8")));
+    } catch {
+      return `${keyPath} není platný JSON.`;
+    }
+    if (!parsed.success) return `${keyPath} nemá tvar klíče { run, candidates: [{ id, origin: pipeline / baseline, title }] }.`;
+    // Běh se jmenuje podle souboru: tak ho správce vidí v runs/ a tak ho píše do sekce B.
+    keys.push({ run: file.slice(0, -KEY_SUFFIX.length), candidates: parsed.data.candidates });
+  }
+  return keys;
+}
+
+/**
+ * Odkrytí po bězích: spojí klíče `runs/*.klic.json` s verdikty rodiny ze sekce B `lessons.md`.
+ * Kandidát bez verdiktu je „bez odpovědi“, ne „nechtěla“; „chtěla“ zahrnuje i „použila“.
+ * Verdikt, který nejde přiřadit, se do tabulky nepočítá a vypíše se pod ní.
+ */
+function evaluate(root: string): CommandResult {
+  const lessonsPath = path.join(root, "lessons.md");
+  if (!existsSync(lessonsPath)) {
+    return { code: 1, lines: [`Chybí ${lessonsPath}. Spusť \`check\`, který ho založí, a do sekce B zapiš verdikty rodiny.`] };
+  }
+  const section = verdictSection(readFileSync(lessonsPath, "utf8"));
+  if (section === undefined) return { code: 1, lines: [`V ${lessonsPath} chybí nadpis \`## B. Verdikty rodiny\`.`] };
+  const keys = readKeys(path.join(root, "runs"));
+  if (typeof keys === "string") return { code: 1, lines: [keys] };
+
+  // Řádek s prázdnou buňkou verdiktu je „bez odpovědi“ a nehlásí se; vše ostatní mimo formát se hlásí.
+  const verdicts = new Map<string, Verdict>();
+  const problems: string[] = [];
+  for (const raw of section) {
+    const line = raw.trim();
+    if (!line.startsWith("- ")) continue;
+    const match = VERDICT_LINE.exec(line);
+    if (!match) {
+      problems.push(`- „${line}“: řádek není ve formátu \`- <běh> <K-ID> | <název> | <verdikt> | <důvod>\``);
+      continue;
+    }
+    const [, run, id, verdictCell] = match;
+    const entry = `${run} ${id}`;
+    const verdict = verdictCell.trim().toLowerCase();
+    if (verdict === "") continue;
+    if (!(VERDICTS as readonly string[]).includes(verdict)) {
+      problems.push(`- ${entry}: neznámý verdikt „${verdictCell.trim()}“ (čekám ${VERDICTS.join(" / ")})`);
+      continue;
+    }
+    if (verdicts.has(entry)) problems.push(`- ${entry}: verdikt je tu víckrát, počítá se poslední`);
+    verdicts.set(entry, verdict as Verdict);
+  }
+
+  const runs = keys.map(({ run }) => run);
+  const counted = new Set<string>();
+  const counts = {
+    pipeline: { proposed: 0, wanted: 0, used: 0, unwanted: 0, noAnswer: 0 },
+    baseline: { proposed: 0, wanted: 0, used: 0, unwanted: 0, noAnswer: 0 },
+  };
+  for (const { run, candidates } of keys) {
+    for (const { id, origin } of candidates) {
+      const side = counts[origin];
+      side.proposed++;
+      const verdict = verdicts.get(`${run} ${id}`);
+      counted.add(`${run} ${id}`);
+      if (verdict === undefined) side.noAnswer++;
+      else if (verdict === "nechtějí") side.unwanted++;
+      else {
+        side.wanted++;
+        if (verdict === "použili") side.used++;
+      }
+    }
+  }
+
+  for (const entry of verdicts.keys()) {
+    if (counted.has(entry)) continue;
+    problems.push(`- ${entry}: ${runs.includes(entry.split(" ")[0]) ? "K-ID není v klíči běhu" : "běh nemá klíč"}`);
+  }
+
+  const row = (name: Origin) => {
+    const c = counts[name];
+    return `| ${name} | ${c.proposed} | ${c.wanted} | ${c.used} | ${c.unwanted} | ${c.noAnswer} |`;
+  };
+  const notes = problems.length > 0 ? ["", "Nezapočteno (oprav řádek v sekci B):", ...problems] : [];
+  return {
+    code: 0,
+    lines: [
+      `Běhy: ${runs.join(", ")} (${runs.length})`,
+      "",
+      "| Strana | Navrženo | Rodina chtěla | Použila | Nechtěla | Bez odpovědi |",
+      "|---|---|---|---|---|---|",
+      row("pipeline"),
+      row("baseline"),
+      "",
+      "„Rodina chtěla“ zahrnuje i „použila“. Kandidát bez verdiktu v sekci B je „bez odpovědi“, ne „nechtěla“.",
+      ...notes,
+    ],
+  };
+}
+
+const COMMANDS: Record<string, Command> = { check, rank, pairwise, blind, evaluate };
 
 const USAGE = `Použití: tsx src/scripts/ideation.ts <${Object.keys(COMMANDS).join("|")}> [--root <dir>] (výchozí kořen .ideation); blind navíc --run <běh> [--seed <n>]`;
 

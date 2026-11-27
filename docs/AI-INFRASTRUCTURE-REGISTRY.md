@@ -63,7 +63,7 @@ Pravidlo:
 | `.agents/skills/skill-creator/` | skill-creator | active | skill creation and benchmarking |
 | `.claude/skills/` (mattpocock) | grilling, grill-with-docs, domain-modeling, to-spec, to-tickets, implement, tdd, code-review, triage, diagnosing-bugs, codebase-design, writing-for-agents, setup-matt-pocock-skills | active | proces podle `docs/SDLC.md`; kopie `mattpocock/skills` @ `5863806`, neupravovat ručně |
 | `.claude/skills/database-migrations/` | database-migrations | active | Claude Code: postup změny Prisma schématu |
-| `.claude/skills/ideation/` | ideation | active | Claude Code: kandidáti na funkce ze signálů rodiny, jen ruční `/ideation` (#367); helper `npm run ideation` |
+| `.claude/skills/ideation/` | ideation | active | Claude Code: kandidáti na funkce ze signálů rodiny, jen ruční `/ideation` (#367), `/ideation vyhodnoť` = tabulka pipeline vs. baseline (#372); helper `npm run ideation` |
 
 ### Prompts
 
