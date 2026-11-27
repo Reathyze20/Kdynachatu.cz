@@ -8,6 +8,7 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { FallbackProps } from 'react-error-boundary'
+import { Card } from '@/components/shared/Card'
 import { reportError } from '@/lib/errorReporting'
 import {
   extractSupportErrorDetails,
@@ -35,23 +36,23 @@ function CopyAllButton({ text }: { text: string }) {
         alignItems: 'center',
         gap: '4px',
         padding: '4px 10px',
-        border: '1px solid var(--border-strong, #e5e7eb)',
-        borderRadius: '6px',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 'var(--radius-sm)',
         background: 'transparent',
-        color: 'var(--text-muted, #4b5563)',
-        fontSize: '0.72rem',
+        color: 'var(--text-muted)',
+        fontSize: 'var(--font-size-sm)',
         cursor: 'pointer',
         transition: 'all 0.15s ease',
-        fontFamily: 'var(--font-family, sans-serif)',
+        fontFamily: 'var(--font-family)',
       }}
       aria-label="Zkopírovat informace o chybě"
       type="button"
     >
       {/* Inline SVG — no lucide dependency in global fallback (may crash before React loads icons) */}
       {copied ? (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
       ) : (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
       )}
       {copied ? 'Zkopírováno' : 'Zkopírovat'}
     </button>
@@ -86,12 +87,11 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        background: 'var(--bg-app, #f0f4f0)',
-        fontFamily: 'var(--font-family, "Plus Jakarta Sans", sans-serif)',
+        background: 'var(--bg-app)',
+        fontFamily: 'var(--font-family)',
       }}
     >
-      <div
-        className="glass-card"
+      <Card
         style={{
           maxWidth: 480,
           width: '100%',
@@ -109,7 +109,7 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
             width: 56,
             height: 56,
             borderRadius: '9999px',
-            background: 'var(--status-error-light, #fee2e2)',
+            background: 'var(--status-error-light)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -118,11 +118,11 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
         >
           {/* Inline SVG AlertTriangle — safe for global fallback (no lucide dep risk) */}
           <svg
-            width="28"
-            height="28"
+            width="24"
+            height="24"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="var(--status-error, #dc2626)"
+            stroke="var(--status-error)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -137,9 +137,9 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
         <h2
           style={{
             margin: 0,
-            fontSize: '1.35rem',
+            fontSize: 'var(--font-size-2xl)',
             fontWeight: 700,
-            color: 'var(--text-main, #1a1a1a)',
+            color: 'var(--text-main)',
             lineHeight: 1.3,
           }}
         >
@@ -150,9 +150,9 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
         <p
           style={{
             margin: 0,
-            color: 'var(--text-muted, #4b5563)',
+            color: 'var(--text-muted)',
             lineHeight: 1.5,
-            fontSize: '0.9rem',
+            fontSize: 'var(--font-size-base)',
           }}
         >
           {friendlyMessage}
@@ -165,9 +165,9 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
               width: '100%',
               marginTop: '0.25rem',
               padding: '12px 16px',
-              background: 'rgba(0, 0, 0, 0.03)',
+              background: 'rgb(var(--inset))',
               borderRadius: '10px',
-              border: '1px solid var(--border-light, #f4f7f5)',
+              border: '1px solid var(--border-light)',
               textAlign: 'left',
             }}
           >
@@ -181,9 +181,9 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
             >
               <span
                 style={{
-                  fontSize: '0.7rem',
+                  fontSize: 'var(--font-size-sm)',
                   fontWeight: 600,
-                  color: 'var(--text-muted, #4b5563)',
+                  color: 'var(--text-muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                 }}
@@ -198,24 +198,24 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '3px',
-                fontSize: '0.72rem',
+                fontSize: 'var(--font-size-sm)',
                 fontFamily: "'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace",
-                color: 'var(--text-muted, #4b5563)',
+                color: 'var(--text-muted)',
               }}
             >
               <span>
-                <strong style={{ color: 'var(--text-main, #1a1a1a)' }}>Kód:</strong>{' '}
+                <strong style={{ color: 'var(--text-main)' }}>Kód:</strong>{' '}
                 {supportDetails.supportCode}
               </span>
               {supportDetails.method && supportDetails.url && (
                 <span>
-                  <strong style={{ color: 'var(--text-main, #1a1a1a)' }}>Endpoint:</strong>{' '}
+                  <strong style={{ color: 'var(--text-main)' }}>Endpoint:</strong>{' '}
                   {supportDetails.method} {supportDetails.url}
                 </span>
               )}
               {supportDetails.status && (
                 <span>
-                  <strong style={{ color: 'var(--text-main, #1a1a1a)' }}>Status:</strong>{' '}
+                  <strong style={{ color: 'var(--text-main)' }}>Status:</strong>{' '}
                   {supportDetails.status}
                 </span>
               )}
@@ -236,9 +236,9 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
-                fontSize: '0.7rem',
-                color: 'var(--text-placeholder, #6b7280)',
-                fontFamily: 'var(--font-family, sans-serif)',
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--text-placeholder)',
+                fontFamily: 'var(--font-family)',
               }}
               type="button"
             >
@@ -264,15 +264,15 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
             {devExpanded && (
               <pre
                 style={{
-                  background: 'rgba(239, 68, 68, 0.06)',
-                  border: '1px solid rgba(239, 68, 68, 0.15)',
-                  borderRadius: '6px',
+                  background: 'var(--status-error-light)',
+                  border: '1px solid color-mix(in srgb, var(--status-error) 15%, transparent)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '12px',
-                  fontSize: '0.68rem',
+                  fontSize: 'var(--font-size-sm)',
                   textAlign: 'left',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-all',
-                  color: 'var(--status-error, #dc2626)',
+                  color: 'var(--status-error)',
                   maxHeight: 180,
                   overflowY: 'auto',
                   margin: '4px 0 0 0',
@@ -304,7 +304,7 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
             ← Domů
           </button>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

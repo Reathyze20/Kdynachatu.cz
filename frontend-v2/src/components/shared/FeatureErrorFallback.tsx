@@ -25,28 +25,10 @@ function CopyAllButton({ text }: { text: string }) {
   }, [text])
 
   return (
-    <button
-      onClick={handleCopy}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '4px 10px',
-        border: '1px solid var(--border-strong)',
-        borderRadius: 'var(--radius-sm)',
-        background: 'transparent',
-        color: 'var(--text-muted)',
-        fontSize: '0.72rem',
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-        fontFamily: 'var(--font-family)',
-      }}
-      aria-label="Zkopírovat informace o chybě"
-      type="button"
-    >
-      {copied ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
+    <Button type="button" variant="secondary" size="sm" className="mt-2" onClick={handleCopy} aria-label="Zkopírovat informace o chybě">
+      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
       {copied ? 'Zkopírováno' : 'Zkopírovat'}
-    </button>
+    </Button>
   )
 }
 
@@ -151,7 +133,7 @@ export function FeatureErrorFallback({
               maxWidth: 360,
               marginTop: 'var(--space-xs)',
               padding: 'var(--space-md) var(--space-lg)',
-              background: 'rgba(0, 0, 0, 0.03)',
+              background: 'rgb(var(--inset))',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-light)',
               textAlign: 'left',
@@ -166,7 +148,7 @@ export function FeatureErrorFallback({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '3px',
-                fontSize: '0.72rem',
+                fontSize: 'var(--font-size-sm)',
                 fontFamily: "'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace",
                 color: 'var(--text-muted)',
               }}
@@ -205,16 +187,16 @@ export function FeatureErrorFallback({
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
-                fontSize: '0.7rem',
-                color: 'var(--text-placeholder)',
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--text-muted)',
                 fontFamily: 'var(--font-family)',
               }}
               type="button"
             >
               <ChevronDown
                 style={{
-                  width: 12,
-                  height: 12,
+                  width: 16,
+                  height: 16,
                   transition: 'transform 0.2s ease',
                   transform: devExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                 }}
@@ -230,11 +212,11 @@ export function FeatureErrorFallback({
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                   style={{
-                    background: 'rgba(239, 68, 68, 0.06)',
-                    border: '1px solid rgba(239, 68, 68, 0.15)',
+                    background: 'var(--status-error-light)',
+                    border: '1px solid color-mix(in srgb, var(--status-error) 15%, transparent)',
                     borderRadius: 'var(--radius-sm)',
                     padding: 'var(--space-md)',
-                    fontSize: '0.68rem',
+                    fontSize: 'var(--font-size-sm)',
                     textAlign: 'left',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-all',

@@ -1,9 +1,10 @@
 /**
  * CopyForWhatsAppButton — jedna akce „Zkopírovat pro WhatsApp“ všude, kde jde text poslat
- * rodině (#264): jeden vzhled (btn-secondary), tlačítko s textem, po zkopírování „Zkopírováno“ na tlačítku a hláška pro čtečku.
+ * rodině (#264): jeden vzhled (`Button` secondary), tlačítko s textem, po zkopírování „Zkopírováno“ na tlačítku a hláška pro čtečku.
  */
 import { useEffect, useRef, useState } from "react";
 import { Check, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { showToast } from "@/lib/toast";
 
 const CONFIRM_MS = 2000;
@@ -43,10 +44,10 @@ export function CopyForWhatsAppButton({ text, onError, onCopied, testId }: Props
   const Icon = copied ? Check : MessageCircle;
   return (
     <>
-      <button type="button" className="btn btn-secondary btn-sm" onClick={() => void copy()} data-testid={testId}>
-        <Icon className="w-4 h-4" aria-hidden="true" />
+      <Button type="button" variant="secondary" size="sm" onClick={() => void copy()} data-testid={testId}>
+        <Icon aria-hidden="true" />
         {copied ? "Zkopírováno" : "Zkopírovat pro WhatsApp"}
-      </button>
+      </Button>
       <span role="status" aria-live="polite" className="sr-only">
         {copied ? "Zkopírováno pro WhatsApp" : ""}
       </span>

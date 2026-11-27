@@ -1,5 +1,6 @@
 import { AVATARS } from '@/lib/avatars'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
+import { cn } from '@/lib/utils'
 
 interface AvatarPickerProps {
   value: string
@@ -7,42 +8,35 @@ interface AvatarPickerProps {
   compact?: boolean
 }
 
+/** Výběr avatara člena. Každá volba má dotykový cíl aspoň 48 px a vybraná je `aria-pressed` (DESIGN.md §7, #526). */
 export function AvatarPicker({ value, onChange, compact }: AvatarPickerProps) {
-  const sz = compact ? 36 : 52
-  const imgSz = compact ? 28 : 40
-  const radius = compact ? 8 : 12
-  const pad = compact ? 2 : 4
-
   return (
-    <div className="avatar-picker-grid" style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(auto-fill, minmax(${sz}px, 1fr))`,
-      gap: compact ? '4px' : '0.5rem',
-    }}>
-      {AVATARS.map((avatar) => (
-        <button
-          key={avatar.id}
-          type="button"
-          className={`avatar-swatch${value === avatar.id ? ' selected' : ''}`}
-          title={avatar.label}
-          style={{
-            width: sz,
-            height: sz,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: radius,
-            border: value === avatar.id ? '2px solid var(--color-primary, #d97706)' : '2px solid transparent',
-            background: value === avatar.id ? 'var(--color-primary-light, #fef3c7)' : 'var(--color-surface, #fff)',
-            cursor: 'pointer',
-            padding: pad,
-            transition: 'border-color 0.15s, background 0.15s',
-          }}
-          onClick={() => onChange(avatar.id)}
-        >
-          <AnimalAvatar icon={avatar.id} username={avatar.label} size={imgSz} />
-        </button>
-      ))}
+    <div
+      className={cn(
+        'grid',
+        compact ? 'grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-1' : 'grid-cols-[repeat(auto-fill,minmax(52px,1fr))] gap-2',
+      )}
+    >
+      {AVATARS.map((avatar) => {
+        const chosen = value === avatar.id
+        return (
+          <button
+            key={avatar.id}
+            type="button"
+            title={avatar.label}
+            aria-label={avatar.label}
+            aria-pressed={chosen}
+            className={cn(
+              'flex items-center justify-center border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+              compact ? 'size-12 rounded-lg p-0.5' : 'size-13 rounded-xl p-1',
+              chosen ? 'border-primary bg-accent' : 'border-transparent bg-sheet hover:bg-(--bg-hover)',
+            )}
+            onClick={() => onChange(avatar.id)}
+          >
+            <AnimalAvatar icon={avatar.id} username={avatar.label} size={compact ? 32 : 40} />
+          </button>
+        )
+      })}
     </div>
   )
 }

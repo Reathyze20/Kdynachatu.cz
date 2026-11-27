@@ -8,6 +8,7 @@
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { MunicipalityOption } from '@/api/municipalities'
+import { Input } from '@/components/ui/input'
 import { useMunicipalitySearch } from '@/hooks/useMunicipalitySearch'
 
 interface MunicipalityPickerProps {
@@ -83,11 +84,10 @@ export function MunicipalityPicker({ id, value, onChange, onPendingChange, place
 
   return (
     <div className="relative">
-      <input
+      <Input
         ref={inputRef}
         type="text"
         id={id}
-        className="form-input"
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={showList}
@@ -115,7 +115,7 @@ export function MunicipalityPicker({ id, value, onChange, onPendingChange, place
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-md"
+          className="absolute z-(--z-dropdown) mt-1 max-h-64 w-full overflow-auto rounded-xl border border-rule-soft bg-sheet py-1 shadow-lift"
         >
           {results.map((m, i) => (
             <li
@@ -123,21 +123,21 @@ export function MunicipalityPicker({ id, value, onChange, onPendingChange, place
               id={`${listId}-${i}`}
               role="option"
               aria-selected={i === active}
-              className={`flex min-h-11 cursor-pointer flex-col justify-center px-3 py-2 ${i === active ? 'bg-accent' : 'hover:bg-slate-50'}`}
+              className={`flex min-h-(--touch-target-min) cursor-pointer flex-col justify-center px-3 py-2 ${i === active ? 'bg-accent' : 'hover:bg-(--bg-hover)'}`}
               // mousedown by jinak inputu sebral focus dřív, než se klik stihne zpracovat
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => pick(m)}
             >
-              <span className="font-medium text-slate-900">{m.name}</span>
-              <span className="text-sm text-slate-600">{describe(m, isAmbiguous(m))} · {m.region}</span>
+              <span className="text-body font-medium text-(--text-main)">{m.name}</span>
+              <span className="text-meta text-(--text-muted)">{describe(m, isAmbiguous(m))} · {m.region}</span>
             </li>
           ))}
         </ul>
       )}
-      <p className="mt-1 text-sm text-slate-600 empty:mt-0" role="status">
+      <p className="mt-1 text-meta text-(--text-muted) empty:mt-0" role="status">
         {showEmpty ? 'Žádná obec tomu neodpovídá. Zkus jiný začátek názvu.' : ''}
       </p>
-      <span id={hintId} className="mt-1 block text-xs text-slate-600">
+      <span id={hintId} className="mt-1 block text-meta text-(--text-muted)">
         Vyber obec ze seznamu, za názvem můžeš napsat i okres.
       </span>
     </div>

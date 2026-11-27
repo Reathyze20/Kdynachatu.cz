@@ -8,8 +8,6 @@
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
-      "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx", "components/shared/FeatureErrorFallback.tsx",
-      "components/shared/GlobalFallback.tsx",
       "features/gallery/FolderGrid.tsx",
       "features/landing/LandingPage.tsx"
     ],
@@ -31,7 +29,6 @@
       "styles/shopping.css", "styles/skeleton.css", "styles/status-header.css"
     ],
     "Inline styl nebo utilita s aliasem --color-*, převede se s obrazovkou": [
-      "components/shared/AvatarPicker.tsx", "components/shared/ColorPicker.tsx",
       "features/dashboard/DepartureBanner.tsx", "features/dashboard/PinnedNote.tsx",
       "features/shopping/AddToCartModal.tsx", "features/shopping/BulkAddToCartModal.tsx"
     ]
@@ -41,7 +38,7 @@
       "features/reservations/ui/BookingForm.tsx"
     ],
     "Studené slate/bg-white z doby před Jedlí, převede se s komponentou": [
-      "components/shared/MunicipalityPicker.tsx", "components/shared/RouteTransitionSkeleton.tsx",
+      "components/shared/RouteTransitionSkeleton.tsx",
       "features/weather/StayHourlyChart.tsx", "features/weather/StayWeatherCard.tsx"
     ]
   },
@@ -58,8 +55,7 @@
   },
   "legacyButton": {
     "Legacy třídy .btn-*, nahradí je <Button> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/ConfirmDialog.tsx", "components/shared/CopyForWhatsAppButton.tsx",
-      "components/shared/LogsPanel.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
+      "components/shared/ConfirmDialog.tsx", "components/shared/LogsPanel.tsx", "features/dashboard/AdminActivationChecklist.tsx", "features/gallery/FolderGrid.tsx",
       "features/gallery/UploadModal.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",
@@ -68,7 +64,7 @@
   },
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
-      "components/shared/GlobalFallback.tsx", "components/shared/LogsPanel.tsx",
+      "components/shared/LogsPanel.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
       "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
