@@ -3,8 +3,7 @@
  * Spouští ho člověk na serveru, ne agent; DB bere z `.env` aplikace. Nejdřív `npm run backup:db`, pak:
  *   npm run diary:fix-dates -- --until 2026-11-28T09:30:00Z --dry-run   # jen vypíše, co by udělal
  *   npm run diary:fix-dates -- --until 2026-11-28T09:30:00Z             # posune v jedné transakci
- * `--until` = kdy na produkci naběhla verze s opravou; `--since` je volitelné (výchozí první nasazení frontend-v2).
- * Exit kód 1, když plán má problémy (pak se nezapíše nic) nebo běh selže.
+ * `--until` = kdy na produkci naběhla verze s opravou; `--since` volitelné. Exit 1 při problémech v plánu (nic se nezapíše) nebo chybě.
  */
 import "../config/config";
 import prisma from "../utils/prisma";

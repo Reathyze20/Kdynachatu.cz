@@ -1,15 +1,17 @@
 /**
- * Jádro jednorázové opravy dat deníku (#185). Frontend-v2 stavěl klíč dne přes `setHours(0)` + `toISOString()`,
- * takže v Europe/Prague uložil každý zápis pod „zobrazený den − 1“. Týká se zápisů s `created_at` od prvního
- * produkčního nasazení frontend-v2 (commit 7eb9cf2, běh Deploy 2026-04-03 14:16:55 UTC) do nasazení opravy (`--until`).
+ * Jádro jednorázové opravy dat deníku (#185). Frontend-v2 stavěl klíč dne přes `setHours(0)` + `toISOString()`, takže
+ * v Europe/Prague uložil každý zápis pod „zobrazený den − 1“. Týká se zápisů s `created_at` od prvního úspěšného nasazení
+ * frontend-v2 (commit 7eb9cf2, Deploy 2026-04-03 14:25:15 UTC, dřívější pokusy spadly před buildem) do opravy (`--until`).
  * Ostrý běh je jedna transakce; při problému se nezapíše nic. Posledním krokem je značka (JSON se seznamem
  * posunutých zápisů, i pro rollback); když existuje, skript nic neposune.
- */import fs from "node:fs/promises";
+ */
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { addDaysIso } from "../backend/routes/reservationHelpers";
 
-export const DIARY_DATE_FIX_DEFAULT_SINCE = "2026-04-03T14:16:55Z";
+export const DIARY_DATE_FIX_DEFAULT_SINCE = "2026-04-03T14:25:15Z";
 export const DIARY_DATE_FIX_MARKER = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../data/maintenance/diary-date-fix-185.json");
 const NO_CABIN = "(bez chaty)";
 const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
@@ -44,12 +46,6 @@ export function parseDiaryDateFixArgs(argv: string[], now: Date = new Date()): D
   return { dryRun, since, until };
 }
 
-/** Posun kalendářního dne "YYYY-MM-DD" o `n` dní (v UTC, bez vlivu letního času). */
-export function addDays(day: string, n: number): string {
-  const [y, m, d] = day.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
-}
-
 /** Čistý výpočet: které zápisy posunout o +1 den a co by posun rozbilo. */
 export function planDiaryDateFix(rows: DiaryEntryRow[], range: { since: Date; until: Date }): DiaryDateFixPlan {
   const isAffected = (row: DiaryEntryRow) => row.createdAt >= range.since && row.createdAt < range.until;
@@ -58,7 +54,7 @@ export function planDiaryDateFix(rows: DiaryEntryRow[], range: { since: Date; un
   const shifts: DiaryDateShift[] = [];
   const problems: string[] = [];
   for (const row of rows.filter(isAffected)) {
-    const to = addDays(row.entryDate, 1);
+    const to = addDaysIso(row.entryDate, 1);
     shifts.push({ id: row.id, folderId: row.folderId, cabinId: row.cabinId, createdAt: row.createdAt, from: row.entryDate, to });
     const label = `zápis ${row.id} (chata ${row.cabinId ?? NO_CABIN})`;
     if (!row.folderStart || !row.folderEnd) problems.push(`${label}: pobyt nemá termín, posun nejde ověřit`);
@@ -91,6 +87,7 @@ export async function runDiaryDateFix(prisma: PrismaClient, options: DiaryDateFi
   if (marker) return { ...base, plan: { shifts: [], beforeSince: 0, afterUntil: [], problems: [] }, alreadyApplied: JSON.parse(marker) };
   if (options.dryRun) return { ...base, plan: planDiaryDateFix(await loadRows(prisma), options) };
 
+  let written: { first?: DiaryDateShift } | null = null;
   return prisma.$transaction(async (tx) => {
     const report: DiaryDateFixReport = { ...base, plan: planDiaryDateFix(await loadRows(tx), options) };
     if (report.plan.problems.length > 0) return report;
@@ -106,8 +103,15 @@ export async function runDiaryDateFix(prisma: PrismaClient, options: DiaryDateFi
     await fs.mkdir(path.dirname(markerPath), { recursive: true });
     // "wx": souběžný druhý běh značku nepřepíše a jeho transakce se vrátí.
     await fs.writeFile(markerPath, JSON.stringify(content, null, 2) + "\n", { flag: "wx" });
+    written = { first: report.plan.shifts[0] };
     return { ...report, applied: true };
-  }, { timeout: 60_000 });
+  }, { timeout: 60_000 }).catch(async (error) => {
+    // Commit selhal až po zápisu značky (timeout, spojení): když se v DB nic neposunulo, značku smaž, ať jde běh zopakovat.
+    const first = written?.first;
+    const landed = first && (await prisma.diaryEntry.count({ where: { id: first.id, entryDate: new Date(first.to) } })) > 0;
+    if (written && !landed) await fs.unlink(markerPath);
+    throw error;
+  });
 }
 
 export function formatDiaryDateFixReport(report: DiaryDateFixReport): string {
@@ -128,7 +132,6 @@ export function formatDiaryDateFixReport(report: DiaryDateFixReport): string {
   lines.push(`Před hranicí (beze změny): ${plan.beforeSince}`, `Vytvořeno od --until (beze změny): ${plan.afterUntil.length}`);
   lines.push(...plan.afterUntil.map((r) => `  ${r.id}  chata ${r.cabinId ?? NO_CABIN}  ${r.entryDate}  (vytvořeno ${r.createdAt.toISOString()})`));
   lines.push(`Problémy: ${plan.problems.length}${plan.problems.length ? " – s problémy ostrý běh nic nezapíše" : ""}`, ...plan.problems.map((p) => `  ${p}`));
-  lines.push(report.applied ? `Posunuto: ${plan.shifts.length}
-Značka zapsána: ${report.markerPath}` : `K posunu: ${plan.shifts.length}`);
+  lines.push(`${report.applied ? "Posunuto" : "K posunu"}: ${plan.shifts.length}`, ...(report.applied ? [`Značka zapsána: ${report.markerPath}`] : []));
   return lines.join("\n");
 }

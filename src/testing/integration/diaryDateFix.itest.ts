@@ -10,7 +10,7 @@ import { runDiaryDateFix } from "../../scripts/diaryDateFix";
 
 let world: TestWorld;
 let marker: string;
-const range = { since: new Date("2026-04-03T14:16:55Z"), until: new Date("2026-11-28T09:30:00Z") };
+const range = { since: new Date("2026-04-03T14:25:15Z"), until: new Date("2026-11-28T09:30:00Z") };
 
 async function folder(author: TestUser): Promise<string> {
   const data = { name: "Léto", createdById: author.id, cabinId: author.cabinId, startDate: new Date("2026-07-10"), endDate: new Date("2026-07-12") };

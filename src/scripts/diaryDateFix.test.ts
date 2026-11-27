@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { addDays, formatDiaryDateFixReport, parseDiaryDateFixArgs, planDiaryDateFix, type DiaryDateFixReport, type DiaryEntryRow } from "./diaryDateFix";
+import { formatDiaryDateFixReport, parseDiaryDateFixArgs, planDiaryDateFix, type DiaryDateFixReport, type DiaryEntryRow } from "./diaryDateFix";
 
 const NOW = new Date("2026-11-28T12:00:00Z");
 const UNTIL = "2026-11-28T09:30:00Z";
-const range = { since: new Date("2026-04-03T14:16:55Z"), until: new Date(UNTIL) };
+const range = { since: new Date("2026-04-03T14:25:15Z"), until: new Date(UNTIL) };
 
 function row(id: string, entryDate: string, createdAt: string, over: Partial<DiaryEntryRow> = {}): DiaryEntryRow {
   return { id, folderId: "f-1", cabinId: "cabin-a", entryDate, createdAt: new Date(createdAt), folderStart: "2026-07-10", folderEnd: "2026-07-12", ...over };
@@ -25,14 +25,10 @@ test("args: instants need an explicit time zone and a sane order", () => {
   assert.deepEqual([options.since.toISOString(), options.until.toISOString()], ["2026-04-03T14:00:00.000Z", "2026-11-28T09:30:00.000Z"]);
 });
 
-test("addDays crosses DST, month and year boundaries as plain calendar days", () => {
-  assert.deepEqual(["2026-03-28", "2026-10-24", "2026-04-30", "2026-12-31"].map((d) => addDays(d, 1)), ["2026-03-29", "2026-10-25", "2026-05-01", "2027-01-01"]);
-});
-
 test("plan: shifts by one day only entries created in [since, until), consecutive ones without collisions", () => {
   const plan = planDiaryDateFix([
-    row("legacy", "2026-03-01", "2026-04-03T14:16:54.999Z", { folderId: "f-0" }),
-    row("first", "2026-07-09", "2026-04-03T14:16:55Z"),
+    row("legacy", "2026-03-01", "2026-04-03T14:25:14.999Z", { folderId: "f-0" }),
+    row("first", "2026-07-09", "2026-04-03T14:25:15Z"),
     row("second", "2026-07-10", "2026-07-11T18:00:00Z"),
     row("last", "2026-07-11", "2026-07-12T18:00:00Z"),
     row("fixed", "2026-07-11", UNTIL, { folderId: "f-3" }),
