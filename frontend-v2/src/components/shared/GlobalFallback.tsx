@@ -34,8 +34,9 @@ function CopyAllButton({ text }: { text: string }) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '4px',
-        padding: '4px 10px',
+        gap: 'var(--space-xs)',
+        minHeight: 'var(--touch-target-min)',
+        padding: '0 var(--space-md)',
         border: '1px solid var(--border-strong)',
         borderRadius: 'var(--radius-sm)',
         background: 'transparent',
@@ -164,9 +165,9 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
             style={{
               width: '100%',
               marginTop: '0.25rem',
-              padding: '12px 16px',
+              padding: 'var(--space-md) var(--space-lg)',
               background: 'rgb(var(--inset))',
-              borderRadius: '10px',
+              borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-light)',
               textAlign: 'left',
             }}
@@ -231,20 +232,20 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: 'var(--space-xs)',
                 padding: 0,
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
                 fontSize: 'var(--font-size-sm)',
-                color: 'var(--text-placeholder)',
+                color: 'var(--text-muted)',
                 fontFamily: 'var(--font-family)',
               }}
               type="button"
             >
               <svg
-                width="12"
-                height="12"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -267,7 +268,7 @@ export function GlobalFallback({ error, resetErrorBoundary }: FallbackProps) {
                   background: 'var(--status-error-light)',
                   border: '1px solid color-mix(in srgb, var(--status-error) 15%, transparent)',
                   borderRadius: 'var(--radius-sm)',
-                  padding: '12px',
+                  padding: 'var(--space-md)',
                   fontSize: 'var(--font-size-sm)',
                   textAlign: 'left',
                   whiteSpace: 'pre-wrap',

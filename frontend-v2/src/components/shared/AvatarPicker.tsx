@@ -14,7 +14,7 @@ export function AvatarPicker({ value, onChange, compact }: AvatarPickerProps) {
     <div
       className={cn(
         'grid',
-        compact ? 'grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-1' : 'grid-cols-[repeat(auto-fill,minmax(52px,1fr))] gap-2',
+        compact ? 'grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-2' : 'grid-cols-[repeat(auto-fill,minmax(52px,1fr))] gap-2',
       )}
     >
       {AVATARS.map((avatar) => {

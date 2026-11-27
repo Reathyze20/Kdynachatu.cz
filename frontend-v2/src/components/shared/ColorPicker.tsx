@@ -15,7 +15,7 @@ export function ColorPicker({ value, onChange, size = 32 }: ColorPickerProps) {
   const chosen = toMemberColor(value)
 
   return (
-    <div className="flex flex-wrap">
+    <div className="flex flex-wrap gap-2">
       {MEMBER_PALETTE.map(({ hex, name }) => (
         <button
           key={hex}
@@ -26,7 +26,7 @@ export function ColorPicker({ value, onChange, size = 32 }: ColorPickerProps) {
           aria-pressed={chosen === hex}
           title={name}
         >
-          {/* Barva člena je uložená data (#271), proto inline; rámeček vybrané barvy je z tokenů. */}
+          {/* Barva člena je uložená data (#271), proto inline. Vybraná: tmavý rámeček a uvnitř bílý kroužek (--text-on-primary). */}
           <span
             aria-hidden="true"
             className={cn(
