@@ -1,7 +1,7 @@
 /**
  * InstallCard.tsx — nabídka „Přidat na plochu“ (#277, mock 06 díl 7 B).
  *
- * InstallCard: karta v toku stránky na konci Přehledu, poprvé na 3. návštěvě; na desktopu ji skryje CSS.
+ * InstallCard: karta v toku stránky na konci Přehledu, poprvé na 3. návštěvě; jen mobil (od md skrytá).
  * „Teď ne“ ji skryje natrvalo. Nic nepřekrývá (pravidlo E3).
  * InstallMenuItem: trvalá položka v menu Víc.
  * Android (Chromium) otevře nativní instalační dialog, iOS Safari ukáže návod Sdílet → „Přidat na plochu“.
@@ -9,13 +9,15 @@
  */
 import { useId, useState } from 'react'
 import { Download, Share } from 'lucide-react'
+import { Card } from '@/components/shared/Card'
+import { Button } from '@/components/ui/button'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
 import { dismissInstallCard, promptPwaInstall, shouldOfferInstallCard } from '@/lib/pwaInstall'
 
 function IosInstallHint() {
   return (
-    <p className="install-hint">
-      Klepni na <Share className="inline h-4 w-4 align-text-bottom" aria-label="Sdílet" /> a zvol
+    <p className="m-0 text-meta text-(--text-muted)">
+      Klepni na <Share className="inline size-4 align-text-bottom" aria-label="Sdílet" /> a zvol
       {' '}<strong>„Přidat na plochu“</strong>.
     </p>
   )
@@ -53,15 +55,15 @@ export function InstallCard() {
   }
 
   return (
-    <section className="glass-card install-card" aria-labelledby={headingId} data-testid="install-card">
-      <h2 id={headingId} className="dashboard-card-header-title">Otevíráš chatu často?</h2>
-      <p className="install-card-text">Přidej si ji na plochu, otevře se jako aplikace.</p>
+    <Card as="section" className="mx-3 mb-3 flex flex-col gap-2 md:hidden" aria-labelledby={headingId} data-testid="install-card">
+      <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Otevíráš chatu často?</h2>
+      <p className="m-0 text-meta text-(--text-muted)">Přidej si ji na plochu, otevře se jako aplikace.</p>
       {showIosHint && <IosInstallHint />}
-      <div className="install-card-actions">
-        <button type="button" className="button-primary" onClick={() => void handleInstall()}>Přidat</button>
-        <button type="button" className="button-secondary" onClick={handleDismiss}>Teď ne</button>
+      <div className="mt-1 flex gap-2">
+        <Button type="button" className="flex-1" onClick={() => void handleInstall()}>Přidat</Button>
+        <Button type="button" variant="secondary" onClick={handleDismiss}>Teď ne</Button>
       </div>
-    </section>
+    </Card>
   )
 }
 

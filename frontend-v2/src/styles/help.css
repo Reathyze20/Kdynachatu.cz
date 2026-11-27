@@ -3,7 +3,7 @@
    ============================================================================ */
 
 /* ── Karta „Co vyzkoušet“ (jen staging, #399): plovoucí, mimo tok stránky ── */
-/* Pod zásuvkami a dialogy; toasty se nad ni zvednou (--testing-card-clearance, toast.css) */
+/* Pod zásuvkami a dialogy; toasty se nad ni zvednou (--testing-card-clearance, Toast.tsx) */
 .testing-card {
     position: fixed;
     right: 24px;

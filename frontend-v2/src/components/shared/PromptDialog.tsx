@@ -14,6 +14,8 @@
  */
 import { useState, useEffect, useId, type HTMLInputTypeAttribute, type ReactNode } from 'react'
 import { Modal } from './Modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface PromptDialogProps {
   isOpen: boolean
@@ -61,6 +63,8 @@ export function PromptDialog({
   const [value, setValue] = useState('')
   const inputId = useId()
   const descriptionId = useId()
+  const errorId = useId()
+  const describedBy = [description && descriptionId, errorMessage && errorId].filter(Boolean).join(' ') || undefined
   const normalizedValue = trimValue ? value.trim() : value
   const canSubmitValue = canSubmit ? canSubmit(value) : Boolean(normalizedValue)
 
@@ -82,55 +86,48 @@ export function PromptDialog({
       maxWidth="max-w-sm"
       footer={
         <div className="modal-dialog-actions">
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={onCancel}
-            disabled={loading}
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="prompt-dialog-form"
-            className={danger ? 'btn-danger' : 'btn-primary'}
-            disabled={loading || !canSubmitValue}
+            variant={danger ? 'danger' : 'primary'}
+            pending={loading}
+            disabled={!canSubmitValue}
           >
             {loading ? loadingLabel : submitLabel}
-          </button>
+          </Button>
         </div>
       }
     >
       <form id="prompt-dialog-form" onSubmit={handleSubmit}>
         {description && (
-          <div id={descriptionId} style={{ marginBottom: '12px', color: 'var(--text-main)', lineHeight: 1.5 }}>
+          <div id={descriptionId} className="mb-3 text-body text-(--text-main)">
             {description}
           </div>
         )}
         {label && (
-          <label
-            htmlFor={inputId}
-            style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}
-          >
+          <label htmlFor={inputId} className="mb-1.5 block text-label text-(--text-muted)">
             {label}
           </label>
         )}
-        <input
+        <Input
           id={inputId}
           type={inputType}
-          className="form-input"
+          invalid={Boolean(errorMessage)}
           value={value}
           onChange={e => setValue(e.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
           autoComplete={autoComplete}
-          aria-describedby={description ? descriptionId : undefined}
+          aria-describedby={describedBy}
           autoFocus
         />
         {errorMessage ? (
-          <div className="error-message show" role="alert">
+          <p id={errorId} role="alert" className="mt-2 text-label text-(--status-error)">
             {errorMessage}
-          </div>
+          </p>
         ) : null}
       </form>
     </Modal>

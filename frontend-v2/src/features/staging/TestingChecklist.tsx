@@ -34,7 +34,7 @@ function TestingChecklistCard() {
   const headingId = useId()
   const cardRef = useRef<HTMLDivElement>(null)
 
-  // Toasty (toast.css) se zvednou nad kartu: vzdálenost její horní hrany od spodku okna + mezera.
+  // Toasty (Toast.tsx) se zvednou nad kartu: vzdálenost její horní hrany od spodku okna + mezera.
   // Jen když je karta dole – ne skrytá ani nahoře (chat, help.css); pozici mění i třídy na <body>.
   useLayoutEffect(() => {
     const el = cardRef.current
