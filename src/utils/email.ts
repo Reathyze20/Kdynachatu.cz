@@ -40,79 +40,6 @@ function ensureEmailTransport(emailKind: string): void {
   }
 }
 
-// ─── Legacy: Send verification email with PIN code ──────────────────────────
-
-export const sendVerificationEmailWithPIN = async (email: string, code: string): Promise<void> => {
-  ensureEmailTransport("Verification PIN");
-  if (!transporter) {
-    logger.warn("EMAIL", `[SIMULATION] Verification PIN email for ${email} with code ${code}`);
-    return;
-  }
-
-  try {
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', Arial, sans-serif;">
-  <div style="background-color: #f3f4f6; padding: 40px 20px;">
-    <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-      
-      <div style="text-align: center; padding: 32px 32px 16px 32px;">
-        <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 600;">${EMAIL_APP_NAME}</h1>
-      </div>
-
-      <div style="padding: 0 32px 32px 32px;">
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Ahoj,
-        </p>
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 24px 0;">
-          Tvůj ověřovací kód pro dokončení registrace je:
-        </p>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <span style="font-size: 36px; font-weight: bold; color: #5d9b62; letter-spacing: 8px; padding: 16px 24px; border: 2px dashed #5d9b62; border-radius: 8px; display: inline-block;">
-            ${code}
-          </span>
-        </div>
-
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 16px 0;">
-          Zadej tento kód do příslušného pole v aplikaci.
-        </p>
-
-        <p style="color: #9ca3af; font-size: 13px; line-height: 1.4; margin: 20px 0 0 0;">
-          Pokud registrace nebyla tvoje, tento e-mail ignoruj.
-        </p>
-      </div>
-    </div>
-
-    <div style="text-align: center; font-size: 12px; color: #9ca3af; margin-top: 16px; padding: 0 20px;">
-      <p style="margin: 0;">${EMAIL_APP_FOOTER}</p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-    const textContent = `Ahoj,\n\nTvůj ověřovací kód je: ${code}\n\nZadej ho do příslušného pole v aplikaci.\n\nPokud registrace nebyla tvoje, tento e-mail ignoruj.`;
-
-    const info = await transporter.sendMail({
-      from: EMAIL_FROM,
-      to: email,
-      subject: `Ověření e-mailu — ${EMAIL_APP_NAME}`,
-      text: textContent,
-      html: htmlContent,
-    });
-
-    logger.info("EMAIL", `Verification PIN email sent to ${email}`, { messageId: info.messageId });
-  } catch (error) {
-    logger.error("EMAIL", `Failed to send verification PIN email to ${email}`, { error: String(error) });
-    throw error;
-  }
-};
-
 // ─── New SaaS: Send verification email with activation link ─────────────────
 
 export const sendVerificationEmailWithToken = async (email: string, token: string): Promise<void> => {
@@ -528,13 +455,6 @@ export const sendFrostAlertEmail = async (
     throw error;
   }
 };
-
-// ─── Backward compatibility aliases ──────────────────────────────────────────
-
-/**
- * @deprecated Use sendVerificationEmailWithPIN instead
- */
-export const sendVerificationEmail = sendVerificationEmailWithPIN;
 
 // ─── Generic send email ──────────────────────────────────────────────────────
 
