@@ -1,12 +1,14 @@
 /**
- * PhotoGrid.tsx — Masonry photo grid with selection mode + classic pagination
- * CSS columns masonry, paginated with prev/next + page number buttons.
+ * PhotoGrid.tsx — Fotky v albu: masonry, výběr k mazání a stránkování (DESIGN.md, #519).
+ * Hlavička alba (název, Zpět, Nahrát) je v GalleryPage přes PageHeader.
  */
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Check, CheckSquare, ChevronLeft, ChevronRight, Trash2, Upload, X } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Check, ChevronLeft, ChevronRight, ImagePlus, ListChecks, SquareCheck, Trash2, Upload, X } from 'lucide-react'
 import type { GalleryPhoto } from '@/api/gallery'
-import { formatCount } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 10
 
@@ -23,7 +25,6 @@ interface Props {
   onDeleteSelected: () => void
   onUpload: () => void
   folderName: string
-  onBack: () => void
   /** Smí uživatel fotku smazat? Jen takovou jde vybrat k hromadnému mazání (#507). */
   canDeletePhoto?: (photo: GalleryPhoto) => boolean
 }
@@ -41,7 +42,6 @@ export function PhotoGrid({
   onDeleteSelected,
   onUpload,
   folderName,
-  onBack,
   canDeletePhoto = () => false,
 }: Props) {
   const [page, setPage] = useState(0)
@@ -57,8 +57,7 @@ export function PhotoGrid({
 
   function goToPage(p: number) {
     setPage(p)
-    // Scroll masonry container to top on page change
-    masonryRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    masonryRef.current?.scrollIntoView?.({ block: 'start' })
   }
 
   // Výběr slouží jen k mazání, proto jde vybrat jen to, co server opravdu smaže.
@@ -72,95 +71,68 @@ export function PhotoGrid({
     }
   }
 
+  if (photos.length === 0) {
+    return (
+      <EmptyState
+        icon={ImagePlus}
+        message="Zatím tu nejsou žádné fotky."
+        action={isGuest ? undefined : { label: 'Nahrát fotky', icon: Upload, onClick: onUpload }}
+      />
+    )
+  }
+
+  const canSelect = !isGuest && (isSelectionMode || deletableIds.length > 0)
+  const columns =
+    pagePhotos.length <= 1 ? 'mx-auto max-w-lg columns-1' : pagePhotos.length <= 3 ? 'columns-2' : 'columns-2 md:columns-3 lg:columns-4'
+
   return (
-    <>
-      {/* Header */}
-      <div className="gallery-header">
-        <div className="gallery-breadcrumb">
-          <button
-            className="gallery-back-btn"
-            onClick={onBack}
-            aria-label="Zpět na seznam alb"
-            data-testid="gallery-back-to-folders-button"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <h2 className="gallery-title">
-            <button className="gallery-breadcrumb-link" onClick={onBack}>
-              Galerie
-            </button>
-            <span className="gallery-breadcrumb-sep">/</span>
-            <span>{folderName}</span>
-          </h2>
-        </div>
-        <div className="gallery-toolbar">
-          {!isGuest && (
+    <div className="flex flex-col gap-4">
+      {canSelect && (
+        <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Výběr fotek">
+          {isSelectionMode ? (
             <>
-              <AnimatePresence>
-                {isSelectionMode && (
-                  <motion.div
-                    className="gallery-selection-bar"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <button className="gallery-tool-btn" onClick={handleSelectAll} title="Vybrat vše">
-                      <CheckSquare size={16} />
-                    </button>
-                    <span className="gallery-selection-count">
-                      {selectedPhotos.size} vybráno
-                    </span>
-                    <button
-                      className="gallery-tool-btn gallery-tool-btn--danger"
-                      onClick={onDeleteSelected}
-                      disabled={selectedPhotos.size === 0}
-                      title="Smazat vybrané"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              {(isSelectionMode || deletableIds.length > 0) && (
-                <button
-                  className={`gallery-tool-btn ${isSelectionMode ? 'gallery-tool-btn--active' : ''}`}
-                  onClick={onToggleSelectionMode}
-                  title={isSelectionMode ? 'Zrušit výběr' : 'Vybrat fotky'}
+              <Button variant="ghost" size="sm" onClick={handleSelectAll} title="Vybrat vše">
+                <ListChecks aria-hidden="true" />
+                Vybrat vše
+              </Button>
+              <span className="text-meta text-(--text-muted)" aria-live="polite">
+                {selectedPhotos.size} vybráno
+              </span>
+              <div className="ml-auto flex flex-wrap gap-2">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={onDeleteSelected}
+                  disabled={selectedPhotos.size === 0}
+                  title="Smazat vybrané"
+                  aria-label="Smazat vybrané"
                 >
-                  {isSelectionMode ? <X size={16} /> : <CheckSquare size={16} />}
-                  <span className="gallery-btn-label">{isSelectionMode ? 'Zrušit' : 'Vybrat'}</span>
-                </button>
-              )}
-              <button className="btn-primary gallery-upload-btn" onClick={onUpload} data-testid="gallery-upload-button">
-                <Upload size={16} />
-                <span className="gallery-btn-label">Nahrát</span>
-              </button>
+                  <Trash2 aria-hidden="true" />
+                  Smazat
+                </Button>
+                <Button variant="secondary" size="sm" onClick={onToggleSelectionMode}>
+                  <X aria-hidden="true" />
+                  Zrušit výběr
+                </Button>
+              </div>
             </>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={onToggleSelectionMode}>
+              <SquareCheck aria-hidden="true" />
+              Vybrat
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Photo grid — masonry via CSS columns */}
+      {/* Masonry přes CSS sloupce; fotka se otevře nebo vybere klepnutím, Enterem i mezerníkem. */}
       <div
         ref={masonryRef}
-        className={`photos-masonry${pagePhotos.length <= 1 ? ' photos-masonry--cols-1' : pagePhotos.length <= 3 ? ' photos-masonry--cols-2' : ''}`}
+        className={cn('scroll-mt-4 gap-3', columns)}
         role="grid"
         aria-label={`Fotky v albu ${folderName}`}
         data-testid="gallery-photo-grid"
       >
-        {photos.length === 0 && (
-          <div className="gallery-empty-state" style={{ gridColumn: '1 / -1' }}>
-            <Upload size={40} strokeWidth={1} style={{ color: 'var(--text-placeholder)' }} />
-            <p className="gallery-empty-title">Album je prázdné</p>
-            <p className="gallery-empty-subtitle">Nahraj své první fotky</p>
-            {!isGuest && (
-              <button className="btn-primary" onClick={onUpload} style={{ marginTop: 12 }} data-testid="gallery-empty-upload-button">
-                <Upload size={16} /> Nahrát fotky
-              </button>
-            )}
-          </div>
-        )}
         {pagePhotos.map((photo, idx) => {
           const globalIdx = page * PAGE_SIZE + idx
           const isSelected = selectedPhotos.has(photo.id)
@@ -168,14 +140,20 @@ export function PhotoGrid({
           return (
             <motion.div
               key={photo.id}
-              className={`photo-masonry-item${isSelected ? ' photo-masonry-item--selected' : ''}${isLocked ? ' photo-masonry-item--locked' : ''}`}
+              className={`photo-masonry-item focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring${isSelected ? ' photo-masonry-item--selected' : ''}${isLocked ? ' photo-masonry-item--locked' : ''}`}
               onClick={() => {
                 if (!isSelectionMode) onOpenLightbox(globalIdx)
                 else if (!isLocked) onToggleSelect(photo.id)
               }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                e.currentTarget.click()
+              }}
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.3) }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              tabIndex={0}
               role="gridcell"
               aria-selected={isSelected}
               aria-disabled={isLocked || undefined}
@@ -192,7 +170,7 @@ export function PhotoGrid({
               <div className="photo-masonry-overlay" />
               {isSelectionMode && !isLocked && (
                 <div className={`photo-select-badge${isSelected ? ' photo-select-badge--active' : ''}`}>
-                  {isSelected && <Check size={14} strokeWidth={3} />}
+                  {isSelected && <Check size={16} strokeWidth={3} aria-hidden="true" />}
                 </div>
               )}
               {photo.description && !isSelectionMode && (
@@ -203,69 +181,41 @@ export function PhotoGrid({
         })}
       </div>
 
-      {/* Pagination + photo count */}
-      {photos.length > 0 && (
-        <div className="gallery-pagination-bar">
-          {totalPages > 1 ? (
-            <div className="gallery-pagination">
-              <button
-                className="gallery-page-btn"
-                onClick={() => goToPage(page - 1)}
-                disabled={page === 0}
-                aria-label="Předchozí stránka"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  className={`gallery-page-btn${i === page ? ' gallery-page-btn--active' : ''}`}
-                  onClick={() => goToPage(i)}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                className="gallery-page-btn"
-                onClick={() => goToPage(page + 1)}
-                disabled={page === totalPages - 1}
-                aria-label="Další stránka"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          ) : null}
-          <div className="gallery-photo-count">
-            {formatCount(photos.length, 'fotka', 'fotky', 'fotek')}
-          </div>
-        </div>
+      {totalPages > 1 && (
+        <nav className="flex flex-wrap items-center justify-center gap-1" aria-label="Stránky fotek">
+          <Button variant="ghost" size="icon" onClick={() => goToPage(page - 1)} disabled={page === 0} aria-label="Předchozí stránka">
+            <ChevronLeft aria-hidden="true" />
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <Button
+              key={i}
+              variant="ghost"
+              size="sm"
+              className={cn('min-w-(--touch-target-min)', i === page && 'bg-accent text-primary')}
+              onClick={() => goToPage(i)}
+              aria-current={i === page ? 'page' : undefined}
+            >
+              {i + 1}
+            </Button>
+          ))}
+          <Button variant="ghost" size="icon" onClick={() => goToPage(page + 1)} disabled={page === totalPages - 1} aria-label="Další stránka">
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        </nav>
       )}
-    </>
+    </div>
   )
 }
 
 /* ── Skeleton ─────────────────────────────────────────────────────────────── */
 export function PhotoGridSkeleton() {
-  const heights = [180, 240, 160, 280, 200, 220, 160, 260]
+  const heights = ['h-44', 'h-60', 'h-40', 'h-72', 'h-48', 'h-56', 'h-40', 'h-64']
   return (
-    <>
-      <div className="gallery-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="skeleton" style={{ width: 32, height: 32, borderRadius: '50%' }} />
-          <div className="skeleton" style={{ width: 160, height: 24, borderRadius: 6 }} />
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div className="skeleton" style={{ width: 80, height: 36, borderRadius: 20 }} />
-          <div className="skeleton" style={{ width: 100, height: 36, borderRadius: 20 }} />
-        </div>
-      </div>
-      <div className="photos-masonry">
-        {heights.map((h, i) => (
-          <div key={i} className="photo-masonry-item" style={{ pointerEvents: 'none' }}>
-            <div className="skeleton" style={{ width: '100%', height: h, borderRadius: 'var(--radius-lg)' }} />
-          </div>
-        ))}
-      </div>
-    </>
+    <div className="columns-2 gap-3 md:columns-3 lg:columns-4" aria-busy="true">
+      <span className="sr-only">Načítám fotky…</span>
+      {heights.map((h, i) => (
+        <div key={i} className={cn('skeleton mb-3 break-inside-avoid rounded-(--radius-lg)', h)} />
+      ))}
+    </div>
   )
 }
