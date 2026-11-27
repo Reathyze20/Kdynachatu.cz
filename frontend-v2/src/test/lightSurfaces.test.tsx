@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '@/api/client'
 import { AuthPage } from '@/features/auth/AuthPage'
+import { ViewSwitcher } from '@/features/shopping/ViewSwitcher'
 
 vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({ login: vi.fn(), logout: vi.fn(), user: null }),
@@ -302,8 +303,14 @@ describe('Obrazovky s fotkou: text jen na plném papíře (#341)', () => {
   const onDesktop = (file: string, selector: string, prop: string) =>
     lastDecl(rulesFor(file, selector).filter((r) => r.media === null), prop)
 
+  // Přepínač Zásoby / Nákup už nemá vlastní CSS (#224): plná vnořená dráha, vybraný segment je papír, ne bílá s alfou.
+  it('přepínač Zásoby / Nákup má plnou dráhu --inset a vybraný segment --sheet', () => {
+    render(<ViewSwitcher activeView="shopping" onChange={() => {}} />)
+    expect(screen.getByRole('group', { name: 'Zásoby nebo nákup' })).toHaveClass('bg-inset')
+    expect(screen.getByRole('button', { name: 'Nákup' })).toHaveClass('bg-sheet')
+  })
+
   it.each([
-    ['shopping.css', '.detail-view-switcher-track'],
     ['shopping.css', '.shopping-master'],
     ['shopping.css', '.detail-placeholder'],
     ['notes.css', '.notes-sidebar'],

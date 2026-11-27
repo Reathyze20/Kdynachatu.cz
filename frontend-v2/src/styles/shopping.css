@@ -44,111 +44,6 @@
   min-height: 44px;
 }
 
-/* ─── Mode Switcher (iOS pill toggle) ──────────────────────────────────────────── */
-
-/* ─── Full-width switcher bar (above layout, always centered on card) ───────── */
-
-.shopping-switcher-bar {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  padding: 20px 20px 0;
-  flex-shrink: 0;
-}
-
-/* Mobile-only switcher: hidden on desktop */
-.shopping-switcher-bar--mobile {
-  display: none;
-}
-
-/* Desktop-only switcher: shown by default */
-.shopping-switcher-bar--desktop {
-  display: flex;
-}
-
-.detail-view-switcher {
-  display: contents;
-  /* transparent wrapper */
-}
-
-.detail-view-switcher-track {
-  display: inline-flex;
-  gap: 0;
-  background: rgba(255, 255, 255, 0.7);
-  padding: 4px;
-  border-radius: 9999px;
-  width: 340px;
-  max-width: 85vw;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.detail-view-switcher-btn {
-  position: relative;
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 9999px;
-  padding: 9px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  font-family: var(--font-family);
-  color: var(--color-text-muted, #64748b);
-  cursor: pointer;
-  transition: color 0.2s;
-  white-space: nowrap;
-  line-height: 1.3;
-  z-index: 1;
-  outline: none;
-}
-
-.detail-view-switcher-btn.is-active {
-  color: var(--color-primary-dark, #1a4731);
-  font-weight: 600;
-}
-
-.detail-view-switcher-btn:not(.is-active):hover {
-  color: var(--text-main, #1a2721);
-}
-
-.detail-view-switcher-label {
-  position: relative;
-  z-index: 2;
-}
-
-.detail-view-switcher-pill {
-  position: absolute;
-  inset: 0;
-  background: var(--bg-card);
-  border-radius: 9999px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  z-index: 0;
-}
-
-/* ── Badge count on switcher tab ─────────────────────────────────────────── */
-
-.switcher-badge-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9999px;
-  background: #dc2626;
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1;
-  margin-left: 4px;
-  position: relative;
-  z-index: 2;
-}
-
-.detail-view-switcher-btn.is-active .switcher-badge-count {
-  background: #dc2626;
-  color: #fff;
-}
-
 /* ─── Two-column layout ──────────────────────────────────────────────────── */
 
 .shopping-layout {
@@ -2024,16 +1919,6 @@
     min-height: 0;
   }
 
-  /* Mode switcher — smaller on mobile */
-  .mode-switcher-bar {
-    padding: 12px 16px 0;
-  }
-
-  .mode-switcher-btn {
-    padding: 7px 16px;
-    font-size: 0.82rem;
-  }
-
   /* Layout: stacked, master is default view */
   .shopping-layout {
     flex-direction: column;
@@ -2043,21 +1928,6 @@
   .shopping-right-col {
     flex: 1;
     min-height: 0;
-  }
-
-  /* Switcher: show mobile version above layout, hide desktop one inside right-col */
-  .shopping-switcher-bar--mobile {
-    display: flex;
-  }
-
-  .shopping-switcher-bar--desktop {
-    display: none;
-  }
-
-  /* Tabs sit above the cover photo (#341): solid paper, not translucent white */
-  .detail-view-switcher-track {
-    background: rgb(var(--sheet));
-    box-shadow: var(--lift);
   }
 
   .shopping-modal-actions {
@@ -2148,20 +2018,9 @@
     padding: 40px 16px;
   }
 
-  /* Detail: hidden by default on mobile */
   .shopping-detail {
-    display: none;
     flex: 1;
     min-height: 100%;
-  }
-
-  /* When detail is open: hide master, show detail */
-  .shopping-layout.detail-open .shopping-master {
-    display: none;
-  }
-
-  .shopping-layout.detail-open .shopping-detail {
-    display: flex;
   }
 
   /* Open detail whose list vanished (deleted elsewhere): the hint needs paper too (#341) */
