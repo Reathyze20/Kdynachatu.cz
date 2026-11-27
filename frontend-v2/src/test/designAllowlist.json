@@ -50,7 +50,7 @@
       "features/gallery/UploadModal.tsx",
       "features/reservations/ui/AvailabilityModal.tsx", "features/reservations/ui/BookingForm.tsx",
       "features/reservations/ui/InventoryNotifyDialog.tsx",
-      "features/shopping/ItemRow.tsx", "features/shopping/ListMaster.tsx"
+      "features/shopping/ListMaster.tsx"
     ]
   },
   "legacyCard": {
@@ -80,7 +80,7 @@
   "inlineSvg": {
     "Ruční kopie ikony lucide, nahradí se komponentou z lucide-react s obrazovkou": [
       "features/reservations/calendar/CalendarGrid.tsx",
-      "features/shopping/ItemRow.tsx", "features/shopping/ListDetail.tsx"
+      "features/shopping/ListDetail.tsx"
     ],
     "Landing page: ilustrace a ikony statické stránky (DESIGN.md §4)": ["features/landing/LandingPage.tsx"],
     "Scéna chaty: pixel art skládaný ze znakových mřížek spritů podle stavu chaty (#558), lucide ani statický obrázek to neumí": ["features/dashboard/CabinScene.tsx"]

@@ -135,7 +135,7 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | Toast | `lib/toast.ts` (`showToast`) | Výsledek akce. Chyby mutací přes `lib/mutationError.ts`. | existuje |
 
 - **Zmrazené legacy třídy:** `.btn` a `.btn-*` (guard `legacyButton`, #452), `page-card`, `glass-card`, `admin-card` a `.card` (guard `legacyCard`, #454), `*-empty-*` (guard `legacyEmptyState`, #454). Nové použití selže v guardu, stávající jsou v allowlistu.
-- **Primitiva v `ui/`** jsou jen `Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `DropdownMenu`, `Dialog` a `Badge` (zatím bez použití, drží ho `themeBridge.test.tsx`). Ostatní nepoužitá shadcn primitiva #452 smazal. Nové primitivum se přidá až s prvním použitím, rovnou na tokenech.
+- **Primitiva v `ui/`** jsou jen `Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `DropdownMenu`, `Dialog` a `Badge` (tichý štítek, např. „Ze zásob“ v řádku nákupu, #221). Ostatní nepoužitá shadcn primitiva #452 smazal. Nové primitivum se přidá až s prvním použitím, rovnou na tokenech.
 - Surové `<button className=…>` pro akci, surové `<input>`, `<textarea>` a `<select>` se po #452 nepíšou, místo nich `Button`, `Input`, `Textarea`, `Select` a `Checkbox`.
 
 ## 7. Vzory

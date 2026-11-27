@@ -1,18 +1,35 @@
 /**
- * ItemRow.tsx — Řádek položky v nákupním seznamu
- * Klik na řádek → toggle purchased; tlačítka: z domova, důležité, smazat
+ * ItemRow.tsx — Řádek položky v nákupním seznamu (#221): `[stav] ★ Název [Ze zásob] … [avatar] [⋯]`.
+ * Ovladač stavu a klepnutí na řádek: Koupit → Koupeno, vyřešená položka → Koupit.
+ * „Přivezu z domova“, důležitost a smazání jsou v menu položky.
  */
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { Star } from 'lucide-react'
+import { Circle, CircleCheck, EllipsisVertical, House, Star, Trash2, Undo2, type LucideIcon } from 'lucide-react'
 import type { ShoppingItem, ItemStatus } from '@/api/shopping'
 import { useToggleItemStatus, useDeleteItem, useToggleItemEssential } from './hooks/useShoppingLists'
 import { useAuth } from '@/context/AuthContext'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface Props {
   item: ShoppingItem
   listCreatedById: string
+}
+
+/** Tři podoby ovladače stavu: přístupný název říká stav i to, co klepnutí udělá. */
+const STATUS_CONTROL: Record<ItemStatus, { label: string; Icon: LucideIcon; tone: string; next: ItemStatus }> = {
+  pending: { label: 'Koupit – označit jako koupené', Icon: Circle, tone: 'text-(--text-muted)', next: 'purchased' },
+  bring_from_home: { label: 'Přivezu z domova – vrátit na Koupit', Icon: House, tone: 'text-[rgb(var(--ok))]', next: 'pending' },
+  purchased: { label: 'Koupeno – vrátit na Koupit', Icon: CircleCheck, tone: 'text-[rgb(var(--ok))]', next: 'pending' },
 }
 
 function ItemRowInner({ item, listCreatedById }: Props) {
@@ -21,38 +38,23 @@ function ItemRowInner({ item, listCreatedById }: Props) {
   const deleteItem = useDeleteItem()
   const toggleEssential = useToggleItemEssential()
 
-  const isPurchased = item.status === 'purchased'
-  const isFromHome = item.status === 'bring_from_home'
+  const control = STATUS_CONTROL[item.status]
+  const isResolved = item.status !== 'pending'
   const isGuest = user?.role === 'guest'
-  const isAdmin = user?.role === 'admin'
-  const canDelete =
-    item.addedById === user?.userId ||
-    listCreatedById === user?.userId ||
-    isAdmin
+  const canDelete = item.addedById === user?.userId || listCreatedById === user?.userId || user?.role === 'admin'
+  const hasStatusAction = item.status !== 'purchased'
+  const hasMenu = hasStatusAction || !isGuest || canDelete
+  const arrangedBy = isResolved && item.purchasedBy
+    ? `${item.status === 'bring_from_home' ? 'Přiveze' : 'Koupil(a)'} ${item.purchasedBy.username}`
+    : null
 
-  const doneClass = isPurchased ? 'is-purchased' : isFromHome ? 'is-from-home' : ''
-  const essentialClass = item.isEssential ? 'is-essential' : ''
+  const setStatus = (status: ItemStatus) => toggleStatus.mutate({ itemId: item.id, status })
 
-  function handleRowClick(e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest('.detail-item-actions')) return
-    const newStatus: ItemStatus = isPurchased ? 'pending' : 'purchased'
-    toggleStatus.mutate({ itemId: item.id, status: newStatus })
-  }
-
-  function handleFromHome(e: React.MouseEvent) {
-    e.stopPropagation()
-    const newStatus: ItemStatus = isFromHome ? 'pending' : 'bring_from_home'
-    toggleStatus.mutate({ itemId: item.id, status: newStatus })
-  }
-
-  function handleEssential(e: React.MouseEvent) {
-    e.stopPropagation()
-    toggleEssential.mutate(item.id)
-  }
-
-  function handleDelete(e: React.MouseEvent) {
-    e.stopPropagation()
-    deleteItem.mutate(item.id)
+  // Klepnutí do řádku mimo tlačítka; menu je v portálu, jeho kliknutí do řádku v DOM nepatří.
+  function handleRowClick(e: React.MouseEvent<HTMLElement>) {
+    const target = e.target as HTMLElement
+    if (!e.currentTarget.contains(target) || target.closest('button')) return
+    setStatus(control.next)
   }
 
   return (
@@ -62,87 +64,73 @@ function ItemRowInner({ item, listCreatedById }: Props) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`detail-item ${doneClass} ${essentialClass}`.trim()}
+      className="flex min-h-(--touch-target-min) cursor-pointer select-none items-center gap-2 border-b border-rule-soft px-1 last:border-b-0 hover:bg-(--bg-hover)"
       data-testid="shopping-item-row"
       data-item-id={item.id}
       data-status={item.status}
       data-essential={String(item.isEssential)}
       onClick={handleRowClick}
     >
-      <span className={`item-checkbox${isPurchased ? ' is-checked' : ''}`}>
-        {isPurchased && (
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )}
-      </span>
-      <span className="detail-item-name">{item.name}</span>
-      {item.linkedInventoryId && <span className="from-inventory-badge">Ze zásob</span>}
-      {(isPurchased || isFromHome) && item.purchasedBy && (
-        <span
-          className="purchased-by-badge"
-          title={`${isFromHome ? 'Přiveze' : 'Koupil(a)'} ${item.purchasedBy.username}`}
-        >
-          <AnimalAvatar icon={item.purchasedBy.animalIcon ?? null} username={item.purchasedBy.username} size={20} />
+      <Button variant="ghost" size="icon" className="shrink-0" aria-label={control.label} onClick={() => setStatus(control.next)}>
+        <control.Icon aria-hidden="true" className={control.tone} />
+      </Button>
+
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-2">
+        <span className="flex min-w-0 items-start gap-1">
+          {item.isEssential && (
+            <Star role="img" aria-label="Důležité" fill="currentColor" className="mt-1 size-4 shrink-0 text-[rgb(var(--low))]" />
+          )}
+          <span className={`min-w-0 break-words text-body ${isResolved ? 'text-(--text-muted)' : 'text-(--text-main)'} ${item.status === 'purchased' ? 'line-through' : ''}`}>
+            {item.name}
+          </span>
         </span>
-      )}
-      <div className="detail-item-actions">
-        {/* Z domova */}
-        <button
-          className={`btn-action btn-home${isFromHome ? ' is-active' : ''}`}
-          title={isFromHome ? 'Zrušit „Z domova"' : 'Přivezu z domova'}
-          aria-label={isFromHome ? 'Zrušit z domova' : 'Přivezu z domova'}
-          data-item-id={item.id}
-          onClick={handleFromHome}
-          disabled={toggleStatus.isPending}
-          data-testid="shopping-item-from-home-button"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-        </button>
-
-        {/* Důležité */}
-        {!isGuest ? (
-          <button
-            className={`btn-action btn-essential${item.isEssential ? ' is-active' : ''}`}
-            title={item.isEssential ? 'Zrušit jako důležité' : 'Označit jako důležité'}
-            aria-label={item.isEssential ? 'Zrušit důležitost' : 'Označit jako důležité'}
-            data-item-id={item.id}
-            onClick={handleEssential}
-            disabled={toggleEssential.isPending}
-            data-testid="shopping-item-essential-button"
-          >
-            <span className={`critical-badge${item.isEssential ? ' is-active' : ''}`} aria-hidden="true">
-              <Star className="w-4 h-4" fill={item.isEssential ? 'currentColor' : 'none'} />
-            </span>
-          </button>
-        ) : (
-          item.isEssential ? (
-            <span className="critical-badge is-active" role="img" aria-label="Důležité" title="Důležité">
-              <Star className="w-4 h-4" fill="currentColor" aria-hidden="true" />
-            </span>
-          ) : null
-        )}
-
-        {/* Smazat */}
-        {canDelete && (
-          <button
-            className="btn-action btn-delete-item"
-            title="Smazat položku"
-            aria-label="Smazat položku"
-            data-item-id={item.id}
-            onClick={handleDelete}
-            disabled={deleteItem.isPending}
-            data-testid="shopping-item-delete-button"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+        {item.linkedInventoryId && (
+          <Badge variant="outline" className="shrink-0 border-rule-soft font-normal text-muted-foreground" title="Po vyřešení se doplní zásoba">
+            Ze zásob<span className="sr-only"> – po vyřešení se doplní zásoba</span>
+          </Badge>
         )}
       </div>
+
+      {arrangedBy && item.purchasedBy && (
+        <span role="img" aria-label={arrangedBy} title={arrangedBy} className="shrink-0">
+          <AnimalAvatar icon={item.purchasedBy.animalIcon ?? null} username={item.purchasedBy.username} size={24} />
+        </span>
+      )}
+
+      {hasMenu ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Akce s položkou ${item.name}`}>
+              <EllipsisVertical aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {item.status === 'pending' && (
+              <DropdownMenuItem onSelect={() => setStatus('bring_from_home')}>
+                <House aria-hidden="true" />Přivezu z domova
+              </DropdownMenuItem>
+            )}
+            {item.status === 'bring_from_home' && (
+              <DropdownMenuItem onSelect={() => setStatus('pending')}>
+                <Undo2 aria-hidden="true" />Zrušit, nepřivezu
+              </DropdownMenuItem>
+            )}
+            {!isGuest && (
+              <DropdownMenuItem onSelect={() => toggleEssential.mutate(item.id)}>
+                <Star aria-hidden="true" />{item.isEssential ? 'Zrušit důležitost' : 'Označit jako důležité'}
+              </DropdownMenuItem>
+            )}
+            {canDelete && (hasStatusAction || !isGuest) && <DropdownMenuSeparator />}
+            {canDelete && (
+              <DropdownMenuItem variant="danger" onSelect={() => deleteItem.mutate(item.id)}>
+                <Trash2 aria-hidden="true" />Smazat
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <span aria-hidden="true" className="size-(--touch-target-min) shrink-0" />
+      )}
     </motion.div>
   )
 }
