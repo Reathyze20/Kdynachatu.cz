@@ -267,7 +267,7 @@ export function CheckoutSection({ reservation }: Props) {
         <p className={`${HINT} text-center`}>Potvrď všechny úkoly pro odeslání.</p>
       )}
       {submitError ? (
-        <p className="text-label text-(--status-error)" role="alert">{submitError}</p>
+        <p className="text-label text-(--status-error-dark)" role="alert">{submitError}</p>
       ) : null}
     </div>
   );

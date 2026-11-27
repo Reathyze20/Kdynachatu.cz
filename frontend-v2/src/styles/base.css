@@ -165,7 +165,7 @@ img {
 
 .error-message {
   display: block;
-  color: var(--status-error);
+  color: var(--status-error-dark);
   font-size: var(--font-size-xs);
   margin-top: var(--space-xs);
   min-height: 0;

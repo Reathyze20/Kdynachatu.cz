@@ -314,7 +314,7 @@
 }
 
 .deadline-near {
-  color: var(--status-error);
+  color: var(--status-error-dark);
   font-weight: 600;
 }
 

@@ -1514,7 +1514,7 @@ button.btnReset {
 
 .actionBar .btnGhostDanger {
   background: transparent;
-  color: var(--status-error);
+  color: var(--status-error-dark);
   border-color: transparent;
   font-weight: 500;
 }
@@ -1607,7 +1607,7 @@ button.btnReset {
 .detailBtnGhostDanger {
   composes: detailBtn;
   background: transparent;
-  color: var(--status-error);
+  color: var(--status-error-dark);
   border-color: transparent;
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -1652,7 +1652,7 @@ button.btnReset {
 
 .watchBtnActive:hover {
   background: var(--status-error-light);
-  color: var(--status-error);
+  color: var(--status-error-dark);
   border-color: var(--status-error);
 }
 

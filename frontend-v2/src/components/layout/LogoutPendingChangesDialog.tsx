@@ -47,7 +47,7 @@ export function LogoutPendingChangesDialog({
         {unsent}. Odešli je, nebo je zahoď. Zahozené změny se už neuloží.
       </p>
       {error ? (
-        <p role="alert" className="mt-3 text-label text-(--status-error)" data-testid="logout-pending-error">
+        <p role="alert" className="mt-3 text-label text-(--status-error-dark)" data-testid="logout-pending-error">
           {error}
         </p>
       ) : null}

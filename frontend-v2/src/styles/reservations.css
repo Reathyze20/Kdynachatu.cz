@@ -1361,7 +1361,7 @@
 }
 
 .res-card-actions button.delete-btn:hover {
-  color: var(--color-danger);
+  color: var(--status-error-dark);
   background: var(--color-danger-bg);
 }
 
@@ -1376,7 +1376,7 @@
 }
 
 .res-card-actions button.delete-btn:hover {
-  color: var(--color-danger);
+  color: var(--status-error-dark);
   background: var(--color-danger-bg);
 }
 
@@ -2244,7 +2244,7 @@
 }
 
 .avail-btn--danger {
-  color: var(--status-error, #dc2626);
+  color: var(--status-error-dark);
   border-color: rgba(239, 68, 68, 0.3);
   background: rgba(239, 68, 68, 0.05);
   font-size: var(--font-size-xs, 0.75rem);
