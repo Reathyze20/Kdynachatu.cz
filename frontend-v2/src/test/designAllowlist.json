@@ -3,7 +3,7 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
+      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
@@ -45,7 +45,7 @@
   "breakpoint": {
     "Legacy media query (páry 768/769 px a další šířky), sjednotí se při převodu obrazovky": [
       "features/reservations/Reservations.module.css", "styles/admin.css", "styles/base.css",
-      "styles/dashboard.css", "styles/dialogs.css", "styles/diary.css", "styles/forms.css", "styles/gallery.css",
+      "styles/dashboard.css", "styles/dialogs.css", "styles/forms.css", "styles/gallery.css",
       "styles/help.css", "styles/landing.css", "styles/layout.css", "styles/legal.css", "styles/lightbox.css",
       "styles/modal.css", "styles/nav.css", "styles/notes.css", "styles/reconstruction.css",
       "styles/reservations.css", "styles/shopping.css", "styles/status-header.css"

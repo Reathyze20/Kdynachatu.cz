@@ -279,7 +279,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
                     onClick={() => removePhoto(photo.id)}
                     aria-label="Odebrat fotku"
                   >
-                    <X className="w-4 h-4 inline-block align-middle" aria-hidden="true" />
+                    <X className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               ))}
