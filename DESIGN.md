@@ -112,6 +112,8 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 |---|---|---|---|
 | `Button` | `ui/` | Každá akce. `variant` `primary` (výchozí), `secondary`, `ghost`, `danger`. `size` `default` a `sm` (48 px, `sm` s menším odsazením), `lg` = hlavní akce obrazovky 56 px a plně kulatá, `icon` = 48 × 48 px s ikonou 20 px a povinným `aria-label`. `disabled`, `pending` (spinner, `aria-busy`, nejde stisknout znovu), `asChild` pro odkaz se vzhledem tlačítka. `default` a `outline` jsou zastaralé aliasy, nový kód je nepíše. | existuje (#452) |
 | `Input` | `ui/` | Pole formuláře, výška 48 px. `invalid` nastaví `aria-invalid` a červený rámeček, text chyby je pod polem a propojí se přes `aria-describedby`. | existuje (#452) |
+| `Textarea` | `ui/` | Víceřádkové pole, vzhled a `invalid` jako `Input`. Výšku řídí `rows`, nejméně 48 px. | existuje (#526) |
+| `Checkbox` | `ui/` | Zaškrtávací políčko 20 px v barvě Jedle. Obalí ho `<label>` s `min-h-(--touch-target-min)`, text labelu je jeho jméno. | existuje (#526) |
 | `DropdownMenu` | `ui/` | Kebab menu akcí nad položkou, ovladatelné klávesnicí i dotykem: `DropdownMenuTrigger asChild` s `Button variant="ghost" size="icon"`, `DropdownMenuItem` (48 px, `variant="danger"` pro Smazat), `DropdownMenuSeparator` (Smazat oddělit od ostatních akcí). Menu je papírová karta nad modálem. | existuje (#452) |
 | `Dialog` | `ui/` | Jen základ pro `Modal`. Obrazovky ho přímo nepoužívají. | existuje |
 | `Modal` | `shared/` | Každý dialog a krátký formulář. API `isOpen`, `onClose`, `title`, `children`, `footer`, `maxWidth`, `persistent`. Stojí na `ui/dialog`: titulek je přístupné jméno, Esc zavře jen horní dialog, Tab zůstává v dialogu, focus jde na první pole a po zavření zpět. `persistent` blokuje Esc i klik na pozadí, křížek zavírá vždy. Do 640 px bottom sheet. | existuje (#453) |
@@ -127,8 +129,8 @@ Kanonický inventář jsou složky `frontend-v2/src/components/ui/` (primitiva, 
 | Toast | `lib/toast.ts` (`showToast`) | Výsledek akce. Chyby mutací přes `lib/mutationError.ts`. | existuje |
 
 - **Zmrazené legacy třídy:** `.btn` a `.btn-*` (guard `legacyButton`, #452), `page-card`, `glass-card`, `admin-card` a `.card` (guard `legacyCard`, #454), `*-empty-*` (guard `legacyEmptyState`, #454). Nové použití selže v guardu, stávající jsou v allowlistu.
-- **Primitiva v `ui/`** jsou jen `Button`, `Input`, `DropdownMenu`, `Dialog` a `Badge` (zatím bez použití, drží ho `themeBridge.test.tsx`). Ostatní nepoužitá shadcn primitiva #452 smazal. Nové primitivum se přidá až s prvním použitím, rovnou na tokenech.
-- Surové `<button className=…>` pro akci a surové `<input>` se po #452 nepíšou, místo nich `Button` a `Input`.
+- **Primitiva v `ui/`** jsou jen `Button`, `Input`, `Textarea`, `Checkbox`, `DropdownMenu`, `Dialog` a `Badge` (zatím bez použití, drží ho `themeBridge.test.tsx`). Ostatní nepoužitá shadcn primitiva #452 smazal. Nové primitivum se přidá až s prvním použitím, rovnou na tokenech.
+- Surové `<button className=…>` pro akci, surové `<input>` a `<textarea>` se po #452 nepíšou, místo nich `Button`, `Input`, `Textarea` a `Checkbox`.
 
 ## 7. Vzory
 

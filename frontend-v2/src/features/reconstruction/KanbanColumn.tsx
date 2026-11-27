@@ -12,6 +12,7 @@ import { Card } from '@/components/shared/Card'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { formatAmount, formatCount, formatDate } from '@/lib/format'
 import { cn, escapeHtml } from '@/lib/utils'
@@ -302,9 +303,7 @@ function TaskCard({ item, currentUserId, isGuest = false, onEdit }: TaskCardProp
       <div className={TITLE_ROW_CLASS}>
         {/* Dotyková plocha 48 px přes okraj karty, samotné políčko 20 px. */}
         <label className="-my-3 -ml-3 flex size-12 shrink-0 cursor-pointer items-center justify-center">
-          <input
-            type="checkbox"
-            className="size-5 cursor-pointer accent-(--brand-primary)"
+          <Checkbox
             checked={isDone}
             onChange={(e) => handleStatusChange(e.target.checked ? 'done' : 'pending')}
             disabled={updateStatus.isPending}

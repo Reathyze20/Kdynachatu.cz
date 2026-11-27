@@ -7,6 +7,7 @@ import type { CompanyStatus, RecItem, RecItemCreate, RecCategory } from '@/api/r
 import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
 import { Building2, Hammer, Lightbulb } from 'lucide-react'
@@ -174,9 +175,8 @@ export function TaskFormModal({ initialCategory, editItem, onClose, onSubmit, is
           {/* Description */}
           <div className="form-group">
             <label htmlFor="rec-desc">Popis (nepovinné)</label>
-            <textarea
+            <Textarea
               id="rec-desc"
-              className="form-input"
               value={description ?? ''}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={2000}
