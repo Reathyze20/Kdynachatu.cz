@@ -23,6 +23,13 @@ import { PromptDialog } from '@/components/shared/PromptDialog'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
 import { isAuthorOrAdmin } from '@/lib/permissions'
+import { formatDateRange } from '@/lib/format'
+import { formatStayRange } from '@/lib/dateUtils'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/shared/Card'
+import { PageHeader } from '@/components/shared/PageHeader'
 
 type View = 'folders' | 'entries'
 
@@ -32,7 +39,7 @@ interface NotebookState {
 }
 
 const ACTIVITY_TAG_OPTIONS = [
-  { value: '', label: '—' },
+  { value: '', label: 'Bez typu' },
   { value: 'relax', label: 'Relaxace' },
   { value: 'party', label: 'Oslava' },
   { value: 'work', label: 'Práce na chatě' },
@@ -153,6 +160,11 @@ export function DiaryPage() {
     setShowCreateModal(true)
   }
 
+  function closeCreateModal() {
+    setShowCreateModal(false)
+    setCreateError(null)
+  }
+
   function handleReservationSelect(e: React.ChangeEvent<HTMLSelectElement>) {
     const id = e.target.value
     setCreateFromReservation(id)
@@ -236,17 +248,32 @@ export function DiaryPage() {
   }
 
   return (
-    <div className="main-content-diary" data-testid="diary-page">
-      <div className="page-card diary-card">
+    <div className="flex flex-col gap-4 p-3 md:gap-6 md:p-0" data-testid="diary-page">
+      <Card className="shrink-0">
+        {view === 'entries' && currentFolder ? (
+          <PageHeader
+            title={currentFolder.name}
+            subtitle={currentFolder.startDate ? formatStayRange(currentFolder.startDate, currentFolder.endDate) : undefined}
+            onBack={backToFolders}
+          />
+        ) : (
+          <PageHeader
+            title="Deník pobytů"
+            subtitle="Záznamy z pobytů na chatě"
+            primaryAction={{ label: 'Nový pobyt', icon: Plus, onClick: openCreateModal }}
+          />
+        )}
+      </Card>
 
+      {/* Dny pobytu mají zatím vlastní odsazení z diary.css (převod dne zbývá z #520), proto karta bez něj. */}
+      <Card flush={view === 'entries'} className={view === 'entries' ? 'overflow-hidden' : undefined}>
         {/* ── FOLDERS VIEW ─────────────────────────────────────────────── */}
         {view === 'folders' && (
           foldersLoading ? (
-            <div style={{ padding: 'var(--space-xl)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 'var(--space-lg)' }}>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="skeleton-card" style={{ minHeight: 180 }}>
+                <div key={i} className="flex min-h-28 flex-col gap-2 rounded-xl bg-inset p-4">
                   <div className="skeleton skeleton-title" />
-                  <div className="skeleton skeleton-text long" />
                   <div className="skeleton skeleton-text medium" />
                 </div>
               ))}
@@ -275,12 +302,6 @@ export function DiaryPage() {
         {/* ── ENTRIES / CALENDAR VIEW ──────────────────────────────────── */}
         {view === 'entries' && currentFolder && (
           <div className="diary-entries-view">
-            <div className="diary-header">
-              <div className="diary-header-left">
-                <button className="back-btn" onClick={backToFolders}>← Zpět</button>
-                <h1>{currentFolder.name}</h1>
-              </div>
-            </div>
             {entriesLoading ? (
               <div className="spinner-container"><div className="spinner" /></div>
             ) : entriesFailed ? (
@@ -302,31 +323,33 @@ export function DiaryPage() {
           </div>
         )}
 
-      </div>
+      </Card>
 
       {/* ── Create folder modal ─────────────────────────────────────────── */}
       {showCreateModal && (
         <Modal
           isOpen={true}
-          onClose={() => {
-            setShowCreateModal(false)
-            setCreateError(null)
-          }}
+          onClose={closeCreateModal}
           title="Nový pobyt"
           maxWidth="max-w-md"
           footer={
-            <button type="submit" form="create-diary-form" className="button-primary" disabled={createFolder.isPending}>Vytvořit</button>
+            <div className="modal-dialog-actions">
+              <Button type="button" variant="secondary" onClick={closeCreateModal} disabled={createFolder.isPending}>Zrušit</Button>
+              <Button type="submit" form="create-diary-form" pending={createFolder.isPending}>
+                {createFolder.isPending ? 'Vytvářím…' : 'Vytvořit'}
+              </Button>
+            </div>
           }
         >
-          <form id="create-diary-form" onSubmit={handleCreate}>
+          <form id="create-diary-form" className="flex flex-col" onSubmit={handleCreate}>
             {myReservations.length > 0 && (
               <div className="form-group">
-                <label htmlFor="reservation-select">Načíst z rezervace</label>
+                <label htmlFor="reservation-select">Načíst z rezervace (nepovinné)</label>
                 <select id="reservation-select" value={createFromReservation} onChange={handleReservationSelect}>
-                  <option value="">— Vyber rezervaci —</option>
+                  <option value="">Vyber rezervaci</option>
                   {myReservations.map(r => (
                     <option key={r.id} value={r.id}>
-                      {r.from.slice(0, 10)} – {r.to.slice(0, 10)}{r.purpose ? ` (${r.purpose})` : ''}
+                      {formatDateRange(r.from.slice(0, 10), r.to.slice(0, 10))}{r.purpose ? ` (${r.purpose})` : ''}
                     </option>
                   ))}
                 </select>
@@ -334,18 +357,18 @@ export function DiaryPage() {
             )}
             <div className="form-group">
               <label htmlFor="diary-folder-name">Název pobytu</label>
-              <input id="diary-folder-name" type="text" value={createName} onChange={e => setCreateName(e.target.value)} required maxLength={100} autoFocus />
+              <Input id="diary-folder-name" type="text" value={createName} onChange={e => setCreateName(e.target.value)} required maxLength={100} autoFocus />
             </div>
             <div className="form-group">
-              <label htmlFor="diary-start-date">Od</label>
-              <input id="diary-start-date" type="date" value={createStartDate} onChange={e => setCreateStartDate(e.target.value)} />
+              <label htmlFor="diary-start-date">Od (nepovinné)</label>
+              <Input id="diary-start-date" type="date" value={createStartDate} onChange={e => setCreateStartDate(e.target.value)} />
             </div>
             <div className="form-group">
-              <label htmlFor="diary-end-date">Do</label>
-              <input id="diary-end-date" type="date" value={createEndDate} onChange={e => setCreateEndDate(e.target.value)} />
+              <label htmlFor="diary-end-date">Do (nepovinné)</label>
+              <Input id="diary-end-date" type="date" value={createEndDate} onChange={e => setCreateEndDate(e.target.value)} />
             </div>
             <div className="form-group">
-              <label htmlFor="activity-tag">Typ pobytu</label>
+              <label htmlFor="activity-tag">Typ pobytu (nepovinné)</label>
               <select id="activity-tag" value={createTag} onChange={e => setCreateTag(e.target.value)}>
                 {ACTIVITY_TAG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>

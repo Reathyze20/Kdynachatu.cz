@@ -71,8 +71,7 @@
       "components/shared/GlobalFallback.tsx", "components/shared/LogsPanel.tsx",
       "features/dashboard/ActiveReservation.tsx", "features/dashboard/AdminActivationChecklist.tsx",
       "features/dashboard/AttentionCard.tsx", "features/dashboard/CabinToday.tsx", "features/dashboard/DashboardPage.tsx",
-      "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx",
-      "features/diary/DiaryPage.tsx"
+      "features/dashboard/NudgeTray.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
     ]
   },
   "legacyEmptyState": {
