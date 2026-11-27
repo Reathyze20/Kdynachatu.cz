@@ -13,7 +13,8 @@ import { setUploadsCookie } from "../../utils/uploadsCookie";
 import { sendEmailChangedNotice } from "../../utils/email";
 import { deleteUserAndRevokeSessions, revokeUserSessions, updateUserAndRevokeSessions } from "../../utils/sessionRevocation";
 import { disconnectUserSockets } from "../../utils/socket";
-import type { JwtPayload } from "../../types";
+import { mergeDashboardPrefs } from "../../utils/dashboardPrefs";
+import type { DashboardPrefs, JwtPayload } from "../../types";
 
 const router = Router();
 const adminOnly = requireRole(["admin"], "Přístup pouze pro administrátora.");
@@ -121,7 +122,8 @@ router.get("/me", protect, async (req: Request, res: Response) => {
         color: true,
         animalIcon: true,
         role: true,
-        isEmailVerified: true
+        isEmailVerified: true,
+        dashboardPrefs: true,
       }
     });
     if (!user) return res.status(404).json({ message: "Uživatel nenalezen" });
@@ -138,13 +140,14 @@ router.get("/me", protect, async (req: Request, res: Response) => {
 router.patch("/me", protect, validate(updateProfileSchema), async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: "Nejdřív se přihlas." });
 
-  const { email, color, animalIcon, currentPassword } = req.body;
+  // Preference Přehledu patří uživateli z tokenu, ne chatě: cabinId se tu nečte ani nepřijímá (#681).
+  const { email, color, animalIcon, currentPassword, dashboardPrefs } = req.body;
 
   try {
     // Změna e-mailu chce současné heslo (#475): ukradený token nesmí stačit na vlastní adresu + reset hesla.
     const current = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { username: true, email: true, passwordHash: true },
+      select: { username: true, email: true, passwordHash: true, dashboardPrefs: true },
     });
     if (!current) return res.status(404).json({ message: "Uživatel nenalezen" });
 
@@ -160,9 +163,14 @@ router.patch("/me", protect, validate(updateProfileSchema), async (req: Request,
       data: {
         email: email !== undefined ? email : undefined,
         color: color !== undefined ? color : undefined,
-        animalIcon: animalIcon !== undefined ? animalIcon : undefined
+        animalIcon: animalIcon !== undefined ? animalIcon : undefined,
+        // Sloučit s uloženými, aby přepnutí jednoho bloku nepřepsalo zbytek; null = vše výchozí (SQL NULL).
+        dashboardPrefs:
+          dashboardPrefs === undefined
+            ? undefined
+            : ((mergeDashboardPrefs(current.dashboardPrefs as DashboardPrefs | null, dashboardPrefs) as Prisma.InputJsonValue | null) ?? Prisma.DbNull),
       },
-      select: { email: true, color: true, animalIcon: true }
+      select: { email: true, color: true, animalIcon: true, dashboardPrefs: true }
     });
 
     if (emailChanged && current.email) {
@@ -482,6 +490,7 @@ router.get("/me/export", protect, async (req: Request, res: Response) => {
           animalIcon: true,
           role: true,
           createdAt: true,
+          dashboardPrefs: true,
         },
       }),
       prisma.reservation.findMany({

@@ -30,17 +30,49 @@ export interface LogoutEverywhereResponse {
   message: string
 }
 
-// PATCH /users/me (#475): změna e-mailu chce současné heslo
+// Preference Přehledu uložené u uživatele (#681). Chybějící klíč nebo null = výchozí
+// (Počasí zapnuté, ostatní bloky vypnuté, scéna animated). Zrcadlí src/types.ts.
+export type DashboardSceneMode = 'animated' | 'static'
+
+export interface DashboardPrefs {
+  weather?: boolean | null
+  cabinScene?: boolean | null
+  sinceLast?: boolean | null
+  laterAndFree?: boolean | null
+  stayForecast?: boolean | null
+  regionEvents?: boolean | null
+  noticeboard?: boolean | null
+  sceneMode?: DashboardSceneMode | null
+  simplifiedNoteDismissed?: boolean | null
+}
+
+// GET /users/me
+export interface UserProfile {
+  id: string
+  username: string
+  email: string | null
+  color: string
+  animalIcon: string | null
+  role: 'admin' | 'user' | 'guest'
+  isEmailVerified: boolean
+  dashboardPrefs: DashboardPrefs | null
+}
+
+// PATCH /users/me (#475): změna e-mailu chce současné heslo. dashboardPrefs se slučuje
+// s uloženými, null u klíče ho vrátí na výchozí, null celé = vše výchozí (#681).
 export interface UpdateProfileRequest {
   email?: string | null
   color?: string
   animalIcon?: string
   currentPassword?: string
+  dashboardPrefs?: DashboardPrefs | null
 }
 
 export interface UpdateProfileResponse {
   message: string
-  user: { email: string | null; color: string; animalIcon: string | null }
+  // dashboardPrefs (sloučené uložené hodnoty) server posílá od #681; volitelné kvůli klientům a mockům
+  // ze starší verze API. Zdroj pravdy pro čtení je GET /users/me.
+  user: { email: string | null; color: string; animalIcon: string | null; dashboardPrefs?: DashboardPrefs | null }
 }
 
 export const authApi = {
