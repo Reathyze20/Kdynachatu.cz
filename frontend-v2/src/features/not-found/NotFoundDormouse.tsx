@@ -8,7 +8,10 @@ import dormouseMapWalk from '@/features/dashboard/scene/dormouse-map-walk.png'
  * Dekorativní: `aria-hidden`, `pointer-events: none`, čtečka přečte jen text 404.
  */
 
-/** Snímek pásu MAPA-4 (50 × 41 px) ve 2×. */
+/**
+ * Snímek pásu MAPA-4 (50 × 41 px) ve 2×. Stejná čísla nesou třídy níže a keyframes `not-found-*` (26 snímků,
+ * posun pásu o 2500 px), při výměně grafiky se mění spolu.
+ */
 const WIDTH = 100
 const HEIGHT = 82
 const FRAMES = 26
