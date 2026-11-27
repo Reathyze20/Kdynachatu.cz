@@ -229,7 +229,7 @@ describe('Přehled: „Potom a volno“ (#273)', () => {
   const JANA = stay('r-jana', 'Jana', '2026-12-14', '2026-12-16')
 
   it('ukáže pobyty po „příště“ a mezi nimi volno; „Zabrat“ vede na formulář s od–do', async () => {
-    calendar(JANA, stay('r-ida', 'Ida', '2026-12-19', '2026-12-20', 'soft'), stay('r-eva', 'Eva', '2026-12-28', '2026-12-30'))
+    calendar(JANA, stay('r-ida', 'Ida', '2026-12-19', '2026-12-20', 'soft'), stay('r-eva', 'Eva', '2026-12-28', '2026-12-30', 'soft'))
     renderOverview(reservations({ upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16')] }))
 
     const block = await screen.findByRole('region', { name: 'Potom a volno' })
@@ -238,11 +238,24 @@ describe('Přehled: „Potom a volno“ (#273)', () => {
       expect.stringMatching(/^Volno · 1 noc\s*17\.–18\. 12\.\s*Zabrat$/),
       expect.stringMatching(/Ida\s*19\.–20\. 12\. · 1 noc · předběžně/),
       expect.stringMatching(/^Volno · 6 nocí\s*21\.–27\. 12\./),
-      expect.stringMatching(/Ty\s*28\.–30\. 12\. · 2 noci/),
+      expect.stringMatching(/Ty\s*28\.–30\. 12\. · 2 noci · předběžně/),
     ])
     expect(block).not.toHaveTextContent('Jana')
     expect(within(block).getByRole('link', { name: 'Zabrat 17.–18. 12.' })).toHaveAttribute('href', '/reservations?from=2026-12-17&to=2026-12-18')
     expect(within(block).getByRole('link', { name: 'Celý kalendář' })).toHaveAttribute('href', '/reservations')
+  })
+
+  it('můj pobyt, který karta ukazuje jako „Tvůj pobyt“, se v bloku neopakuje', async () => {
+    calendar(JANA, stay('r-eva', 'Eva', '2026-12-20', '2026-12-22'), stay('r-petr', 'Petr', '2026-12-28', '2026-12-30'))
+    renderOverview(reservations({
+      upcomingReservations: [upcoming('r-jana', 'Jana', '2026-12-14', '2026-12-16'), upcoming('r-eva', 'Eva', '2026-12-20', '2026-12-22'), upcoming('r-petr', 'Petr', '2026-12-28', '2026-12-30')],
+      myNextReservation: { from: '2026-12-20', to: '2026-12-22', purpose: 'Víkend' },
+    }))
+
+    expect(await screen.findByRole('region', { name: 'Na chatě teď' })).toHaveTextContent('Tvůj pobyt za 10 dní')
+    const block = await screen.findByRole('region', { name: 'Potom a volno' })
+    expect(block).not.toHaveTextContent(/Ty|20\.–22\. 12\./)
+    expect(block).toHaveTextContent('Petr')
   })
 
   it('bez pobytů po „příště“ se blok nevykreslí; host ho nevidí', async () => {

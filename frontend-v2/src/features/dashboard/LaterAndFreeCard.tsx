@@ -1,28 +1,30 @@
 /**
  * LaterAndFreeCard — „Potom a volno“ na Přehledu (#273, spec #677): kdo jede po „příště“ a kdy je chata
  * volná k zabrání. Data z kalendáře (všechny pobyty včetně předběžných), výpočet v `buildLaterAndFree`.
- * Když po „příště“ nic není, karta se nevykreslí.
+ * Když po „příště“ nic není (nebo se ještě načítá), karta se nevykreslí: je volitelná a nemá posouvat Přehled.
  */
 import { useId } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, House } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useReservationsData } from "@/features/reservations/hooks/useReservations";
-import { nightsBetween, nightsLabel } from "@/lib/dateUtils";
-import { formatDateRange } from "@/lib/format";
+import { nightsBetween } from "@/lib/dateUtils";
+import { formatCount, formatDateRange } from "@/lib/format";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { Card } from "@/components/shared/Card";
+import { FeatureErrorFallback } from "@/components/shared/FeatureErrorFallback";
 import { ListRow } from "@/components/shared/ListRow";
 import { Button } from "@/components/ui/button";
 import { buildLaterAndFree } from "./laterAndFree";
 
-const nights = (n: number) => `${n} ${nightsLabel(n)}`;
+const nights = (n: number) => formatCount(n, "noc", "noci", "nocí");
 
 export function LaterAndFreeCard() {
   const headingId = useId();
   const { user } = useAuth();
-  const { data } = useReservationsData();
-  const items = data ? buildLaterAndFree(data.reservations, new Date()) : [];
+  const { data, error, refetch } = useReservationsData();
+  if (error) return <FeatureErrorFallback title="Kalendář se nepodařilo načíst" error={error} resetErrorBoundary={() => void refetch()} />;
+  const items = data ? buildLaterAndFree(data.reservations, new Date(), user?.username) : [];
   if (items.length === 0) return null;
 
   return (
