@@ -23,15 +23,11 @@ export interface NavItem {
   forGuest?: true
 }
 
-/**
- * Předávka a Zásoby zatím nemají vlastní obrazovku (T3b, T6b). Do té doby vedou na dnešní ekvivalent:
- * Předávka na stránku rezervací (formulář odjezdu je v detailu pobytu), Zásoby na Nákupy (se spíží).
- * `?sekce=predavka` stránka nečte, jen odliší aktivní tab od Kalendáře.
- */
+/** Zásoby zatím nemají vlastní obrazovku (T6b), do té doby vedou na Nákupy (se spíží). */
 export const PRIMARY_NAV: NavItem[] = [
   { to: '/dashboard',                   label: 'Přehled',  icon: Home, forGuest: true },
   { to: '/reservations',                label: 'Kalendář', icon: CalendarDays, featureKey: 'reservations', forGuest: true },
-  { to: '/reservations?sekce=predavka', label: 'Předávka', fullLabel: 'Předávka chaty', icon: KeyRound, featureKey: 'reservations', forGuest: true },
+  { to: '/handover',                    label: 'Předávka', fullLabel: 'Předávka chaty', icon: KeyRound, featureKey: 'reservations', forGuest: true },
   { to: '/shopping',                    label: 'Zásoby',   icon: ShoppingCart, featureKey: 'shopping' },
 ]
 

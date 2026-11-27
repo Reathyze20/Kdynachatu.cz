@@ -1,4 +1,4 @@
-/** Texty nápovědy (#510). Klíč = cíl položky navigace (Kalendář a Předávka sdílejí stránku), mimo navigaci cesta.
+/** Texty nápovědy (#510). Klíč = cíl položky navigace, mimo navigaci cesta.
  *  Názvy obrazovek a tlačítek musí sedět s UI; hlas textů podle DESIGN.md §8. */
 import type { ReactNode } from 'react'
 import { findActiveNavItem, MORE_NAV, PRIMARY_NAV } from '@/lib/navRoutes'
@@ -29,7 +29,7 @@ export const HELP_PAGES: Record<string, ReactNode> = {
       </ul>
     </>
   ),
-  '/reservations?sekce=predavka': (
+  '/handover': (
     <>
       <h3>Předávka chaty</h3>
       <p>Předávka chaty je krátký zápis o tom, v jakém stavu chatu necháváš. Kdo přijede po tobě, uvidí ho jako přivítání a ví, co ho čeká.</p>

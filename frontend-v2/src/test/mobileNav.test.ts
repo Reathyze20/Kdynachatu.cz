@@ -18,10 +18,10 @@ describe('globální navigace (#171)', () => {
     expect(MORE_NAV.map((i) => i.to)).toEqual(['/notes', '/gallery', '/diary', '/reconstruction'])
   })
 
-  it('aktivní je jen jedna položka, i když Kalendář a Předávka vedou na stejnou stránku', () => {
+  it('aktivní je jen jedna položka, Kalendář a Předávka mají každá svou stránku', () => {
     const all = [...PRIMARY_NAV, ...MORE_NAV]
     expect(findActiveNavItem(all, at('/reservations'))?.label).toBe('Kalendář')
-    expect(findActiveNavItem(all, at('/reservations?sekce=predavka'))?.label).toBe('Předávka')
+    expect(findActiveNavItem(all, at('/handover'))?.label).toBe('Předávka')
     expect(findActiveNavItem(all, at('/shopping'))?.label).toBe('Zásoby')
     expect(findActiveNavItem(all, at('/gallery'))?.label).toBe('Galerie')
     expect(findActiveNavItem(all, at('/admin'))).toBeUndefined()

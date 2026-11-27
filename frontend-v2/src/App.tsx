@@ -28,6 +28,7 @@ import type { ReactNode } from 'react'
 // ── Lazy-loaded page components (code splitting) ───────────────────────────────
 const DashboardPage = lazyRetry(() => import('@/features/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const ReservationsPage = lazyRetry(() => import('@/features/reservations/ReservationsPage').then(m => ({ default: m.ReservationsPage })))
+const HandoverPage = lazyRetry(() => import('@/features/handover/HandoverPage').then(m => ({ default: m.HandoverPage })))
 const NotesPage = lazyRetry(() => import('@/features/notes/NotesPage').then(m => ({ default: m.NotesPage })))
 const ShoppingPage = lazyRetry(() => import('@/features/shopping/ShoppingPage').then(m => ({ default: m.ShoppingPage })))
 const GalleryPage = lazyRetry(() => import('@/features/gallery/GalleryPage').then(m => ({ default: m.GalleryPage })))
@@ -150,6 +151,7 @@ function AppRoutes() {
       >
         <Route path="/dashboard"      element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><DashboardPage /></Suspense></ErrorBoundary>} />
         <Route path="/reservations"   element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ReservationsPage /></Suspense></ErrorBoundary>} />
+        <Route path="/handover"       element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><HandoverPage /></Suspense></ErrorBoundary>} />
         <Route path="/notes"          element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><NotesPage /></Suspense></ErrorBoundary>} />
         <Route path="/shopping"       element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><ShoppingPage /></Suspense></ErrorBoundary>} />
         <Route path="/gallery"        element={<ErrorBoundary FallbackComponent={FeatureErrorFallback}><Suspense fallback={<RouteLoadingFallback />}><GalleryPage /></Suspense></ErrorBoundary>} />

@@ -30,7 +30,7 @@ describe('HelpDialog – nápověda podle položky navigace (#510)', () => {
     const calendarText = calendar.dialog.textContent
     calendar.unmount()
 
-    const handover = await openHelpAt('/reservations?sekce=predavka')
+    const handover = await openHelpAt('/handover')
     expect(handover.dialog).toHaveTextContent(/stav chaty při odjezdu/i)
     expect(handover.dialog.textContent).not.toBe(calendarText)
   })
