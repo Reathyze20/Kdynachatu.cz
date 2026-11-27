@@ -3,7 +3,7 @@ import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import type { Express } from "express";
 import prisma from "../../utils/prisma";
-import { as, recordRealtimeEmits, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
+import { addGuests, as, recordRealtimeEmits, setupIntegrationFile, teardownIntegrationFile, type TestUser, type TestWorld } from "./harness";
 
 let app: Express;
 let world: TestWorld;
@@ -489,5 +489,85 @@ describe("shopping: bring from home counts as resolved and restocks the linked i
     assert.deepEqual([pendingIds.includes(home), pendingIds.includes(pending)], [false, true]);
     assert.deepEqual(dashboard.body.essentialWarning, { count: 1, items: [{ id: pending, name: "Baterky A" }] });
     assert.equal((await as(app, world.memberA).get("/api/inventory/missing-summary")).body.pendingShoppingCount, pendingCount);
+  });
+});
+
+// #679: smazat položku smí jen ten, kdo ji přidal, zakladatel seznamu nebo admin chaty (stejně jako UI v ItemRow).
+describe("shopping: only the item's author, the list founder or an admin may delete an item (#679)", () => {
+  let guestA: TestUser;
+  let otherMemberA: TestUser;
+  let founderList: string;
+
+  before(async () => {
+    ({ guestA } = await addGuests(world));
+    const other = await prisma.user.create({
+      data: { username: "druhy-clen-a", passwordHash: "x", color: "#5d9b62", email: "druhy-clen-a@example.test", isEmailVerified: true, isVerified: true, role: "user", cabinId: world.cabinA.id },
+    });
+    otherMemberA = { id: other.id, username: other.username, role: "user", cabinId: world.cabinA.id, tokenVersion: other.tokenVersion };
+    founderList = await createList(world.memberA, "Seznam člena A");
+  });
+
+  after(async () => {
+    await prisma.shoppingList.deleteMany({ where: { id: founderList } });
+  });
+
+  const deleteAs = (user: TestUser, itemId: string) => as(app, user).delete(`/api/shopping-list/${itemId}`);
+
+  test("a guest gets 403 and the item stays", async () => {
+    const item = await createItem(world.adminA, founderList, "Káva A");
+    const before = await itemSnapshot(item);
+    const res = await deleteAs(guestA, item);
+    assert.equal(res.status, 403);
+    assert.deepEqual(await itemSnapshot(item), before);
+  });
+
+  test("another member (not the author, not the founder) gets 403, the item stays and nothing is emitted", async () => {
+    const item = await createItem(world.adminA, founderList, "Čaj A");
+    const before = await itemSnapshot(item);
+    const recorder = recordRealtimeEmits();
+    try {
+      const res = await deleteAs(otherMemberA, item);
+      assert.equal(res.status, 403);
+      assert.equal(res.body.message, "Tuhle položku může smazat jen ten, kdo ji přidal, zakladatel seznamu nebo správce chaty.");
+      assert.deepEqual(recorder.emits, []);
+    } finally {
+      recorder.restore();
+    }
+    assert.deepEqual(await itemSnapshot(item), before);
+  });
+
+  const allowed: [string, () => TestUser, () => TestUser][] = [
+    ["the author", () => otherMemberA, () => otherMemberA],
+    ["the list founder", () => world.adminA, () => world.memberA],
+    ["a cabin admin who is neither author nor founder", () => otherMemberA, () => world.adminA],
+  ];
+  for (const [who, author, actor] of allowed) {
+    test(`${who} gets 200 and the item is gone`, async () => {
+      const item = await createItem(author(), founderList, `Mléko A (${who})`);
+      const res = await deleteAs(actor(), item);
+      assert.equal(res.status, 200);
+      assert.equal(await itemSnapshot(item), null);
+    });
+  }
+
+  test("a user of another cabin gets 404, even an admin, and the item stays", async () => {
+    const item = await createItem(world.adminA, founderList, "Rohlík A");
+    const before = await itemSnapshot(item);
+    for (const actor of [world.memberB, world.adminB]) {
+      assert.equal((await deleteAs(actor, item)).status, 404, actor.username);
+    }
+    assert.deepEqual(await itemSnapshot(item), before);
+  });
+
+  test("a whole list: another member and a guest get 403, a cabin admin who did not found it gets 200", async () => {
+    const list = await createList(world.memberA, "Celý seznam A");
+    await createItem(world.memberA, list, "Sýr A");
+    const before = await listSnapshot(list);
+    for (const actor of [otherMemberA, guestA]) {
+      assert.equal((await as(app, actor).delete(`/api/shopping-lists/${list}`)).status, 403, actor.username);
+    }
+    assert.deepEqual(await listSnapshot(list), before);
+    assert.equal((await as(app, world.adminA).delete(`/api/shopping-lists/${list}`)).status, 200);
+    assert.equal(await listSnapshot(list), null);
   });
 });
