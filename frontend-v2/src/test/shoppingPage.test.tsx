@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { InventoryItem, ShoppingItem } from '@/api/shopping'
 import { ShoppingPage } from '@/features/shopping/ShoppingPage'
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from '@/features/shopping/hooks/useShoppingLists'
@@ -47,12 +47,12 @@ function invalidatedKeys(qc: QueryClient) {
   return () => spy.mock.calls.map(([filters]) => filters?.queryKey)
 }
 
-function renderPage(items: ShoppingItem[]) {
-  auth.role = 'member'
+function renderPage(items: ShoppingItem[], { role = 'member', listCreatedById = 'u-me' } = {}) {
+  auth.role = role
   api.get.mockImplementation((url: string) =>
     Promise.resolve({
       data: url === '/shopping-lists'
-        ? [{ id: 'list-1', name: 'Víkend', createdById: 'u-me', isResolved: false, items }]
+        ? [{ id: 'list-1', name: 'Víkend', createdById: listCreatedById, isResolved: false, items }]
         : [],
     }),
   )
@@ -81,7 +81,7 @@ describe('shopping page: item row tags', () => {
 
     const row = await rowOf('Káva')
     expect(row.getByText('Ze zásob')).toBeInTheDocument()
-    expect(row.getByRole('button', { name: 'Označit jako důležité' })).toBeInTheDocument()
+    expect(row.queryByRole('img', { name: 'Důležité' })).not.toBeInTheDocument()
   })
 
   it('shows the star but no "Ze zásob" for an essential item added by hand', async () => {
@@ -89,7 +89,7 @@ describe('shopping page: item row tags', () => {
 
     const row = await rowOf('Chleba')
     expect(row.queryByText('Ze zásob')).not.toBeInTheDocument()
-    expect(row.getByRole('button', { name: 'Zrušit důležitost' })).toBeInTheDocument()
+    expect(row.getByRole('img', { name: 'Důležité' })).toBeInTheDocument()
   })
 })
 
@@ -108,7 +108,9 @@ describe('shopping page: bring from home is resolved', () => {
   it('marking an item "Přivezu z domova" sends the status and refreshes shopping, inventory and the dashboard', async () => {
     const invalidated = invalidatedKeys(renderPage([item({ id: 'i-3', name: 'Káva', linkedInventoryId: 'inv-1' })]))
 
-    await userEvent.setup().click((await rowOf('Káva')).getByRole('button', { name: 'Přivezu z domova' }))
+    const user = userEvent.setup()
+    await user.click((await rowOf('Káva')).getByRole('button', { name: 'Akce s položkou Káva' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Přivezu z domova' }))
 
     expect(api.put).toHaveBeenCalledWith('/shopping-list/i-3/purchase', { status: 'bring_from_home' })
     await waitFor(() => expect(invalidated()).toEqual(expect.arrayContaining([SHOPPING_KEY, INVENTORY_KEY, DASHBOARD_SHOPPING_KEY])))
@@ -126,6 +128,119 @@ describe('shopping page: bring from home is resolved', () => {
       expect(invalidated()).toEqual(expect.arrayContaining([SHOPPING_KEY, DASHBOARD_SHOPPING_KEY]))
     },
   )
+})
+
+// #221: řádek položky – ovladač stavu se třemi podobami, ★, „Ze zásob“, avatar a menu položky.
+describe('shopping page: item row with a three-state control', () => {
+  beforeEach(() => { api.put.mockClear(); api.patch.mockClear(); api.delete.mockClear() })
+  const status = (row: Awaited<ReturnType<typeof rowOf>>) => row.getByRole('button', { name: /–/ })
+  const openMenu = async (name: string) => {
+    const user = userEvent.setup()
+    await user.click((await rowOf(name)).getByRole('button', { name: `Akce s položkou ${name}` }))
+    return { user, items: within(screen.getByRole('menu')).getAllByRole('menuitem').map((el) => el.textContent) }
+  }
+
+  it('names the state and the action; a tap buys a Koupit item and returns a resolved one to Koupit', async () => {
+    renderPage([
+      item({ id: 'i-buy', name: 'Mléko' }),
+      item({ id: 'i-bought', name: 'Rohlíky', status: 'purchased' }),
+      item({ id: 'i-home', name: 'Plyn', status: 'bring_from_home' }),
+    ])
+    const user = userEvent.setup()
+
+    expect(status(await rowOf('Mléko'))).toHaveAccessibleName('Koupit – označit jako koupené')
+    expect(status(await rowOf('Rohlíky'))).toHaveAccessibleName('Koupeno – vrátit na Koupit')
+    expect(status(await rowOf('Plyn'))).toHaveAccessibleName('Přivezu z domova – vrátit na Koupit')
+
+    await user.click(status(await rowOf('Mléko')))
+    await user.click(status(await rowOf('Rohlíky')))
+    await user.click((await rowOf('Plyn')).getByText('Plyn'))
+
+    expect(api.put.mock.calls).toEqual([
+      ['/shopping-list/i-buy/purchase', { status: 'purchased' }],
+      ['/shopping-list/i-bought/purchase', { status: 'pending' }],
+      ['/shopping-list/i-home/purchase', { status: 'pending' }],
+    ])
+  })
+
+  it('offers "Přivezu z domova" for Koupit and "Zrušit, nepřivezu" for a promised item in the item menu', async () => {
+    renderPage([item({ id: 'i-buy', name: 'Mléko' }), item({ id: 'i-home', name: 'Plyn', status: 'bring_from_home' })])
+
+    const buy = await openMenu('Mléko')
+    expect(buy.items).toEqual(['Přivezu z domova', 'Označit jako důležité', 'Smazat'])
+    await buy.user.click(screen.getByRole('menuitem', { name: 'Přivezu z domova' }))
+
+    const home = await openMenu('Plyn')
+    expect(home.items).toEqual(['Zrušit, nepřivezu', 'Označit jako důležité', 'Smazat'])
+    await home.user.click(screen.getByRole('menuitem', { name: 'Zrušit, nepřivezu' }))
+
+    expect(api.put.mock.calls).toEqual([
+      ['/shopping-list/i-buy/purchase', { status: 'bring_from_home' }],
+      ['/shopping-list/i-home/purchase', { status: 'pending' }],
+    ])
+  })
+
+  it('shows the star before the name of an important item and lets a member, not a guest, change it', async () => {
+    renderPage([item({ id: 'i-star', name: 'Chleba', isEssential: true })])
+    const member = await openMenu('Chleba')
+    await member.user.click(screen.getByRole('menuitem', { name: 'Zrušit důležitost' }))
+    expect(api.patch).toHaveBeenCalledWith('/shopping-list/i-star/toggle-essential')
+  })
+
+  it('lets a guest see the star but not change it', async () => {
+    renderPage([item({ id: 'i-star', name: 'Chleba', isEssential: true, addedById: 'u-other' })], { role: 'guest', listCreatedById: 'u-other' })
+
+    const row = await rowOf('Chleba')
+    const star = row.getByRole('img', { name: 'Důležité' })
+    expect(star.compareDocumentPosition(row.getByText('Chleba')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect((await openMenu('Chleba')).items).toEqual(['Přivezu z domova'])
+  })
+
+  it.each([
+    ['who added it', { addedById: 'u-me' }, {}, true],
+    ['the list founder', { addedById: 'u-other' }, { listCreatedById: 'u-me' }, true],
+    ['an admin', { addedById: 'u-other' }, { listCreatedById: 'u-other', role: 'admin' }, true],
+    ['another member', { addedById: 'u-other' }, { listCreatedById: 'u-other' }, false],
+  ])('offers "Smazat" to %s', async (_who, own, opts, canDelete) => {
+    renderPage([item({ id: 'i-del', name: 'Sýr', ...own })], opts)
+
+    const menu = await openMenu('Sýr')
+    expect(menu.items.includes('Smazat')).toBe(canDelete)
+    if (canDelete) {
+      await menu.user.click(screen.getByRole('menuitem', { name: 'Smazat' }))
+      expect(api.delete).toHaveBeenCalledWith('/shopping-list/i-del')
+    }
+  })
+
+  it('tags only a linked item "Ze zásob" with its meaning and shows who arranged it only once resolved', async () => {
+    renderPage([
+      item({ id: 'i-linked', name: 'Káva', linkedInventoryId: 'inv-1', purchasedBy: { id: 'u-jana', username: 'Jana' } }),
+      item({ id: 'i-home', name: 'Plyn', status: 'bring_from_home', purchasedBy: { id: 'u-jana', username: 'Jana' } }),
+    ])
+
+    const coffee = await rowOf('Káva')
+    expect(coffee.getByTitle('Po vyřešení se doplní zásoba')).toHaveTextContent('Ze zásob')
+    expect(coffee.queryByRole('img', { name: /Jana/ })).not.toBeInTheDocument()
+    const gas = await rowOf('Plyn')
+    expect(gas.queryByText('Ze zásob')).not.toBeInTheDocument()
+    expect(gas.getByRole('img', { name: 'Přiveze Jana' })).toBeInTheDocument()
+  })
+
+  it('sorts pending items first (star, then by addition) and resolved ones last, counting resolved in the progress', async () => {
+    const at = (day: number) => `2027-01-0${day}T00:00:00.000Z`
+    renderPage([
+      item({ id: 'bought-old', name: 'Sůl', status: 'purchased', createdAt: at(1) }),
+      item({ id: 'pending-old', name: 'Mouka', createdAt: at(2) }),
+      item({ id: 'home-new', name: 'Plyn', status: 'bring_from_home', createdAt: at(3) }),
+      item({ id: 'star-new', name: 'Káva', isEssential: true, createdAt: at(4) }),
+      item({ id: 'pending-new', name: 'Mléko', createdAt: at(5) }),
+    ])
+
+    await rowOf('Sůl')
+    expect(screen.getAllByTestId('shopping-item-row').map((row) => row.getAttribute('data-item-id')))
+      .toEqual(['star-new', 'pending-old', 'pending-new', 'bought-old', 'home-new'])
+    expect(within(screen.getByTestId('shopping-list-detail')).getByText('2/5')).toBeInTheDocument()
+  })
 })
 
 // #223: zásoby slovy Dostatek · Dochází · Došlo, „Chybí“ = Dochází + Došlo, akce ve vlastním sloupci.

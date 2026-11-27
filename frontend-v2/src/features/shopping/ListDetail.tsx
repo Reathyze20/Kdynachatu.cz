@@ -84,6 +84,8 @@ export function ListDetail({ list, onBack }: Props) {
     const aDone = isDone(a.status) ? 1 : 0
     const bDone = isDone(b.status) ? 1 : 0
     if (aDone !== bDone) return aDone - bDone
+    // Mezi nevyřízenými jde ★ nahoru (#221), jinak podle přidání.
+    if (!aDone && a.isEssential !== b.isEssential) return a.isEssential ? -1 : 1
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   })
 
