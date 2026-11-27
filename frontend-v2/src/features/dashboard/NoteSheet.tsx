@@ -1,10 +1,10 @@
 /**
  * NoteSheet — vzkaz z nástěnky ke čtení a úpravě (#702), otevře ho řádek Vzkaz v bloku „Důležité“.
- * Na mobilu bottom sheet (Modal). Ukládá stejně jako karta Vzkaz (PATCH /workspace/handover-note).
+ * Na mobilu bottom sheet (Modal). Ukládá přes settingsApi.updateHandoverNote (PATCH /workspace/handover-note).
  */
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import apiClient from "@/api/client";
+import { settingsApi, type HandoverNote } from "@/api/settings";
 import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,10 +15,8 @@ import { showToast } from "@/lib/toast";
 /** Limit serveru (updateHandoverNoteSchema). */
 const NOTE_MAX_LENGTH = 300;
 
-type Note = { pinnedHandoverNote: string | null; handoverNoteAuthor: string | null; handoverNoteUpdatedAt: string | null };
-
 interface Props {
-  note: Note;
+  note: HandoverNote;
   onClose: () => void;
   onSaved: (note: string | null, author: string | null, updatedAt: string | null) => void;
 }
@@ -26,7 +24,7 @@ interface Props {
 export function NoteSheet({ note, onClose, onSaved }: Props) {
   const [draft, setDraft] = useState(note.pinnedHandoverNote?.trim() ?? "");
   const save = useMutation({
-    mutationFn: (text: string) => apiClient.patch<Note>("/workspace/handover-note", { note: text }).then((r) => r.data),
+    mutationFn: settingsApi.updateHandoverNote,
     onSuccess: (data) => {
       onSaved(data.pinnedHandoverNote, data.handoverNoteAuthor, data.handoverNoteUpdatedAt);
       showToast("Vzkaz uložen.", "success");

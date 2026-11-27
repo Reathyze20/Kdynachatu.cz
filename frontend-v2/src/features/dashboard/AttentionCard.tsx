@@ -24,11 +24,11 @@ import { ListRow, listRowLinkClass } from "@/components/shared/ListRow";
 import { Button } from "@/components/ui/button";
 import { attentionKey, attentionWhatsApp, type Attention, type AttentionRow, type AttentionTone } from "./attention";
 
-// Tóny s ověřeným kontrastem (statusBadgeContrast, DESIGN.md §2): varování, došlo, tiché info
+// Tóny štítků (DESIGN.md §2): varování a došlo s ověřeným kontrastem (statusBadgeContrast), info tichý tlumený text na papíře
 const TONES: Record<AttentionTone, { pill: string; icon: string }> = {
   low: { pill: "bg-(--low-bg) text-[rgb(var(--low))]", icon: "text-[rgb(var(--low))]" },
   empty: { pill: "bg-(--empty-bg) text-[rgb(var(--empty))]", icon: "text-[rgb(var(--empty))]" },
-  info: { pill: "border border-rule-soft text-(--text-muted)", icon: "text-(--text-muted)" },
+  info: { pill: "bg-sheet text-(--text-muted)", icon: "text-(--text-muted)" },
 };
 const ICONS: Record<AttentionRow["kind"], LucideIcon> = { storm: CloudLightning, gas: Flame, fault: Wrench, supply: Star, note: StickyNote };
 
