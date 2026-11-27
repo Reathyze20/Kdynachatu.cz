@@ -3,12 +3,13 @@
  * Obsahuje editor textu, přikládání fotek a navigaci mezi dny
  */
 import { useState, useEffect, useRef } from 'react'
-import { X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import type { DiaryEntry } from '@/api/diary'
 import { useSaveDiaryEntry, useDeleteDiaryEntry } from './hooks/useDiary'
 import { usePhotosByIds } from '@/features/gallery/hooks/useGallery'
 import { GalleryPicker } from './GalleryPicker'
 import { DiaryLightbox } from './DiaryLightbox'
+import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/shared/Modal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { getNetworkAwareActionMessage } from '@/lib/networkError'
@@ -90,7 +91,7 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
     if (!isDirty) return true
     if (content.trim() === '') {
       setContentError(entry?.id
-        ? 'Zápis nemůže být prázdný. Napiš pár slov, nebo zápis vytrhni.'
+        ? 'Zápis nemůže být prázdný. Napiš pár slov, nebo zápis smaž.'
         : 'Zápis nemůže být prázdný. Napiš pár slov, ať je co uložit.')
       return false
     }
@@ -180,24 +181,26 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
   }
 
   const notebookTitle = (
-    <div className="notebook-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-      <button
-        className="notebook-nav-btn"
+    <div className="flex flex-1 items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => navigate('prev')}
         disabled={!hasPrev || saveEntry.isPending}
         aria-label="Předchozí den"
       >
-        ‹
-      </button>
-      <span className="notebook-date" style={{ flex: 1, textAlign: 'center' }}>{formatNotebookDate(dateObj)}</span>
-      <button
-        className="notebook-nav-btn"
+        <ChevronLeft aria-hidden="true" />
+      </Button>
+      <span className="notebook-date flex-1 text-center">{formatNotebookDate(dateObj)}</span>
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => navigate('next')}
         disabled={!hasNext || saveEntry.isPending}
         aria-label="Další den"
       >
-        ›
-      </button>
+        <ChevronRight aria-hidden="true" />
+      </Button>
     </div>
   )
 
@@ -209,32 +212,26 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
         title={notebookTitle}
         maxWidth="max-w-2xl"
         footer={
-          <div className="notebook-footer">
-            <button
-              className="notebook-btn-attach"
-              onClick={() => setShowPickerModal(true)}
-              data-testid="diary-attach-photos-button"
-            >
-              Fotky
-            </button>
+          // Jeden řádek i na mobilu: modal.css jinak tlačítka v patičce skládá pod sebe a patička by zabrala
+          // půl bottom sheetu i s přiloženými fotkami. Smazat stojí vlevo, daleko od Uložit.
+          <div className="flex w-full flex-row! flex-wrap items-center justify-end gap-2 [&>*]:w-auto!">
             {entry?.id && (
-              <button
-                className="notebook-btn-delete"
+              <Button
+                variant="ghost"
+                className="mr-auto text-destructive"
                 onClick={handleDeleteClick}
                 disabled={deleteEntry.isPending}
                 data-testid="diary-delete-entry-button"
               >
-                Vytrhnout
-              </button>
+                Smazat zápis
+              </Button>
             )}
-            <button
-              className="notebook-btn-save"
-              onClick={handleSave}
-              disabled={saveEntry.isPending}
-              data-testid="diary-save-entry-button"
-            >
+            <Button variant="secondary" onClick={() => setShowPickerModal(true)} data-testid="diary-attach-photos-button">
+              Fotky
+            </Button>
+            <Button onClick={handleSave} pending={saveEntry.isPending} data-testid="diary-save-entry-button">
               {saveEntry.isPending ? 'Ukládám…' : 'Uložit'}
-            </button>
+            </Button>
           </div>
         }
       >
@@ -327,9 +324,9 @@ export function NotebookModal({ dateObj, entry, folderId, allDates, onNavigate, 
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
-        title="Vytrhnout zápisník"
-        message="Opravdu chceš vytrhnout tento zápisník? Tato akce je nevratná."
-        confirmLabel="Vytrhnout"
+        title="Smazat zápis?"
+        message="Zápis z tohoto dne se smaže a nejde vrátit. Fotky zůstanou v galerii."
+        confirmLabel="Smazat"
         danger
         loading={deleteEntry.isPending}
         errorMessage={deleteError}
