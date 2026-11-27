@@ -144,9 +144,25 @@ const schemas: Record<string, JsonSchema> = {
       testToken: { type: "string", nullable: true, description: "Jen mimo produkci, kdyz se aktivacni e-mail nepodarilo odeslat" },
     },
   },
+  DashboardPrefs: {
+    type: "object",
+    additionalProperties: false,
+    description: "Preference Prehledu u uzivatele (#681). Vsechny klice volitelne; chybejici klic nebo null = vychozi (weather true, ostatni bloky false, sceneMode animated, simplifiedNoteDismissed false). Neznamy klic nebo jiny typ = 400.",
+    properties: {
+      weather: { type: "boolean", nullable: true, description: "Blok Pocasi (vychozi zapnuty)" },
+      cabinScene: { type: "boolean", nullable: true, description: "Blok Scena chaty" },
+      sinceLast: { type: "boolean", nullable: true, description: "Blok Od minule" },
+      laterAndFree: { type: "boolean", nullable: true, description: "Blok Potom a volno" },
+      stayForecast: { type: "boolean", nullable: true, description: "Blok Predpoved na pobyt" },
+      regionEvents: { type: "boolean", nullable: true, description: "Blok Akce v kraji" },
+      noticeboard: { type: "boolean", nullable: true, description: "Blok Nastenka" },
+      sceneMode: { type: "string", enum: ["animated", "static"], nullable: true, description: "Rezim Sceny chaty" },
+      simplifiedNoteDismissed: { type: "boolean", nullable: true, description: "Jednorazova poznamka o zjednoduseni Prehledu je zavrena" },
+    },
+  },
   UserProfile: {
     type: "object",
-    required: ["id", "username", "email", "color", "animalIcon", "role", "isEmailVerified"],
+    required: ["id", "username", "email", "color", "animalIcon", "role", "isEmailVerified", "dashboardPrefs"],
     properties: {
       id: { type: "string", format: "uuid" },
       username: { type: "string", example: "admin" },
@@ -155,6 +171,7 @@ const schemas: Record<string, JsonSchema> = {
       animalIcon: { type: "string", nullable: true, example: "fox" },
       role: { type: "string", enum: ["admin", "user", "guest"] },
       isEmailVerified: { type: "boolean", example: true },
+      dashboardPrefs: { allOf: [ref("DashboardPrefs")], nullable: true, description: "null = uzivatel si Prehled nenastavil, plati vychozi" },
     },
   },
   UpdateProfileRequest: {
@@ -164,6 +181,7 @@ const schemas: Record<string, JsonSchema> = {
       color: { type: "string", nullable: true, example: "#22C55E" },
       animalIcon: { type: "string", nullable: true, example: "fox" },
       currentPassword: { type: "string", maxLength: 100, description: "Soucasne heslo. Povinne jen pri zmene e-mailu (#475)." },
+      dashboardPrefs: { allOf: [ref("DashboardPrefs")], nullable: true, description: "Slouci se s ulozenymi preferencemi; null u klice ho vrati na vychozi, null misto objektu vrati na vychozi vse. Meni jen prihlaseneho uzivatele, cabinId se neprijima." },
     },
   },
   UpdateProfileResponse: {
@@ -177,6 +195,7 @@ const schemas: Record<string, JsonSchema> = {
           email: { type: "string", format: "email", nullable: true },
           color: { type: "string", nullable: true },
           animalIcon: { type: "string", nullable: true },
+          dashboardPrefs: { allOf: [ref("DashboardPrefs")], nullable: true },
         },
       },
     },
@@ -753,7 +772,7 @@ const paths: Record<string, OpenApiObject> = {
     patch: {
       tags: ["Users"],
       summary: "Uprav profil prihlaseneho uzivatele",
-      description: "Zmena e-mailu (i jeho odebrani) vyzaduje currentPassword; na puvodni adresu pak odejde upozorneni. Barva a ikona heslo nechteji.",
+      description: "Zmena e-mailu (i jeho odebrani) vyzaduje currentPassword; na puvodni adresu pak odejde upozorneni. Barva, ikona a preference Prehledu heslo nechteji.",
       security: bearerSecurity,
       requestBody: jsonRequestBody(ref("UpdateProfileRequest")),
       responses: {

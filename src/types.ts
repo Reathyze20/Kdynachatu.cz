@@ -208,17 +208,49 @@ export interface SetCabinCoverPhotoRequest {
   photoId: string;
 }
 
+// Preference Přehledu uložené u uživatele, ne u chaty (#681, spec #677). Všechny klíče jsou volitelné:
+// chybějící klíč nebo null = výchozí hodnota (Počasí zapnuté, ostatní bloky vypnuté, scéna animated).
+export type DashboardSceneMode = "animated" | "static";
+
+export interface DashboardPrefs {
+  weather?: boolean | null; // Počasí
+  cabinScene?: boolean | null; // Scéna chaty
+  sinceLast?: boolean | null; // Od minule
+  laterAndFree?: boolean | null; // Potom a volno
+  stayForecast?: boolean | null; // Předpověď na pobyt
+  regionEvents?: boolean | null; // Akce v kraji
+  noticeboard?: boolean | null; // Nástěnka
+  sceneMode?: DashboardSceneMode | null; // režim Scény chaty
+  simplifiedNoteDismissed?: boolean | null; // jednorázová poznámka „Přehled je jednodušší“ je zavřená
+}
+
+// GET /api/users/me – profil přihlášeného uživatele; dashboardPrefs je null, dokud si nic nenastavil.
+export interface UserProfile {
+  id: string;
+  username: string;
+  email: string | null;
+  color: string;
+  animalIcon: string | null;
+  role: "admin" | "user" | "guest";
+  isEmailVerified: boolean;
+  dashboardPrefs: DashboardPrefs | null;
+}
+
 // PATCH /api/users/me – změna e-mailu (i odebrání) chce současné heslo, ostatní pole ne (#475).
+// dashboardPrefs se slučuje s uloženými (null u klíče ho vrátí na výchozí), null celé = vše výchozí (#681).
 export interface UpdateProfileRequest {
   email?: string | null;
   color?: string;
   animalIcon?: string;
   currentPassword?: string;
+  dashboardPrefs?: DashboardPrefs | null;
 }
 
 export interface UpdateProfileResponse {
   message: string;
-  user: { email: string | null; color: string; animalIcon: string | null };
+  // dashboardPrefs (sloučené uložené hodnoty) server posílá od #681; volitelné kvůli klientům a mockům
+  // ze starší verze API. Zdroj pravdy pro čtení je GET /users/me.
+  user: { email: string | null; color: string; animalIcon: string | null; dashboardPrefs?: DashboardPrefs | null };
 }
 
 // PATCH /api/users/me/password – změna vlastního hesla zneplatní všechna přihlášení (#485).

@@ -105,6 +105,8 @@ model User {
   role              String   @default("user") // "admin" | "user" | "guest"
   // Verze tokenu pro zneplatnění přihlášení (#470); token s jinou verzí bude neplatný (#485).
   tokenVersion      Int      @default(0) @map("token_version")
+  // Preference Přehledu (#681): jen hodnoty, které si uživatel změnil; null = všechno výchozí.
+  dashboardPrefs    Json?    @map("dashboard_prefs")
   createdAt         DateTime @default(now()) @map("created_at")
 
   // ── Cabin relation ────────────────────────────────────────────────────

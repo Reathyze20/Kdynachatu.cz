@@ -348,6 +348,22 @@ export const createUserSchema = z.object({
   role: z.enum(["admin", "user", "guest"]).optional().default("user"),
 });
 
+// Users — preference Přehledu (#681). Striktní: neznámý klíč nebo jiný typ = 400. null u klíče = výchozí.
+const dashboardToggle = z.boolean().nullable().optional();
+export const dashboardPrefsSchema = z
+  .object({
+    weather: dashboardToggle,
+    cabinScene: dashboardToggle,
+    sinceLast: dashboardToggle,
+    laterAndFree: dashboardToggle,
+    stayForecast: dashboardToggle,
+    regionEvents: dashboardToggle,
+    noticeboard: dashboardToggle,
+    sceneMode: z.enum(["animated", "static"]).nullable().optional(),
+    simplifiedNoteDismissed: dashboardToggle,
+  })
+  .strict();
+
 // Users — update profile
 export const updateProfileSchema = z.object({
   email: z.string().email("Neplatný e-mail").optional().nullable(),
@@ -355,6 +371,8 @@ export const updateProfileSchema = z.object({
   animalIcon: z.string().max(50).optional(),
   // Povinné jen při změně e-mailu (#475), ověří ho routa
   currentPassword: z.string().max(100).optional(),
+  // Slučuje se s uloženými preferencemi, null = všechno výchozí (#681)
+  dashboardPrefs: dashboardPrefsSchema.nullable().optional(),
 });
 
 // Users — change own password
