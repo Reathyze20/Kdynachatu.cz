@@ -15,7 +15,7 @@
   display: block;
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: var(--text-main, #374151);
+  color: var(--text-main);
   margin-bottom: 4px;
   letter-spacing: 0.01em;
 }
@@ -27,17 +27,17 @@
   padding: 9px 12px;
   font-size: 0.9rem;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #cbd5e1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
   border-radius: 10px;
-  color: var(--color-text, #111827);
+  color: var(--text-main);
   transition: border-color 0.15s, box-shadow 0.15s;
   outline: none;
 }
 
 .auth-card input:not([type="checkbox"]):not([type="hidden"]):focus,
 .auth-card select:focus {
-  border-color: var(--color-primary, #5d9b62);
+  border-color: var(--brand-primary);
   box-shadow: var(--focus-ring);
   background: var(--bg-card);
 }
@@ -51,13 +51,13 @@
   font-weight: 600;
   border-radius: 10px;
   margin-top: 4px;
-  box-shadow: 0 2px 8px rgba(93, 155, 98, 0.3);
+  box-shadow: var(--shadow-sm);
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
 .auth-card .button-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(93, 155, 98, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .app-container {
@@ -83,19 +83,9 @@
   overflow: hidden;
 }
 
-.main-content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  width: 100%;
-  min-height: 0;
-  /* Critical: allows flex children to shrink below content size */
-}
-
 .card {
-  background-color: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
@@ -117,9 +107,7 @@
 @media (hover: hover) {
   .card:hover {
     transform: translateY(-3px);
-    box-shadow:
-      0 10px 25px -5px rgba(0, 0, 0, 0.08),
-      0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-hover);
     border-color: var(--border-strong);
   }
 
@@ -129,12 +117,11 @@
   }
 
   /* Karty které jsou scrollovatelné panely se nezvedají */
-  .card.no-lift:hover,
   #reservations-list:hover,
   #reservation-detail:hover {
     transform: none;
     box-shadow: var(--shadow-sm);
-    border-color: var(--color-border);
+    border-color: var(--border-light);
   }
 }
 
@@ -155,17 +142,12 @@
     flex-grow: 0;
   }
 
-  .main-content {
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-
   .card {
     padding: var(--space-lg);
     border-radius: var(--radius-xl);
     background-color: var(--bg-card) !important;
-    border: 1px solid var(--border-strong, #e5e7eb) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid var(--border-strong) !important;
+    box-shadow: var(--shadow-md) !important;
   }
 }
 
@@ -303,7 +285,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   background: var(--status-error-light);
-  border: 1px solid #fca5a5;
+  border: 1px solid color-mix(in srgb, var(--status-error) 35%, transparent);
   color: var(--status-error);
 }
 
@@ -324,7 +306,7 @@
 }
 
 .toggle-form-text a {
-  color: var(--color-primary, #5d9b62);
+  color: var(--brand-primary);
   font-weight: 600;
   text-decoration: none;
 }
@@ -338,14 +320,14 @@
 .demo-accounts {
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
-  border-bottom: 1px dashed var(--color-border);
+  border-bottom: 1px dashed var(--border-light);
 }
 
 .demo-accounts-title {
   margin: 0 0 var(--space-xs);
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-main);
   text-align: center;
 }
 
@@ -354,7 +336,7 @@
   padding-left: 1.5em;
   width: fit-content;
   font-size: var(--font-size-base);
-  color: var(--color-text);
+  color: var(--text-main);
   line-height: 1.6;
 }
 
@@ -367,17 +349,17 @@
 .demo-account-chip {
   min-height: var(--touch-target-min);
   padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   background: var(--bg-card);
-  color: var(--color-text);
+  color: var(--text-main);
   font-size: var(--font-size-lg);
   font-weight: 600;
   cursor: pointer;
 }
 
 .demo-account-chip:hover {
-  border-color: var(--color-primary, #5d9b62);
+  border-color: var(--brand-primary);
 }
 
 .demo-account-chip:focus-visible {
@@ -408,13 +390,13 @@
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   cursor: pointer;
 }
 
 .toggle-password:hover {
-  background: var(--color-bg-hover, #f1f5f9);
-  color: var(--color-text);
+  background: var(--bg-hover);
+  color: var(--text-main);
 }
 
 /* Remember me checkbox */
@@ -429,7 +411,7 @@
   gap: var(--space-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  color: var(--color-text-light);
+  color: var(--text-muted);
   user-select: none;
   min-height: var(--touch-target-min);
   padding: 4px 0;
@@ -438,7 +420,7 @@
 .remember-me-label input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--color-primary);
+  accent-color: var(--brand-primary);
   cursor: pointer;
 }
 
