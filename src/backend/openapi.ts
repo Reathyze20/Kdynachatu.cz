@@ -335,6 +335,16 @@ const schemas: Record<string, JsonSchema> = {
       consent: { type: "boolean", enum: [true], description: "Souhlas se zpracovanim e-mailu (ulozeni nejdele 24 mesicu)" },
       ref: { type: "string", nullable: true, description: "Odkud navstevnik prisel (?ref=); server ho orizne, necha jen pismena, cislice, . _ - a zkrati na 64 znaku" },
       website: { type: "string", description: "Honeypot, clovek ho necha prazdny. Vyplneny = nic se neulozi ani neposle, odpoved je stejna" },
+      households: { type: "string", nullable: true, enum: ["2", "3-4", "5+", ""], description: "Dobrovolne: kolik domacnosti chatu sdili. Chybejici, null i \"\" = neuvedeno" },
+      willingnessToPay: { type: "string", nullable: true, enum: ["0", "do-500", "500-1000", "nad-1000", ""], description: "Dobrovolne: kolik by stalo za to platit rocne (Kc)" },
+      painPoint: { type: "string", nullable: true, maxLength: 1000, description: "Dobrovolne: co na sdilene chate nejvic stve. Server ho orizne, prazdny = neuvedeno, limit plati po oriznuti" },
+      rentalIntent: { type: "string", nullable: true, enum: ["ne", "obcas", "ano", ""], description: "Dobrovolne: pronajima (nebo chce pronajimat) chatu cizim" },
+      rentalNeeds: {
+        type: "array",
+        nullable: true,
+        items: { type: "string", enum: ["rezervace-hostu", "zalohy-platby", "predani-klicu", "uklid-mezi-hosty", "kalendar-booking-airbnb", "rozpocitani-prijmu"] },
+        description: "Dobrovolne: co by s pronajmem nejvic pomohlo. Ulozi se jen pri rentalIntent obcas/ano, jinak je server zahodi; duplicity se slouci",
+      },
     },
   },
   WaitlistSignupResponse: {
@@ -767,7 +777,7 @@ const paths: Record<string, OpenApiObject> = {
       requestBody: jsonRequestBody(ref("WaitlistSignupRequest")),
       responses: {
         "200": jsonResponse(ref("WaitlistSignupResponse"), "Zapis prijat; stejna odpoved i pro duplicitni e-mail (nic se nezmeni ani neposle) a vyplneny honeypot"),
-        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny e-mail, chybejici souhlas nebo neznamy segment"),
+        "400": jsonResponse(ref("ValidationErrorResponse"), "Neplatny e-mail, chybejici souhlas, neznamy segment, neznama volba v dobrovolne otazce nebo prilis dlouhy text; chyba je u pole (path)"),
         "429": jsonResponse(ref("ErrorResponse"), "Prilis mnoho zapisu z jedne IP (5 za hodinu)"),
       },
     },

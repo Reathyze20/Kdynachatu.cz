@@ -48,12 +48,14 @@ export function waitlistHoneypot(req: Request, res: Response, next: NextFunction
 }
 
 export async function waitlistSignupHandler(req: Request, res: Response) {
-  const { email, segment, ref } = req.body as z.infer<typeof waitlistSignupSchema>;
+  // Schéma už zahodilo potřeby pronájmu bez záměru „Občas“ / „Ano“ (#699).
+  const { email, segment, ref, households, willingnessToPay, painPoint, rentalIntent, rentalNeeds } =
+    req.body as z.infer<typeof waitlistSignupSchema>;
 
   try {
     // ON CONFLICT DO NOTHING: první zápis zůstává beze změny, i když dva dorazí naráz.
     const [created] = await prisma.waitlistSignup.createManyAndReturn({
-      data: [{ email, segment, ref, consentedAt: new Date() }],
+      data: [{ email, segment, ref, households, willingnessToPay, painPoint, rentalIntent, rentalNeeds, consentedAt: new Date() }],
       skipDuplicates: true,
     });
     if (!created) {
