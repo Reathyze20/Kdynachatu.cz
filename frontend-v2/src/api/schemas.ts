@@ -127,6 +127,10 @@ export const DashboardShoppingSchema = z.object({
     )
     .optional()
     .default([]),
+  claimed: z
+    .array(z.object({ name: z.string(), inventoryId: z.string(), shoppingItemId: z.string(), buyer: z.string() }))
+    .optional()
+    .default([]),
 })
 
 export const DashboardNotesSchema = z.object({

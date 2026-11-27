@@ -444,6 +444,32 @@ describe("shopping: bring from home counts as resolved and restocks the linked i
     assert.deepEqual(["Sůl P", "Sirky P"].map((n) => rows.some((r) => r.name === n)), [false, false]);
   });
 
+  // #683: ostatní vidí, kdo Došlo ★ koupí; jen sliby vlastní chaty a jen čerstvé
+  test("dashboard claimed names who will buy a pledged ★ supply of my cabin, not other cabins' or old pledges", async () => {
+    const star = async (owner: TestUser, name: string) => {
+      const id = await createInventory(owner, name, "EMPTY", false);
+      await prisma.inventoryItem.update({ where: { id }, data: { isEssential: true } });
+      return id;
+    };
+    const mine = await star(world.memberA, "Toaleťák K");
+    const foreign = await star(world.memberB, "Cizí K");
+    const old = await star(world.memberA, "Sirky K");
+    const stale = await createLinkedItem("Sirky K", old, { status: "bring_from_home", purchasedById: world.adminA.id, purchasedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) });
+    await prisma.inventoryItem.update({ where: { id: old }, data: { status: "OK" } });
+    const pledgeA = await as(app, world.memberA).post(`/api/inventory/${mine}/pledge`).expect(200);
+    const pledgeB = await as(app, world.memberB).post(`/api/inventory/${foreign}/pledge`).expect(200);
+    try {
+      const claimed = (await as(app, world.adminA).get("/api/dashboard/shopping")).body.claimed as { name: string }[];
+      assert.deepEqual(claimed.filter((c) => c.name.endsWith(" K")), [{ name: "Toaleťák K", inventoryId: mine, shoppingItemId: pledgeA.body.id, buyer: world.memberA.username }]);
+    } finally {
+      const items = [stale, pledgeA.body.id, pledgeB.body.id];
+      const listB = await prisma.shoppingListItem.findUnique({ where: { id: pledgeB.body.id }, select: { listId: true } });
+      await prisma.shoppingListItem.deleteMany({ where: { id: { in: items } } });
+      if (pledgeB.body.created && listB?.listId) await prisma.shoppingList.deleteMany({ where: { id: listB.listId, items: { none: {} } } });
+      await prisma.inventoryItem.deleteMany({ where: { id: { in: [mine, foreign, old] } } });
+    }
+  });
+
   test("Zpět after Koupím já: the pledge response is enough to put the item and the supply back (#511)", async () => {
     const onList = await createInventory(world.memberA, "Sůl Z", "EMPTY");
     const listed = await createLinkedItem("Sůl Z", onList);

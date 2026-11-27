@@ -1,7 +1,7 @@
 /**
  * AttentionCard — „Důležité“ na Přehledu (#682, dřív „Potřebuje pozornost“ #275), tichý tón s ikonou a štítkem.
  * Nejvýš tři řádky se stavem slovem, u zásob „Koupím já“ = slib „Přivezu z domova“ s mým jménem
- * (#167) s toastem „Zpět“ (#511), u víc věcí souhrn do Zásob. Nahoře „Zkopírovat pro WhatsApp“ zkopíruje celý seznam (#264).
+ * (#167) s toastem „Zpět“ (#511), u věci, kterou slíbil někdo jiný, „Koupí: <jméno>“ (#683), u víc věcí souhrn do Zásob. Nahoře „Zkopírovat pro WhatsApp“ zkopíruje celý seznam (#264).
  * Když nic nepotřebuje pozornost, karta se nevykreslí.
  */
 import { useId } from "react";
@@ -30,7 +30,7 @@ const TONES: Record<AttentionTone, { pill: string; icon: string }> = {
   empty: { pill: "bg-(--empty-bg) text-[rgb(var(--empty))]", icon: "text-[rgb(var(--empty))]" },
   info: { pill: "bg-sheet text-(--text-muted)", icon: "text-(--text-muted)" },
 };
-const ICONS: Record<AttentionRow["kind"], LucideIcon> = { storm: CloudLightning, gas: Flame, fault: Wrench, supply: Star, note: StickyNote };
+const ICONS: Record<AttentionRow["kind"], LucideIcon> = { storm: CloudLightning, gas: Flame, fault: Wrench, supply: Star, claimed: Star, note: StickyNote };
 
 function RowContent({ row }: { row: AttentionRow }) {
   const Icon = ICONS[row.kind];
@@ -170,11 +170,15 @@ export function AttentionCard({ attention: { rows, more, all }, onOpenNote }: Pr
             <ListRow
               as="li"
               key={row.key}
-              action={row.kind === "supply" && (
-                <Button variant="secondary" size="sm" aria-label={`Koupím já: ${row.text}`} onClick={() => pledge.mutate(row.item)}>
-                  Koupím já
-                </Button>
-              )}
+              action={
+                row.kind === "supply" ? (
+                  <Button variant="secondary" size="sm" aria-label={`Koupím já: ${row.text}`} onClick={() => pledge.mutate(row.item)}>
+                    Koupím já
+                  </Button>
+                ) : row.kind === "claimed" ? (
+                  <span className="text-meta text-(--text-muted)">Koupí: {row.buyer}</span>
+                ) : undefined
+              }
             >
               <RowContent row={row} />
             </ListRow>

@@ -2,9 +2,10 @@
  * attention.ts — co patří do bloku „Důležité“ na Přehledu (#682, spec #677).
  * Pevné pořadí: výstraha před bouřkou → plyn a závada z poslední předávky → Došlo u zásoby s ★ →
  * vzkaz z nástěnky mladší než 14 dní. Běžné Dochází a položky bez ★ na Přehled nepatří.
+ * Došlo ★, kterou si někdo vzal přes „Koupím já“, vidí ostatní s „Koupí: <jméno>“, ten, kdo ji koupí, ne (#683).
  * Host vidí jen výstrahu před bouřkou. Rozhoduje se tady, karta jen vykresluje.
  */
-import type { AttentionItem, HandoverFault, WeatherData } from "@/api/dashboard";
+import type { AttentionItem, ClaimedItem, HandoverFault, WeatherData } from "@/api/dashboard";
 import { GAS_LABEL, gasStateLabel, type GasValue } from "@/lib/gasLevel";
 import { formatDayMonth } from "@/lib/dateUtils";
 
@@ -18,7 +19,8 @@ interface RowBase { key: string; label: string; tone: AttentionTone; text: strin
 export type AttentionRow =
   | (RowBase & { kind: "storm" | "gas" | "note" })
   | (RowBase & { kind: "fault"; fault: HandoverFault })
-  | (RowBase & { kind: "supply"; item: AttentionItem });
+  | (RowBase & { kind: "supply"; item: AttentionItem })
+  | (RowBase & { kind: "claimed"; buyer: string });
 
 export interface Attention {
   /** Nejvýš tři řádky karty. */
@@ -35,6 +37,9 @@ export interface AttentionInput {
   gas?: GasValue | null;
   fault?: HandoverFault | null;
   supplies?: AttentionItem[];
+  /** Slíbené Došlo ★ (#683) a přihlášený člen, kterému se jeho vlastní slib neukáže. */
+  claimed?: ClaimedItem[];
+  myUsername?: string | null;
   note?: { text: string | null; author: string | null; updatedAt: string | null };
   isGuest?: boolean;
 }
@@ -42,7 +47,7 @@ export interface AttentionInput {
 /** Stabilní klíč věci (řádek React, optimistické odebrání). */
 export const attentionKey = (item: AttentionItem): string => item.inventoryId ?? item.shoppingItemId ?? item.name;
 
-export function buildAttention({ storm, gas, fault, supplies = [], note, isGuest }: AttentionInput): Attention {
+export function buildAttention({ storm, gas, fault, supplies = [], claimed = [], myUsername, note, isGuest }: AttentionInput): Attention {
   const all: AttentionRow[] = [];
   if (storm) all.push({ kind: "storm", key: "storm", label: "Výstraha", tone: "low", text: `${storm.day}: ${storm.description}` });
   if (!isGuest) {
@@ -54,6 +59,10 @@ export function buildAttention({ storm, gas, fault, supplies = [], note, isGuest
     }
     for (const item of supplies.filter((i) => i.isEmpty && i.isEssential)) {
       all.push({ kind: "supply", key: attentionKey(item), label: "Došlo", tone: "empty", text: item.name, item });
+    }
+    // Vyřešené tiše: štítek bez tónu varování
+    for (const { inventoryId, name, buyer } of claimed.filter((c) => c.buyer !== myUsername)) {
+      all.push({ kind: "claimed", key: `claimed-${inventoryId}`, label: "Došlo", tone: "info", text: name, buyer });
     }
     const noteText = note?.text?.trim();
     const noteAge = note?.updatedAt ? Date.now() - new Date(note.updatedAt).getTime() : Infinity;
@@ -68,7 +77,9 @@ export function buildAttention({ storm, gas, fault, supplies = [], note, isGuest
 /** Text pro rodinnou skupinu: každá věc na jednom řádku se stavem slovem. */
 export function attentionWhatsApp(rows: AttentionRow[]): string {
   const lines = rows.map((r) =>
-    r.kind === "fault" ? `- Závada: ${r.text} (${r.fault.reportedBy}, ${formatDayMonth(r.fault.reportedAt)})` : `- ${r.label}: ${r.text}`,
+    r.kind === "fault" ? `- Závada: ${r.text} (${r.fault.reportedBy}, ${formatDayMonth(r.fault.reportedAt)})`
+    : r.kind === "claimed" ? `- ${r.label}: ${r.text} (koupí ${r.buyer})`
+    : `- ${r.label}: ${r.text}`,
   );
   return ["Na chatě potřebuje pozornost:", ...lines].join("\n");
 }
