@@ -1,6 +1,6 @@
 import { test, describe, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { calendarTodayIso, departureGate, handoverFault, isPrimaryCollisionBlocked, nextFreeWeekend, sanitizeCheckoutState } from "./reservationHelpers";
+import { calendarTodayIso, departureGate, handoverFault, handoverPhase, isPrimaryCollisionBlocked, nextFreeWeekend, pickMyStay, sanitizeCheckoutState } from "./reservationHelpers";
 
 describe("calendarTodayIso (Europe/Prague)", () => {
   test("after local midnight it is already the new day, although UTC is still on the previous one", () => {
@@ -185,5 +185,31 @@ describe("handoverFault", () => {
     assert.equal(handoverFault({ broken: "   " }, "Petr", at), null);
     assert.equal(handoverFault({ note: "Vše v pořádku" }, "Petr", at), null);
     assert.equal(handoverFault(null, "Petr", at), null);
+  });
+});
+
+describe("handoverPhase and pickMyStay (tab Předávka)", () => {
+  const today = "2027-07-10";
+  const stay = (from: string, to: string, isCheckoutCompleted = false) => ({ from, to, isCheckoutCompleted });
+
+  test("the handover window is the departure day and the day after it", () => {
+    assert.equal(handoverPhase(today, "2027-07-08", "2027-07-10"), "departure");
+    assert.equal(handoverPhase(today, "2027-07-07", "2027-07-09"), "departure");
+    assert.equal(handoverPhase(today, "2027-07-06", "2027-07-08"), null);
+    assert.equal(handoverPhase(today, "2027-07-09", "2027-07-12"), "ongoing");
+    assert.equal(handoverPhase(today, "2027-07-11", "2027-07-12"), "upcoming");
+  });
+
+  test("an open handover wins over a finished one, then the ongoing stay, then the nearest upcoming", () => {
+    const done = stay("2027-07-08", "2027-07-10", true);
+    const open = stay("2027-07-07", "2027-07-09");
+    const ongoing = stay("2027-07-09", "2027-07-12");
+    const later = stay("2027-08-01", "2027-08-03");
+    const sooner = stay("2027-07-20", "2027-07-22");
+    assert.deepEqual(pickMyStay([later, done, ongoing, open, sooner], today), { ...open, phase: "departure" });
+    assert.deepEqual(pickMyStay([later, done, ongoing, sooner], today), { ...done, phase: "departure" });
+    assert.deepEqual(pickMyStay([later, ongoing, sooner], today), { ...ongoing, phase: "ongoing" });
+    assert.deepEqual(pickMyStay([later, sooner], today), { ...sooner, phase: "upcoming" });
+    assert.equal(pickMyStay([stay("2027-07-01", "2027-07-05")], today), null);
   });
 });

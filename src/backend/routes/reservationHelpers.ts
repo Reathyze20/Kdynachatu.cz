@@ -3,6 +3,7 @@
  * route. Kept out of the route module so they can be unit-tested without
  * booting Express / Prisma / Socket.IO.
  */
+import type { HandoverPhase } from "../../types";
 
 /**
  * Rozhoduje, zda se úprava rezervace má zablokovat kolizí (HTTP 409).
@@ -73,6 +74,27 @@ export function departureGate(
     return { departingToday: false, departingReservationId: null };
   }
   return { departingToday: true, departingReservationId: departing.id };
+}
+
+/** Fáze mého pobytu vůči dnešku pro tab Předávka. Okno předávky je den odjezdu a den po něm, mimo něj `null`. */
+export function handoverPhase(today: string, from: string, to: string): HandoverPhase | null {
+  if (to === today || to === addDaysIso(today, -1)) return "departure";
+  if (from > today) return "upcoming";
+  return to > today ? "ongoing" : null;
+}
+
+/** „Můj pobyt“ (spec #173): nedokončená předávka v okně, pak dokončená, pak probíhající pobyt, pak nejbližší budoucí. */
+export function pickMyStay<T extends { from: string; to: string; isCheckoutCompleted: boolean }>(
+  stays: T[],
+  today: string,
+): (T & { phase: HandoverPhase }) | null {
+  const rank = (s: T & { phase: HandoverPhase }) =>
+    s.phase === "departure" ? Number(s.isCheckoutCompleted) : s.phase === "ongoing" ? 2 : 3;
+  const candidates = stays.flatMap((s) => {
+    const phase = handoverPhase(today, s.from, s.to);
+    return phase ? [{ ...s, phase }] : [];
+  });
+  return candidates.sort((a, b) => rank(a) - rank(b) || a.from.localeCompare(b.from))[0] ?? null;
 }
 
 export interface CheckoutStateShape {

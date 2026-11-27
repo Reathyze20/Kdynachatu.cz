@@ -35,6 +35,7 @@ import galleryRoutes from "./routes/gallery";
 import diaryRoutes from "./routes/diary";
 import reconstructionRoutes from "./routes/reconstruction";
 import dashboardRoutes from "./routes/dashboard";
+import handoverRoutes from "./routes/handover";
 // noteThreadsRoutes kept for backward-compat; superseded by channelsRoutes
 import noteThreadsRoutes from "./routes/noteThreads";
 import shoppingListsRoutes from "./routes/shoppingLists";
@@ -259,6 +260,7 @@ export function createApp({ enableRateLimits = true }: CreateAppOptions = {}) {
 
   // API routes
   app.use("/api/dashboard", dashboardRoutes);
+  app.use("/api/handover", handoverRoutes);
   app.use("/api/workspace", workspaceRoutes);
   app.use("/api/users", usersRoutes);
   app.use("/api/reservations", reservationsRoutes);

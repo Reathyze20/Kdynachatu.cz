@@ -29,6 +29,7 @@ export const ROUTE_ITEST_MAP: RouteItestMap = {
   "channels.ts": ["chat.itest.ts"],
   "dashboard.ts": ["dashboard.itest.ts", "handover.itest.ts", "shopping.itest.ts"],
   "diary.ts": ["diary.itest.ts"],
+  "handover.ts": ["handoverOverview.itest.ts"],
   "gallery.ts": ["gallery.itest.ts", "cabinCoverPhoto.itest.ts"],
   "inventory.ts": ["inventory.itest.ts", "shopping.itest.ts"],
   "invites.ts": ["invites.itest.ts"],

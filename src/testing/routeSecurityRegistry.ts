@@ -75,6 +75,8 @@ export const ROUTE_SECURITY: Readonly<Record<string, RouteAccess>> = {
   "GET /api/dashboard/notes": WRITERS,
   "GET /api/dashboard/reconstruction": WRITERS,
   "GET /api/dashboard/gallery": WRITERS,
+  // handover.ts
+  "GET /api/handover": MEMBERS, // host: jen vlastní pobyty
   // diary.ts (úpravy a mazání: admin nebo autor)
   "GET /api/diary/folders": WRITERS,
   "POST /api/diary/folders": WRITERS,
