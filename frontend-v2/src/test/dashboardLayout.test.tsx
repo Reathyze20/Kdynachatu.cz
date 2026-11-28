@@ -28,6 +28,7 @@ describe('Přehled ve dvousloupcovém rozložení (#171, #172)', () => {
 
     const layout = screen.getByTestId('two-column-layout')
     expect(within(layout).getByTestId('dashboard-page')).toContainElement(screen.getByTestId('dashboard-stack'))
-    expect(screen.getByRole('complementary', { name: 'Kontext chaty' })).toContainElement(await screen.findByTestId('dashboard-handover-widget'))
+    // #685: boční panel se vykreslí, až když má co ukázat (zapnutá Nástěnka z preferencí)
+    expect(await screen.findByRole('complementary', { name: 'Kontext chaty' })).toContainElement(screen.getByTestId('dashboard-handover-widget'))
   })
 })

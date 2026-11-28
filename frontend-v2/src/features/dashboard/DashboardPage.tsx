@@ -251,6 +251,40 @@ export function DashboardPage() {
     </>
   );
 
+  // Volitelné bloky (#685): na mobilu v hlavním sloupci kolem Kdo jede, na desktopu v bočním sloupci
+  const sceneBlock = blocks.cabinScene && reservationsData && (
+    <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-scene-widget">
+      <CabinScene data={reservationsData} winterized={isWinterized} weather={todayWeather} />
+    </motion.div>
+  );
+  const laterBlocks = (
+    <>
+      {blocks.sinceLast && lastStay && (
+        <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-since-last-widget">
+          <SinceLastCard lastStay={lastStay} shownElsewhere={shownElsewhere} />
+        </motion.div>
+      )}
+
+      {blocks.laterAndFree && (
+        <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-later-free-widget">
+          <LaterAndFreeCard />
+        </motion.div>
+      )}
+
+      {stayPick && blocks.stayForecast && (
+        <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-stay-weather-widget">
+          <StayWeatherCard
+            from={stayPick.stay.from}
+            to={stayPick.stay.to}
+            title={overviewStayTitle(stayPick)}
+            frame="rounded-2xl border border-rule-soft bg-sheet shadow-lift"
+            collapsibleChart
+          />
+        </motion.div>
+      )}
+    </>
+  );
+
   const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
       {/* Dnešek chaty (#338): na desktopu v hlavičce levého menu, jinak kompaktní karta nahoře */}
@@ -281,8 +315,8 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* Nudge tray — timely coordination prompts derived from existing data */}
-      {!isDesktop && nudges}
+      {/* Visí na tobě, pod ním na mobilu Důležité; na desktopu jde Důležité pod Kdo jede (#685) */}
+      {nudges}
       {!isDesktop && attention}
 
       {/* Hlavní sloupec: prioritní stack karet (#172), karty se nenatahují do výšky sousedů */}
@@ -293,11 +327,7 @@ export function DashboardPage() {
         animate="visible"
         data-testid="dashboard-stack"
       >
-        {blocks.cabinScene && reservationsData && (
-          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-scene-widget">
-            <CabinScene data={reservationsData} winterized={isWinterized} weather={todayWeather} />
-          </motion.div>
-        )}
+        {!isDesktop && sceneBlock}
 
         {/* Kdo jede */}
         <motion.div variants={cardVariants} data-testid="dashboard-reservation-widget">
@@ -312,30 +342,10 @@ export function DashboardPage() {
           ) : null}
         </motion.div>
 
-        {blocks.sinceLast && lastStay && (
-          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-since-last-widget">
-            <SinceLastCard lastStay={lastStay} shownElsewhere={shownElsewhere} />
-          </motion.div>
-        )}
-
-        {blocks.laterAndFree && (
-          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-later-free-widget">
-            <LaterAndFreeCard />
-          </motion.div>
-        )}
-
-        {stayPick && blocks.stayForecast && (
-          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-stay-weather-widget">
-            <StayWeatherCard
-              from={stayPick.stay.from}
-              to={stayPick.stay.to}
-              title={overviewStayTitle(stayPick)}
-              frame="rounded-2xl border border-rule-soft bg-sheet shadow-lift"
-              collapsibleChart
-            />
-          </motion.div>
-        )}
+        {!isDesktop && laterBlocks}
       </motion.div>
+
+      {isDesktop && attention}
 
       {isAdmin && (activationQuery.isLoading ? (
         <motion.div variants={cardVariants} data-testid="dashboard-activation-widget">
@@ -351,11 +361,12 @@ export function DashboardPage() {
     </div>
   );
 
-  // Rám #1b: hlavní sloupec = stav chaty a pobytu, boční panel = co visí na mně, pozornost a vzkaz (#356). Další příjezd je jen v hlavičce (#272).
-  const aside = (
+  // Rám #1b: hlavní sloupec = co nesmím minout (Visí na tobě → Kdo jede → Důležité), boční = zapnuté volitelné bloky (#685)
+  const hasAside = blocks.noticeboard || (isDesktop && (!!sceneBlock || blocks.sinceLast || blocks.laterAndFree || blocks.stayForecast));
+  const aside = hasAside && (
     <div className="dashboard-aside" data-testid="dashboard-aside">
-      {isDesktop && nudges}
-      {isDesktop && attention}
+      {isDesktop && sceneBlock}
+      {isDesktop && laterBlocks}
       {blocks.noticeboard && <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />

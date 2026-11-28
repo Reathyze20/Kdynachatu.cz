@@ -8,7 +8,7 @@ import { useLocation, useOutlet } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { DesktopSidebar } from './DesktopSidebar'
-import { CabinToday } from '@/features/dashboard/CabinToday'
+import { SidebarToday } from '@/features/dashboard/SidebarToday'
 import { MobileHeader } from './MobileHeader'
 import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -79,7 +79,7 @@ export function AppShell() {
 
         {/* Desktop rám #1b: levý sidebar s profilovým menu (bez horní lišty, #205)
             + obsah s omezenou čitelnou šířkou (na mobilu display: contents) */}
-        <DesktopSidebar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} today={wideDesktop ? <CabinToday variant="sidebar" /> : null} />
+        <DesktopSidebar onOpenProfileDrawer={() => setProfileDrawerOpen(true)} today={wideDesktop ? <SidebarToday /> : null} />
         <div className="app-shell-body">
         <OfflineBanner />
 
