@@ -1,6 +1,23 @@
-/** Který pobyt ukáže karta Počasí na pobyt na Přehledu (#326). Čisté funkce, data z dotazu Přehledu na pobyty. */
-import type { ActiveReservation, UpcomingReservation } from "@/api/dashboard";
-import { addIsoDays, formatShortDayDate } from "@/lib/dateUtils";
+/** Který pobyt ukáže karta Počasí na pobyt na Přehledu (#326) a kdo je teď na chatě. Čisté funkce nad dotazem Přehledu na pobyty. */
+import type { ActiveReservation, DashboardReservationsData, UpcomingReservation } from "@/api/dashboard";
+import { addIsoDays, formatShortDayDate, getLocalTodayIso } from "@/lib/dateUtils";
+import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
+
+/** Řetězec teď → pak z dat Přehledu; aktivní pobyt API posílá jen pevný. Jméno je unikátní, vlastní pobyt = „Ty“. */
+export function dashboardChainStays(data: DashboardReservationsData, myUsername: string | undefined): ChainStay[] {
+  const toChainStay = (r: { id: string; from: string; to: string; username: string }, status: string): ChainStay =>
+    ({ id: r.id, from: r.from, to: r.to, status, username: r.username, isMine: r.username === myUsername });
+  const active = data.activeReservation;
+  return [
+    ...(active ? [toChainStay(active, "primary")] : []),
+    ...data.upcomingReservations.map((r) => toChainStay(r, r.status)),
+  ];
+}
+
+/** Je teď někdo na chatě (uzel „teď“ řetězce turnusu)? „Od minule“ se ukazuje, jen když ne. */
+export function someoneAtCabin(data: DashboardReservationsData, myUsername: string | undefined): boolean {
+  return !!buildTurnusChain(dashboardChainStays(data, myUsername), getLocalTodayIso())[0]?.stay;
+}
 
 /** Karta se ukáže od 7 dní před příjezdem do dne odjezdu. */
 const DAYS_BEFORE_ARRIVAL = 7;

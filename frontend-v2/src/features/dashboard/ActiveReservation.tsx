@@ -1,41 +1,39 @@
 import { useId } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation, WeatherResult } from "@/api/dashboard";
+import type { ActiveReservation as ActiveStay, DashboardReservationsData, LastStay, UpcomingReservation } from "@/api/dashboard";
 import { daysUntil, formatDateRange, formatShortDayDate, getLocalTodayIso, nightsBetween, nightsLabel } from "@/lib/dateUtils";
 import { pluralize } from "@/lib/format";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { Card } from "@/components/shared/Card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { buildTurnusChain, type ChainStay, type TurnusChainNode } from "@/lib/turnusChain";
+import { buildTurnusChain, type TurnusChainNode } from "@/lib/turnusChain";
 import { gasLine } from "@/lib/gasLevel";
-import { CabinScene } from "./CabinScene";
 import { DEPARTURE_HOUR } from "./cabinSceneState";
+import { dashboardChainStays } from "./overviewStay";
 import { ArrowRight, CircleCheck, Droplet, Flame, House, MessageSquare, Package, Thermometer, TriangleAlert, Wrench, type LucideIcon } from "lucide-react";
 
 interface Props {
   data: DashboardReservationsData;
   cabinDepartureChecklist: string[];
-  isWinterized?: boolean;
-  /** Dnešní počasí pro scénu chaty (#564). */
-  weather?: WeatherResult;
-  /** Co už nesou jiné karty Přehledu; „Od minule“ to pak nezvýrazní (#425). */
+  /** Co už nesou jiné karty Přehledu (#425). */
   shownElsewhere?: ShownElsewhere;
 }
 
 /** Plyn ve „Visí na tobě“, text závady v „Důležité“, výzva k mému odjezdu ve „Visí na tobě“ (#274). */
-interface ShownElsewhere { gas: boolean; faultText: string | null; departure?: boolean }
+export interface ShownElsewhere { gas: boolean; faultText: string | null; departure?: boolean }
 
 const NOTHING_ELSEWHERE: ShownElsewhere = { gas: false, faultText: null };
 
 interface BriefingRow { icon: LucideIcon; text: string; label?: string; warn?: boolean }
 
 /**
- * „Od minule“ ze stavu předávky posledního pobytu (#366): vlevo stav chaty, vpravo vzkazy.
- * Popisky vzkazů nahrazuje ikona, čtečky je slyší (sr-only). Jantarově jen to, co chce akci a nemá ji
- * jinde na Přehledu (#425): docházející plyn nese „Visí na tobě“, závadu „Potřebuje pozornost“.
+ * Blok „Od minule“ ze stavu předávky posledního pobytu (#366, samostatný blok od #685): vlevo stav chaty,
+ * vpravo vzkazy. Popisky vzkazů nahrazuje ikona, čtečky je slyší (sr-only). Jantarově jen to, co chce akci
+ * a nemá ji jinde na Přehledu (#425): docházející plyn nese „Visí na tobě“, závadu „Důležité“.
  */
-function buildArrivalBriefing(lastStay: LastStay, elsewhere: ShownElsewhere): React.ReactNode {
+export function SinceLastCard({ lastStay, shownElsewhere: elsewhere = NOTHING_ELSEWHERE }: { lastStay: LastStay; shownElsewhere?: ShownElsewhere }) {
+  const headingId = useId();
   const s = lastStay.checkoutState;
   if (!s) return null;
   const gas = gasLine(s.gas);
@@ -61,17 +59,17 @@ function buildArrivalBriefing(lastStay: LastStay, elsewhere: ShownElsewhere): Re
     </ul>
   );
   return (
-    <div className="arrival-briefing">
-      <h3 className="m-0 text-card-title text-(--text-main)">Od minule — {lastStay.username}</h3>
+    <Card as="section" className="arrival-briefing" aria-labelledby={headingId}>
+      <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Od minule — {lastStay.username}</h2>
       <div className="arrival-briefing-body">
         {list("Stav chaty", state, "state")}
         {list("Vzkazy", notes, "notes")}
       </div>
-    </div>
+    </Card>
   );
 }
 
-function buildLastStayBlock(lastStay: LastStay | null | undefined, elsewhere: ShownElsewhere): React.ReactNode {
+function buildLastStayBlock(lastStay: LastStay | null | undefined): React.ReactNode {
   if (!lastStay) return null;
   const daysLabel = lastStay.daysEmpty === 0 ? "dnes" :
     lastStay.daysEmpty === 1 ? "1 den" :
@@ -82,26 +80,12 @@ function buildLastStayBlock(lastStay: LastStay | null | undefined, elsewhere: Sh
     ? " · Checklist OK"
     : lastStay.daysEmpty > 0 ? " · Checklist nevyplněn" : "";
   return (
-    <>
-      <div className={`last-stay-inline${isLongEmpty ? " last-stay-warning" : ""}`}>
-        <span className="last-stay-text">
-          Prázdná {daysLabel}{checklistPart}
-        </span>
-      </div>
-      {buildArrivalBriefing(lastStay, elsewhere)}
-    </>
+    <div className={`last-stay-inline${isLongEmpty ? " last-stay-warning" : ""}`}>
+      <span className="last-stay-text">
+        Prázdná {daysLabel}{checklistPart}
+      </span>
+    </div>
   );
-}
-
-/** Řetězec teď → pak z dat Přehledu; aktivní pobyt API posílá jen pevný. Jméno je unikátní, vlastní pobyt = „Ty“. */
-function dashboardChainStays(data: DashboardReservationsData, myUsername: string | undefined): ChainStay[] {
-  const toChainStay = (r: { id: string; from: string; to: string; username: string }, status: string): ChainStay =>
-    ({ id: r.id, from: r.from, to: r.to, status, username: r.username, isMine: r.username === myUsername });
-  const active = data.activeReservation;
-  return [
-    ...(active ? [toChainStay(active, "primary")] : []),
-    ...data.upcomingReservations.map((r) => toChainStay(r, r.status)),
-  ];
 }
 
 type HeaderStay = ActiveStay | UpcomingReservation;
@@ -143,11 +127,11 @@ function emptySinceLabel(lastStay: LastStay): React.ReactNode {
 }
 
 /**
- * Hlavička Přehledu jako osa teď → příště (#366, dřív #272). Uzly počítá `buildTurnusChain` (jen pevné
- * pobyty, střídací den). Pobyty za „příště“ a volno nese blok „Potom a volno“ (#273, spec #677).
- * Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
+ * Blok Kdo jede: osa teď → příště (#366, dřív #272). Uzly počítá `buildTurnusChain` (jen pevné pobyty,
+ * střídací den). Pobyty za „příště“ a volno nese „Potom a volno“ (#273), scénu a „Od minule“ vlastní
+ * bloky (#685, spec #677). Nic naplánováno = pozvánka „Chata zatím čeká“ (E2).
  */
-export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized = false, weather, shownElsewhere = NOTHING_ELSEWHERE }: Props) {
+export function ActiveReservation({ data, cabinDepartureChecklist, shownElsewhere = NOTHING_ELSEWHERE }: Props) {
   const navigate = useNavigate();
   const headingId = useId();
   const { user } = useAuth();
@@ -187,7 +171,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
     return (
       <Card as="section" className="flex flex-col status-card status-header" id="dashboard-active-reservation" aria-labelledby={headingId}>
         <div className="card-body-full status-content">
-          <CabinScene data={data} winterized={isWinterized} weather={weather} />
           <h2 id={headingId} className="m-0 text-card-title text-(--text-main)">Na chatě teď</h2>
           <div className="status-header__row">
             <div role="group" aria-label="Teď" className="status-header__side">
@@ -214,7 +197,6 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
               )}
             </div>
           </div>
-          {!now && data.lastStay && buildArrivalBriefing(data.lastStay, shownElsewhere)}
           {myNext && myNext.id !== now?.id && myNext.id !== next?.id && (
             <p className="status-header__mine">
               <strong>Tvůj pobyt {inDaysLabel(myNext.from)}</strong> · {formatDateRange(myNext.from, myNext.to)}
@@ -233,10 +215,9 @@ export function ActiveReservation({ data, cabinDepartureChecklist, isWinterized 
   return (
     <Card as="section" className="flex flex-col status-card overview-invite" id="dashboard-active-reservation" aria-labelledby="overview-invite-title">
       <div className="card-body-full status-content">
-        <CabinScene data={data} winterized={isWinterized} weather={weather} />
-        <h2 id="overview-invite-title" className="mt-2 mb-0 text-card-title text-(--text-main)">Chata zatím čeká</h2>
+        <h2 id="overview-invite-title" className="m-0 text-card-title text-(--text-main)">Chata zatím čeká</h2>
         <p className="overview-invite__text">Zaber termín a rozjeď to.</p>
-        {buildLastStayBlock(data.lastStay, shownElsewhere)}
+        {buildLastStayBlock(data.lastStay)}
         <div className="status-cta-row overview-invite__actions">
           <Button onClick={() => navigate("/reservations")}>Zabrat termín</Button>
         </div>

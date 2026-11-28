@@ -117,6 +117,8 @@ describe('Přehled: výpadek více sekcí (#512)', () => {
     responses.set('/dashboard/reservations', RESERVATIONS)
     responses.set('/dashboard/shopping', { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null })
     responses.set('/dashboard/notes', apiDown())
+    // #685 (spec #677): Nástěnka je volitelný blok, chybovou kartu má jen zapnutá
+    responses.set('/users/me', { dashboardPrefs: { noticeboard: true } })
     renderOverview()
 
     const alert = await screen.findByRole('alert')

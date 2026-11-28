@@ -41,14 +41,16 @@ function renderOverview(data: DashboardReservationsData, { time = '10:00', isWin
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null })
   responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
+  // #685 (spec #677): Scéna chaty je volitelný blok, ve výchozím stavu vypnutý
+  responses.set('/users/me', { dashboardPrefs: { cabinScene: true } })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(<QueryClientProvider client={qc}><MemoryRouter><DashboardPage /></MemoryRouter></QueryClientProvider>)
 }
 
-/** Scéna je obrázek nahoře v kartě „Na chatě teď“ (i v jejím prázdném stavu „Chata zatím čeká“). */
+/** Scéna je samostatný blok nad kartou „Na chatě teď“ (#685, spec #677), i nad prázdným stavem „Chata zatím čeká“. */
 async function scene() {
   const img = await screen.findByRole('img', { name: /^Scéna chaty/ })
-  expect(screen.getByTestId('dashboard-reservation-widget')).toContainElement(img)
+  expect(screen.getByTestId('dashboard-scene-widget')).toContainElement(img)
   return img
 }
 
@@ -76,8 +78,8 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
   it('někdo je na chatě: kouř z komína, svítí okno, plch vykukuje zpoza střechy; scéna není fokusovatelná', async () => {
     renderOverview(reservations({ activeReservation: active(stay('r-now', 'Novákovi', '2026-12-08', '2026-12-12')) }))
 
-    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
-    const img = within(header).getByRole('img', { name: /^Scéna chaty/ })
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    const img = await scene()
     expect(img).toHaveAccessibleName(/někdo je na chatě, z komína jde kouř a svítí okno/i)
     expect(img).toHaveAccessibleName(/plch vykukuje zpoza střechy/i)
     expect(img).not.toHaveAttribute('tabindex')
@@ -181,17 +183,21 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     expect(img).not.toHaveAccessibleName(/oříšek/i)
   })
 
-  it('host: z dat omezených na jeho pobyt scéna cizí obsazenost neukáže', async () => {
+  // #685 (spec #677): host nemá volitelné bloky ani personalizaci, scénu nevidí ani se zapnutou v preferencích.
+  // Nahrazuje testy „scéna hostovi neukáže cizí obsazenost“ a „host vidí déšť stejně jako ostatní“.
+  it('host scénu nevidí, ani když ji má v preferencích zapnutou', async () => {
     auth.isGuest = true
+    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 61 }))
     // Tvar dat pro hosta (#484): jen jeho vlastní pobyt příští týden, cizí probíhající pobyt backend nepošle.
     renderOverview(reservations({
       upcomingReservations: [stay('r-guest', 'Eva', '2026-12-17', '2026-12-19')],
       myNextReservation: { from: '2026-12-17', to: '2026-12-19', purpose: 'Víkend' },
     }))
 
-    const img = await scene()
-    expect(img).toHaveAccessibleName(/chata je prázdná/i)
-    expect(img).not.toHaveAccessibleName(/někdo je na chatě|auto/i)
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    await weatherLoaded()
+    expect(screen.queryByRole('img', { name: /^Scéna chaty/ })).not.toBeInTheDocument()
+    vi.mocked(fetchWeather).mockImplementation(() => Promise.resolve(null))
   })
 })
 
@@ -567,18 +573,6 @@ describe('Déšť, mrholení a bouřka ve scéně chaty (#609)', () => {
       for (const name of ['rain', 'splash', 'overcast']) expect(layer(img, name)).toBeNull()
       cleanup()
     }
-  })
-
-  it('host vidí déšť stejně jako ostatní', async () => {
-    auth.isGuest = true
-    vi.mocked(fetchWeather).mockResolvedValue(todayWeather({ weatherCode: 61 }))
-    renderOverview(reservations({
-      upcomingReservations: [stay('r-guest', 'Eva', '2026-12-17', '2026-12-19')],
-      myNextReservation: { from: '2026-12-17', to: '2026-12-19', purpose: 'Víkend' },
-    }))
-
-    const img = await screen.findByRole('img', { name: /prší\./i })
-    expect(img).toHaveAccessibleName(/plch se schoval před deštěm/i)
   })
 
   it('bouřka stojí, když je stránka na pozadí', async () => {
