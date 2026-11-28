@@ -1,15 +1,12 @@
-import { useState, useEffect } from "react";
-import { Check, RefreshCw } from "lucide-react";
-import apiClient from "@/api/client";
-import type { Reservation, CheckoutStatus, CheckoutState } from "@/api/reservations";
+import { useState } from "react";
+import type { Reservation, CheckoutState } from "@/api/reservations";
 import { useCheckoutReservation } from "../hooks/useReservations";
-import { getNetworkAwareActionMessage, getNetworkAwareLoadMessage } from "@/lib/networkError";
-import { GAS_LABEL, GAS_OPTIONS, gasLine, type WritableGasValue } from "@/lib/gasLevel";
+import { getNetworkAwareActionMessage } from "@/lib/networkError";
+import { GAS_LABEL, GAS_OPTIONS, type WritableGasValue } from "@/lib/gasLevel";
 import { isQueuedOffline } from "@/lib/offlineQueue";
 import { useCheckoutPending } from "@/hooks/useOfflineQueue";
 import { PendingSyncBadge } from "@/components/shared/PendingSyncBadge";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatTime } from "@/lib/format";
 
 // Předávka leží v detailu: vnořený blok bg-inset, rounded-xl (DESIGN.md §7).
 const SECTION = "flex flex-col gap-3 rounded-xl bg-inset p-4";
@@ -49,14 +46,16 @@ interface Props {
   reservation: Reservation;
 }
 
+/**
+ * Formulář předávky v detailu pobytu jen pro hosta (#222): host tab Předávka nemá, svůj pobyt předá tady.
+ * Dokončenou předávku ukazuje zrcadlo v `StayHandover`.
+ */
 export function CheckoutSection({ reservation }: Props) {
   const isPrimary = reservation.status === "primary";
   const eligible = isPrimary && isReservationActiveOrRecent(reservation);
   const checkout = useCheckoutReservation();
   const checkoutPending = useCheckoutPending(reservation.id); // E4, #276
 
-  const [tasks, setTasks] = useState<string[]>([]);
-  const [checked, setChecked] = useState<Set<number>>(new Set());
   // Structured "state of the cabin" (arrival-briefing source)
   const [gas, setGas] = useState<WritableGasValue | null>(null);
   const [heatingOff, setHeatingOff] = useState(false);
@@ -64,52 +63,7 @@ export function CheckoutSection({ reservation }: Props) {
   const [broken, setBroken] = useState("");
   const [leftBehind, setLeftBehind] = useState("");
   const [stateNote, setStateNote] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [completedStatus, setCompletedStatus] = useState<CheckoutStatus | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    if (!eligible) return;
-    setLoadError(null);
-    setSubmitError(null);
-    if (reservation.isCheckoutCompleted) {
-      setLoading(true);
-      setTasks([]);
-      apiClient
-        .get<CheckoutStatus>(`/reservations/${reservation.id}/checkout`)
-        .then((res) => setCompletedStatus(res.data))
-        .catch((error) => {
-          setCompletedStatus(null);
-          setLoadError(
-            getNetworkAwareLoadMessage(
-              error,
-              "Nepodařilo se načíst stav potvrzeného odjezdu. Zkus to znovu.",
-            ),
-          );
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setCompletedStatus(null);
-      setLoading(true);
-      apiClient
-        .get<{ checkoutTasks?: string[] }>("/cabin")
-        .then((res) => {
-          setTasks(res.data.checkoutTasks ?? []);
-        })
-        .catch((error) => {
-          setTasks([]);
-          setLoadError(
-            getNetworkAwareLoadMessage(
-              error,
-              "Nepodařilo se načíst výjezdový protokol. Zkus to znovu.",
-            ),
-          );
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [eligible, reservation.id, reservation.isCheckoutCompleted, reloadKey]);
 
   if (!eligible) return null;
 
@@ -123,68 +77,7 @@ export function CheckoutSection({ reservation }: Props) {
     );
   }
 
-  if (loading) {
-    return (
-      <div className={SECTION} aria-busy="true">
-        <div className="h-24 rounded-xl bg-sheet" />
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className={`${SECTION} items-center text-center`} role="alert">
-        <p className="text-body text-(--text-main)">{loadError}</p>
-        <Button type="button" variant="secondary" onClick={() => setReloadKey((value) => value + 1)}>
-          <RefreshCw aria-hidden="true" />
-          Zkusit znovu
-        </Button>
-      </div>
-    );
-  }
-
-  // --- Completed state ---
-  if (reservation.isCheckoutCompleted && completedStatus) {
-    const ts = completedStatus.checkoutCompletedAt;
-    const formatted = ts ? `${formatDate(ts)} ${formatTime(ts)}` : "";
-    const s = completedStatus.checkoutState;
-    const gasSummary = gasLine(s?.gas);
-    return (
-      <div className={SECTION}>
-        <div className="flex items-center gap-3 rounded-xl bg-(--status-success-light) p-3">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--status-success) text-(--text-on-success)" aria-hidden="true"><Check className="size-5" /></div>
-          <div className="flex flex-col">
-            <strong className={TITLE}>Odjezd potvrzen</strong>
-            {formatted && <span className={HINT}>{formatted}</span>}
-          </div>
-        </div>
-        {s && (
-          <div className="flex flex-col gap-1 text-body text-(--text-main)">
-            {gasSummary && <div>{gasSummary}</div>}
-            {s.heatingOff && <div>Topení vypnuté</div>}
-            {s.waterOff && <div>Voda uzavřená</div>}
-            {s.broken && <div><strong>Rozbité:</strong> {s.broken}</div>}
-            {s.leftBehind && <div><strong>Nechal/a:</strong> {s.leftBehind}</div>}
-            {s.note && <div><strong>Vzkaz:</strong> {s.note}</div>}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // --- Form: state-of-the-cabin + optional checklist (not yet completed) ---
-  // Confirm needs all checklist tasks ticked; with no tasks it's always allowed.
-  const allChecked = tasks.length === 0 || checked.size === tasks.length;
-
-  const toggle = (i: number) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
-      return next;
-    });
-  };
-
+  // --- Form: state-of-the-cabin ---
   const buildState = (): CheckoutState => ({
     gas: gas ?? undefined,
     heatingOff: heatingOff || undefined,
@@ -195,7 +88,6 @@ export function CheckoutSection({ reservation }: Props) {
   });
 
   const handleConfirm = async () => {
-    if (!allChecked) return;
     setSubmitError(null);
     try {
       await checkout.mutateAsync({ id: reservation.id, state: buildState() });
@@ -246,26 +138,9 @@ export function CheckoutSection({ reservation }: Props) {
       <NoteField label="Co jsem nechal/a, třeba dřevo nebo jídlo (nepovinné)" value={leftBehind} onChange={(v) => { clearErr(); setLeftBehind(v); }} />
       <NoteField label="Vzkaz pro dalšího (nepovinné)" value={stateNote} onChange={(v) => { clearErr(); setStateNote(v); }} />
 
-      {/* Výjezdový protokol – jen pokud chata má nakonfigurované úkoly */}
-      {tasks.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <h3 className={TITLE}>Výjezdový protokol</h3>
-          <p className={HINT}>Splněno {checked.size} z {tasks.length} úkolů</p>
-          {tasks.map((task, i) => (
-            <label key={i} className={CHECK_ROW}>
-              <input type="checkbox" className={CHECKBOX} checked={checked.has(i)} onChange={() => { clearErr(); toggle(i); }} />
-              <span>{task}</span>
-            </label>
-          ))}
-        </div>
-      )}
-
-      <Button className="w-full" disabled={!allChecked} pending={checkout.isPending} onClick={handleConfirm}>
+      <Button className="w-full" pending={checkout.isPending} onClick={handleConfirm}>
         {checkout.isPending ? "Ukládám…" : "Potvrdit odjezd"}
       </Button>
-      {tasks.length > 0 && !allChecked && (
-        <p className={`${HINT} text-center`}>Potvrď všechny úkoly pro odeslání.</p>
-      )}
       {submitError ? (
         <p className="text-label text-(--status-error-dark)" role="alert">{submitError}</p>
       ) : null}

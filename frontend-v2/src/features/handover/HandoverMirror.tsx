@@ -4,6 +4,7 @@ import type { LastHandover } from "@/api/handover";
 import { Card } from "@/components/shared/Card";
 import { GAS_LABEL, gasStateLabel, type GasValue } from "@/lib/gasLevel";
 import { formatDate, formatDateRange, formatTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // Štítek plynu tónem stavu (DESIGN.md §2, stavové štítky)
 const GAS_TONE: Record<GasValue, string> = {
@@ -26,10 +27,12 @@ function Row({ icon, className = "", children }: { icon: ReactNode; className?: 
  * Read-only zrcadlo předávky (spec #173): stejný jazyk jako formulář, bez interakce. Prázdné části
  * skryje, topení a vodu ukáže jen u uvedeného údaje. Znovu ho použije příjezdová karta #174.
  */
-export function HandoverMirror({ handover, title, children }: {
+export function HandoverMirror({ handover, title, className, children }: {
   handover: Pick<LastHandover, "from" | "to" | "completedAt" | "completedByUsername" | "checkoutState"> & Partial<Pick<LastHandover, "organizer">>;
   /** Shrnutí vlastní předávky („Chata předána“, #218): meta řekne, kdo a kdy předal. */
   title?: string;
+  /** Vnořené zrcadlo v jiné kartě (detail pobytu, #222) přepíše vzhled karty. */
+  className?: string;
   children?: ReactNode;
 }) {
   const { checkoutState: s, completedAt } = handover;
@@ -57,7 +60,7 @@ export function HandoverMirror({ handover, title, children }: {
   ].filter(Boolean);
 
   return (
-    <Card as="section" aria-labelledby="handover-mirror-title" className="flex flex-col gap-3">
+    <Card as="section" aria-labelledby="handover-mirror-title" className={cn("flex flex-col gap-3", className)}>
       <div>
         <h2 id="handover-mirror-title" className="text-card-title text-(--text-main)">{title ?? `Od minule · ${who}`}</h2>
         <p className="text-meta text-(--text-muted)">

@@ -7,7 +7,7 @@ import type { Reservation } from '@/api/reservations'
 import { ReservationDetail } from '@/features/reservations/ui/ReservationDetail'
 
 // #461: detail rezervace a předávka podle DESIGN.md – Smazat v kebab menu přes ConfirmDialog,
-// chyba načtení předávky s „Zkusit znovu“. Fiktivní data.
+// chyba načtení předávky je v stayDetailHandover.test.tsx (#222). Fiktivní data.
 const { api, auth } = vi.hoisted(() => ({
   api: { get: vi.fn((_url: string): Promise<unknown> => Promise.resolve({ data: null })) },
   auth: { userId: 'u-me' },
@@ -60,18 +60,5 @@ describe('reservation detail per DESIGN.md (#461)', () => {
     const { card } = renderDetail()
     expect(within(card).queryByRole('button', { name: 'Upravit' })).toBeNull()
     expect(within(card).queryByRole('button', { name: 'Další akce' })).toBeNull()
-  })
-
-  it('a handover that failed to load says so and loads again on "Zkusit znovu"', async () => {
-    api.get.mockImplementation((url: string) =>
-      url === '/cabin' ? Promise.reject(new Error('boom')) : Promise.resolve({ data: null }))
-    const { card, user } = renderDetail()
-
-    const alert = await within(card).findByRole('alert')
-    expect(alert).toHaveTextContent('Nepodařilo se načíst výjezdový protokol.')
-
-    api.get.mockImplementation(() => Promise.resolve({ data: { checkoutTasks: [] } }))
-    await user.click(within(alert).getByRole('button', { name: 'Zkusit znovu' }))
-    expect(await within(card).findByRole('button', { name: 'Potvrdit odjezd' })).toBeInTheDocument()
   })
 })

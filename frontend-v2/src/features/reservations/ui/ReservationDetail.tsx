@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, EllipsisVertical, Eye, Trash2 } from "lucide-react";
 import apiClient from "@/api/client";
 import type { Reservation } from "@/api/reservations";
-import { CheckoutSection } from "./CheckoutSection";
+import { StayHandover } from "./StayHandover";
 import { useAuth } from "@/context/AuthContext";
 import { AnimalAvatar } from "@/components/shared/AnimalAvatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -218,8 +218,7 @@ export function ReservationDetail({ reservation: r, onBack, onEdit, onDelete }: 
       )}
 
       <StayWeatherCard from={r.from} to={r.to} />
-      {/* ── Checkout ── */}
-      <CheckoutSection reservation={r} />
+      <StayHandover reservation={r} />
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}

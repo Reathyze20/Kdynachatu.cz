@@ -82,7 +82,7 @@ export const checkoutPath = (id: string) => `/reservations/${id}/checkout`;
 /**
  * Completes the handover (předávka) of a stay: marks the checkout done and, when given,
  * stores the structured state of the cabin. The single write path shared by
- * the Předávka tab and CheckoutSection (reservation detail).
+ * the Předávka tab and the guest-only CheckoutSection (stay detail).
  * `state === undefined` keeps any previously stored state untouched.
  */
 export function completeCheckout(id: string, state?: CheckoutState): Promise<CheckoutStatus> {
