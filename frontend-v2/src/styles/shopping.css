@@ -17,33 +17,6 @@
   overflow: hidden;
 }
 
-.shopping-modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.shopping-modal-form label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.shopping-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  width: 100%;
-  flex-wrap: wrap;
-}
-
-.shopping-modal-actions .button-primary,
-.shopping-modal-actions .button-secondary {
-  width: auto;
-  min-width: 120px;
-  min-height: 44px;
-}
-
 /* ─── Two-column layout ──────────────────────────────────────────────────── */
 
 .shopping-layout {
@@ -197,16 +170,6 @@
   margin-top: 2px;
 }
 
-.shopping-inline-error {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--status-error-light);
-  color: var(--status-error-dark);
-  font-size: 0.84rem;
-  line-height: 1.45;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    DETAIL PANEL (right — selected basket content)
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -248,56 +211,9 @@
   padding: 48px;
 }
 
-.detail-placeholder-icon {
-  font-size: 3rem;
-  opacity: 0.2;
-  margin-bottom: 8px;
-}
-
-.detail-placeholder-title {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.detail-placeholder-hint {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-placeholder);
-}
-
 .detail-placeholder p {
   margin: 0;
   font-size: 0.95rem;
-}
-
-/* ── Back button (mobile only) ───────────────────────────────────────────── */
-
-.detail-back-btn {
-  display: none;
-  /* shown only on mobile */
-  align-items: center;
-  gap: 4px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 500;
-  font-family: var(--font-family);
-  color: var(--color-primary);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm, 6px);
-  transition: all 0.15s ease;
-  min-width: var(--touch-target-min);
-  min-height: var(--touch-target-min);
-  flex-shrink: 0;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-
-.detail-back-btn:hover {
-  background: var(--color-primary-bg);
 }
 
 /* ── Add-form submit button (used in ListDetail + PantryView) ────────── */
@@ -462,13 +378,6 @@
   padding-left: 0;
 }
 
-.detail-back-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .detail-page-title {
   font-size: 26px;
   font-weight: 700;
@@ -476,50 +385,6 @@
   margin: 0;
   line-height: 1.15;
   letter-spacing: -0.025em;
-}
-
-/* Editable title */
-.detail-title-text {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: var(--radius-sm);
-  padding: 2px 4px;
-  margin: -2px -4px;
-  transition: background 0.15s;
-}
-
-.detail-title-text:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.detail-title-edit-icon {
-  opacity: 0;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  transition: opacity 0.15s;
-}
-
-.detail-title-text:hover .detail-title-edit-icon {
-  opacity: 0.5;
-}
-
-.detail-title-edit {
-  font: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: inherit;
-  line-height: inherit;
-  color: inherit;
-  width: 100%;
-  border: 1px solid var(--brand-primary);
-  border-radius: var(--radius-sm);
-  padding: 2px 6px;
-  margin: -3px -7px;
-  outline: none;
-  background: var(--bg-card);
-  box-shadow: var(--focus-ring);
 }
 
 /* Inline row: subtitle counter + add-item form */
@@ -715,136 +580,6 @@
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
 }
 
-.pantry-filter-chip-count {
-  font-size: 0.72rem;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.08);
-  padding: 1px 6px;
-  border-radius: 9999px;
-  line-height: 1.4;
-}
-
-.pantry-filter-chip.is-active .pantry-filter-chip-count {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* ── Bulk add chip (inline with filter chips) ────────────────────────────── */
-
-.pantry-bulk-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 9999px;
-  border: 1.5px dashed rgba(239, 68, 68, 0.4);
-  background: rgba(254, 226, 226, 0.35);
-  color: #b91c1c;
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: var(--font-family);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.18s ease;
-  line-height: 1.3;
-  margin-left: auto;
-}
-
-.pantry-bulk-chip:hover {
-  border-color: rgba(239, 68, 68, 0.7);
-  background: rgba(254, 226, 226, 0.6);
-  color: #991b1b;
-}
-
-.pantry-bulk-chip-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.15);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.pantry-bulk-chip .pantry-filter-chip-count {
-  background: rgba(239, 68, 68, 0.15);
-  color: #b91c1c;
-}
-
-/* ── Essential toggle (inventory edit modal) ─────────────────────────────── */
-
-.essential-toggle-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  border-radius: 50%;
-  border: 1.5px solid var(--color-border, #d1d5db);
-  color: var(--color-text-muted, #9ca3af);
-  cursor: pointer;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  transition: border-color 0.18s, color 0.18s, background 0.18s, box-shadow 0.18s;
-}
-
-.essential-toggle-label:hover {
-  border-color: var(--color-primary, #5d9b62);
-  color: var(--color-primary, #5d9b62);
-  background: rgba(93, 155, 98, 0.06);
-}
-
-.essential-toggle-label input[type="checkbox"] {
-  display: none;
-}
-
-.essential-toggle-icon {
-  font-size: 0.95rem;
-  opacity: 0.6;
-  pointer-events: none;
-  transition: opacity 0.15s, transform 0.15s;
-  line-height: 1;
-}
-
-.essential-toggle-label input[type="checkbox"]:checked+.essential-toggle-icon {
-  opacity: 1;
-  transform: scale(1.15);
-}
-
-.essential-toggle-label:has(input:checked) {
-  background: var(--color-primary, #5d9b62);
-  border-color: var(--color-primary, #5d9b62);
-  color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(93, 155, 98, 0.15);
-}
-
-.essential-toggle-label:has(input:checked):hover {
-  background: #4a8a50;
-  border-color: #4a8a50;
-}
-
-.essential-toggle-label--form {
-  width: 100%;
-  height: auto;
-  min-height: 44px;
-  border-radius: var(--radius-md, 8px);
-  justify-content: flex-start;
-  padding: 8px 12px;
-  gap: var(--space-sm, 8px);
-  font-size: 0.9rem;
-}
-
-.essential-toggle-label--form:has(input:checked) {
-  background: var(--color-primary, #5d9b62);
-  border-color: var(--color-primary, #5d9b62);
-  color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(93, 155, 98, 0.15);
-}
-
 /* ── Clean essential toggle row (EditInventoryModal) ─────────────────────── */
 
 .essential-toggle-row {
@@ -900,55 +635,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MODALS (shared)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.modal-small {
-  max-width: 420px !important;
-  width: 100%;
-}
-
-.modal-actions {
-  text-align: right;
-  margin-top: var(--space-lg);
-}
-
-.inv-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  margin-top: var(--space-lg, 20px);
-  padding-top: var(--space-md, 16px);
-  border-top: 1px solid var(--color-border-light, #f3f4f6);
-  gap: 8px;
-}
-
-.btn-modal-delete {
-  background: transparent;
-  border: none;
-  color: var(--status-error-dark);
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 10px;
-  border-radius: var(--radius-md, 8px);
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-
-.btn-modal-delete:hover {
-  background: var(--color-danger-light, #fee2e2);
-  color: #b91c1c;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
    SHARE DIALOG
    ═══════════════════════════════════════════════════════════════════════════ */
-
-.share-note-modal-content {
-  max-width: 460px;
-}
 
 .share-note-subtitle {
   font-size: var(--font-size-sm);
@@ -1166,15 +854,6 @@
     min-height: 0;
   }
 
-  .shopping-modal-actions {
-    flex-direction: column-reverse;
-  }
-
-  .shopping-modal-actions .button-primary,
-  .shopping-modal-actions .button-secondary {
-    width: 100%;
-  }
-
   /* Master: full-width paper card, the cover photo shows around it (#341) */
   .shopping-master {
     width: auto;
@@ -1204,11 +883,6 @@
     box-shadow: var(--lift);
   }
 
-  /* Show back button on mobile */
-  .detail-back-btn {
-    display: flex !important;
-  }
-
   .detail-inner-container {
     padding: 20px 16px 28px;
     border-radius: var(--radius-lg, 12px);
@@ -1235,23 +909,6 @@
     font-size: 20px;
   }
 
-  /* Edit icon always visible on touch devices */
-  .detail-title-edit-icon {
-    opacity: 0.4;
-  }
-
-  /* Modal actions stacked */
-  .modal-actions {
-    text-align: center !important;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .modal-actions button {
-    width: 100%;
-  }
-
   /* Pantry: tighter sticky header on mobile */
   .pantry-sticky-header {
     gap: 8px;
@@ -1261,11 +918,6 @@
   /* Hide subtitle on mobile to save space */
   .pantry-sticky-header .detail-page-subtitle {
     display: none;
-  }
-
-  /* Compact header: hide back button, title only */
-  .pantry-header-compact .detail-back-btn {
-    display: none !important;
   }
 
   .pantry-header-compact .detail-page-title {
@@ -1385,16 +1037,6 @@
   .pantry-filter-chip {
     padding: 6px 10px;
     font-size: 0.76rem;
-  }
-
-  .pantry-filter-chip-count {
-    font-size: 0.66rem;
-    padding: 0 5px;
-  }
-
-  .pantry-bulk-chip {
-    font-size: 0.76rem;
-    padding: 6px 10px;
   }
 
   /* Items card: subtle radius */
