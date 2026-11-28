@@ -107,7 +107,9 @@ describe('landing page: bloky mezi funkcemi a formulářem (#701)', () => {
     const { container } = renderLanding()
     const block = section(container, 'autor')
     expect(block).toHaveTextContent(/Ahoj, jsem Tomáš\. Kdy na chatu vznikla pro naši rodinnou chatu/)
-    expect(block).not.toHaveTextContent(/Rambousek|nemoc|zdravot|diagnóz|léčb|nemocnic/i)
+    // Za křestním jménem nesmí následovat příjmení (slovo s velkým písmenem).
+    expect(block.textContent).not.toMatch(/Tomáš\s+\p{Lu}/u)
+    expect(block).not.toHaveTextContent(/nemoc|zdravot|diagnóz|léčb|nemocnic/i)
     const images = block.querySelectorAll('img')
     expect(images).toHaveLength(1)
     expect(images[0]).toHaveAttribute('alt', '')

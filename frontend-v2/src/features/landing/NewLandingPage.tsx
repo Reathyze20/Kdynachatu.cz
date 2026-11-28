@@ -209,7 +209,7 @@ function FoundingCabin() {
 /** CTA bloku: doskočí na formulář a předá mu nový objekt `prefill` (WaitlistForm ho použije znovu). */
 function PrefillCta({ label, prefill, onPrefill }: { label: string; prefill: WaitlistPrefill; onPrefill: (p: WaitlistPrefill) => void }) {
   return (
-    <Button asChild variant="outline">
+    <Button asChild variant="secondary">
       <a href="#zapis" onClick={() => onPrefill({ ...prefill })}>{label}</a>
     </Button>
   )
