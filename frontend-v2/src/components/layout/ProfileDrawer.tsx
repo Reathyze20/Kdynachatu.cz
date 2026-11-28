@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import { LogOut, ScrollText, Shield } from 'lucide-react'
 import { ADMIN_NAV } from '@/lib/navRoutes'
 import { useCabinSceneMode, type CabinSceneMode } from '@/hooks/useCabinSceneMode'
+import { OverviewToggles } from '@/features/dashboard/OverviewToggles'
 
 /** Volba „Scéna chaty“ (#565): scéna na Přehledu (později i maskot na liště), jen v tomto zařízení. */
 const SCENE_MODES: { value: CabinSceneMode; label: string }[] = [
@@ -45,11 +46,12 @@ interface ProfileDrawerProps {
 }
 
 export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
-  const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, user, token, login } = useAuth()
+  const { updateAnimalIcon, logout, isAdmin, isSuperAdmin, isGuest, user, token, login } = useAuth()
   // Šuplík se zavře až při odhlášení, jinak by s ním zmizel i dotaz na neodeslané změny (#537)
   const { requestLogout, pendingDialog } = useLogout(onClose)
   const logoutHintId = useId()
   const sceneHeadingId = useId()
+  const overviewHeadingId = useId()
   const [sceneMode, setSceneMode] = useCabinSceneMode()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -502,6 +504,15 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 <input type="hidden" id="profile-animal-icon" value={selectedAnimal} readOnly />
               </div>
             </div>
+
+            {/* Přepínače Přehledu (#686), stejné jako v „Upravit Přehled“; host personalizaci nemá */}
+            {!isGuest && (
+              <div className="drawer-section" role="group" aria-labelledby={overviewHeadingId}>
+                <h3 id={overviewHeadingId} className="text-card-title text-(--text-main)">Přehled</h3>
+                <p className="mt-1 text-label text-(--text-muted)">Co chceš vidět na Přehledu. Platí na všech tvých zařízeních.</p>
+                <OverviewToggles />
+              </div>
+            )}
 
             <div className="drawer-section">
               <h3 id={sceneHeadingId} className="text-card-title text-(--text-main)">Scéna chaty</h3>

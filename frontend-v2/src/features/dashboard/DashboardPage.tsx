@@ -17,6 +17,7 @@ import { AttentionCard } from "./AttentionCard";
 import { LaterAndFreeCard } from "./LaterAndFreeCard";
 import { buildAttention } from "./attention";
 import { NoteSheet } from "./NoteSheet";
+import { EditOverview, SimplifiedNote } from "./EditOverview";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle, someoneAtCabin } from "./overviewStay";
@@ -218,6 +219,8 @@ export function DashboardPage() {
     hasStayForecast: !!stayPick,
     hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username, getLocalTodayIso()),
   });
+  // Jednorázová poznámka o jednodušším Přehledu (#686), dokud ji uživatel nezavře; host personalizaci nemá
+  const showSimplifiedNote = !isGuest && prefs !== undefined && !prefs?.simplifiedNoteDismissed;
   // „Visí na tobě“ a „Důležité“ jsou vždy v hlavním sloupci (#685)
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const tray = useTrayNudges(reservationsQuery.data, shoppingQuery.data);
@@ -288,6 +291,7 @@ export function DashboardPage() {
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
       {/* Dnešek chaty (#338): na desktopu v hlavičce levého menu, jinak kompaktní karta nahoře */}
       {isDesktop ? <h1 className="sr-only">{cabinQuery.data?.name ?? "Přehled"}</h1> : <CabinToday variant="card" weather={blocks.weather} events={blocks.regionEvents} />}
+      {showSimplifiedNote && <SimplifiedNote />}
 
       {/* Winter banner */}
       {isWinterized && (
@@ -357,6 +361,9 @@ export function DashboardPage() {
           </ErrorBoundary>
         </motion.div>
       ) : null)}
+
+      {/* Upravit Přehled (#686): přepínače bloků a Napsat vzkaz; host personalizaci nemá */}
+      {!isGuest && <EditOverview onWriteNote={() => setNoteSheetOpen(true)} />}
     </div>
   );
 

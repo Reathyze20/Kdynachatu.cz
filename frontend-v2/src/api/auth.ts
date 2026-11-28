@@ -102,6 +102,12 @@ export const authApi = {
     const { data } = await apiClient.patch<UpdateProfileResponse>('/users/me', body)
     return data
   },
+  /** Uloží změnu preferencí Přehledu; server ji sloučí s uloženými (#681). */
+  updateDashboardPrefs: async (dashboardPrefs: DashboardPrefs): Promise<UpdateProfileResponse> => {
+    const body: UpdateProfileRequest = { dashboardPrefs }
+    const { data } = await apiClient.patch<UpdateProfileResponse>('/users/me', body)
+    return data
+  },
   /** Zneplatní všechna přihlášení účtu, i to aktuální. */
   logoutEverywhere: async (): Promise<LogoutEverywhereResponse> => {
     const { data } = await apiClient.post<LogoutEverywhereResponse>('/users/me/logout-all')
