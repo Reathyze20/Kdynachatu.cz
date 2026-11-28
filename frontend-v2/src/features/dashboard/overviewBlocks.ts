@@ -37,6 +37,14 @@ export function overviewBlocks({ isGuest, prefs, hasStayForecast, hasSinceLast }
   return { ...toggles, stayForecast: toggles.stayForecast && hasStayForecast, sinceLast: toggles.sinceLast && hasSinceLast };
 }
 
+/**
+ * Má boční sloupec co ukázat? Na desktopu nese zapnuté volitelné bloky kromě Počasí a Akcí v kraji
+ * (ty jsou v levém menu), na mobilu jen Nástěnku. Prázdné „Potom a volno“ se tu nerozpozná.
+ */
+export function hasAsideContent(blocks: OverviewBlocks, isDesktop: boolean): boolean {
+  return blocks.noticeboard || (isDesktop && (blocks.cabinScene || blocks.sinceLast || blocks.laterAndFree || blocks.stayForecast));
+}
+
 /** Uložené preference Přehledu přihlášeného uživatele; sdílí dotaz s profilem. Host je nenačítá. */
 export function useDashboardPrefs(enabled: boolean): DashboardPrefs | null | undefined {
   const { data } = useQuery({

@@ -8,7 +8,7 @@ import type { CabinSettings, DashboardActivationData, DashboardReservationsData,
 import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppingSchema, DashboardNotesSchema } from "@/api/schemas";
 import { ActiveReservation, SinceLastCard } from "./ActiveReservation";
 import { CabinScene } from "./CabinScene";
-import { overviewBlocks, useDashboardPrefs } from "./overviewBlocks";
+import { hasAsideContent, overviewBlocks, useDashboardPrefs } from "./overviewBlocks";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { NudgeTray } from "./NudgeTray";
@@ -218,8 +218,7 @@ export function DashboardPage() {
     hasStayForecast: !!stayPick,
     hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username, getLocalTodayIso()),
   });
-  // „Visí na tobě“ a „Důležité“: na mobilu nahoře v hlavním sloupci, na desktopu
-  // v bočním panelu nad vzkazem, aby se Přehled vešel bez scrollování (#275, #356)
+  // „Visí na tobě“ a „Důležité“ jsou vždy v hlavním sloupci (#685)
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
   const tray = useTrayNudges(reservationsQuery.data, shoppingQuery.data);
   const nudges = <NudgeTray nudges={tray.nudges} onDismiss={tray.dismiss} />;
@@ -257,7 +256,7 @@ export function DashboardPage() {
       <CabinScene data={reservationsData} winterized={isWinterized} weather={todayWeather} />
     </motion.div>
   );
-  const laterBlocks = (
+  const optionalBlocks = (
     <>
       {blocks.sinceLast && lastStay && (
         <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-since-last-widget">
@@ -342,7 +341,7 @@ export function DashboardPage() {
           ) : null}
         </motion.div>
 
-        {!isDesktop && laterBlocks}
+        {!isDesktop && optionalBlocks}
       </motion.div>
 
       {isDesktop && attention}
@@ -362,11 +361,10 @@ export function DashboardPage() {
   );
 
   // Rám #1b: hlavní sloupec = co nesmím minout (Visí na tobě → Kdo jede → Důležité), boční = zapnuté volitelné bloky (#685)
-  const hasAside = blocks.noticeboard || (isDesktop && (!!sceneBlock || blocks.sinceLast || blocks.laterAndFree || blocks.stayForecast));
-  const aside = hasAside && (
+  const aside = hasAsideContent(blocks, isDesktop) && (
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {isDesktop && sceneBlock}
-      {isDesktop && laterBlocks}
+      {isDesktop && optionalBlocks}
       {blocks.noticeboard && <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />
