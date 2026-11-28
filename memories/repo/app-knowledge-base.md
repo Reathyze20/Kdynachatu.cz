@@ -45,7 +45,7 @@
 | **Rezervace** | ✅ reservations.ts (16 endpointů) | ✅ ReservationsPage (12 komponent) | ❌ deprecated | ✅ Reservation, UserAvailability, MonthlyNote, ReservationWatcher | Complete | 95% |
 | **Kalendář** | ✅ (součást reservations) | ✅ CalendarGrid, CalendarCell | ❌ deprecated | ✅ | Complete | 90% |
 | **Dostupnost uživatelů** | ✅ reservations.ts (4 endpointy) | ✅ AvailabilityModal | ❌ | ✅ UserAvailability | Complete | 90% |
-| **Checkout odjezdu** | ✅ reservations.ts (2 endpointy) | ✅ CheckoutSection, DepartureBanner | ❌ | ✅ Reservation fields | Complete | 95% |
+| **Checkout odjezdu** | ✅ reservations.ts (2 endpointy) | ✅ CheckoutSection | ❌ | ✅ Reservation fields | Complete | 95% |
 | **Měsíční poznámky** | ✅ reservations.ts (2 endpointy) | ✅ (v kalendáři) | ❌ | ✅ MonthlyNote | Complete | 100% |
 | **Chat / Nástěnka** | ✅ channels.ts, messages.ts, notes.ts (22 endpointů) | ✅ NotesPage (10 komponent) | ❌ deprecated | ✅ NoteThread, Note, NoteReaction, ThreadReadStatus | Complete | 95% |
 | **Nákupní seznamy** | ✅ shoppingList.ts, shoppingLists.ts (16 endpointů) | ✅ ShoppingPage (13 komponent) | ❌ deprecated | ✅ ShoppingList, ShoppingListItem, ShoppingItemSplit | Complete | 95% |
@@ -431,7 +431,7 @@ Legacy frontend (`src/frontend/`) obsahuje:
 | [landing/](frontend-v2/src/features/landing/) | 2 (LandingPage, WaitlistForm) | 0 | waitlist API | Tailwind + tokeny (#700) | ✅ Complete |
 | [invite/](frontend-v2/src/features/invite/) | 1 (InvitePage) | 0 | invites API | AuthLayout (layout.css) | ✅ Complete |
 | [onboarding/](frontend-v2/src/features/onboarding/) | 1 (OnboardingPage) | 0 | cabin API | AuthLayout (layout.css) | ✅ Complete |
-| [dashboard/](frontend-v2/src/features/dashboard/) | 7 (DashboardPage, ActiveReservation, DepartureBanner, EssentialWarning, HandoverNote, ShoppingWidget, WeatherCard) | 0 (inline queries) | dashboard.ts (3 queries + weather) | dashboard.css | ✅ Complete |
+| [dashboard/](frontend-v2/src/features/dashboard/) | 6 (DashboardPage, ActiveReservation, EssentialWarning, HandoverNote, ShoppingWidget, WeatherCard) | 0 (inline queries) | dashboard.ts (3 queries + weather) | dashboard.css | ✅ Complete |
 | [reservations/](frontend-v2/src/features/reservations/) | 12 (ReservationsPage + calendar/2 + ui/8 + hooks/2) | 2 (useCalendar, useReservations) | reservations.ts | reservations.css, Reservations.module.css | ✅ Complete |
 | [notes/](frontend-v2/src/features/notes/) | 10 (NotesPage, ChatView, MessageBubble, MessageInput, MessageContextMenu, ReactionBar, ThreadList, AddToShoppingDialog, CreateRepairDialog) | 2 (useNotes, useThreads) | notes.ts | notes.css | ✅ Complete |
 | [shopping/](frontend-v2/src/features/shopping/) | 13 (ShoppingPage, ListMaster, ListDetail, ItemRow, ViewSwitcher, PantryView, InventoryRow, EditInventoryModal, AddToCartModal, BulkAddToCartModal, ShareListDialog) | 2 (useShoppingLists, useInventory) | shopping.ts | shopping.css | ✅ Complete |
