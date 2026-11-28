@@ -18,6 +18,8 @@ import { LaterAndFreeCard } from "./LaterAndFreeCard";
 import { buildAttention } from "./attention";
 import { NoteSheet } from "./NoteSheet";
 import { EditOverview, SimplifiedNote } from "./EditOverview";
+import { ArrivalCard } from "./ArrivalCard";
+import { useArrival } from "./useArrival";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
 import { pickOverviewStay, overviewStayTitle, someoneAtCabin } from "./overviewStay";
@@ -212,12 +214,14 @@ export function DashboardPage() {
     : null;
   // Které bloky jsou vidět, rozhoduje jen `overviewBlocks` (#685): role, preference a data
   const reservationsData = reservationsQuery.data;
+  // Příjezdová karta (#174) přebírá „Od minule“, dokud je vidět
+  const arrival = useArrival(!isGuest);
   const lastStay = reservationsData?.lastStay;
   const blocks = overviewBlocks({
     isGuest: !!isGuest,
     prefs,
     hasStayForecast: !!stayPick,
-    hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username, getLocalTodayIso()),
+    hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username, getLocalTodayIso()) && !arrival,
   });
   // Jednorázová poznámka o jednodušším Přehledu (#686), dokud ji uživatel nezavře; host personalizaci nemá
   const showSimplifiedNote = !isGuest && prefs !== undefined && !prefs?.simplifiedNoteDismissed;
@@ -317,6 +321,8 @@ export function DashboardPage() {
           <span>Nepodařilo se načíst nastavení chaty — některé widgety nemusí fungovat správně.</span>
         </div>
       )}
+
+      {arrival && <ArrivalCard arrival={arrival} supplies={shoppingQuery.data?.attention} />}
 
       {/* Visí na tobě, pod ním na mobilu Důležité; na desktopu jde Důležité pod Kdo jede (#685) */}
       {nudges}
