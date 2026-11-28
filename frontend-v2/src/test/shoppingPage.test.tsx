@@ -617,6 +617,28 @@ describe('shopping page: add from the pantry in one tap', () => {
     expect(api.post).toHaveBeenCalledWith('/inventory/s-low/add-to-cart', { newListName: 'Nákup' })
   })
 
+  it('"Vše do nákupu" without an active list creates the named list first and adds every missing stock into it', async () => {
+    const { user } = await openPantry([])
+    api.post.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === '/shopping-lists' ? { id: 'list-new', name: 'Chata' } : {} }),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
+    const prompt = await dialog('Nový nákupní seznam')
+    expect(prompt.getByText('Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj 2 položky.')).toBeInTheDocument()
+    await user.clear(prompt.getByRole('textbox', { name: 'Název seznamu' }))
+    await user.type(prompt.getByRole('textbox', { name: 'Název seznamu' }), 'Chata')
+    await user.click(prompt.getByRole('button', { name: 'Vytvořit a přidat' }))
+
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(3))
+    expect(api.post.mock.calls).toEqual([
+      ['/shopping-lists', { name: 'Chata' }],
+      ['/inventory/s-low/add-to-cart', { listId: 'list-new' }],
+      ['/inventory/s-empty/add-to-cart', { listId: 'list-new' }],
+    ])
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Přidáno do seznamu „Chata“.', 'success'))
+  })
+
   it('"Vše do nákupu" confirms the count and the list once, adds every missing stock outside the list and reports a partial failure', async () => {
     const { qc, user } = await openPantry()
     const invalidated = invalidatedKeys(qc)
