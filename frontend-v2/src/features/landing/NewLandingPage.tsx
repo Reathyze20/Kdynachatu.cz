@@ -1,19 +1,22 @@
 /**
  * features/landing/NewLandingPage.tsx
  * Landing page na `/` pro nepřihlášené (#700, spec #692): lišta → hero se scénou chaty → screenshoty → funkce →
- * zápis do waitlistu → patička. Stojí na tokenech a sdílených komponentách (DESIGN.md), bez vlastního CSS.
- * Bloky zakládající chata, spolky, pronájem a autor (#701) patří mezi `#funkce` a `#zapis`.
+ * zakládající chata → oddíly a spolky → pronájem → od chataře → zápis do waitlistu → patička (#701). Stojí na
+ * tokenech a sdílených komponentách (DESIGN.md), bez vlastního CSS. CTA z bloků spolky a pronájem předvyplní
+ * formulář a doskočí na něj; odkaz s kotvou (`/#pronajem`) otevře stránku rovnou na sekci.
  */
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { CalendarDays, KeyRound, Menu, ShoppingBasket, UserRound, WifiOff, X, type LucideIcon } from 'lucide-react'
 import type { DashboardReservationsData } from '@/api/dashboard'
 import { Card } from '@/components/shared/Card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CabinScene } from '@/features/dashboard/CabinScene'
+import dormouseNotebook from '@/features/dashboard/scene/dormouse-notebook.png'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { cn } from '@/lib/utils'
-import { WaitlistForm } from './WaitlistForm'
+import { WaitlistForm, type WaitlistPrefill } from './WaitlistForm'
 
 /** Návštěvník nemá chatu: scéna je prázdná chata s ročním obdobím z data zařízení, bez pobytů a bez počasí. */
 const NO_STAYS: DashboardReservationsData = {
@@ -186,8 +189,94 @@ function Features() {
   )
 }
 
+function FoundingCabin() {
+  return (
+    <section id="zakladajici" aria-labelledby="zakladajici-title" className={SECTION}>
+      <Card className="flex flex-col items-start gap-4">
+        <h2 id="zakladajici-title" className="text-card-title">Zakládající chata</h2>
+        <p className="text-body text-(--text-muted)">
+          Prvních 50 chat má první sezónu zdarma a hlas při rozhodování, co se bude stavět dál. Cenu poznáš dřív, než
+          budeš platit.
+        </p>
+        <Button asChild>
+          <a href="#zapis">Zapsat se</a>
+        </Button>
+      </Card>
+    </section>
+  )
+}
+
+/** CTA bloku: doskočí na formulář a předá mu nový objekt `prefill` (WaitlistForm ho použije znovu). */
+function PrefillCta({ label, prefill, onPrefill }: { label: string; prefill: WaitlistPrefill; onPrefill: (p: WaitlistPrefill) => void }) {
+  return (
+    <Button asChild variant="secondary">
+      <a href="#zapis" onClick={() => onPrefill({ ...prefill })}>{label}</a>
+    </Button>
+  )
+}
+
+function Clubs({ onPrefill }: { onPrefill: (p: WaitlistPrefill) => void }) {
+  return (
+    <section id="spolky" aria-labelledby="spolky-title" className={SECTION}>
+      <Card className="flex flex-col items-start gap-4">
+        <h2 id="spolky-title" className="text-card-title">Spravuješ chatu oddílu nebo spolku?</h2>
+        <p className="text-body text-(--text-muted)">
+          Na chatě se střídá víc lidí, klíče drží správce a závady se ztrácejí ve zprávách. I pro oddíl máš na jednom
+          místě, kdo kdy jede, v jakém stavu kdo chatu předal a co dochází.
+        </p>
+        <PrefillCta label="Zapsat oddíl nebo spolek" prefill={{ segment: 'spolek' }} onPrefill={onPrefill} />
+      </Card>
+    </section>
+  )
+}
+
+function Rental({ onPrefill }: { onPrefill: (p: WaitlistPrefill) => void }) {
+  return (
+    <section id="pronajem" aria-labelledby="pronajem-title" className={SECTION}>
+      <Card className="flex flex-col items-start gap-4">
+        <Badge variant="outline" className="border-rule-soft font-normal text-muted-foreground">Připravujeme</Badge>
+        <h2 id="pronajem-title" className="text-card-title">Pronajímáš chatu i cizím lidem? Zvažujeme to.</h2>
+        <p className="text-body text-(--text-muted)">
+          Zatím to nestavíme. Zapiš se a dej nám vědět, co bys potřeboval. Až to bude, dozvíš se to první.
+        </p>
+        <PrefillCta label="Zapsat zájem o pronájem" prefill={{ rentalIntent: 'obcas' }} onPrefill={onPrefill} />
+      </Card>
+    </section>
+  )
+}
+
+/** Jen křestní jméno, bez zdravotních údajů a bez fotky obličeje: místo ní plch z povolených obrázků (DESIGN.md §4). */
+function Founder() {
+  return (
+    <section id="autor" aria-labelledby="autor-title" className={SECTION}>
+      <Card className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
+        <img src={dormouseNotebook} alt="" width={112} height={80} className="shrink-0 [image-rendering:pixelated]" />
+        <div className="flex flex-col gap-3">
+          <h2 id="autor-title" className="text-card-title">Od chataře</h2>
+          <p className="text-body">
+            Ahoj, jsem Tomáš. Kdy na chatu vznikla pro naši rodinnou chatu, na které se střídá několik rodin. Kdo kdy
+            jede, jsme dohledávali ve WhatsAppu. Co dochází, jsme zjistili až na místě. A v jakém stavu chatu najdeme,
+            nevěděl nikdo předem.
+          </p>
+          <p className="text-body">
+            Tak jsem napsal aplikaci, kterou dnes používá celá naše rodina. Teď zkouším, jestli pomůže i dalším chatám.
+          </p>
+        </div>
+      </Card>
+    </section>
+  )
+}
+
 export function NewLandingPage() {
   useDocumentTitle('Sdílená chata bez dohadování')
+  const { hash } = useLocation()
+  const [prefill, setPrefill] = useState<WaitlistPrefill | null>(null)
+
+  // Odkaz s kotvou (`/#pronajem` pro pronajímatele) otevře stránku rovnou na sekci; prohlížeč to po vykreslení
+  // Reactu sám neudělá.
+  useEffect(() => {
+    if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'start' })
+  }, [hash])
 
   return (
     <div className="min-h-dvh text-(--text-main) [background:var(--bg-app-backdrop)]">
@@ -196,6 +285,10 @@ export function NewLandingPage() {
         <Hero />
         <Screens />
         <Features />
+        <FoundingCabin />
+        <Clubs onPrefill={setPrefill} />
+        <Rental onPrefill={setPrefill} />
+        <Founder />
         <section id="zapis" aria-labelledby="zapis-title" data-testid="landing-waitlist-section" className={SECTION}>
           {/* WaitlistForm je sám papírová karta, úvod je karta nad ním. */}
           <div className="mx-auto flex max-w-xl flex-col gap-4">
@@ -205,7 +298,7 @@ export function NewLandingPage() {
                 Kdy na chatu zatím používá naše rodina. Zapiš se a ozvu se, až bude připravená i pro tvoji chatu.
               </p>
             </Card>
-            <WaitlistForm />
+            <WaitlistForm prefill={prefill} />
           </div>
         </section>
       </main>

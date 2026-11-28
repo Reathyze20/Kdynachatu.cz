@@ -54,6 +54,10 @@ Role jsou vázané na členství v chatě, ne na uživatele ([ADR-0001](adr/0001
 Ke **30. 6. 2027**: (a) všechny rezervace sezóny vznikly v aplikaci, ne ve WhatsAppu, a (b) předávka je vyplněná u ≥ 70 % pobytů.
 Splněno → komerční připravenost (self-service onboarding, GDPR, platby, případně i18n). Nesplněno → zjistit proč, nestavět platby.
 
+Zájem mimo rodinu měří waitlist na landing page (spec #692):
+- **Waitlist:** k 30. 6. 2027 aspoň 100 zápisů mimo rodinu, z toho aspoň 30 % s ochotou platit víc než 0 Kč.
+- **Pronájem:** aspoň 30 % zápisů „Občas“ nebo „Ano“, nebo aspoň 30 pronajímatelů, otevře samostatný grill k pronájmu podle ADR-0003. ADR-0003 se nemění.
+
 ## Vědomě ne teď
 
 - WhatsApp bot (Cloud API / Baileys) – nejdřív ověřit, že rodina výstupy přes „Kopírovat pro WhatsApp“ opravdu sdílí.
