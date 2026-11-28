@@ -61,7 +61,7 @@ const countPerFile = (files: Record<string, string>, count: (source: string) => 
 const G3_DEBT: Record<string, number> = {
   '../features/reservations/Reservations.module.css': 26,
   '../styles/gallery.css': 12,
-  '../styles/notes.css': 19,
+  '../styles/notes.css': 16,
   '../styles/reconstruction.css': 3,
   '../styles/reservations.css': 38,
   '../styles/shopping.css': 26,

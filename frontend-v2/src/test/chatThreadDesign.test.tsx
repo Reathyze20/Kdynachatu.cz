@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import notesCssRaw from '@/styles/notes.css?raw'
 import type { Note } from '@/api/notes'
@@ -26,7 +27,7 @@ const noop = () => {}
 
 function renderWithQuery(ui: ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+  return render(<QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>)
 }
 
 function renderChat(extra: Partial<Parameters<typeof ChatView>[0]> = {}) {
@@ -97,10 +98,9 @@ describe('message composer per DESIGN.md (#518)', () => {
     expect(screen.getByRole('button', { name: 'Odeslat' })).toBeInTheDocument()
   })
 
-  it('closing the reply preview and the departure panel are named icon buttons', () => {
+  // Panel „Odjezdový protokol“ odstranil #517 (odkaz na Předávku, chatHandoverLink.test.tsx), jeho tlačítko zavřít s ním.
+  it('closing the reply preview is a named icon button', () => {
     renderWithQuery(<MessageInput activeThreadId="t-1" replyTo={note('n-1', 'u-petr', 'petr')} onCancelReply={noop} />)
     expect(screen.getByRole('button', { name: 'Zrušit odpověď' })).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId('notes-handover-toggle-button'))
-    expect(screen.getByRole('button', { name: 'Zavřít odjezdový protokol' })).toBeInTheDocument()
   })
 })
