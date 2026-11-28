@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import notesCssRaw from '@/styles/notes.css?raw'
 import type { Note } from '@/api/notes'
@@ -59,7 +60,7 @@ const noop = () => {}
 
 function renderWithQuery(ui: ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+  return render(<QueryClientProvider client={qc}><MemoryRouter>{ui}</MemoryRouter></QueryClientProvider>)
 }
 
 function renderChat(extra: Partial<Parameters<typeof ChatView>[0]> = {}) {

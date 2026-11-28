@@ -1,17 +1,12 @@
 import { useRef, useState, useEffect } from "react";
-import { ClipboardCheck, SendHorizontal, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { KeyRound, SendHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { isFeatureEnabled, useCabinFeatures } from "@/hooks/useCabinFeatures";
 import { useSendNote } from "./hooks/useNotes";
 import type { Note } from "@/api/notes";
 import { getNetworkAwareActionMessage, isNetworkError } from "@/lib/networkError";
-
-const HANDOVER_ITEMS = [
-  { key: "kamna", label: "Kamna: Popel vybrán, vyhasnuto" },
-  { key: "drevo", label: "Dřevo: Třísky a polena pro dalšího připraveny" },
-  { key: "jidlo", label: "Jídlo: Uklizeno (ochrana před myšmi)" },
-  { key: "voda", label: "Voda: Kohoutky zavřeny, trubky vypuštěny" },
-  { key: "zabezpeceni", label: "Zabezpečení: Okenice a dveře zajištěny" },
-];
 
 interface Props {
   activeThreadId: string | null;
@@ -21,14 +16,13 @@ interface Props {
 
 export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) {
   const [message, setMessage] = useState("");
-  const [handoverOpen, setHandoverOpen] = useState(false);
-  const [handoverChecks, setHandoverChecks] = useState<Record<string, boolean>>(
-    Object.fromEntries(HANDOVER_ITEMS.map((i) => [i.key, true])),
-  );
-  const [protocolNote, setProtocolNote] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sendNote = useSendNote();
+  const { isGuest } = useAuth();
+  const { data: cabin } = useCabinFeatures();
+  // Předat chatu jde jen na záložce Předávka (#517); host ji nevidí (403, #216) a bez rezervací záložka není.
+  const showHandoverLink = !isGuest && isFeatureEnabled(cabin?.features, "reservations");
 
   // Auto-resize textarea
   const autoResize = () => {
@@ -80,41 +74,6 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
     handleSend();
   };
 
-  // Build handover protocol text and insert into textarea
-  const insertHandover = () => {
-    const lines: string[] = ["Odjezdový protokol:", ""];
-    HANDOVER_ITEMS.forEach((item) => {
-      const checked = handoverChecks[item.key] ?? true;
-      lines.push(`${checked ? "[x]" : "[ ]"} ${item.label}`);
-    });
-    if (protocolNote.trim()) {
-      lines.push("");
-      lines.push(`Poznámka: ${protocolNote.trim()}`);
-    }
-    const existing = message.trimEnd();
-    const text = existing.length > 0
-      ? existing + "\n\n" + lines.join("\n")
-      : lines.join("\n");
-    setSendError(null);
-    setMessage(text);
-    setHandoverOpen(false);
-    setProtocolNote("");
-    setHandoverChecks(Object.fromEntries(HANDOVER_ITEMS.map((i) => [i.key, true])));
-    // Focus textarea
-    setTimeout(() => {
-      const ta = textareaRef.current;
-      if (ta) {
-        ta.focus();
-        ta.setSelectionRange(ta.value.length, ta.value.length);
-        autoResize();
-      }
-    }, 0);
-  };
-
-  const toggleCheck = (key: string) => {
-    setHandoverChecks((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
   // Focus textarea when reply starts
   useEffect(() => {
     if (replyTo && textareaRef.current) {
@@ -141,61 +100,16 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
         </div>
       )}
 
-      {/* Odjezdový protokol panel */}
-      {handoverOpen && (
-        <div className="handover-panel" id="handover-panel">
-          <div className="handover-panel-header">
-            <span>Odjezdový protokol</span>
-            <Button type="button" variant="ghost" size="icon" id="handover-panel-close" aria-label="Zavřít odjezdový protokol"
-              onClick={() => setHandoverOpen(false)}>
-              <X aria-hidden="true" />
-            </Button>
-          </div>
-          <div className="handover-checklist" id="handover-checklist">
-            {HANDOVER_ITEMS.map((item) => (
-              <label key={item.key} className="handover-item">
-                <input
-                  type="checkbox"
-                  name={item.key}
-                  checked={handoverChecks[item.key] ?? true}
-                  onChange={() => toggleCheck(item.key)}
-                />
-                <span>{item.label}</span>
-              </label>
-            ))}
-          </div>
-          <div className="handover-note-row">
-            <input
-              type="text"
-              id="handover-note-input"
-              placeholder="Poznámka (volitelná)..."
-              autoComplete="off"
-              value={protocolNote}
-              onChange={(e) => {
-                if (sendError) setSendError(null);
-                setProtocolNote(e.target.value);
-              }}
-            />
-          </div>
-          <div className="handover-panel-footer">
-            <Button type="button" variant="secondary" id="handover-panel-cancel" onClick={() => setHandoverOpen(false)}>
-              Zrušit
-            </Button>
-            <Button type="button" id="handover-panel-insert" onClick={insertHandover}>
-              Vložit do zprávy
-            </Button>
-          </div>
+      {showHandoverLink && (
+        <div className="chat-actions-row">
+          <Button asChild variant="secondary" size="sm">
+            <Link to="/handover">
+              <KeyRound aria-hidden="true" />
+              Předat chatu
+            </Link>
+          </Button>
         </div>
       )}
-
-      {/* Chip action buttons above input */}
-      <div className="chat-actions-row">
-        <Button type="button" variant="secondary" size="sm" aria-expanded={handoverOpen} aria-controls="handover-panel"
-          onClick={() => setHandoverOpen((o) => !o)} data-testid="notes-handover-toggle-button">
-          <ClipboardCheck aria-hidden="true" />
-          Odjezdový protokol
-        </Button>
-      </div>
 
       <div className="chat-input-row">
         {/* Bílá pilulka */}

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { DiaryPage } from '@/features/diary/DiaryPage'
 import { NotesPage } from '@/features/notes/NotesPage'
@@ -22,7 +23,7 @@ vi.mock('@/context/AuthContext', () => ({
 
 function renderPage(page: ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  render(<QueryClientProvider client={qc}>{page}</QueryClientProvider>)
+  render(<QueryClientProvider client={qc}><MemoryRouter>{page}</MemoryRouter></QueryClientProvider>)
 }
 
 function mockGet(routes: Record<string, unknown>) {
