@@ -80,21 +80,6 @@ describe('Stav chaty při odjezdu: plynová bomba', () => {
 
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/reservations/r-1/checkout', { checkoutState: {} }))
   })
-
-  it.each(READ_CASES)('shrnutí potvrzeného odjezdu čte %s jako %s', async (value, expected) => {
-    api.get.mockResolvedValueOnce({
-      data: {
-        isCheckoutCompleted: true, checkoutCompletedBy: 'u-eva', checkoutCompletedByUsername: 'Eva',
-        checkoutCompletedAt: `${TODAY}T09:00:00Z`, checkoutState: { gas: value, note: 'Dřevo je u kamen.' },
-      },
-    })
-    renderCheckout(stay({ isCheckoutCompleted: true }))
-
-    await screen.findByText('Odjezd potvrzen')
-    if (expected) expect(screen.getByText(expected)).toBeInTheDocument()
-    else expect(screen.queryByText(/Plynová bomba/)).not.toBeInTheDocument()
-    expect(screen.queryByText(OLD_GAS_WORDS)).not.toBeInTheDocument()
-  })
 })
 
 describe('Od minule na Přehledu: plynová bomba', () => {

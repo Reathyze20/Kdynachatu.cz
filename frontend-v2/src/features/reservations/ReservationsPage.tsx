@@ -134,7 +134,7 @@ export function ReservationsPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  // Výzva k odjezdu na Přehledu (#274): ?pobyt=<id> otevře detail pobytu s formulářem odjezdu
+  // Výzva k odjezdu pro hosta (#274, #222): ?pobyt=<id> otevře detail pobytu s formulářem odjezdu
   useEffect(() => {
     const id = searchParams.get("pobyt");
     if (!id || !data) return;
