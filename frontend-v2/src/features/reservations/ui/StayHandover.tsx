@@ -31,7 +31,7 @@ export function StayHandover({ reservation: r }: { reservation: Reservation }) {
     if (status.data) {
       const { checkoutCompletedAt: completedAt, checkoutCompletedByUsername: completedByUsername, checkoutState } = status.data;
       return (
-        <HandoverMirror title="Odjezd potvrzen" nested
+        <HandoverMirror title="Chata předána" nested
           handover={{ from: r.from, to: r.to, completedAt, completedByUsername, checkoutState: checkoutState ?? {} }} />
       );
     }

@@ -58,14 +58,14 @@ const noHandoverForm = (card: HTMLElement) => {
 
 describe('stay detail: completed handover is a read-only mirror', () => {
   // Host vidí dokončenou předávku stejně jako člen.
-  it.each(['member', 'guest'])('%s sees "Odjezd potvrzen", who and when, and the whole state without any form', async (role) => {
+  it.each(['member', 'guest'])('%s sees "Chata předána", who and when, and the whole state without any form', async (role) => {
     auth.role = role
     mockCheckout(completedStatus({
       gas: 'low', heatingOff: true, waterOff: false, broken: 'kape kohoutek', leftBehind: 'dřevo u kamen', note: 'Užijte si to!',
     }))
     const { card } = renderDetail({ isCheckoutCompleted: true, userId: 'u-jana', username: 'Jana' })
 
-    const mirror = await within(card).findByRole('region', { name: 'Odjezd potvrzen' })
+    const mirror = await within(card).findByRole('region', { name: 'Chata předána' })
     expect(mirror).toHaveTextContent('Předal/a Jana · 29. 11. 2030 v 10:30')
     expect(mirror).toHaveTextContent('Plynová bomba')
     expect(within(mirror).getByText('Dochází')).toBeInTheDocument()
@@ -85,7 +85,7 @@ describe('stay detail: completed handover is a read-only mirror', () => {
     mockCheckout(completedStatus({ gas, note: 'Dřevo je u kamen.' }))
     const { card } = renderDetail({ isCheckoutCompleted: true })
 
-    const mirror = await within(card).findByRole('region', { name: 'Odjezd potvrzen' })
+    const mirror = await within(card).findByRole('region', { name: 'Chata předána' })
     if (expected) expect(within(mirror).getByText(expected)).toBeInTheDocument()
     else expect(mirror).not.toHaveTextContent('Plynová bomba')
     expect(mirror).not.toHaveTextContent(/Plný|Půl|Prázdný|Plyn:/i)
@@ -97,10 +97,11 @@ describe('stay detail: completed handover is a read-only mirror', () => {
     const { card, user } = renderDetail({ isCheckoutCompleted: true })
 
     const alert = await within(card).findByRole('alert')
+    expect(alert).toHaveTextContent('Předávku se nepodařilo načíst')
     mockCheckout(completedStatus({ note: 'Dřevo je u kamen.' }))
     await user.click(within(alert).getByRole('button', { name: 'Zkusit znovu' }))
 
-    expect(await within(card).findByRole('region', { name: 'Odjezd potvrzen' })).toHaveTextContent('Dřevo je u kamen.')
+    expect(await within(card).findByRole('region', { name: 'Chata předána' })).toHaveTextContent('Dřevo je u kamen.')
   })
 })
 
@@ -126,7 +127,7 @@ describe('stay detail: link to the Předávka tab', () => {
     const { card } = renderDetail(overrides)
 
     expect(handoverLink(card)).toBeNull()
-    expect(within(card).queryByText(/Odjezd potvrzen|Předat chatu/)).toBeNull()
+    expect(within(card).queryByText(/Chata předána|Předat chatu/)).toBeNull()
     noHandoverForm(card)
   })
 })
