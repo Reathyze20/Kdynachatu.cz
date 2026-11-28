@@ -49,6 +49,18 @@ describe('nápověda bez plovoucího tlačítka (#524)', () => {
     await expectHelpFor('Kalendář')
   })
 
+  it('tělo nápovědy bere role typové škály, legacy třídy help-modal-* z help.css zmizely', async () => {
+    const user = userEvent.setup()
+    renderAt('/dashboard', <MobileNav />)
+
+    await user.click(screen.getByRole('button', { name: /Víc/ }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Víc' })).getByRole('button', { name: 'Nápověda' }))
+    const body = (await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).querySelector<HTMLElement>('#help-modal-content')!
+    expect(body.className).toMatch(/(^|\s)text-body(\s|$)/)
+    expect(body.className).toContain('[&_h3]:text-card-title')
+    for (const [file, source] of Object.entries(SOURCES)) expect(source, file).not.toMatch(/help-modal-(?!content)[\w-]+/)
+  })
+
   it('plovoucí tlačítko nápovědy ani výjimky kvůli němu v kódu nezůstaly', () => {
     for (const [file, source] of Object.entries(SOURCES)) expect(source, file).not.toMatch(/fab-help|HelpFab/)
   })

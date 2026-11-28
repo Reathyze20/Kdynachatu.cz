@@ -3,7 +3,7 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
+      "styles/forms.css", "styles/gallery.css", "styles/landing.css",
       "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
@@ -23,7 +23,7 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
+      "styles/forms.css", "styles/gallery.css", "styles/landing.css",
       "styles/modal.css", "styles/notes.css", "styles/reservations.css",
       "styles/shopping.css"
     ],
