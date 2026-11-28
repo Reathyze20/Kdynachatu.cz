@@ -8,7 +8,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '@/features/auth/VerifyEmailPage'
-import { NewLandingPage } from '@/features/landing/NewLandingPage'
+import { LandingPage } from '@/features/landing/LandingPage'
 import { InvitePage } from '@/features/invite/InvitePage'
 import { NotFoundPage } from '@/features/not-found/NotFoundPage'
 import { PrivacyPage } from '@/features/legal/PrivacyPage'
@@ -111,7 +111,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Auth */}
-      <Route path="/" element={isLoggedIn ? <Navigate to={authedHome} replace /> : <NewLandingPage />} />
+      <Route path="/" element={isLoggedIn ? <Navigate to={authedHome} replace /> : <LandingPage />} />
       <Route path="/login" element={isLoggedIn ? <Navigate to={loginRedirectTo} replace /> : <AuthPage />} />
       <Route path="/reset-password" element={isLoggedIn ? <Navigate to={authedHome} replace /> : <ResetPasswordPage />} />
       {/* Token-based verify route (standalone stránka) */}

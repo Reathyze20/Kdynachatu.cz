@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { NewLandingPage } from '@/features/landing/NewLandingPage'
+import { LandingPage } from '@/features/landing/LandingPage'
 
 // #701: bloky zakládající chata, oddíly a spolky, pronájem a od chataře mezi funkcemi a formulářem.
 // CTA z bloků předvyplní formulář waitlistu a doskočí na něj, `/#pronajem` otevře stránku na bloku o pronájmu.
@@ -12,7 +12,7 @@ vi.mock('@/api/client', () => ({ default: api, apiClient: api }))
 const RENTAL_NEEDS = 'Co by ti nejvíc pomohlo (nepovinné)'
 const RENTAL_INTENT = 'Pronajímáš (nebo chceš pronajímat) chatu cizím lidem (nepovinné)'
 
-const renderLanding = (entry = '/') => render(<MemoryRouter initialEntries={[entry]}><NewLandingPage /></MemoryRouter>)
+const renderLanding = (entry = '/') => render(<MemoryRouter initialEntries={[entry]}><LandingPage /></MemoryRouter>)
 const section = (container: HTMLElement, id: string) => {
   const el = container.querySelector<HTMLElement>(`#${id}`)
   expect(el, id).not.toBeNull()
