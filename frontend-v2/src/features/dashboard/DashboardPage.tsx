@@ -9,6 +9,7 @@ import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppi
 import { ActiveReservation, SinceLastCard } from "./ActiveReservation";
 import { CabinScene } from "./CabinScene";
 import { hasAsideContent, overviewBlocks, useDashboardPrefs } from "./overviewBlocks";
+import { useSceneMode } from "./sceneMode";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { NudgeTray } from "./NudgeTray";
@@ -127,6 +128,7 @@ export function DashboardPage() {
   useDocumentTitle('Přehled');
   const { isAdmin, isGuest, user } = useAuth();
   const prefs = useDashboardPrefs(!isGuest);
+  const { mode: sceneMode } = useSceneMode(!isGuest);
   const [pinnedNote, setPinnedNote] = useState<string | null>(null);
   const [pinnedNoteAuthor, setPinnedNoteAuthor] = useState<string | null>(null);
   const [pinnedNoteUpdatedAt, setPinnedNoteUpdatedAt] = useState<string | null>(null);
@@ -256,7 +258,7 @@ export function DashboardPage() {
   // Volitelné bloky (#685): na mobilu v hlavním sloupci kolem Kdo jede, na desktopu v bočním sloupci
   const sceneBlock = blocks.cabinScene && reservationsData && (
     <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-scene-widget">
-      <CabinScene data={reservationsData} winterized={isWinterized} weather={todayWeather} />
+      <CabinScene data={reservationsData} winterized={isWinterized} weather={todayWeather} mode={sceneMode} />
     </motion.div>
   );
   const optionalBlocks = (

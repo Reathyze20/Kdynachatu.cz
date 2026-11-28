@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
-import { useCabinSceneMode } from "@/hooks/useCabinSceneMode";
+import { useAuth } from "@/context/AuthContext";
 import { MOBILE_QUERY, useMediaQuery } from "@/hooks/useMediaQuery";
+import { useSceneMode } from "./sceneMode";
 import dormousePeek from "./scene/dormouse-peek.png";
 
 /**
  * Maskot na mobilní liště (#566): plch ze scény chaty jednou za otevření appky přijde zleva po horní hraně spodní
  * lišty, zastaví se, rozhlédne, dvakrát poskočí (zamává) a odejde zpět doleva, na displeji 320 px nevyjde
- * za pravý okraj. Jen na mobilu a ve stavu „Scéna chaty“ Animovaná. Nevyjde, dokud je otevřené okno, šuplík
+ * za pravý okraj. Jen na mobilu, se zapnutou Scénou chaty v režimu Animovaná (nastavení ze serveru, #687). Nevyjde, dokud je otevřené okno, šuplík
  * profilu nebo klávesnice (fokus v textovém poli) nebo je appka na pozadí; když se něco z toho stane během
  * průchodu, zmizí a už se nevrátí. Dekorativní: `aria-hidden`, `pointer-events: none`. Chůzi nese keyframe
  * `scene-mascot-walk` v `shadcn-tokens.css`, rozhlížení pás snímků vykukování ze scény (`animate-scene-frames`).
@@ -64,17 +65,18 @@ function subscribeBlockers(onChange: () => void) {
 type Phase = "waiting" | "walking" | "done";
 
 export function NavMascot() {
-  const [mode] = useCabinSceneMode();
+  const { isGuest } = useAuth();
+  const { sceneOn, mode } = useSceneMode(!isGuest);
   const mobile = useMediaQuery(MOBILE_QUERY);
   const [phase, setPhase] = useState<Phase>(() => (alreadyWalked() ? "done" : "waiting"));
-  const allowed = mode === "animated" && mobile;
+  const allowed = sceneOn && mode === "animated" && mobile;
   const start = useCallback(() => {
     markWalked();
     setPhase("walking");
   }, []);
   const finish = useCallback(() => setPhase("done"), []);
 
-  // Přepnutí na Statickou / Skrytou nebo na desktop během průchodu ho ukončí, po návratu už nevyjde.
+  // Přepnutí na Statickou, vypnutí scény nebo přechod na desktop během průchodu ho ukončí, po návratu už nevyjde.
   useEffect(() => {
     if (phase === "walking" && !allowed) finish();
   }, [phase, allowed, finish]);

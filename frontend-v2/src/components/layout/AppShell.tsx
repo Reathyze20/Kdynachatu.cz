@@ -9,6 +9,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { DesktopSidebar } from './DesktopSidebar'
 import { SidebarToday } from '@/features/dashboard/SidebarToday'
+import { NavMascot } from '@/features/dashboard/NavMascot'
+import { useMigrateDeviceSceneMode } from '@/features/dashboard/sceneMode'
 import { MobileHeader } from './MobileHeader'
 import { MobileNav } from './MobileNav'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -33,11 +35,13 @@ const pageTransition = {
 const ROUTE_SKELETON_OVERLAY_MS = 140
 
 export function AppShell() {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const location = useLocation()
   const outlet = useOutlet()
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   useRealtimeSync()
+  // Režim Scény chaty uložený v zařízení jednou přejde na server (#687)
+  useMigrateDeviceSceneMode(!isGuest)
   const [showRouteSkeleton, setShowRouteSkeleton] = useState(false)
   const isFirstRoutePaint = useRef(true)
   // Dnešek chaty v menu jen tam, kde má menu popisky (#338); jinak ho nese karta na Přehledu
@@ -115,7 +119,7 @@ export function AppShell() {
         </div>
 
         {/* Mobile bottom navigation */}
-        <MobileNav onOpenProfileDrawer={() => setProfileDrawerOpen(true)} />
+        <MobileNav onOpenProfileDrawer={() => setProfileDrawerOpen(true)} mascot={<NavMascot />} />
       </div>
 
       {/* Profile Drawer (global overlay) */}

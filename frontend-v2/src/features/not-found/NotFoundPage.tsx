@@ -9,7 +9,7 @@ import { NotFoundDormouse } from './NotFoundDormouse'
 export function NotFoundPage() {
   const { isLoggedIn } = useAuth()
   // Volba „Scéna chaty“ je uložená v zařízení, takže platí i pro nepřihlášené (#657). Skrytá = původní ikona.
-  const [sceneMode] = useCabinSceneMode()
+  const sceneMode = useCabinSceneMode()
   const visual = sceneMode === 'hidden'
     ? { icon: MapPinOff, tone: 'neutral' as const }
     : { image: <NotFoundDormouse animated={sceneMode === 'animated'} /> }

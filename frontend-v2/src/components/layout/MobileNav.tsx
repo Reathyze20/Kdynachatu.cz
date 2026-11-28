@@ -6,7 +6,7 @@
  * nápověda na mobilu jinde není.
  * Po horní hraně lišty jednou za otevření appky přejde maskot ze scény chaty (#566).
  */
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { CircleHelp, LogOut, MoreHorizontal, UserRound } from 'lucide-react'
 import { ADMIN_NAV, MORE_NAV, PRIMARY_NAV, findActiveNavItem, visibleNavItems, type NavItem } from '@/lib/navRoutes'
@@ -19,14 +19,15 @@ import { listRowLinkClass } from '@/components/shared/ListRow'
 import { InstallMenuItem } from '@/components/shared/InstallCard'
 import { LogoutPendingChangesDialog } from './LogoutPendingChangesDialog'
 import { usePwaInstall } from '@/hooks/usePwaInstall'
-import { NavMascot } from '@/features/dashboard/NavMascot'
 
 interface MobileNavProps {
   /** Otevře šuplík profilu (drží ho AppShell). Bez něj Víc položku „Můj profil“ nenabízí. */
   onOpenProfileDrawer?: () => void
+  /** Maskot na horní hraně lišty (#566). Dodá ho AppShell, protože čte nastavení Scény chaty ze serveru (#687). */
+  mascot?: ReactNode
 }
 
-export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
+export function MobileNav({ onOpenProfileDrawer, mascot }: MobileNavProps) {
   const { user, isGuest, isAdmin } = useAuth()
   const { data: cabin } = useCabinFeatures()
   const location = useLocation()
@@ -83,7 +84,7 @@ export function MobileNav({ onOpenProfileDrawer }: MobileNavProps) {
           <span>Víc</span>
         </button>
 
-        <NavMascot />
+        {mascot}
       </nav>
 
       <Modal isOpen={moreOpen} onClose={closeMore} title="Víc">

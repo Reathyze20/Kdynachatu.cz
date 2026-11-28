@@ -4,7 +4,9 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
+import { NavMascot } from '@/features/dashboard/NavMascot'
 import tokensCss from '@/styles/shadcn-tokens.css?raw'
+import { PROFILE_KEY, type DashboardPrefs } from '@/api/auth'
 
 // Maskot na mobilní liště (#566): jednou za otevření appky přejde po horní hraně lišty, jen ve stavu
 // Animovaná, ne přes otevřené okno ani klávesnici. Testy přes lištu, jak ji vidí uživatel; falešné hodiny, proto
@@ -40,13 +42,16 @@ function Path() {
   return <output data-testid="path">{useLocation().pathname}</output>
 }
 
-function renderNav({ drawerOpen = false } = {}) {
+// #687 (spec #677): maskot patří ke Scéně chaty ze serveru, „Skrytá“ = vypnutý přepínač (ve výchozím stavu vypnutý).
+// Preference jsou už načtené, jako když appka běží; maskota do lišty dodává AppShell.
+function renderNav({ drawerOpen = false, dashboardPrefs = { cabinScene: true } as DashboardPrefs | null } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  queryClient.setQueryData(PROFILE_KEY, { email: 'jana@example.test', color: '#5d9b62', animalIcon: null, dashboardPrefs })
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/dashboard']}>
         <input aria-label="Poznámka" />
-        <MobileNav />
+        <MobileNav mascot={<NavMascot />} />
         <ProfileDrawer isOpen={drawerOpen} onClose={vi.fn()} />
         <Path />
       </MemoryRouter>
@@ -207,5 +212,21 @@ describe('maskot na mobilní liště (#566)', () => {
     const farthest = Math.max(...[...walk.matchAll(/translate\((-?\d+)px/g)].map((m) => Number(m[1])))
     expect(farthest).toBeGreaterThan(0)
     expect(farthest + 60).toBeLessThanOrEqual(320)
+  })
+
+  it.each([
+    ['přepínač Scéna chaty je vypnutý (dřívější Skrytá, #687)', { cabinScene: false }],
+    ['uživatel si Scénu chaty nezapnul (#687)', null],
+    ['režim na serveru je Statická (#687)', { cabinScene: true, sceneMode: 'static' as const }],
+  ])('neobjeví se, když %s', (_name, dashboardPrefs) => {
+    device()
+    renderNav({ dashboardPrefs })
+    expect(waitForMascot()).toBeNull()
+  })
+
+  it('režim Animovaná na serveru platí i při omezeném pohybu v zařízení (#687)', () => {
+    device({ reduceMotion: true })
+    renderNav({ dashboardPrefs: { cabinScene: true, sceneMode: 'animated' } })
+    expect(waitForMascot()).toBeInTheDocument()
   })
 })
