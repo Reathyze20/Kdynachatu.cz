@@ -14,13 +14,15 @@ interface Props {
   list: ShoppingList
   /** Hlavička seznamu (`ListHeader`): název nebo výběr, postup a menu ⋮. */
   header: ReactNode
+  /** Zásoby jsou vidět vedle seznamu (desktop, #226): propojené položky jde vrátit do zásob. */
+  pantryAlongside?: boolean
 }
 
 function isDone(status: ItemStatus): boolean {
   return status === 'purchased' || status === 'bring_from_home'
 }
 
-export function ListDetail({ list, header }: Props) {
+export function ListDetail({ list, header, pantryAlongside = false }: Props) {
   const [newItemName, setNewItemName] = useState('')
   const [addItemError, setAddItemError] = useState<string | null>(null)
   const addItem = useAddItem()
@@ -131,6 +133,7 @@ export function ListDetail({ list, header }: Props) {
                       key={item.id}
                       item={item}
                       listCreatedById={list.createdById}
+                      pantryAlongside={pantryAlongside}
                     />
                   ))}
                 </AnimatePresence>

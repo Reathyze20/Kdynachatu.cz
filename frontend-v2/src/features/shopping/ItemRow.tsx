@@ -10,7 +10,6 @@ import { ArrowLeft, Circle, CircleCheck, EllipsisVertical, House, Star, Trash2, 
 import type { ShoppingItem, ItemStatus } from '@/api/shopping'
 import { useToggleItemStatus, useDeleteItem, useToggleItemEssential } from './hooks/useShoppingLists'
 import { useAuth } from '@/context/AuthContext'
-import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
 import { AnimalAvatar } from '@/components/shared/AnimalAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,6 +24,8 @@ import {
 interface Props {
   item: ShoppingItem
   listCreatedById: string
+  /** Zásoby jsou vidět vedle seznamu (desktop, #226): nabídne „Vrátit do zásob“. */
+  pantryAlongside?: boolean
 }
 
 /** Tři podoby ovladače stavu: přístupný název říká stav i to, co klepnutí udělá. */
@@ -34,13 +35,11 @@ const STATUS_CONTROL: Record<ItemStatus, { label: string; Icon: LucideIcon; tone
   purchased: { label: 'Koupeno – vrátit na Koupit', Icon: CircleCheck, tone: 'text-[rgb(var(--ok))]', next: 'pending' },
 }
 
-function ItemRowInner({ item, listCreatedById }: Props) {
+function ItemRowInner({ item, listCreatedById, pantryAlongside = false }: Props) {
   const { user } = useAuth()
   const toggleStatus = useToggleItemStatus()
   const deleteItem = useDeleteItem()
   const toggleEssential = useToggleItemEssential()
-  // Stejný práh jako dva sloupce na `ShoppingPage`: zásoby, kam se položka vrací, jsou vidět vedle
-  const pantryAlongside = useMediaQuery(WIDE_DESKTOP_QUERY)
 
   const control = STATUS_CONTROL[item.status]
   const isResolved = item.status !== 'pending'

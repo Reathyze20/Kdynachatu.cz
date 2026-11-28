@@ -47,8 +47,8 @@ export function ShoppingPage() {
   useDocumentTitle('Zásoby a nákupy');
   const [searchParams, setSearchParams] = useSearchParams()
   const activeView: ActiveView = searchParams.get('view') === 'pantry' ? 'pantry' : 'shopping'
-  // Desktop: Zásoby vlevo a Nákup vpravo naráz, bez přepínače (#226)
-  const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY)
+  // Široký desktop (rám shellu): Zásoby vlevo a Nákup vpravo naráz, bez přepínače (#226)
+  const sideBySide = useMediaQuery(WIDE_DESKTOP_QUERY)
   const {
     data: lists = [],
     isLoading,
@@ -178,19 +178,20 @@ export function ShoppingPage() {
 
   const pantryView = <PantryView currentList={isLoading || isError ? undefined : selectedList} />
   // Nadpis pravého sloupce; vedle „Zásoby na chatě“ ho nese hlavička karty (výběr a menu seznamu pod ním)
-  const shoppingColumnHeading = isDesktop ? (
+  const shoppingColumnHeading = sideBySide ? (
     <h2 id={SHOPPING_COLUMN_HEADING_ID} className="detail-page-title">Nákupní seznam</h2>
   ) : null
   const shoppingView = selectedList ? (
     <ListDetail
       list={selectedList}
+      pantryAlongside={sideBySide}
       header={
         <div className="flex flex-col gap-3">
           {shoppingColumnHeading}
           <ListHeader
             list={selectedList}
             lists={lists}
-            nested={isDesktop}
+            nested={sideBySide}
             onSelect={rememberList}
             onRename={setRenameTarget}
             onShare={setShareList}
@@ -202,7 +203,7 @@ export function ShoppingPage() {
     />
   ) : (
     <div className="p-3 md:p-6">
-      <Card className={isDesktop ? 'flex flex-col gap-4' : undefined}>
+      <Card className={sideBySide ? 'flex flex-col gap-4' : undefined}>
         {shoppingColumnHeading}
         {isLoading ? (
           [1, 2, 3].map((i) => (
@@ -237,15 +238,15 @@ export function ShoppingPage() {
         <Card className="flex flex-col gap-4">
           <PageHeader
             title="Zásoby a nákupy"
-            primaryAction={activeView === 'shopping' || isDesktop ? { label: 'Nový seznam', icon: Plus, onClick: () => setNewListName('') } : undefined}
+            primaryAction={activeView === 'shopping' || sideBySide ? { label: 'Nový seznam', icon: Plus, onClick: () => setNewListName('') } : undefined}
           />
-          {!isDesktop && <ViewSwitcher activeView={activeView} onChange={handleChangeView} pendingCount={pendingCount} />}
+          {!sideBySide && <ViewSwitcher activeView={activeView} onChange={handleChangeView} pendingCount={pendingCount} />}
         </Card>
       </div>
 
       {/* Obsah: Zásoby, nebo rovnou aktuální nákupní seznam; na desktopu obojí vedle sebe */}
-      <div className={isDesktop ? 'shopping-layout is-split' : 'shopping-layout'} id="shopping-layout">
-        {isDesktop ? (
+      <div className={sideBySide ? 'shopping-layout is-split gap-2 px-3' : 'shopping-layout'} id="shopping-layout">
+        {sideBySide ? (
           <>
             <div className="shopping-right-col">{pantryView}</div>
             <section className="shopping-right-col" aria-labelledby={SHOPPING_COLUMN_HEADING_ID}>{shoppingView}</section>

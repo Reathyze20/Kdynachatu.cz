@@ -63,14 +63,9 @@
   overflow: hidden;
 }
 
-/* Desktop: Zásoby a Nákup vedle sebe (#226). Sloupec je úzký skoro jako telefon:
-   okraje drží linku s hlavičkou stránky, mezi kartami výrazná mezera, karta s menším vzduchem
-   a formulář zásoby ve dvou sloupcích jako na mobilu. */
-.shopping-layout.is-split {
-  gap: var(--space-sm);
-  padding: 0 var(--space-md);
-}
-
+/* Desktop: Zásoby a Nákup vedle sebe (#226; mezera a okraje sloupců jsou utility v ShoppingPage.tsx).
+   Sloupec je úzký skoro jako telefon: karta s menším vzduchem a formulář zásoby ve dvou sloupcích
+   jako na mobilu. Pravidla přebíjejí legacy třídy obrazovky, utilita Tailwindu by proti nim prohrála. */
 /* Vodorovné odsazení uvnitř sloupce nechá místo stínu karty (sloupec ořezává přetečení) */
 .shopping-layout.is-split .detail-content-wrapper {
   padding: var(--space-xl) var(--space-md) var(--space-2xl);
