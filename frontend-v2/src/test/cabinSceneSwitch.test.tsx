@@ -5,10 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { ProfileDrawer } from '@/components/layout/ProfileDrawer'
 import { CabinScene } from '@/features/dashboard/CabinScene'
+import { useSceneMode } from '@/features/dashboard/sceneMode'
 import type { DashboardReservationsData } from '@/api/dashboard'
 
-// Vypínač „Scéna chaty“ v profilovém panelu (#565): ukládá se per zařízení, projeví se hned ve scéně
-// a vydrží nové vykreslení appky. Fiktivní účet, žádná data rodiny.
+// Vypínač „Scéna chaty“ v profilovém panelu (#565): projeví se hned ve scéně a vydrží nové vykreslení appky.
+// Od #687 (spec #677) se ukládá na server, ne per zařízení, a „Skrytá“ = vypnutý přepínač Scéna chaty
+// (volba Animovaná / Statická je u něj). Fiktivní účet, žádná data rodiny.
 const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }))
 vi.mock('@/api/client', () => ({ default: api }))
 vi.mock('@/context/AuthContext', () => ({
@@ -22,6 +24,8 @@ const EMPTY: DashboardReservationsData = {
   activeReservation: null, upcomingReservations: [], myNextReservation: null, departingToday: false, departingReservationId: null,
   nextFreeWeekend: null, lastStay: null, stats: { myNightsThisYear: 0, totalStaysThisMonth: 0 },
 }
+// #687: Scéna chaty je zapnutá, režim si uživatel ještě nevybral
+const PROFILE = { email: 'jana@example.test', color: '#5d9b62', animalIcon: null, dashboardPrefs: { cabinScene: true } }
 
 function prefersReducedMotion(reduce: boolean) {
   vi.stubGlobal('matchMedia', (query: string) => ({
@@ -29,14 +33,29 @@ function prefersReducedMotion(reduce: boolean) {
   }))
 }
 
+/** Scéna jako na Přehledu: s režimem přihlášeného ze serveru (#687). */
+function Scene() {
+  return <CabinScene data={EMPTY} winterized={false} mode={useSceneMode(true).mode} />
+}
+
 /** Profilový panel a scéna chaty vedle sebe, jako když je panel otevřený nad Přehledem. */
-function renderApp() {
+async function renderApp() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(<QueryClientProvider client={queryClient}><MemoryRouter>
-    <CabinScene data={EMPTY} winterized={false} />
+    <Scene />
     <ProfileDrawer isOpen onClose={vi.fn()} />
   </MemoryRouter></QueryClientProvider>)
-  return within(screen.getByRole('group', { name: 'Scéna chaty' }))
+  // #687: volba je u přepínače Scéna chaty a ukáže se, až dorazí preference ze serveru
+  return within(await screen.findByRole('group', { name: 'Režim scény' }))
+}
+
+/** PATCH /users/me uloží režim jako server, příští GET ho vrátí. */
+function serverSaves() {
+  api.patch.mockImplementation((_url: string, body: { dashboardPrefs: Record<string, unknown> }) => {
+    const me = { ...PROFILE, dashboardPrefs: { ...PROFILE.dashboardPrefs, ...body.dashboardPrefs } }
+    api.get.mockResolvedValue({ data: me })
+    return Promise.resolve({ data: { message: 'ok', user: me } })
+  })
 }
 
 const sceneImg = () => screen.queryByRole('img', { name: /^Scéna chaty/ })
@@ -44,25 +63,26 @@ const sceneImg = () => screen.queryByRole('img', { name: /^Scéna chaty/ })
 describe('vypínač „Scéna chaty“ v profilu (#565)', () => {
   beforeEach(() => {
     localStorage.clear()
-    api.get.mockReset().mockResolvedValue({ data: { email: 'jana@example.test', color: '#5d9b62', animalIcon: null } })
+    api.get.mockReset().mockResolvedValue({ data: PROFILE })
+    api.patch.mockReset()
   })
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  it('nabízí Animovaná / Statická / Skrytá; bez volby je vybraná Animovaná', async () => {
+  it('nabízí Animovaná / Statická (Skrytá = vypnutý přepínač, #687); bez volby je vybraná Animovaná', async () => {
     prefersReducedMotion(false)
-    const sw = renderApp()
+    const sw = await renderApp()
 
-    expect(sw.getAllByRole('button').map((b) => b.textContent)).toEqual(['Animovaná', 'Statická', 'Skrytá'])
+    expect(sw.getAllByRole('button').map((b) => b.textContent)).toEqual(['Animovaná', 'Statická'])
     expect(sw.getByRole('button', { name: 'Animovaná' })).toHaveAttribute('aria-pressed', 'true')
     expect(sw.getByRole('button', { name: 'Statická' })).toHaveAttribute('aria-pressed', 'false')
     await waitFor(() => expect(api.get).toHaveBeenCalled())
   })
 
-  it('při prefers-reduced-motion: reduce je bez volby vybraná Statická', () => {
+  it('při prefers-reduced-motion: reduce je bez volby vybraná Statická', async () => {
     prefersReducedMotion(true)
-    const sw = renderApp()
+    const sw = await renderApp()
 
     expect(sw.getByRole('button', { name: 'Statická' })).toHaveAttribute('aria-pressed', 'true')
     expect(sceneImg()).toHaveAttribute('data-motion', 'static')
@@ -71,20 +91,19 @@ describe('vypínač „Scéna chaty“ v profilu (#565)', () => {
   it('volba se projeví ve scéně hned a vydrží nové vykreslení appky', async () => {
     prefersReducedMotion(false)
     const user = userEvent.setup()
-    let sw = renderApp()
+    serverSaves()
+    let sw = await renderApp()
     expect(sceneImg()).toHaveAttribute('data-motion', 'animated')
-
-    await user.click(sw.getByRole('button', { name: 'Skrytá' }))
-    expect(sw.getByRole('button', { name: 'Skrytá' })).toHaveAttribute('aria-pressed', 'true')
-    expect(sceneImg()).not.toBeInTheDocument()
 
     await user.click(sw.getByRole('button', { name: 'Statická' }))
     expect(sceneImg()).toHaveAttribute('data-motion', 'static')
 
     cleanup()
-    sw = renderApp()
+    sw = await renderApp()
     expect(sw.getByRole('button', { name: 'Statická' })).toHaveAttribute('aria-pressed', 'true')
     expect(sceneImg()).toHaveAttribute('data-motion', 'static')
-    expect(api.patch).not.toHaveBeenCalled()
+    // #687: volba se uloží na server, ne do zařízení
+    expect(api.patch).toHaveBeenCalledWith('/users/me', { dashboardPrefs: { sceneMode: 'static' } })
+    expect(localStorage.getItem('cabinSceneMode')).toBeNull()
   })
 })

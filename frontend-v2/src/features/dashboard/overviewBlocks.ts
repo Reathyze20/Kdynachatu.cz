@@ -76,7 +76,7 @@ const PREFS_MUTATION_KEY = ["dashboardPrefs"] as const;
  * takže se změna projeví všude hned. Při chybě serveru se vrátí původní stav a ukáže se toast;
  * změna uložená do offline fronty zůstane (odešle se po připojení).
  */
-export function useUpdateDashboardPrefs() {
+export function useUpdateDashboardPrefs({ quiet = false } = {}) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: PREFS_MUTATION_KEY,
@@ -89,7 +89,8 @@ export function useUpdateDashboardPrefs() {
     },
     onError: (error: Error, _change, context) => {
       if (!isQueuedOffline(error)) queryClient.setQueryData(PROFILE_KEY, context?.previous);
-      handleMutationError("Nastavení Přehledu se nepodařilo uložit")(error);
+      // `quiet`: změna na pozadí (přenos volby ze zařízení, #687), o které uživatel neví
+      if (!quiet) handleMutationError("Nastavení Přehledu se nepodařilo uložit")(error);
     },
     // Až doběhne poslední z rychle po sobě odeslaných změn, srovná se stav se serverem
     onSettled: () => {

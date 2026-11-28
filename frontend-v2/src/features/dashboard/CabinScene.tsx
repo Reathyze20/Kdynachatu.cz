@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import type { DashboardReservationsData, WeatherResult } from "@/api/dashboard";
-import { useCabinSceneMode } from "@/hooks/useCabinSceneMode";
+import { useCabinSceneMode, type CabinSceneMode } from "@/hooks/useCabinSceneMode";
 import { cn } from "@/lib/utils";
 import { cabinSceneLabel, deriveCabinScene, fallsSlanted, mascotPose, sceneBackdrop, smokeCurls, type Backdrop, type CabinSceneState, type MascotPose } from "./cabinSceneState";
 import { BIRD_FLAP, MOON, SCENE_PALETTE, SMOKE, SMOKE_WIND, ZZZ, type Sprite } from "./cabinSceneSprites";
@@ -318,6 +318,8 @@ interface Props {
   winterized: boolean;
   /** Dnešní počasí obce chaty; bez něj (bez obce, chyba, načítání) je scéna bez počasí. */
   weather?: WeatherResult;
+  /** Režim přihlášeného ze serveru (#687); bez něj platí volba v zařízení (landing page). */
+  mode?: CabinSceneMode;
 }
 
 /** Pixel art se při zvětšení nerozmaže. */
@@ -341,8 +343,9 @@ function FrameStrip({ strip: { href, paths, x, y, w, h, frames, ms }, className 
 
 /** Neinteraktivní obrázek stavu chaty s popisem pro čtečky. `data-motion`: animated (hýbe se), paused (stojí na pozadí
  * nebo mimo obrazovku), static (volba Statická). */
-export function CabinScene({ data, winterized, weather }: Props) {
-  const [mode] = useCabinSceneMode();
+export function CabinScene({ data, winterized, weather, mode: userMode }: Props) {
+  const deviceMode = useCabinSceneMode();
+  const mode = userMode ?? deviceMode;
   const ref = useRef<HTMLDivElement>(null);
   const moving = mode === "animated";
   const onScreen = useOnScreen(ref, moving);
