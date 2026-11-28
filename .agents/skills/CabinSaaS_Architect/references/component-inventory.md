@@ -73,7 +73,6 @@ Unused shadcn primitives (avatar, card, checkbox, form, label, scroll-area, sepa
 | DashboardPage | Page | ✅ Complete |
 | CabinToday | Header | ✅ Today at the cabin (#338): date, today's weather, storm alert, „Akce v kraji ↗“ and the admin link to the location settings; `sidebar` variant in the desktop menu header under the cabin name (≥ 1024 px, `today` slot of DesktopSidebar filled by AppShell), `card` variant = compact card with the cabin name as h1 at the top of Přehled below 1024 px. Replaced CabinHero |
 | ActiveReservation | Card | ✅ Status header „Na chatě teď“ now → next (#272): who is at the cabin and until when, arrow, who comes next and from when (avatar + name, G4); desktop shows purpose, nights and co-travellers under each side; „Chata je volná“ / „Zatím nikdo“ when a side is empty; chain line only from the stay after next; nothing planned = invitation „Chata zatím čeká“ with illustration slot (#172) |
-| DepartureBanner | Banner | ✅ |
 | NudgeTray | Card | ✅ „Visí na vás“: nudges from `nudges.ts` as one action card, actionable first, first highlighted with a button, max 2 visible + „Zobrazit víc“; low supplies stay in RunningLowCard (#172) |
 | PinnedNote | Card | ✅ |
 | RunningLowCard | Card | ✅ Side panel „Dochází“: essential (★) items waiting to be bought + shopping-list count, link to Zásoby; nothing to say = no card (#172) |
