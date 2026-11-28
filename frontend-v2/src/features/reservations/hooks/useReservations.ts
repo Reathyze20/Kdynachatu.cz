@@ -14,6 +14,7 @@ import type {
   UserAvailability,
 } from "@/api/reservations";
 import { checkoutPath, completeCheckout } from "@/api/reservations";
+import { isQueuedOffline } from "@/lib/offlineQueue";
 import { fetchHandoverOverview } from "@/api/handover";
 
 // ─── Query Keys ───────────────────────────────────────────────────────
@@ -156,8 +157,9 @@ export function useCheckoutReservation() {
       // Optimistic rollback done, now show structured toast
       handleMutationError("Předávku se nepodařilo uložit", { silent: true })(_err); // chybu ukazuje formulář u tlačítka (DESIGN §7)
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
+    onSettled: (_data, error) => {
+      // Ve frontě se nic neuložilo; refetch při slabém signálu jen selže a vyhodí chybu načtení
+      if (!isQueuedOffline(error)) qc.invalidateQueries({ queryKey: RESERVATIONS_KEY });
     },
     onSuccess: (status, { id }) => {
       qc.setQueryData(checkoutStatusKey(id), status); // shrnutí ukáže uložený stav hned, ne starý do refetche
