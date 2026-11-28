@@ -16,7 +16,7 @@
     "Barvy ikon počasí natvrdo v datové vrstvě, přesunout do tokenů": ["api/dashboard.ts"]
   },
   "rawPalette": {
-    "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": ["styles/gallery.css", "styles/shopping.css"]
+    "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": ["styles/gallery.css"]
   },
   "legacyColorAlias": {
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
