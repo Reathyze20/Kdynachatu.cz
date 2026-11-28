@@ -226,11 +226,11 @@ Kroky: Otevri tema, scrollni chat, vrat se zpet do seznamu a pak odejdi na jinou
 Ocekavany vysledek: Nevznika prazdna plocha ani dvojity scroll a po odchodu z Notes nezustane stranka zaseknuta bez scrollu.
 Proc je to rizikove: Notes pouziva `body.page-notes` a vlastni mobile-only overflow kontrakt.
 
-5. Notes: composer, reply preview a odjezdovy protokol
+5. Notes: composer, reply preview a odkaz Predat chatu
 Kde: `/notes`
-Kroky: Spust odpoved na zpravu, otevri Odjezdovy protokol, prepni checkboxy, vloz ho do zpravy a dopis vlastni text.
-Ocekavany vysledek: Reply preview i handover panel zustavaji nad inputem a tlacitko Odeslat je porad viditelne a pouzitelne.
-Proc je to rizikove: Kombinuje se auto-resize textarea, safe-area padding a rozbalovaci panel nad patou chatu.
+Kroky: Spust odpoved na zpravu, dopis delsi text, aby se textarea roztahla, a jako clen klepni na odkaz Predat chatu nad inputem. Prihlas se jako host a over, ze odkaz chybi.
+Ocekavany vysledek: Reply preview zustava nad inputem, tlacitko Odeslat je porad viditelne a pouzitelne a odkaz vede na `/handover`. Host odkaz nevidi.
+Proc je to rizikove: Kombinuje se auto-resize textarea, safe-area padding a obsah nad patou chatu; host na `/handover` dostane 403.
 
 6. Notes: context menu a navazane dialogy
 Kde: `/notes`
@@ -238,11 +238,11 @@ Kroky: Otevri message context menu, zkus akci Pridat do nakupu nebo Vytvorit uko
 Ocekavany vysledek: Menu ani modaly nejsou useknute, akce maji pohodlne tap targety a footer modalniho sheetu je full-width.
 Proc je to rizikove: Notes ma vlastni mobilni context menu a navazuje na shared modal vrstvu.
 
-7. Shopping: master/detail prepinani
-Kde: `/shopping`
-Kroky: Otevri seznam z prehledu, pouzij Zpet, otevri modal Novy seznam a znovu vyber detail.
-Ocekavany vysledek: Master panel na mobilu mizi jen pri otevrenem detailu a po navratu nevznika prazdne misto.
-Proc je to rizikove: Layout stoji na kombinaci `mobileDetailOpen` a mobile CSS prepinacu.
+7. Shopping: prepinac Zasoby/Nakup a vyber seznamu
+Kde: `/shopping` a `/shopping?view=pantry`
+Kroky: Prepni mezi Zasobami a Nakupem, v hlavicce vyber jiny seznam a zaloz novy, v Zasobach pridej polozku do nakupu jednim klepnutim. Na desktopu over sloupce Zasoby a Nakup vedle sebe.
+Ocekavany vysledek: Vybrany seznam zustane vybrany i po reloadu, novy seznam se hned vybere a pridana polozka se objevi v nakupu bez prazdneho mista v layoutu.
+Proc je to rizikove: Vyber seznamu se pamatuje v localStorage a mobilni a desktopovy layout se lisi.
 
 8. Shopping pantry: sticky header a filtry
 Kde: `/shopping` -> `Zasoby`
