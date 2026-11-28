@@ -53,7 +53,7 @@
   "legacyCard": {
     "Legacy karty page-card, glass-card, admin-card a .card, nahradí je <Card> při převodu obrazovky (DESIGN.md §11)": [
       "features/dashboard/AdminActivationChecklist.tsx",
-      "features/dashboard/CabinToday.tsx", "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
+      "features/dashboard/PinnedNote.tsx", "features/dashboard/QuickLinksWidget.tsx"
     ]
   },
   "legacyEmptyState": {

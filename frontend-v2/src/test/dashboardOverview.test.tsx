@@ -53,7 +53,12 @@ function reservations(overrides: Partial<DashboardReservationsData> = {}): Dashb
 
 const NO_SHOPPING: DashboardShoppingData = { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null }
 
+// #685 (spec #677): volitelné bloky jsou ve výchozím stavu vypnuté. Testy z doby před #685 počítají se všemi
+// zapnutými; výchozí minimum a přepínání hlídá describe #685, který si preference nastaví sám.
+const ALL_BLOCKS = { cabinScene: true, sinceLast: true, laterAndFree: true, stayForecast: true, regionEvents: true, noticeboard: true }
+
 function renderOverview(data: DashboardReservationsData, shopping: DashboardShoppingData = NO_SHOPPING, cabin: Partial<CabinSettings> = {}) {
+  if (!responses.has('/users/me')) responses.set('/users/me', { dashboardPrefs: ALL_BLOCKS })
   responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], ...cabin })
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', shopping)
@@ -165,9 +170,9 @@ describe('Přehled: hlavička teď → příště (#272)', () => {
       },
     }))
 
-    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
-    expect(within(header).getByText('Od minule — Jana')).toBeInTheDocument()
-    const items = (name: string) => within(within(header).getByRole('list', { name })).getAllByRole('listitem').map((li) => li.textContent)
+    // #685 (spec #677): „Od minule“ je samostatný blok, ne část karty „Na chatě teď“
+    const sinceLast = await screen.findByRole('region', { name: 'Od minule — Jana' })
+    const items = (name: string) => within(within(sinceLast).getByRole('list', { name })).getAllByRole('listitem').map((li) => li.textContent)
     expect(items('Stav chaty')).toEqual(['Plynová bomba: Dochází', 'Topení vypnuté', 'Voda uzavřená'])
     expect(items('Vzkazy')).toEqual(['Rozbité: Kape kohoutek.', 'Nechal/a: Dřevo u kamen.', 'Poznámka: Past na myši.'])
   })
@@ -278,7 +283,8 @@ describe('Přehled: boční panel s lehkým kontextem (#172)', () => {
     renderOverview(reservations())
 
     const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
-    expect(within(aside).getByTestId('dashboard-handover-widget')).toBeInTheDocument()
+    // #685 (spec #677): Nástěnka se ukáže až s načtenými preferencemi
+    expect(await within(aside).findByTestId('dashboard-handover-widget')).toBeInTheDocument()
     expect(screen.queryByTestId('dashboard-weather-widget')).not.toBeInTheDocument()
     await screen.findByText('Chata zatím čeká')
     expect(screen.queryByRole('region', { name: 'Další příjezd' })).not.toBeInTheDocument()
@@ -607,7 +613,8 @@ describe('Přehled: kompaktní karta chaty a pozvánka (#172, #338)', () => {
     const invite = await screen.findByRole('region', { name: 'Chata zatím čeká' })
     expect(within(invite).getByText('Zaber termín a rozjeď to.')).toBeInTheDocument()
     // #579: scéna chaty nahradila starý obrázek dveří (změnu chování schválil uživatel 2026-11-25).
-    expect(within(invite).getByRole('img', { name: /^Scéna chaty/ })).toBeInTheDocument()
+    // #685 (spec #677): Scéna chaty je samostatný blok nad kartou, ne její část.
+    expect(await screen.findByRole('img', { name: /^Scéna chaty/ })).toBeInTheDocument()
     expect(within(invite).queryByTestId('overview-invite-media')).not.toBeInTheDocument()
     expect(within(invite).getByRole('button', { name: 'Zabrat termín' })).toBeInTheDocument()
   })
@@ -761,9 +768,10 @@ describe('Přehled: žádná duplicita (#425)', () => {
     upcomingReservations: [upcoming('r-petr', 'Petr', '2026-12-28', '2026-12-30')],
     lastStay: { username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-11-30', to: '2026-12-02', daysEmpty, isCheckoutCompleted: true, checkoutState },
   })
+  // #685 (spec #677): „Od minule“ je samostatný blok, ne část karty „Na chatě teď“
   const briefingRow = async (text: string) => {
-    const header = await screen.findByRole('region', { name: 'Na chatě teď' })
-    return within(header).getByText(text).closest('li') as HTMLElement
+    const sinceLast = await screen.findByRole('region', { name: /^Od minule/ })
+    return within(sinceLast).getByText(text).closest('li') as HTMLElement
   }
   const emphasized = (row: HTMLElement) => row.classList.contains('arrival-briefing-item--warn')
 
@@ -1005,5 +1013,77 @@ describe('Přehled: „Koupí: <jméno>“ u slíbené Došlo ★ (#683)', () =>
 
     await screen.findByText('Chata zatím čeká')
     expect(important()).not.toBeInTheDocument()
+  })
+})
+
+// #685 (spec #677): Přehled odpovídá na kdo jede, co je důležité a jaké bude počasí; ostatní si každý zapne sám
+describe('Přehled: výchozí minimum a bloky podle preferencí (#685)', () => {
+  // Eva přijede příště (v okně předpovědi na pobyt) a čeká na ni výzva k plynu, Ida jede po ní (Potom a volno)
+  const lastStay = { username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-12-01', to: '2026-12-03', daysEmpty: 7, isCheckoutCompleted: true, checkoutState: { gas: 'empty' as const, heatingOff: true } }
+  const calendarStay = (id: string, username: string, from: string, to: string) => ({ id, userId: `u-${username}`, username, from, to, purpose: 'Víkend', status: 'primary' })
+  const OPTIONAL = {
+    'Scéna chaty': () => screen.queryByRole('img', { name: /^Scéna chaty/ }),
+    'Od minule': () => screen.queryByRole('region', { name: /^Od minule/ }),
+    'Potom a volno': () => screen.queryByRole('region', { name: 'Potom a volno' }),
+    'Předpověď na pobyt': () => screen.queryByTestId('dashboard-stay-weather-widget'),
+    'Akce v kraji': () => screen.queryByRole('link', { name: /Akce v kraji/ }),
+    Nástěnka: () => screen.queryByTestId('dashboard-handover-widget'),
+  }
+
+  async function renderWithPrefs(dashboardPrefs: Record<string, boolean> | null) {
+    weather.current = { temp: 5, description: 'Zataženo', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
+    responses.set('/users/me', { dashboardPrefs })
+    responses.set('/reservations', { reservations: [calendarStay('r-eva', 'Eva', '2026-12-14', '2026-12-16'), calendarStay('r-ida', 'Ida', '2026-12-20', '2026-12-22')], availabilities: [] })
+    renderOverview(
+      reservations({ lastStay, upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-14', '2026-12-16')], myNextReservation: { from: '2026-12-14', to: '2026-12-16', purpose: 'Víkend' } }),
+      NO_SHOPPING,
+      { municipalityName: 'Telč', municipalityRegion: 'Kraj Vysočina' },
+    )
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    await screen.findByRole('region', { name: 'Důležité' })
+    await waitFor(() => expect(vi.mocked(apiClient.get).mock.calls.some(([url]) => url === '/users/me')).toBe(true))
+  }
+  const mandatoryShown = async () => {
+    expect(screen.getByRole('heading', { level: 1, name: 'Chata U Lesa' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Na chatě teď' })).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Důležité' })).getByText('Zítra: Bouřka')).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Visí na tobě' })).toHaveTextContent('Plynová bomba: Došlo')
+  }
+
+  it('bez preferencí je vidět hlavička, Kdo jede, Důležité, Visí na tobě a Počasí, nic dalšího', async () => {
+    await renderWithPrefs(null)
+
+    await mandatoryShown()
+    await waitFor(() => expect(screen.getByTestId('cabin-today')).toHaveTextContent('5 °C · Zataženo'))
+    for (const [name, query] of Object.entries(OPTIONAL)) expect(query(), name).not.toBeInTheDocument()
+  })
+
+  it('zapnuté bloky se objeví a vypnuté Počasí zmizí; Kdo jede, Důležité a Visí na tobě zůstanou', async () => {
+    await renderWithPrefs({ ...ALL_BLOCKS, weather: false })
+
+    await mandatoryShown()
+    for (const [name, query] of Object.entries(OPTIONAL)) await waitFor(() => expect(query(), name).toBeInTheDocument())
+    expect(screen.getByTestId('cabin-today')).not.toHaveTextContent('°C')
+  })
+
+  it('vypnout jde jen volitelné bloky: se vším vypnutým zůstane hlavička, Kdo jede, Důležité a Visí na tobě', async () => {
+    await renderWithPrefs({ weather: false, cabinScene: false, sinceLast: false, laterAndFree: false, stayForecast: false, regionEvents: false, noticeboard: false })
+
+    await mandatoryShown()
+    for (const [name, query] of Object.entries(OPTIONAL)) expect(query(), name).not.toBeInTheDocument()
+    expect(screen.getByTestId('cabin-today')).not.toHaveTextContent('°C')
+  })
+
+  it('host vidí Kdo jede, Počasí a výstrahu v Důležité; preference ani volitelné bloky nemá', async () => {
+    auth.isGuest = true
+    weather.current = { temp: 5, description: 'Zataženo', stormAlert: { day: 'Zítra', description: 'Bouřka' } }
+    responses.set('/users/me', { dashboardPrefs: { ...ALL_BLOCKS, weather: false } })
+    renderOverview(reservations({ lastStay, upcomingReservations: [upcoming('r-eva', 'Eva', '2026-12-14', '2026-12-16')] }), NO_SHOPPING, { municipalityName: 'Telč', municipalityRegion: 'Kraj Vysočina' })
+
+    await screen.findByRole('region', { name: 'Na chatě teď' })
+    expect(within(await screen.findByRole('region', { name: 'Důležité' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['VýstrahaZítra: Bouřka'])
+    await waitFor(() => expect(screen.getByTestId('cabin-today')).toHaveTextContent('5 °C · Zataženo'))
+    for (const [name, query] of Object.entries(OPTIONAL)) expect(query(), name).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Visí na tobě' })).not.toBeInTheDocument()
   })
 })

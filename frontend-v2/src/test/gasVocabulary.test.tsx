@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { DashboardReservationsData, LastStay } from '@/api/dashboard'
+import type { LastStay } from '@/api/dashboard'
 import type { Reservation } from '@/api/reservations'
-import { ActiveReservation } from '@/features/dashboard/ActiveReservation'
+import { SinceLastCard } from '@/features/dashboard/ActiveReservation'
 import { CheckoutSection } from '@/features/reservations/ui/CheckoutSection'
 
 // Slovník plynu podle rozhodnutí #166 = A: „Plynová bomba“ · Dostatek / Dochází / Došlo.
@@ -88,13 +88,10 @@ describe('Od minule na Přehledu: plynová bomba', () => {
       username: 'Jana', userColor: null, userAnimalIcon: null, from: '2026-12-05', to: '2026-12-07',
       isCheckoutCompleted: true, daysEmpty: 3, checkoutState: { gas, waterOff: true },
     }
-    const data: DashboardReservationsData = {
-      activeReservation: null, upcomingReservations: [], myNextReservation: null, departingToday: false,
-      nextFreeWeekend: null, lastStay, stats: { myNightsThisYear: 0, totalStaysThisMonth: 0 },
-    }
+    // #685 (spec #677): „Od minule“ je samostatný blok, už ne část karty Kdo jede
     render(
       <MemoryRouter>
-        <ActiveReservation data={data} cabinDepartureChecklist={[]} />
+        <SinceLastCard lastStay={lastStay} />
       </MemoryRouter>,
     )
   }

@@ -2,13 +2,11 @@
    Dashboard — Clean SaaS Layout (Radical Cleanup)
    ============================================================================ */
 
-/* ── „Od minule“ na status kartě (#366): sekce bez boxu, stav chaty vlevo, vzkazy vpravo ── */
+/* ── „Od minule“ (#366, samostatná karta od #685): stav chaty vlevo, vzkazy vpravo ── */
 .arrival-briefing {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-top: var(--space-md);
-  border-top: 1px solid rgb(var(--rule));
   font-size: max(0.875rem, var(--font-size-sm));
   line-height: 1.45;
 }
@@ -365,13 +363,6 @@
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-}
-
-.glass-card.cabin-today--card {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-md);
-  padding: 10px 14px;
 }
 
 .cabin-today__text {

@@ -6,7 +6,9 @@ import { ErrorBoundary } from "react-error-boundary";
 import apiClient from "@/api/client";
 import type { CabinSettings, DashboardActivationData, DashboardReservationsData, DashboardShoppingData, DashboardNotesData } from "@/api/dashboard";
 import { DashboardActivationSchema, DashboardReservationsSchema, DashboardShoppingSchema, DashboardNotesSchema } from "@/api/schemas";
-import { ActiveReservation } from "./ActiveReservation";
+import { ActiveReservation, SinceLastCard } from "./ActiveReservation";
+import { CabinScene } from "./CabinScene";
+import { overviewBlocks, useDashboardPrefs } from "./overviewBlocks";
 import { AdminActivationChecklist } from "./AdminActivationChecklist";
 import { PinnedNote } from "./PinnedNote";
 import { NudgeTray } from "./NudgeTray";
@@ -17,7 +19,7 @@ import { buildAttention } from "./attention";
 import { NoteSheet } from "./NoteSheet";
 import { useMediaQuery, WIDE_DESKTOP_QUERY } from "@/hooks/useMediaQuery";
 import { CabinToday } from "./CabinToday";
-import { pickOverviewStay, overviewStayTitle } from "./overviewStay";
+import { pickOverviewStay, overviewStayTitle, someoneAtCabin } from "./overviewStay";
 import { StayWeatherCard } from "@/features/weather/StayWeatherCard";
 import { useTodayWeather } from "@/features/weather/hooks/useTodayWeather";
 import { InstallCard } from "@/components/shared/InstallCard";
@@ -123,6 +125,7 @@ const cardVariants = {
 export function DashboardPage() {
   useDocumentTitle('Přehled');
   const { isAdmin, isGuest, user } = useAuth();
+  const prefs = useDashboardPrefs(!isGuest);
   const [pinnedNote, setPinnedNote] = useState<string | null>(null);
   const [pinnedNoteAuthor, setPinnedNoteAuthor] = useState<string | null>(null);
   const [pinnedNoteUpdatedAt, setPinnedNoteUpdatedAt] = useState<string | null>(null);
@@ -206,6 +209,15 @@ export function DashboardPage() {
   const stayPick = reservationsQuery.data
     ? pickOverviewStay(reservationsQuery.data.activeReservation, reservationsQuery.data.upcomingReservations, user, getLocalTodayIso())
     : null;
+  // Které bloky jsou vidět, rozhoduje jen `overviewBlocks` (#685): role, preference a data
+  const reservationsData = reservationsQuery.data;
+  const lastStay = reservationsData?.lastStay;
+  const blocks = overviewBlocks({
+    isGuest: !!isGuest,
+    prefs,
+    hasStayForecast: !!stayPick,
+    hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username, getLocalTodayIso()),
+  });
   // „Visí na tobě“ a „Důležité“: na mobilu nahoře v hlavním sloupci, na desktopu
   // v bočním panelu nad vzkazem, aby se Přehled vešel bez scrollování (#275, #356)
   const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY);
@@ -242,7 +254,7 @@ export function DashboardPage() {
   const mainColumn = (
     <div className="dashboard nordic-dashboard" data-testid="dashboard-page">
       {/* Dnešek chaty (#338): na desktopu v hlavičce levého menu, jinak kompaktní karta nahoře */}
-      {isDesktop ? <h1 className="sr-only">{cabinQuery.data?.name ?? "Přehled"}</h1> : <CabinToday variant="card" />}
+      {isDesktop ? <h1 className="sr-only">{cabinQuery.data?.name ?? "Přehled"}</h1> : <CabinToday variant="card" weather={blocks.weather} events={blocks.regionEvents} />}
 
       {/* Winter banner */}
       {isWinterized && (
@@ -281,7 +293,13 @@ export function DashboardPage() {
         animate="visible"
         data-testid="dashboard-stack"
       >
-        {/* Na chatě teď */}
+        {blocks.cabinScene && reservationsData && (
+          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-scene-widget">
+            <CabinScene data={reservationsData} winterized={isWinterized} weather={todayWeather} />
+          </motion.div>
+        )}
+
+        {/* Kdo jede */}
         <motion.div variants={cardVariants} data-testid="dashboard-reservation-widget">
           {reservationsQuery.isLoading ? (
             <StatusCardSkeleton />
@@ -290,18 +308,23 @@ export function DashboardPage() {
               <FeatureErrorFallback title="Rezervace se nepodařilo načíst" error={reservationsQuery.error as Error} resetErrorBoundary={() => reservationsQuery.refetch()} />
             </ErrorBoundary>
           ) : reservationsQuery.data ? (
-            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} isWinterized={isWinterized} weather={todayWeather} shownElsewhere={shownElsewhere} />
+            <ActiveReservation data={reservationsQuery.data} cabinDepartureChecklist={departureChecklist} shownElsewhere={shownElsewhere} />
           ) : null}
         </motion.div>
 
-        {/* Potom a volno (#273): do #685 všem členům pod kartou Kdo jede, host volitelné bloky nemá (#677) */}
-        {!isGuest && (
+        {blocks.sinceLast && lastStay && (
+          <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-since-last-widget">
+            <SinceLastCard lastStay={lastStay} shownElsewhere={shownElsewhere} />
+          </motion.div>
+        )}
+
+        {blocks.laterAndFree && (
           <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-later-free-widget">
             <LaterAndFreeCard />
           </motion.div>
         )}
 
-        {stayPick && (
+        {stayPick && blocks.stayForecast && (
           <motion.div variants={cardVariants} className="empty:hidden" data-testid="dashboard-stay-weather-widget">
             <StayWeatherCard
               from={stayPick.stay.from}
@@ -333,7 +356,7 @@ export function DashboardPage() {
     <div className="dashboard-aside" data-testid="dashboard-aside">
       {isDesktop && nudges}
       {isDesktop && attention}
-      {!isGuest && <div data-testid="dashboard-handover-widget">
+      {blocks.noticeboard && <div data-testid="dashboard-handover-widget">
         {notesQuery.isLoading ? (
           <PinnedNoteSkeleton />
         ) : notesQuery.isError ? (

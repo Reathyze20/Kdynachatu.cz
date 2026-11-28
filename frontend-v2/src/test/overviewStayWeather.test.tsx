@@ -100,6 +100,8 @@ function renderOverview(data: DashboardReservationsData, qc = new QueryClient({ 
   responses.set('/dashboard/reservations', data)
   responses.set('/dashboard/shopping', { pendingShoppingItems: [], totalPendingShoppingCount: 0, totalItemsCount: 0, essentialWarning: null })
   responses.set('/dashboard/notes', { latestNotes: [], pinnedHandoverNote: null, handoverNoteAuthor: null, handoverNoteUpdatedAt: null })
+  // #685 (spec #677): Předpověď na pobyt je volitelný blok, ve výchozím stavu vypnutý
+  responses.set('/users/me', { dashboardPrefs: { stayForecast: true } })
   renderWith(qc, <DashboardPage />)
   return qc
 }

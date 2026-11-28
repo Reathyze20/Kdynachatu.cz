@@ -9,7 +9,7 @@ import apiClient from '@/api/client'
 import { PromptDialog } from '@/components/shared/PromptDialog'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { membersApi } from '@/api/members'
-import { authApi } from '@/api/auth'
+import { authApi, PROFILE_KEY } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/context/AuthContext'
@@ -99,7 +99,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
   // ─── Načíst profil ──────────────────────────────────────────────────────────
   const { data: profileData } = useQuery<ProfileData>({
-    queryKey: ['profile'],
+    queryKey: PROFILE_KEY,
     queryFn: () => apiClient.get<ProfileData>('/users/me').then((r) => r.data),
     enabled: isOpen,
   })
@@ -144,7 +144,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
         updateAnimalIcon(variables.animalIcon)
       }
       showToast('Změny uloženy.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: PROFILE_KEY })
     },
     onError: () => showToast('Změny se nepodařilo uložit. Zkus to znovu.', 'error'),
   })
@@ -182,7 +182,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       setEmailMessage('')
       setEmailPassword('')
       showToast('E-mail změněn.', 'success')
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: PROFILE_KEY })
     } catch (err: unknown) {
       const response = (err as { response?: { status?: number; data?: { message?: string } } })?.response
       if (response?.status === 403) {
