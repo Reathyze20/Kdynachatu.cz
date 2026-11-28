@@ -5,16 +5,15 @@
  * Volitelné bloky podle efektivních preferencí uživatele (`GET /users/me`) a dat; host personalizaci nemá.
  */
 import { useQuery } from "@tanstack/react-query";
-import apiClient from "@/api/client";
-import type { DashboardPrefs, UserProfile } from "@/api/auth";
+import { authApi, PROFILE_KEY, type DashboardPrefs } from "@/api/auth";
 
 /** Přepínatelné bloky v pevném pořadí Přehledu. */
-export const OVERVIEW_TOGGLES = ["weather", "cabinScene", "sinceLast", "laterAndFree", "stayForecast", "regionEvents", "noticeboard"] as const;
-export type OverviewToggle = (typeof OVERVIEW_TOGGLES)[number];
+const OVERVIEW_TOGGLES = ["weather", "cabinScene", "sinceLast", "laterAndFree", "stayForecast", "regionEvents", "noticeboard"] as const;
+type OverviewToggle = (typeof OVERVIEW_TOGGLES)[number];
 export type OverviewBlocks = Record<OverviewToggle, boolean>;
 
 /** Bez uložené hodnoty je zapnuté jen Počasí (zrcadlí `effectiveDashboardPrefs` v src/utils/dashboardPrefs.ts). */
-export function effectiveToggles(stored: DashboardPrefs | null | undefined): OverviewBlocks {
+function effectiveToggles(stored: DashboardPrefs | null | undefined): OverviewBlocks {
   const result = Object.fromEntries(OVERVIEW_TOGGLES.map((key) => [key, key === "weather"])) as OverviewBlocks;
   for (const key of OVERVIEW_TOGGLES) {
     const value = stored?.[key];
@@ -40,9 +39,9 @@ export function overviewBlocks({ isGuest, prefs, hasStayForecast, hasSinceLast }
 
 /** Uložené preference Přehledu přihlášeného uživatele; sdílí dotaz s profilem. Host je nenačítá. */
 export function useDashboardPrefs(enabled: boolean): DashboardPrefs | null | undefined {
-  const { data } = useQuery<UserProfile>({
-    queryKey: ["profile"],
-    queryFn: () => apiClient.get<UserProfile>("/users/me").then((r) => r.data),
+  const { data } = useQuery({
+    queryKey: PROFILE_KEY,
+    queryFn: authApi.getMe,
     enabled,
     staleTime: 60_000,
   });

@@ -216,7 +216,7 @@ export function DashboardPage() {
     isGuest: !!isGuest,
     prefs,
     hasStayForecast: !!stayPick,
-    hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username),
+    hasSinceLast: !!reservationsData && !!lastStay && !someoneAtCabin(reservationsData, user?.username, getLocalTodayIso()),
   });
   // „Visí na tobě“ a „Důležité“: na mobilu nahoře v hlavním sloupci, na desktopu
   // v bočním panelu nad vzkazem, aby se Přehled vešel bez scrollování (#275, #356)

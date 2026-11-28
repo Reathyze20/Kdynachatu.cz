@@ -70,7 +70,7 @@ export function CabinToday({ variant, weather: showWeather = true, events: showE
   return sidebar ? (
     <div className="cabin-today cabin-today--sidebar" data-testid="cabin-today">{body}</div>
   ) : (
-    <Card className="cabin-today flex items-center gap-3 px-3.5 py-2.5 md:px-3.5 md:py-2.5" data-testid="cabin-today">
+    <Card className="cabin-today flex items-center gap-3 py-3 md:px-4 md:py-3" data-testid="cabin-today">
       <img src="/logo-icon.svg" alt="" className="nav-logo-icon" />
       {body}
     </Card>

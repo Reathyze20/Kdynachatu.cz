@@ -75,6 +75,9 @@ export interface UpdateProfileResponse {
   user: { email: string | null; color: string; animalIcon: string | null; dashboardPrefs?: DashboardPrefs | null }
 }
 
+/** Klíč dotazu na vlastní profil (`GET /users/me`), sdílí ho šuplík profilu a Přehled. */
+export const PROFILE_KEY = ['profile'] as const
+
 export const authApi = {
   getSignupStatus: async (): Promise<SignupStatusResponse> => {
     const { data } = await apiClient.get<SignupStatusResponse>('/signup-status')
@@ -84,6 +87,10 @@ export const authApi = {
   getDemoAccounts: async (): Promise<DemoAccount[]> => {
     const { data } = await apiClient.get<DemoAccountsResponse>('/demo-accounts')
     return Array.isArray(data?.accounts) ? data.accounts : []
+  },
+  getMe: async (): Promise<UserProfile> => {
+    const { data } = await apiClient.get<UserProfile>('/users/me')
+    return data
   },
   changeMyPassword: async (oldPassword: string, newPassword: string): Promise<ChangeMyPasswordResponse> => {
     const { data } = await apiClient.patch<ChangeMyPasswordResponse>('/users/me/password', { oldPassword, newPassword })

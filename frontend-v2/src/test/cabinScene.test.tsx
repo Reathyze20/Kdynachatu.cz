@@ -62,6 +62,7 @@ afterEach(() => {
   vi.useRealTimers()
   responses.clear()
   auth.isGuest = false
+  vi.mocked(fetchWeather).mockImplementation(() => Promise.resolve(null))
 })
 
 describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
@@ -197,7 +198,6 @@ describe('Scéna chaty v kartě „Na chatě teď“ (#563)', () => {
     await screen.findByRole('region', { name: 'Na chatě teď' })
     await weatherLoaded()
     expect(screen.queryByRole('img', { name: /^Scéna chaty/ })).not.toBeInTheDocument()
-    vi.mocked(fetchWeather).mockImplementation(() => Promise.resolve(null))
   })
 })
 

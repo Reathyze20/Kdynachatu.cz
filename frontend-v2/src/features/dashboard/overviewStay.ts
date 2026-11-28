@@ -1,6 +1,6 @@
 /** Který pobyt ukáže karta Počasí na pobyt na Přehledu (#326) a kdo je teď na chatě. Čisté funkce nad dotazem Přehledu na pobyty. */
 import type { ActiveReservation, DashboardReservationsData, UpcomingReservation } from "@/api/dashboard";
-import { addIsoDays, formatShortDayDate, getLocalTodayIso } from "@/lib/dateUtils";
+import { addIsoDays, formatShortDayDate } from "@/lib/dateUtils";
 import { buildTurnusChain, type ChainStay } from "@/lib/turnusChain";
 
 /** Řetězec teď → pak z dat Přehledu; aktivní pobyt API posílá jen pevný. Jméno je unikátní, vlastní pobyt = „Ty“. */
@@ -15,8 +15,8 @@ export function dashboardChainStays(data: DashboardReservationsData, myUsername:
 }
 
 /** Je teď někdo na chatě (uzel „teď“ řetězce turnusu)? „Od minule“ se ukazuje, jen když ne. */
-export function someoneAtCabin(data: DashboardReservationsData, myUsername: string | undefined): boolean {
-  return !!buildTurnusChain(dashboardChainStays(data, myUsername), getLocalTodayIso())[0]?.stay;
+export function someoneAtCabin(data: DashboardReservationsData, myUsername: string | undefined, today: string): boolean {
+  return !!buildTurnusChain(dashboardChainStays(data, myUsername), today)[0]?.stay;
 }
 
 /** Karta se ukáže od 7 dní před příjezdem do dne odjezdu. */
