@@ -61,7 +61,6 @@ const countPerFile = (files: Record<string, string>, count: (source: string) => 
 const G3_DEBT: Record<string, number> = {
   '../features/reservations/Reservations.module.css': 26,
   '../styles/gallery.css': 12,
-  '../styles/landing.css': 18,
   '../styles/notes.css': 19,
   '../styles/reconstruction.css': 3,
   '../styles/reservations.css': 38,
@@ -71,7 +70,6 @@ const G3_DEBT: Record<string, number> = {
 /** Totéž pro TSX (Tailwind a inline styly). */
 const G3_DEBT_TSX: Record<string, number> = {
   '../features/gallery/UploadModal.tsx': 1,
-  '../features/landing/LandingPage.tsx': 3,
   '../features/reservations/ui/BookingForm.tsx': 2,
 }
 

@@ -427,8 +427,8 @@ Legacy frontend (`src/frontend/`) obsahuje:
 
 | Feature | Komponenty | Hooks | API calls | CSS | Stav |
 |---------|:----------:|:-----:|:---------:|:---:|------|
-| [auth/](frontend-v2/src/features/auth/) | 5 (AuthPage, LoginForm, RegisterForm, VerifyEmailPage, VerifyForm) | 0 | client.ts direct | landing.css, forms.css | ✅ Complete |
-| [landing/](frontend-v2/src/features/landing/) | 1 (LandingPage) | 0 | 0 | landing.css | ✅ Complete |
+| [auth/](frontend-v2/src/features/auth/) | 5 (AuthPage, LoginForm, RegisterForm, VerifyEmailPage, VerifyForm) | 0 | client.ts direct | forms.css | ✅ Complete |
+| [landing/](frontend-v2/src/features/landing/) | 2 (LandingPage, WaitlistForm) | 0 | waitlist API | Tailwind + tokeny (#700) | ✅ Complete |
 | [invite/](frontend-v2/src/features/invite/) | 1 (InvitePage) | 0 | invites API | AuthLayout (layout.css) | ✅ Complete |
 | [onboarding/](frontend-v2/src/features/onboarding/) | 1 (OnboardingPage) | 0 | cabin API | AuthLayout (layout.css) | ✅ Complete |
 | [dashboard/](frontend-v2/src/features/dashboard/) | 7 (DashboardPage, ActiveReservation, DepartureBanner, EssentialWarning, HandoverNote, ShoppingWidget, WeatherCard) | 0 (inline queries) | dashboard.ts (3 queries + weather) | dashboard.css | ✅ Complete |

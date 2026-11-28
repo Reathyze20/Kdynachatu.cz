@@ -88,6 +88,10 @@ body {
   line-height: 1.6;
   position: relative;
   z-index: 0;
+  /* Stránka se neposouvá do strany a písmo je vyhlazené (dřív v globálně importovaném landing.css, #700) */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Fotka krajiny s jemným závojem jen na přihlašovacích obrazovkách (C5a). */

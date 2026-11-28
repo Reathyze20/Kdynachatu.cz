@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import landingCssRaw from '@/styles/landing.css?raw'
+import landingCssRaw from '@/styles/base.css?raw'
 import { LandingPage } from '@/features/landing/LandingPage'
 
 // #695: člen rodiny na telefonu (360–430 px) vidí „Přihlásit se“ přímo v liště landing page,
 // bez otevírání menu. jsdom nepočítá media queries, proto se viditelnost hlídá přes DOM
-// (tlačítko je v liště, ne v menu) a přes pravidla landing.css, která platí na mobilu.
+// (tlačítko je v liště, ne v menu) a přes globální pravidla base.css, která platí na mobilu (vlastní CSS stránka od #700 nemá).
 
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '')
 const MEDIA_BLOCK = /@media([^{]*)\{((?:[^{}]*\{[^{}]*\})*[^{}]*)\}/g

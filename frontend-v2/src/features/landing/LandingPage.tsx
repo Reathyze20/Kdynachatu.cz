@@ -1,464 +1,317 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import '@/styles/landing.css'
-import { WaitlistForm } from './WaitlistForm'
+/**
+ * features/landing/LandingPage.tsx
+ * Landing page na `/` pro nepřihlášené (#700, spec #692): lišta → hero se scénou chaty → screenshoty → funkce →
+ * zakládající chata → oddíly a spolky → pronájem → od chataře → zápis do waitlistu → patička (#701). Stojí na
+ * tokenech a sdílených komponentách (DESIGN.md), bez vlastního CSS. CTA z bloků spolky a pronájem předvyplní
+ * formulář a doskočí na něj; odkaz s kotvou (`/#pronajem`) otevře stránku rovnou na sekci.
+ */
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { CalendarDays, KeyRound, Menu, ShoppingBasket, UserRound, WifiOff, X, type LucideIcon } from 'lucide-react'
+import type { DashboardReservationsData } from '@/api/dashboard'
+import { Card } from '@/components/shared/Card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { CabinScene } from '@/features/dashboard/CabinScene'
+import dormouseNotebook from '@/features/dashboard/scene/dormouse-notebook.png'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { cn } from '@/lib/utils'
+import { WaitlistForm, type WaitlistPrefill } from './WaitlistForm'
 
-const CheckIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-)
+/** Návštěvník nemá chatu: scéna je prázdná chata s ročním obdobím z data zařízení, bez pobytů a bez počasí. */
+const NO_STAYS: DashboardReservationsData = {
+  activeReservation: null, upcomingReservations: [], myNextReservation: null, departingToday: false,
+  nextFreeWeekend: null, lastStay: null, stats: { myNightsThisYear: 0, totalStaysThisMonth: 0 },
+}
 
-export function LandingPage() {
-  const navigate = useNavigate()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+const CONTACT_EMAIL = 'ahoj@kdynachatu.cz'
+const WRAP = 'mx-auto w-full max-w-5xl px-4 md:px-6'
+/** Sekce pod lepkavou lištou: kotva nezajede pod ni. */
+const SECTION = cn(WRAP, 'scroll-mt-20 py-8 md:py-12')
+const TEXT_LINK = 'inline-flex min-h-(--touch-target-min) items-center rounded-(--radius-md) px-3 hover:text-primary focus-visible:outline-2 focus-visible:outline-ring'
 
-  // ── Nav shrink on scroll ──
-  useEffect(() => {
-    let ticking = false
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 60)
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+const NAV_LINKS = [
+  { href: '#ukazka', label: 'Jak to vypadá' },
+  { href: '#funkce', label: 'Funkce' },
+]
 
-  // ── Scroll reveal ──
-  useEffect(() => {
-    const els = document.querySelectorAll('.reveal')
-    if (!els.length || !('IntersectionObserver' in window)) {
-      els.forEach(el => el.classList.add('revealed'))
-      return
-    }
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('revealed')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.15, rootMargin: '-40px 0px' }
-    )
-    els.forEach(el => observer.observe(el))
-    return () => observer.disconnect()
-  }, [])
+/** Screenshoty fiktivní chaty Pod Lipou (#697), 390 × 844 px. */
+const SCREENS = [
+  {
+    src: '/landing/kdy-kdo-jede.webp',
+    title: 'Kdo kdy jede, vidí všichni.',
+    text: 'Pobyty všech rodin v jednom kalendáři. Hned vidíš, kdy je chata volná.',
+    alt: 'Kalendář pobytů na prosinec s barevnými pruhy pobytů jednotlivých rodin a volnými dny.',
+  },
+  {
+    src: '/landing/predavka.webp',
+    title: 'Víš, v jakém stavu najdeš chatu, ještě než vyjedeš.',
+    text: 'Kdo odjíždí, předá chatu. Další rodina pak na Přehledu vidí, co po ní zůstalo: plyn, topení, voda a vzkaz.',
+    alt: 'Přehled s kartou Na chatě teď: chata je volná, kdo jede příště a co po sobě nechali Novákovi.',
+  },
+  {
+    src: '/landing/zasoby.webp',
+    title: 'Co dochází, víš dřív, než to dojde.',
+    text: 'Zásoby na chatě mají stav Dostatek, Dochází a Došlo. Co chybí, přidáš do společného nákupu.',
+    alt: 'Zásoby na chatě: káva došla, toaletní papír a jar na nádobí docházejí.',
+  },
+]
 
-  // ── Seasonal pricing ──
-  const getSeasonalPricing = useCallback(() => {
-    const month = new Date().getMonth() + 1
-    const FULL_PRICE = 490
-    const MONTHLY_RATE = 70
-    if (month < 4 || month > 10) {
-      return { price: FULL_PRICE, subtitle: 'Na celou sezónu', explanation: 'Vychází na 40\u00a0Kč měs. Zima je zdarma.' }
-    }
-    const monthsLeft = 11 - month
-    return {
-      price: monthsLeft * MONTHLY_RATE,
-      subtitle: `Za zbývající ${monthsLeft} měsíce`,
-      explanation: 'Aplikace odečetla měsíce, které už uplynuly. Zima je navždy zdarma.'
-    }
-  }, [])
+const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
+  { icon: CalendarDays, title: 'Kdo kdy jede', text: 'Kalendář pobytů pro všechny rodiny. Volný víkend najdeš na první pohled.' },
+  { icon: KeyRound, title: 'Předávka', text: 'Kdo odjíždí, zapíše plyn, topení, vodu, závady a vzkaz pro další rodinu.' },
+  { icon: ShoppingBasket, title: 'Zásoby a nákupy', text: 'Co na chatě dochází, vidí všichni. Nakoupí ten, kdo jede.' },
+  { icon: UserRound, title: 'Hosté', text: 'Půjčíš chatu kamarádovi a on uvidí jen svůj pobyt.' },
+  {
+    icon: WifiOff,
+    title: 'Funguje bez signálu, výstupy do WhatsAppu',
+    text: 'Co zapíšeš bez signálu, odešle se, až se chytí. Připomínky pošleš do rodinného WhatsAppu. WhatsApp nenahrazujeme, jen v něm přestaneš hledat.',
+  },
+]
 
-  const seasonal = getSeasonalPricing()
-
-  useEffect(() => {
-    document.body.style.overflow = mobileMenuOpen ? 'hidden' : ''
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileMenuOpen])
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false)
-  }
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(prev => !prev)
-  }
-
-  const goToLogin = () => navigate('/login')
-
-  const smoothScroll = (id: string) => (e: React.MouseEvent) => {
-    e.preventDefault()
-    closeMobileMenu()
-    const el = document.getElementById(id)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+function LandingNav() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const closeMenu = () => setMenuOpen(false)
 
   return (
-    <>
-      {/* ========== GLASS NAVIGATION ========== */}
-      <nav className={`landing-nav${scrolled ? ' scrolled' : ''}`} id="landing-nav" data-testid="landing-nav">
-        <a href="/" className="landing-nav-logo" onClick={e => { e.preventDefault() }} data-testid="landing-home-link">
-          <img src="/logo-icon.svg" alt="Kdy na chatu" className="landing-nav-logo-img" />
-          <span className="landing-nav-logo-text">Kdy na chatu</span>
+    <header className="sticky top-0 z-(--z-header) border-b border-rule-soft bg-sheet">
+      <nav data-testid="landing-nav" aria-label="Hlavní" className={cn(WRAP, 'flex min-h-16 items-center gap-2')}>
+        <a href="#hero" className="mr-auto flex min-h-(--touch-target-min) items-center gap-2 rounded-(--radius-md) text-card-title">
+          <img src="/logo-icon.svg" alt="" width={32} height={32} className="size-8" />
+          Kdy na chatu
         </a>
-
-        <div className="landing-nav-links">
-          <a href="#funkce" className="landing-nav-link" onClick={smoothScroll('funkce')}>Funkce</a>
-          <a href="#jak-to-funguje" className="landing-nav-link" onClick={smoothScroll('jak-to-funguje')}>Jak to funguje</a>
-          <a href="#cenik" className="landing-nav-link" onClick={smoothScroll('cenik')}>Ceník</a>
+        <div className="flex items-center gap-2 max-md:hidden">
+          {NAV_LINKS.map((l) => <a key={l.href} href={l.href} className={cn(TEXT_LINK, 'text-label')}>{l.label}</a>)}
         </div>
-
-        <div className="landing-nav-actions">
-          <button className="landing-btn landing-btn-ghost landing-nav-login" onClick={goToLogin} data-testid="landing-login-button">Přihlásit se</button>
-          <button className="landing-btn landing-btn-primary landing-btn-sm landing-nav-trial" onClick={goToLogin} data-testid="landing-trial-button">Vyzkoušet zdarma</button>
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className={`landing-nav-hamburger${mobileMenuOpen ? ' active' : ''}`}
-          aria-label="Otevřít menu"
-          onClick={toggleMobileMenu}
-          data-testid="landing-mobile-menu-button"
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/login">Přihlásit se</Link>
+        </Button>
+        <Button asChild size="sm" className="max-md:hidden">
+          <a href="#zapis">Zapsat se</a>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label={menuOpen ? 'Zavřít menu' : 'Otevřít menu'}
+          aria-expanded={menuOpen}
+          aria-controls="landing-menu"
+          onClick={() => setMenuOpen((open) => !open)}
         >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+          {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+        </Button>
       </nav>
-
-      {/* Mobile menu overlay */}
-      <div className={`landing-mobile-menu${mobileMenuOpen ? ' open' : ''}`} data-testid="landing-mobile-menu">
-        <a href="#funkce" className="landing-mobile-link" onClick={smoothScroll('funkce')}>Funkce</a>
-        <a href="#jak-to-funguje" className="landing-mobile-link" onClick={smoothScroll('jak-to-funguje')}>Jak to funguje</a>
-        <a href="#cenik" className="landing-mobile-link" onClick={smoothScroll('cenik')}>Ceník</a>
-        <hr className="landing-mobile-divider" />
-        <button className="landing-btn landing-btn-ghost" style={{ width: '100%', textAlign: 'center' }} onClick={goToLogin} data-testid="landing-mobile-login-button">Přihlásit se</button>
-        <button className="landing-btn landing-btn-primary" style={{ width: '100%', textAlign: 'center' }} onClick={goToLogin} data-testid="landing-mobile-trial-button">Vyzkoušet zdarma</button>
+      {/* Jen mobil: odkazy na sekce a zápis. „Přihlásit se“ je v liště, v menu se neopakuje. */}
+      <div id="landing-menu" data-testid="landing-mobile-menu" hidden={!menuOpen} className="border-t border-rule-soft md:hidden">
+        <div className={cn(WRAP, 'flex flex-col gap-2 py-3')}>
+          {NAV_LINKS.map((l) => <a key={l.href} href={l.href} className={TEXT_LINK} onClick={closeMenu}>{l.label}</a>)}
+          <Button asChild className="w-full">
+            <a href="#zapis" onClick={closeMenu}>Zapsat se</a>
+          </Button>
+        </div>
       </div>
+    </header>
+  )
+}
 
-      {/* ========== HERO SECTION ========== */}
-      <section className="hero-section" data-testid="landing-hero-section">
-        <div className="hero-overlay"></div>
-
-        {/* Decorative blobs */}
-        <div className="hero-blob hero-blob-1"></div>
-        <div className="hero-blob hero-blob-2"></div>
-        <div className="hero-blob hero-blob-3"></div>
-
-        {/* Content */}
-        <div className="hero-content">
-          <h1 className="hero-title">
-            Konečně pořádek.<br /><span className="hero-title-accent">S radostí, bez hádek.</span>
-          </h1>
-
-          <p className="hero-subtitle">
-            Sdílej kalendář, nakupuj chytře a&nbsp;plánuj údržbu chalupy.
-            Jedna aplikace, která sjednotí celou rodinu.
-          </p>
-
-          <div className="hero-cta-group">
-            <button className="landing-btn landing-btn-primary landing-btn-lg" onClick={goToLogin} data-testid="landing-hero-primary-cta">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="M12 5l7 7-7 7" />
-              </svg>
-              Vyzkoušet zdarma
-            </button>
-            <a href="#funkce" className="landing-btn landing-btn-outline landing-btn-lg" onClick={smoothScroll('funkce')} data-testid="landing-hero-secondary-cta">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-              Ukázka aplikace
-            </a>
-          </div>
+function Hero() {
+  return (
+    <section id="hero" aria-labelledby="landing-title" className={cn(SECTION, 'pt-4 md:pt-10')}>
+      <Card className="flex flex-col gap-6 md:flex-row-reverse md:items-center md:gap-8">
+        <div className="md:w-1/2">
+          <CabinScene data={NO_STAYS} winterized={false} />
         </div>
+        <div className="flex flex-col items-start gap-4 md:w-1/2">
+          <h1 id="landing-title" className="text-page-title">Sdílená chata bez dohadování.</h1>
+          <p className="text-body text-(--text-muted)">
+            Kdo kdy jede, v jakém stavu chatu nechal a co dochází. Na jednom místě, pro všechny rodiny, co se na chatě střídají.
+          </p>
+          <Button asChild size="lg">
+            <a href="#zapis">Zapsat se</a>
+          </Button>
+        </div>
+      </Card>
+    </section>
+  )
+}
 
-        {/* Mockup */}
-        <div className="hero-mockup-wrapper">
-          <div className="hero-mockup">
-            <div className="hero-mockup-bar">
-              <span className="mockup-dot mockup-dot--red"></span>
-              <span className="mockup-dot mockup-dot--yellow"></span>
-              <span className="mockup-dot mockup-dot--green"></span>
-              <span className="mockup-bar-url">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-placeholder, #9ca3af)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                kdynachatu.cz
+function Screens() {
+  return (
+    <section id="ukazka" aria-labelledby="ukazka-title" className={SECTION}>
+      <Card>
+        <h2 id="ukazka-title" className="text-card-title">Takhle to vypadá v telefonu</h2>
+        <p className="mt-1 text-body text-(--text-muted)">Ukázková chata Pod Lipou s vymyšlenými rodinami.</p>
+        <ul className="mt-6 grid gap-8 md:grid-cols-3 md:gap-6">
+          {SCREENS.map((s) => (
+            <li key={s.src} className="flex flex-col gap-2">
+              <h3 className="text-card-title">{s.title}</h3>
+              <p className="text-body text-(--text-muted)">{s.text}</p>
+              <img
+                src={s.src}
+                alt={s.alt}
+                width={390}
+                height={844}
+                loading="lazy"
+                decoding="async"
+                className="mx-auto mt-2 h-auto w-full max-w-64 rounded-2xl border border-rule-soft shadow-lift"
+              />
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </section>
+  )
+}
+
+function Features() {
+  return (
+    <section id="funkce" aria-labelledby="funkce-title" className={SECTION}>
+      <Card>
+        <h2 id="funkce-title" className="text-card-title">Co na chatě vyřešíš</h2>
+        <ul className="mt-6 grid gap-6 md:grid-cols-2">
+          {FEATURES.map(({ icon: Icon, title, text }) => (
+            <li key={title} className="flex gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+                <Icon className="size-5" aria-hidden="true" />
               </span>
-            </div>
-            <img src="/dashboard-mockup.jpg" alt="Náhled aplikace Kdy na chatu — přehled s rezervacemi, počasím a nákupy" className="mockup-image" loading="eager" />
-          </div>
-        </div>
+              <div>
+                <h3 className="text-card-title">{title}</h3>
+                <p className="mt-1 text-body text-(--text-muted)">{text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 border-t border-rule-soft pt-4 text-label text-(--text-muted)">
+          A k tomu galerie fotek, deník pobytů, chat a plánování rekonstrukce.
+        </p>
+      </Card>
+    </section>
+  )
+}
 
-        {/* Scroll indicator */}
-        <div className="hero-scroll-indicator">
-          <span>Zjistit více</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </div>
-      </section>
+function FoundingCabin() {
+  return (
+    <section id="zakladajici" aria-labelledby="zakladajici-title" className={SECTION}>
+      <Card className="flex flex-col items-start gap-4">
+        <h2 id="zakladajici-title" className="text-card-title">Zakládající chata</h2>
+        <p className="text-body text-(--text-muted)">
+          Prvních 50 chat má první sezónu zdarma a hlas při rozhodování, co se bude stavět dál. Cenu poznáš dřív, než
+          budeš platit.
+        </p>
+        <Button asChild>
+          <a href="#zapis">Zapsat se</a>
+        </Button>
+      </Card>
+    </section>
+  )
+}
 
-      {/* ========== FEATURES ========== */}
-      <section id="funkce" className="landing-section landing-section--white">
-        <div className="landing-section-inner">
-          <h2 className="landing-section-title reveal">Všechno, co potřebuješ, na jednom místě</h2>
-          <p className="landing-section-subtitle reveal reveal-delay-1">
-            Rezervace, nákupy, galerie, deník, nástěnka i plánování rekonstrukce — v jedné přehledné aplikaci.
+/** CTA bloku: doskočí na formulář a předá mu nový objekt `prefill` (WaitlistForm ho použije znovu). */
+function PrefillCta({ label, prefill, onPrefill }: { label: string; prefill: WaitlistPrefill; onPrefill: (p: WaitlistPrefill) => void }) {
+  return (
+    <Button asChild variant="secondary">
+      <a href="#zapis" onClick={() => onPrefill({ ...prefill })}>{label}</a>
+    </Button>
+  )
+}
+
+function Clubs({ onPrefill }: { onPrefill: (p: WaitlistPrefill) => void }) {
+  return (
+    <section id="spolky" aria-labelledby="spolky-title" className={SECTION}>
+      <Card className="flex flex-col items-start gap-4">
+        <h2 id="spolky-title" className="text-card-title">Spravuješ chatu oddílu nebo spolku?</h2>
+        <p className="text-body text-(--text-muted)">
+          Na chatě se střídá víc lidí, klíče drží správce a závady se ztrácejí ve zprávách. I pro oddíl máš na jednom
+          místě, kdo kdy jede, v jakém stavu kdo chatu předal a co dochází.
+        </p>
+        <PrefillCta label="Zapsat oddíl nebo spolek" prefill={{ segment: 'spolek' }} onPrefill={onPrefill} />
+      </Card>
+    </section>
+  )
+}
+
+function Rental({ onPrefill }: { onPrefill: (p: WaitlistPrefill) => void }) {
+  return (
+    <section id="pronajem" aria-labelledby="pronajem-title" className={SECTION}>
+      <Card className="flex flex-col items-start gap-4">
+        <Badge variant="outline" className="border-rule-soft font-normal text-muted-foreground">Připravujeme</Badge>
+        <h2 id="pronajem-title" className="text-card-title">Pronajímáš chatu i cizím lidem? Zvažujeme to.</h2>
+        <p className="text-body text-(--text-muted)">
+          Zatím to nestavíme. Zapiš se a dej nám vědět, co bys potřeboval. Až to bude, dozvíš se to první.
+        </p>
+        <PrefillCta label="Zapsat zájem o pronájem" prefill={{ rentalIntent: 'obcas' }} onPrefill={onPrefill} />
+      </Card>
+    </section>
+  )
+}
+
+/** Jen křestní jméno, bez zdravotních údajů a bez fotky obličeje: místo ní plch z povolených obrázků (DESIGN.md §4). */
+function Founder() {
+  return (
+    <section id="autor" aria-labelledby="autor-title" className={SECTION}>
+      <Card className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
+        <img src={dormouseNotebook} alt="" width={112} height={80} className="shrink-0 [image-rendering:pixelated]" />
+        <div className="flex flex-col gap-3">
+          <h2 id="autor-title" className="text-card-title">Od chataře</h2>
+          <p className="text-body">
+            Ahoj, jsem Tomáš. Kdy na chatu vznikla pro naši rodinnou chatu, na které se střídá několik rodin. Kdo kdy
+            jede, jsme dohledávali ve WhatsAppu. Co dochází, jsme zjistili až na místě. A v jakém stavu chatu najdeme,
+            nevěděl nikdo předem.
           </p>
-          <div className="feature-grid">
-            <article className="feature-card reveal reveal-delay-1">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-              </div>
-              <h3>Chytrý kalendář rezervací</h3>
-              <p>Okamžitě vidíš, kdo kdy jede na chatu. Přehled měsíců, konflikty i osobní volno na jednom místě.</p>
-            </article>
-            <article className="feature-card reveal reveal-delay-2">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24">
-                  <circle cx="9" cy="21" r="1" />
-                  <circle cx="20" cy="21" r="1" />
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                </svg>
-              </div>
-              <h3>Sdílené nákupy</h3>
-              <p>Už žádné duplicitní nákupy. Každý ví, co chybí a co je už koupené.</p>
-            </article>
-            <article className="feature-card reveal reveal-delay-3">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                </svg>
-              </div>
-              <h3>Rekonstrukce pod kontrolou</h3>
-              <p>Nápady, firmy, úkoly i rozpočet přehledně v kanban pohledu.</p>
-            </article>
-            <article className="feature-card reveal reveal-delay-1">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
-              <h3>Sdílená galerie</h3>
-              <p>Fotky z víkendovek na jednom místě. Každý člen rodiny může přidávat, komentovat a sdílet vzpomínky.</p>
-            </article>
-            <article className="feature-card reveal reveal-delay-2">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-              </div>
-              <h3>Chatový deník</h3>
-              <p>Záznamy o tom, kdo co udělal, opravil, nakoupil. Historie chaty na jednom místě.</p>
-            </article>
-            <article className="feature-card reveal reveal-delay-3">
-              <div className="feature-icon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
-              <h3>Nástěnka a vzkazy</h3>
-              <p>Důležité informace a vzkazy pro další návštěvníky. Všichni vědí, na co si dát pozor.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== HOW IT WORKS ========== */}
-      <section id="jak-to-funguje" className="landing-section landing-section--alt">
-        <div className="landing-section-inner">
-          <h2 className="landing-section-title reveal">Jak to funguje</h2>
-          <p className="landing-section-subtitle reveal reveal-delay-1">
-            Nastavení zvládneš za pár minut. Pak už jen sdílíš termíny, úkoly a nákupy.
+          <p className="text-body">
+            Tak jsem napsal aplikaci, kterou dnes používá celá naše rodina. Teď zkouším, jestli pomůže i dalším chatám.
           </p>
-          <div className="steps-grid">
-            <article className="step-card reveal reveal-delay-1">
-              <div className="step-number">1</div>
-              <h3>Vytvoříš účet</h3>
-              <p>Přihlásíš sebe a pozveš rodinu. Každý dostane vlastní přístup.</p>
-            </article>
-            <article className="step-card reveal reveal-delay-2">
-              <div className="step-number">2</div>
-              <h3>Nastavíš pravidla</h3>
-              <p>Určíš role, dostupnost a první seznamy. Všichni vidí stejná data.</p>
-            </article>
-            <article className="step-card reveal reveal-delay-3">
-              <div className="step-number">3</div>
-              <h3>Používáš každý den</h3>
-              <p>Rezervace, nákupní seznamy a úkoly máš na jednom místě pro celou rodinu.</p>
-            </article>
-          </div>
         </div>
-      </section>
+      </Card>
+    </section>
+  )
+}
 
-      {/* ========== FOUNDER'S STORY ========== */}
-      <section id="founders-story" className="landing-section founder-section">
-        <div className="landing-section-inner">
-          <div className="founder-card reveal">
-            <div className="founder-photo-wrapper">
-              <div className="founder-photo-placeholder">—</div>
-            </div>
-            <div className="founder-text">
-              <h2 className="founder-headline">Od chataře pro chataře.</h2>
-              <blockquote className="founder-quote">
-                <p>
-                  Miluji přírodu, klid a čas na chalupě. Je to pro mě oáza — zvlášť od doby,
-                  kdy mi do života vstoupila roztroušená skleróza (RS). Odbourání zbytečného
-                  stresu se stalo nutností.
-                </p>
-                <p>
-                  V rodině jsme ale neustále řešili, kdo na chatě je, jestli došel plyn nebo
-                  kdo zrovna nakoupí. Tyhle zmatky měnily odpočinek ve stres. Proto jsem
-                  vytvořil <strong>Kdy na chatu</strong>. Abychom se zbavili dohadování
-                  a vrátili se k tomu hlavnímu — radosti z přírody.
-                </p>
-                <p>Věřím, že to pomůže i tobě.</p>
-              </blockquote>
-              <div className="founder-signature">
-                <span className="founder-name">Tomáš Rambousek</span>
-                <span className="founder-role">Tvůrce aplikace</span>
-              </div>
-            </div>
+export function LandingPage() {
+  useDocumentTitle('Sdílená chata bez dohadování')
+  const { hash } = useLocation()
+  const [prefill, setPrefill] = useState<WaitlistPrefill | null>(null)
+
+  // Odkaz s kotvou (`/#pronajem` pro pronajímatele) otevře stránku rovnou na sekci; prohlížeč to po vykreslení
+  // Reactu sám neudělá.
+  useEffect(() => {
+    if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'start' })
+  }, [hash])
+
+  return (
+    <div className="min-h-dvh text-(--text-main) [background:var(--bg-app-backdrop)]">
+      <LandingNav />
+      <main>
+        <Hero />
+        <Screens />
+        <Features />
+        <FoundingCabin />
+        <Clubs onPrefill={setPrefill} />
+        <Rental onPrefill={setPrefill} />
+        <Founder />
+        <section id="zapis" aria-labelledby="zapis-title" data-testid="landing-waitlist-section" className={SECTION}>
+          {/* WaitlistForm je sám papírová karta, úvod je karta nad ním. */}
+          <div className="mx-auto flex max-w-xl flex-col gap-4">
+            <Card>
+              <h2 id="zapis-title" className="text-card-title">Zapiš se na seznam</h2>
+              <p className="mt-1 text-body text-(--text-muted)">
+                Kdy na chatu zatím používá naše rodina. Zapiš se a ozvu se, až bude připravená i pro tvoji chatu.
+              </p>
+            </Card>
+            <WaitlistForm prefill={prefill} />
           </div>
-        </div>
-      </section>
-
-      {/* ========== PRICING ========== */}
-      <section id="cenik" className="landing-section landing-section--white">
-        <div className="landing-section-inner">
-          <h2 className="landing-section-title reveal">Jednoduchý ceník, žádné háčky</h2>
-          <p className="landing-section-subtitle reveal reveal-delay-1">
-            Vyber si, co ti sedí. Kdykoli to můžeš změnit nebo zrušit.
-          </p>
-
-          <div className="pricing-cards-container reveal reveal-delay-2">
-            {/* Karta 1: Základ */}
-            <article className="pricing-card">
-              <div className="pricing-card-top">
-                <h3 className="pricing-plan">Rodinný základ</h3>
-                <div className="pricing-price" style={{ marginBottom: 8 }}>
-                  <span className="pricing-amount">0</span>
-                  <span className="pricing-currency">Kč <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>/ navždy</span></span>
-                </div>
-                <p className="pricing-plan-desc">Pro běžný chod jedné chalupy.</p>
-              </div>
-              <ul className="pricing-list">
-                <li><CheckIcon /><span>Sdílený přehled</span></li>
-                <li><CheckIcon /><span>Nákupy a Zásoby</span></li>
-                <li><CheckIcon /><span>Až pro 3 členy</span></li>
-              </ul>
-              <button className="pricing-btn pricing-btn-ghost" onClick={goToLogin}>Založit zdarma</button>
-            </article>
-
-            {/* Karta 2: Měsíčně */}
-            <article className="pricing-card">
-              <div className="pricing-card-top">
-                <h3 className="pricing-plan">Měsíčně</h3>
-                <div className="pricing-price" style={{ marginBottom: 8 }}>
-                  <span className="pricing-amount">89</span>
-                  <span className="pricing-currency">Kč <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>/ měsíc</span></span>
-                </div>
-                <p className="pricing-plan-desc">Absolutní flexibilita. Zapni si to třeba jen na prázdniny.</p>
-              </div>
-              <ul className="pricing-list">
-                <li><CheckIcon /><span>Neomezeně členů</span></li>
-                <li><CheckIcon /><span>Fotogalerie a deník</span></li>
-                <li><CheckIcon /><span>Plánovač údržby</span></li>
-              </ul>
-              <button className="pricing-btn pricing-btn-secondary" onClick={goToLogin}>Platit měsíčně</button>
-            </article>
-
-            {/* Karta 3: Sezónní */}
-            <article className="pricing-card">
-              <div className="pricing-card-top">
-                <h3 className="pricing-plan">Sezónní Předplatné</h3>
-                <div className="pricing-price" style={{ marginBottom: 8 }}>
-                  <span className="pricing-amount">{seasonal.price}</span>
-                  <span className="pricing-currency">Kč</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--brand-primary, #5d9b62)', textTransform: 'uppercase' as const, letterSpacing: '0.03em' }}>
-                  {seasonal.subtitle}
-                </div>
-                <p className="pricing-plan-desc" style={{ marginTop: 8 }}>{seasonal.explanation}</p>
-              </div>
-              <ul className="pricing-list">
-                <li><CheckIcon /><span>Vše z Měsíčního plánu</span></li>
-                <li><CheckIcon /><span>Navíc varování před mrazy</span></li>
-                <li><CheckIcon /><span>Nejlepší poměr cena/výkon</span></li>
-              </ul>
-              <button className="pricing-btn pricing-btn-primary" onClick={goToLogin}>Pořídit na sezónu</button>
-            </article>
-          </div>
-
-          <div className="pricing-community-note reveal reveal-delay-3">
-            <strong>Stavíme to společně.</strong> Jako předplatitel dostaneš pozvánku na náš soukromý Discord, kde můžeš ovlivnit další vývoj.
-          </div>
-        </div>
-      </section>
-
-      {/* ========== CTA SECTION ========== */}
-      <section className="landing-cta-section reveal">
-        <div className="landing-cta-inner">
-          <h2>Chceš na chatě pořádek?</h2>
-          <p>Začni zdarma, bez závazků. Pozvi rodinu a všechno si vyzkoušej.</p>
-          <div className="landing-cta-buttons">
-            <button className="landing-btn landing-btn-primary landing-btn-lg" onClick={goToLogin}>Vyzkoušet zdarma</button>
-            <a href="#funkce" className="landing-btn landing-btn-outline landing-btn-lg" onClick={smoothScroll('funkce')}>Prozkoumat funkce</a>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== ZÁPIS DO WAITLISTU (#696) ========== */}
-      <section id="zapis" className="landing-section landing-section--alt" data-testid="landing-waitlist-section">
-        <div className="landing-section-inner mx-auto max-w-xl">
-          <h2 className="landing-section-title">Zapiš se na seznam</h2>
-          <p className="landing-section-subtitle">
-            Kdy na chatu zatím používá naše rodina. Zapiš se a ozvu se, až bude připravená i pro tvoji chatu.
-          </p>
-          <WaitlistForm />
-        </div>
-      </section>
-
-      {/* ========== FOOTER ========== */}
-      <footer className="site-footer">
-        <div className="footer-inner">
-          <div className="footer-col footer-brand">
-            <div className="footer-logo">
-              <img src="/logo-icon.svg" alt="Kdy na chatu" width="28" height="28" />
-              <span>Kdy na chatu</span>
-            </div>
-            <p>Rodinná aplikace pro správu chaty a chalupy. Konečně pořádek bez hádek.</p>
-          </div>
-          <div className="footer-col">
-            <h4>Produkt</h4>
-            <a href="#funkce" onClick={smoothScroll('funkce')}>Funkce</a>
-            <a href="#jak-to-funguje" onClick={smoothScroll('jak-to-funguje')}>Jak to funguje</a>
-            <a href="#cenik" onClick={smoothScroll('cenik')}>Ceník</a>
-          </div>
-          <div className="footer-col">
-            <h4>Právní</h4>
-            <Link to="/terms">Obchodní podmínky</Link>
-            <Link to="/privacy">Ochrana soukromí</Link>
-            <Link to="/privacy#cookies">Cookies</Link>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>&copy; 2026 Kdy na chatu — Všechna práva vyhrazena.</span>
+        </section>
+      </main>
+      <footer className="border-t border-rule-soft">
+        <div className={cn(WRAP, 'flex flex-col gap-2 py-6 md:flex-row md:items-center md:justify-between')}>
+          <p className="text-meta text-(--text-muted)">Kdy na chatu</p>
+          <ul className="-mx-3 flex flex-wrap gap-2 text-label">
+            <li><Link to="/privacy" className={TEXT_LINK}>Ochrana soukromí</Link></li>
+            <li><a href={`mailto:${CONTACT_EMAIL}`} className={TEXT_LINK}>Kontakt</a></li>
+            <li><Link to="/login" className={TEXT_LINK}>Přihlásit se</Link></li>
+          </ul>
         </div>
       </footer>
-    </>
+    </div>
   )
 }

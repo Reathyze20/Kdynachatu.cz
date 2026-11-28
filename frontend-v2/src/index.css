@@ -32,7 +32,6 @@
 @import './styles/diary.css';
 @import './styles/reconstruction.css';
 @import './styles/cabin-settings.css';
-@import './styles/landing.css';
 
 /* ─── React #root wrapper — body je display:flex, #root musí zabrat 100% šířky ─── */
 #root {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { NewLandingPage } from '@/features/landing/NewLandingPage'
+import { LandingPage } from '@/features/landing/LandingPage'
 
 // #700: nová landing page na design systému. Pořadí sekcí, jediné h1, žádný ceník ani registrace a scéna
 // chaty v heru bez počasí a bez API, podle volby „Scéna chaty“ v zařízení.
@@ -14,7 +14,7 @@ function prefersReducedMotion(reduce: boolean) {
   }))
 }
 
-const renderLanding = () => render(<MemoryRouter><NewLandingPage /></MemoryRouter>)
+const renderLanding = () => render(<MemoryRouter><LandingPage /></MemoryRouter>)
 const scene = () => screen.queryByRole('img', { name: /^Scéna chaty/ })
 
 beforeEach(() => {

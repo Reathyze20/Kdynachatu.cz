@@ -3,13 +3,12 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/forms.css", "styles/gallery.css", "styles/landing.css",
+      "styles/forms.css", "styles/gallery.css",
       "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ],
     "Inline styl s barvou natvrdo nebo s fallbackem var(--x, #hex), převede se s obrazovkou": [
-      "features/gallery/FolderGrid.tsx",
-      "features/landing/LandingPage.tsx"
+      "features/gallery/FolderGrid.tsx"
     ],
     "Barva člena a avatara je uložená data (#271), převod hex → rgba a paleta zatím mimo tokeny": [
       "features/reservations/calendar/CalendarCell.tsx", "lib/avatars.ts", "lib/memberPalette.ts"
@@ -23,7 +22,7 @@
     "Legacy CSS obrazovky, převede se na tokeny spolu s obrazovkou (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/forms.css", "styles/gallery.css", "styles/landing.css",
+      "styles/forms.css", "styles/gallery.css",
       "styles/modal.css", "styles/notes.css", "styles/reservations.css",
       "styles/shopping.css"
     ],
@@ -39,7 +38,7 @@
   "breakpoint": {
     "Legacy media query (šířky mimo md/lg, v galerii ještě páry 768/769 px), sjednotí se při převodu obrazovky": [
       "features/reservations/Reservations.module.css", "styles/dashboard.css", "styles/gallery.css",
-      "styles/landing.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css",
+      "styles/legal.css", "styles/lightbox.css", "styles/modal.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css"
     ]
   },
@@ -67,7 +66,7 @@
     "Stávající legacy CSS, zmizí, až se jeho obrazovky převedou na utility (DESIGN.md §11)": [
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/buttons.css",
       "styles/cabin-settings.css", "styles/custom-select.css", "styles/dashboard.css", "styles/dialogs.css",
-      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css", "styles/landing.css",
+      "styles/diary.css", "styles/forms.css", "styles/gallery.css", "styles/help.css",
       "styles/layout.css", "styles/legal.css", "styles/lightbox.css", "styles/modal.css", "styles/nav.css", "styles/notes.css",
       "styles/reconstruction.css", "styles/reservations.css", "styles/shopping.css", "styles/skeleton.css",
       "styles/status-header.css", "styles/view-transitions.css"
@@ -78,7 +77,6 @@
     "Ruční kopie ikony lucide, nahradí se komponentou z lucide-react s obrazovkou": [
       "features/reservations/calendar/CalendarGrid.tsx"
     ],
-    "Landing page: ilustrace a ikony statické stránky (DESIGN.md §4)": ["features/landing/LandingPage.tsx"],
     "Scéna chaty: pixel art skládaný ze znakových mřížek spritů podle stavu chaty (#558), lucide ani statický obrázek to neumí": ["features/dashboard/CabinScene.tsx"]
   },
   "iconSize": {
@@ -96,7 +94,7 @@
       "features/reservations/Reservations.module.css", "styles/base.css", "styles/gallery.css",
       "styles/skeleton.css"
     ],
-    "Dekorativní smyčka z doby před #565 (pulzující tečka stavu, landing page), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/landing.css", "styles/reservations.css"]
+    "Dekorativní smyčka z doby před #565 (pulzující tečka stavu), zklidní se s převodem obrazovky": ["styles/dashboard.css", "styles/reservations.css"]
   },
   "uiDingbat": {
     "Trvalá výjimka (#165): reakce na zprávy jsou feature emoji": ["features/notes/MessageContextMenu.tsx"],
