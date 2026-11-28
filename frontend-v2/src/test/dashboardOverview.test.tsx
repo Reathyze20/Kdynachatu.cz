@@ -866,15 +866,29 @@ describe('Přehled: „Visí na tobě“ jen pro toho, kdo může jednat (#274)'
   const toiletPaper: DashboardShoppingData = { ...NO_SHOPPING, attention: [{ name: 'Toaleťák', isEmpty: true, isEssential: true, inventoryId: 'inv-t', shoppingItemId: null }] }
   const nextArrival = (username: string) => reservations({ lastStay: gasEmpty, upcomingReservations: [upcoming('r-next', username, '2026-12-14', '2026-12-16')] })
 
-  it('v den mého odjezdu je výzva k předávce chaty jednou, jako řádek s tlačítkem do detailu pobytu; formulář odjezdu na Přehledu není', async () => {
+  it('v den mého odjezdu je výzva k předávce chaty jednou, jako řádek s tlačítkem na tab Předávka; formulář odjezdu na Přehledu není', async () => {
     renderOverview(leavingToday(), NO_SHOPPING, { departureChecklist: ['Zavřít okna'] })
 
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     expect(card).toHaveTextContent('Dnes odjíždíš.Vyplň předávku chaty pro toho, kdo přijede po tobě.')
-    expect(within(card).getByRole('link', { name: 'Vyplnit předávku chaty' })).toHaveAttribute('href', '/reservations?pobyt=r-now')
+    expect(within(card).getByRole('link', { name: 'Vyplnit předávku chaty' })).toHaveAttribute('href', '/handover')
     expect(screen.getAllByText(/Dnes odjíždíš/)).toHaveLength(1)
     expect(screen.queryByRole('button', { name: 'Vyplnit protokol' })).not.toBeInTheDocument()
     expect(screen.queryByText(/vyplň odjezdový checklist/i)).not.toBeInTheDocument()
+  })
+
+  // #220: náhrada za test DepartureBanneru (komponenta zmizí v druhé části #220); zapisuje jen tab Předávka, do chatu nic (ADR-0004)
+  it('výzva k odjezdu vede na /handover a sama nic neukládá ani neposílá do chatu', async () => {
+    renderOverview(leavingToday(), NO_SHOPPING, { departureChecklist: ['Zavřít okna'] })
+    const link = within(await screen.findByRole('region', { name: 'Visí na tobě' })).getByRole('link', { name: 'Vyplnit předávku chaty' })
+    expect(link).toHaveAttribute('href', '/handover')
+    vi.mocked(apiClient.patch).mockClear()
+    vi.mocked(apiClient.post).mockClear()
+
+    fireEvent.click(link)
+
+    expect(apiClient.patch).not.toHaveBeenCalled()
+    expect(apiClient.post).not.toHaveBeenCalled()
   })
 
   it.each([
@@ -924,6 +938,8 @@ describe('Přehled: „Visí na tobě“ jen pro toho, kdo může jednat (#274)'
     const card = await screen.findByRole('region', { name: 'Visí na tobě' })
     expect(within(card).getAllByRole('listitem')).toHaveLength(1)
     expect(card).toHaveTextContent('Dnes odjíždíš.')
+    // Host na tab Předávka nesmí (403, #216), výzva ho vede do detailu pobytu (#220)
+    expect(within(card).getByRole('link', { name: 'Vyplnit předávku chaty' })).toHaveAttribute('href', '/reservations?pobyt=r-now')
 
     cleanup()
     renderOverview(nextArrival('Eva'))

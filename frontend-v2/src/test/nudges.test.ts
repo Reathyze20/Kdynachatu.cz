@@ -90,6 +90,17 @@ describe('buildNudges', () => {
     expect(ids(ns)).toContain('departure-r1')
   })
 
+  // #220: jediná cesta k předávce je tab Předávka; host na /handover nesmí (403, #216), zůstává mu detail pobytu
+  it('sends my departure prompt to the Předávka tab (#220)', () => {
+    const ns = buildNudges({ reservations: reservations({ departingToday: true, departingReservationId: 'r1' }), myUsername: 'Táta' })
+    expect(ns.find((n) => n.id === 'departure-r1')?.href).toBe('/handover')
+  })
+
+  it('sends a guest departure prompt to the stay detail, not the Předávka tab (#220)', () => {
+    const ns = buildNudges({ reservations: reservations({ departingToday: true, departingReservationId: 'r1' }), myUsername: 'Táta', isGuest: true })
+    expect(ns.find((n) => n.id === 'departure-r1')?.href).toBe('/reservations?pobyt=r1')
+  })
+
   it('prompts departure to a co-traveller whose shared stay ends today (#255)', () => {
     const participants = [{ userId: 'u2', username: 'Máma', userColor: null, userAnimalIcon: null }]
     const ns = buildNudges({ reservations: reservations({ activeReservation: active({ username: 'Táta', participants }) }), myUsername: 'Máma' })

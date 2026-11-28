@@ -60,7 +60,7 @@ export function buildNudges({ reservations, shopping, myUsername, isGuest, depar
   const nudges: Nudge[] = [];
 
   // 1. Departure today — prompt the leaving occupant (and only them) to fill the handover.
-  // Until the handover screen exists (#220), the button opens the departure form in the stay detail.
+  // The button opens the Předávka tab (#220); a guest gets 403 there (#216), so they keep the stay detail.
   const departureId = myDepartureId(reservations, myUsername);
   if (departureId) {
     nudges.push(departurePending
@@ -71,7 +71,7 @@ export function buildNudges({ reservations, shopping, myUsername, isGuest, depar
           icon: Luggage,
           title: "Dnes odjíždíš.",
           detail: "Vyplň předávku chaty pro toho, kdo přijede po tobě.",
-          href: `/reservations?pobyt=${departureId}`,
+          href: isGuest ? `/reservations?pobyt=${departureId}` : "/handover",
           action: "Vyplnit předávku chaty",
         });
   }
