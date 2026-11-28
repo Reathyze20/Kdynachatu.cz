@@ -21,16 +21,19 @@ export interface ListHeaderActions {
 interface Props extends ListHeaderActions {
   list: ShoppingList
   lists: ShoppingList[]
+  /** Pod nadpisem sloupce „Nákupní seznam“ (desktop, #226): název seznamu je o úroveň níž. */
+  nested?: boolean
 }
 
 const pendingCount = (list: ShoppingList) => list.items.filter(i => i.status === 'pending').length
 
-export function ListHeader({ list, lists, onSelect, onRename, onShare, onArchive, onDelete }: Props) {
+export function ListHeader({ list, lists, nested = false, onSelect, onRename, onShare, onArchive, onDelete }: Props) {
   const { user, isAdmin } = useAuth()
   const canEdit = list.createdById === user?.userId || isAdmin
   const total = list.items.length
   const done = total - pendingCount(list)
   const canArchive = total > 0 && done === total && !list.isResolved
+  const Heading = nested ? 'h3' : 'h2'
 
   return (
     <div className="flex items-center gap-2">
@@ -39,7 +42,7 @@ export function ListHeader({ list, lists, onSelect, onRename, onShare, onArchive
           {lists.map(l => <option key={l.id} value={l.id}>{`${l.name} · ${pendingCount(l)} ke koupi`}</option>)}
         </Select>
       ) : (
-        <h2 className="min-w-0 flex-1 text-card-title text-(--text-main) [overflow-wrap:anywhere]">{list.name}</h2>
+        <Heading className="min-w-0 flex-1 text-card-title text-(--text-main) [overflow-wrap:anywhere]">{list.name}</Heading>
       )}
       <span className="shrink-0 text-meta text-(--text-muted)">{done}/{total}</span>
       <DropdownMenu>

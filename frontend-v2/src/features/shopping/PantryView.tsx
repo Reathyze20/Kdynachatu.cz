@@ -181,7 +181,7 @@ export function PantryView({ currentList }: Props) {
   ]
 
   return (
-    <section className="shopping-detail pantry-view-root">
+    <section className="shopping-detail pantry-view-root" aria-labelledby="pantry-heading">
     <div className="detail-content-wrapper pantry-content-wrapper">
 
       {/* This container locks EVERYTHING to a maximum width of 900px, creating perfect center alignment */}
@@ -190,7 +190,7 @@ export function PantryView({ currentList }: Props) {
         {/* ─── STICKY HEADER (never scrolls) ─── */}
         <div className="pantry-sticky-header">
           <div className="detail-page-header pantry-header-compact">
-            <h2 className="detail-page-title">Zásoby na chatě</h2>
+            <h2 id="pantry-heading" className="detail-page-title">Zásoby na chatě</h2>
             <p className="detail-page-subtitle">Rychlý přehled všeho, co nesmí chybět.</p>
           </div>
 

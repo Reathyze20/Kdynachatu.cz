@@ -1,11 +1,12 @@
 /**
  * ItemRow.tsx — Řádek položky v nákupním seznamu (#221): `[stav] ★ Název [Ze zásob] … [avatar] [⋯]`.
  * Ovladač stavu a klepnutí na řádek: Koupit → Koupeno, vyřešená položka → Koupit.
- * „Přivezu z domova“, důležitost a smazání jsou v menu položky.
+ * „Přivezu z domova“, důležitost a smazání jsou v menu položky. Na desktopu, kde jsou Zásoby vedle Nákupu,
+ * má propojená položka ve stavu Koupit navíc „Vrátit do zásob“ (#226): smaže ji z nákupu a zásoba už není v nákupu.
  */
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { Circle, CircleCheck, EllipsisVertical, House, Star, Trash2, Undo2, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Circle, CircleCheck, EllipsisVertical, House, Star, Trash2, Undo2, type LucideIcon } from 'lucide-react'
 import type { ShoppingItem, ItemStatus } from '@/api/shopping'
 import { useToggleItemStatus, useDeleteItem, useToggleItemEssential } from './hooks/useShoppingLists'
 import { useAuth } from '@/context/AuthContext'
@@ -23,6 +24,8 @@ import {
 interface Props {
   item: ShoppingItem
   listCreatedById: string
+  /** Zásoby jsou vidět vedle seznamu (desktop, #226): nabídne „Vrátit do zásob“. */
+  pantryAlongside?: boolean
 }
 
 /** Tři podoby ovladače stavu: přístupný název říká stav i to, co klepnutí udělá. */
@@ -32,7 +35,7 @@ const STATUS_CONTROL: Record<ItemStatus, { label: string; Icon: LucideIcon; tone
   purchased: { label: 'Koupeno – vrátit na Koupit', Icon: CircleCheck, tone: 'text-[rgb(var(--ok))]', next: 'pending' },
 }
 
-function ItemRowInner({ item, listCreatedById }: Props) {
+function ItemRowInner({ item, listCreatedById, pantryAlongside = false }: Props) {
   const { user } = useAuth()
   const toggleStatus = useToggleItemStatus()
   const deleteItem = useDeleteItem()
@@ -43,6 +46,8 @@ function ItemRowInner({ item, listCreatedById }: Props) {
   const isGuest = user?.role === 'guest'
   const canDelete = item.addedById === user?.userId || listCreatedById === user?.userId || user?.role === 'admin'
   const hasStatusAction = item.status !== 'purchased'
+  // Vrácení = existující smazání položky, proto jen pro toho, kdo smí mazat (jinak server vrátí 403)
+  const canReturnToPantry = pantryAlongside && canDelete && item.status === 'pending' && !!item.linkedInventoryId
   const hasMenu = hasStatusAction || !isGuest || canDelete
   const arrangedBy = isResolved && item.purchasedBy
     ? `${item.status === 'bring_from_home' ? 'Přiveze' : 'Koupil(a)'} ${item.purchasedBy.username}`
@@ -105,6 +110,11 @@ function ItemRowInner({ item, listCreatedById }: Props) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
+            {canReturnToPantry && (
+              <DropdownMenuItem onSelect={() => deleteItem.mutate(item.id)}>
+                <ArrowLeft aria-hidden="true" />Vrátit do zásob
+              </DropdownMenuItem>
+            )}
             {item.status === 'pending' && (
               <DropdownMenuItem onSelect={() => setStatus('bring_from_home')}>
                 <House aria-hidden="true" />Přivezu z domova

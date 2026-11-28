@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { InventoryItem, ShoppingItem, ShoppingList } from '@/api/shopping'
 import { ShoppingPage } from '@/features/shopping/ShoppingPage'
 import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from '@/features/shopping/hooks/useShoppingLists'
@@ -668,5 +668,107 @@ describe('shopping page: add from the pantry in one tap', () => {
     ])
     await waitFor(() => expect(errorToasts()).toEqual([[{ title: 'Některé zásoby se nepodařilo přidat do nákupu', detail: 'Cukr. Zkus to znovu.' }, 'error']]))
     expect(invalidated()).toEqual(expect.arrayContaining([INVENTORY_KEY, SHOPPING_KEY]))
+  })
+})
+
+// #226: na desktopu (od 1024 px jako rám shellu) Zásoby a Nákup vedle sebe, přesuny tlačítky tam i zpět.
+describe('shopping page: desktop side by side', () => {
+  const desktop = (matches: boolean) =>
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: matches && query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+  beforeEach(() => { localStorage.clear(); desktop(true); api.post.mockReset(); api.post.mockResolvedValue({ data: {} }); api.delete.mockClear() })
+  afterEach(() => vi.unstubAllGlobals())
+  const column = (name: string) => within(screen.getByRole('region', { name }))
+  // Stejný název může být v obou sloupcích naráz: řádky se hledají jen ve svém sloupci
+  const stockIn = (name: string) => within(column('Zásoby na chatě').getByText(name).closest<HTMLElement>('[data-testid="inventory-item-row"]')!)
+  const listRow = async (name: string) => within((await column('Nákupní seznam').findByText(name)).closest<HTMLElement>('[data-testid="shopping-item-row"]')!)
+
+  it('shows both columns with their own headings at once, with the list picker and menu in the shopping column header, and hides the switcher', async () => {
+    renderPage([], { lists: [{ id: 'list-1', name: 'Víkend', items: [item({ id: 'a', name: 'Mléko' })] }, { id: 'list-2', name: 'Grilovačka' }], inventory: pantry })
+
+    expect(await column('Zásoby na chatě').findByText('Káva')).toBeInTheDocument()
+    expect(await column('Nákupní seznam').findByText('Mléko')).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Zásoby na chatě', 'Nákupní seznam'])
+    expect(column('Nákupní seznam').getByRole('combobox', { name: 'Nákupní seznam' })).toBeInTheDocument()
+    expect(column('Nákupní seznam').getByRole('button', { name: 'Akce se seznamem Víkend' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Zásoby nebo nákup' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Nový seznam' })).toBeInTheDocument()
+  })
+
+  // Server po zápisu vrací nový stav; dotazy se po vlastní změně načtou znovu
+  function serveLive(lists: ListFixture[], inventory: InventoryItem[]) {
+    api.get.mockImplementation((path: string) => Promise.resolve({
+      data: path === '/shopping-lists' ? lists.map((l) => ({ createdById: 'u-me', isResolved: false, items: [], ...l })) : path === '/inventory' ? inventory : [],
+    }))
+  }
+
+  it('moves a stock into the list shown on the right with "+" and shows it there with "V nákupu" on the stock', async () => {
+    const lists: ListFixture[] = [{ id: 'list-1', name: 'Víkend', items: [item({ id: 'a', name: 'Mléko' })] }]
+    const inventory = pantry.map((s) => ({ ...s }))
+    renderPage([], { lists, inventory })
+    serveLive(lists, inventory)
+    api.post.mockImplementationOnce(() => {
+      lists[0].items = [...lists[0].items!, item({ id: 'b', name: 'Káva', linkedInventoryId: 's-low' })]
+      inventory.find((s) => s.id === 's-low')!.inCart = true
+      return Promise.resolve({ data: {} })
+    })
+
+    await column('Zásoby na chatě').findByText('Káva')
+    expect(column('Nákupní seznam').queryByText('Káva')).not.toBeInTheDocument()
+    await userEvent.setup().click(stockIn('Káva').getByRole('button', { name: 'Přidat do nákupu' }))
+
+    expect(api.post).toHaveBeenCalledWith('/inventory/s-low/add-to-cart', { listId: 'list-1' })
+    expect(await column('Nákupní seznam').findByText('Káva')).toBeInTheDocument()
+    expect(stockIn('Káva').getByRole('img', { name: 'V nákupu' })).toBeInTheDocument()
+  })
+
+  it('returns a linked Koupit item to the pantry from its menu, and offers that only for a linked item still to buy', async () => {
+    const lists: ListFixture[] = [{ id: 'list-1', name: 'Víkend', items: [
+      item({ id: 'i-tea', name: 'Čaj', linkedInventoryId: 's-cart' }),
+      item({ id: 'i-bread', name: 'Chleba' }),
+      item({ id: 'i-salt', name: 'Sůl', status: 'purchased', linkedInventoryId: 's-ok' }),
+    ] }]
+    const inventory = pantry.map((s) => ({ ...s }))
+    renderPage([], { lists, inventory })
+    serveLive(lists, inventory)
+    api.delete.mockImplementationOnce(() => {
+      lists[0].items = lists[0].items!.filter((i) => i.id !== 'i-tea')
+      inventory.find((s) => s.id === 's-cart')!.inCart = false
+      return Promise.resolve({ data: {} })
+    })
+    const user = userEvent.setup()
+    const menuOf = async (name: string) => {
+      await user.click((await listRow(name)).getByRole('button', { name: `Akce s položkou ${name}` }))
+      return within(screen.getByRole('menu')).getAllByRole('menuitem').map((el) => el.textContent)
+    }
+
+    expect(await menuOf('Chleba')).not.toContain('Vrátit do zásob')
+    await user.keyboard('{Escape}')
+    expect(await menuOf('Sůl')).not.toContain('Vrátit do zásob')
+    await user.keyboard('{Escape}')
+    expect(await menuOf('Čaj')).toEqual(['Vrátit do zásob', 'Přivezu z domova', 'Označit jako důležité', 'Smazat'])
+    await user.click(screen.getByRole('menuitem', { name: 'Vrátit do zásob' }))
+
+    expect(api.delete).toHaveBeenCalledWith('/shopping-list/i-tea')
+    await waitFor(() => expect(column('Nákupní seznam').queryByText('Čaj')).not.toBeInTheDocument())
+    expect(await stockIn('Čaj').findByRole('button', { name: 'Přidat do nákupu' })).toBeInTheDocument()
+    expect(stockIn('Čaj').queryByRole('img', { name: 'V nákupu' })).not.toBeInTheDocument()
+  })
+
+  it('does not offer "Vrátit do zásob" below the desktop width', async () => {
+    desktop(false)
+    renderPage([item({ id: 'i-tea', name: 'Čaj', linkedInventoryId: 's-cart' })])
+    const user = userEvent.setup()
+    await user.click((await rowOf('Čaj')).getByRole('button', { name: 'Akce s položkou Čaj' }))
+    expect(within(screen.getByRole('menu')).getAllByRole('menuitem').map((el) => el.textContent)).toEqual(['Přivezu z domova', 'Označit jako důležité', 'Smazat'])
+  })
+
+  it('keeps the switcher and one mode at a time below the desktop width', async () => {
+    desktop(false)
+    renderPage([item({ id: 'a', name: 'Mléko' })], { inventory: pantry })
+
+    expect(await screen.findByText('Mléko')).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Zásoby nebo nákup' })).toBeInTheDocument()
+    expect(screen.queryByText('Káva')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Nákupní seznam' })).not.toBeInTheDocument()
   })
 })

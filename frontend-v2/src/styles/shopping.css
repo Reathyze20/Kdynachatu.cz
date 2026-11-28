@@ -63,6 +63,68 @@
   overflow: hidden;
 }
 
+/* Desktop: Zásoby a Nákup vedle sebe (#226; mezera a okraje sloupců jsou utility v ShoppingPage.tsx).
+   Sloupec je úzký skoro jako telefon: karta s menším vzduchem a formulář zásoby ve dvou sloupcích
+   jako na mobilu. Pravidla přebíjejí legacy třídy obrazovky, utilita Tailwindu by proti nim prohrála. */
+/* Vodorovné odsazení uvnitř sloupce nechá místo stínu karty (sloupec ořezává přetečení) */
+.shopping-layout.is-split .detail-content-wrapper {
+  padding: var(--space-xl) var(--space-md) var(--space-2xl);
+}
+
+.shopping-layout.is-split .detail-inner-container {
+  padding: var(--space-lg);
+}
+
+.shopping-layout.is-split .pantry-filter-bar {
+  flex-wrap: wrap;
+}
+
+.shopping-layout.is-split .pantry-form-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.shopping-layout.is-split .pantry-form-col-4,
+.shopping-layout.is-split .pantry-form-col-3,
+.shopping-layout.is-split .pantry-form-col-1 {
+  grid-column: 1 / -1;
+}
+
+.shopping-layout.is-split .pantry-form-col-2 {
+  grid-column: span 1;
+}
+
+/* Formulář zásoby se rozbaluje jako na mobilu, aby zásoby zůstaly vidět */
+.shopping-layout.is-split .pantry-add-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-md);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--brand-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.shopping-layout.is-split .pantry-add-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.shopping-layout.is-split .pantry-add-form-collapse {
+  display: none;
+}
+
+.shopping-layout.is-split .pantry-add-form-collapse.is-open {
+  display: block;
+  margin-top: var(--space-sm);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    MASTER PANEL (left sidebar — list of baskets)
    ═══════════════════════════════════════════════════════════════════════════ */
