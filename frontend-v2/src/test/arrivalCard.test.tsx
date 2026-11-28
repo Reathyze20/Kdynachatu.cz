@@ -72,7 +72,8 @@ function renderOverview(handover: HandoverOverview, attention: AttentionItem[] =
   )
 }
 
-const arrivalCard = () => screen.findByRole('region', { name: 'Vítej na chatě' })
+const ARRIVAL = /^(Vítej na chatě|Zítra přijíždíš)$/
+const arrivalCard = () => screen.findByRole('region', { name: ARRIVAL })
 /** Přehled je načtený a dotaz na Předávku doběhl (macrotask po vykreslení). */
 async function overviewSettled() {
   await screen.findByRole('region', { name: 'Chata zatím čeká' })
@@ -96,7 +97,7 @@ describe('Příjezdová karta (#174)', () => {
     renderOverview({ myStay: myStay(TODAY), lastHandover: JANA_HANDOVER })
 
     const card = await arrivalCard()
-    expect(card).toHaveTextContent('Dnes přijíždíš · tvůj pobyt 10.–14. 12.')
+    expect(card).toHaveTextContent('Tvůj pobyt 10.–14. 12.')
     const quote = within(card).getByRole('figure')
     expect(quote).toHaveTextContent('„Užijte si to, dřevo je u kamen.“')
     expect(quote).toHaveTextContent('Jana')
@@ -120,7 +121,8 @@ describe('Příjezdová karta (#174)', () => {
     renderOverview({ myStay: myStay(TOMORROW), lastHandover: JANA_HANDOVER })
 
     const card = await arrivalCard()
-    expect(card).toHaveTextContent('Zítra přijíždíš · tvůj pobyt 11.–14. 12.')
+    expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent('Zítra přijíždíš')
+    expect(card).toHaveTextContent('Tvůj pobyt 11.–14. 12.')
     expect(within(card).getByRole('region', { name: 'Od minule · Jana' })).toBeInTheDocument()
     expect(within(card).queryByRole('button', { name: 'Potvrdit příjezd' })).not.toBeInTheDocument()
   })
@@ -129,13 +131,13 @@ describe('Příjezdová karta (#174)', () => {
     renderOverview({ myStay: myStay(TODAY), lastHandover: JANA_HANDOVER })
 
     fireEvent.click(within(await arrivalCard()).getByRole('button', { name: 'Potvrdit příjezd' }))
-    expect(screen.queryByRole('region', { name: 'Vítej na chatě' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: ARRIVAL })).not.toBeInTheDocument()
     expect(await screen.findByText('Příjezd potvrzen.')).toBeInTheDocument()
 
     cleanup()
     renderOverview({ myStay: myStay(TODAY), lastHandover: JANA_HANDOVER })
     await overviewSettled()
-    expect(screen.queryByRole('region', { name: 'Vítej na chatě' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: ARRIVAL })).not.toBeInTheDocument()
   })
 
   it('co dochází ukáže s odkazem do Zásob, když nic nedochází, blok není', async () => {
@@ -144,13 +146,13 @@ describe('Příjezdová karta (#174)', () => {
       { name: 'Toaleťák', isEmpty: true, isEssential: false, inventoryId: 'inv-t', shoppingItemId: null },
     ])
     const card = await arrivalCard()
-    const supplies = within(card).getByRole('heading', { name: 'Co dochází' }).parentElement as HTMLElement
+    const supplies = within(card).getByRole('region', { name: 'Co dochází' })
     expect(supplies).toHaveTextContent('Káva, Toaleťák')
     expect(within(supplies).getByRole('link', { name: 'Otevřít Zásoby' })).toHaveAttribute('href', '/shopping?view=pantry')
 
     cleanup()
     renderOverview({ myStay: myStay(TODAY), lastHandover: JANA_HANDOVER })
-    expect(within(await arrivalCard()).queryByRole('heading', { name: 'Co dochází' })).not.toBeInTheDocument()
+    expect(within(await arrivalCard()).queryByRole('region', { name: 'Co dochází' })).not.toBeInTheDocument()
   })
 
   it('první pobyt bez předávky: karta to řekne, nic si nevymýšlí', async () => {
@@ -177,7 +179,7 @@ describe('Příjezdová karta (#174)', () => {
   ])('karta se neukáže, když %s', async (_case, handover) => {
     renderOverview(handover)
     await overviewSettled()
-    expect(screen.queryByRole('region', { name: 'Vítej na chatě' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: ARRIVAL })).not.toBeInTheDocument()
   })
 
   it('host kartu nemá a Předávku nenačítá (dostal by 403)', async () => {
@@ -186,7 +188,7 @@ describe('Příjezdová karta (#174)', () => {
     vi.mocked(apiClient.get).mockClear()
     renderOverview({ myStay: myStay(TODAY), lastHandover: JANA_HANDOVER })
     await overviewSettled()
-    expect(screen.queryByRole('region', { name: 'Vítej na chatě' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: ARRIVAL })).not.toBeInTheDocument()
     expect(vi.mocked(apiClient.get).mock.calls.map(([url]) => url)).not.toContain('/handover')
   })
 
