@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { CabinToday } from '@/features/dashboard/CabinToday'
+import { SidebarToday } from '@/features/dashboard/SidebarToday'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { Toast } from '@/components/shared/Toast'
 import apiClient from '@/api/client'
@@ -403,12 +404,12 @@ describe('Přehled: „Důležité“ (#682)', () => {
     await waitFor(() => expect(rowTexts(card)).toEqual(['VýstrahaZítra: Bouřka']))
   })
 
-  it('na desktopu je v bočním panelu', async () => {
+  // #685 (spec #677, „Desktop: hlavní sloupec Visí na tobě → Kdo jede → Důležité“): dřív byl v bočním panelu
+  it('na desktopu je v hlavním sloupci', async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
     try {
       renderOverview(reservations(), withAttention(supply('Káva')))
-      const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
-      expect(await within(aside).findByRole('region', { name: 'Důležité' })).toBeInTheDocument()
+      expect(screen.getByTestId('dashboard-page')).toContainElement(await screen.findByRole('region', { name: 'Důležité' }))
     } finally {
       vi.unstubAllGlobals()
     }
@@ -628,12 +629,12 @@ describe('Přehled: kompaktní karta chaty a pozvánka (#172, #338)', () => {
 })
 
 describe('Desktop: dnešek chaty v hlavičce levého menu (#338)', () => {
-  function renderSidebar(cabin: Partial<CabinSettings> = {}) {
+  function renderSidebar(cabin: Partial<CabinSettings> = {}, today = <CabinToday variant="sidebar" />) {
     responses.set('/cabin', { id: 'c-1', name: 'Chata U Lesa', weatherLocation: null, departureChecklist: [], ...cabin })
     render(
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
         <MemoryRouter>
-          <DesktopSidebar onOpenProfileDrawer={vi.fn()} today={<CabinToday variant="sidebar" />} />
+          <DesktopSidebar onOpenProfileDrawer={vi.fn()} today={today} />
         </MemoryRouter>
       </QueryClientProvider>,
     )
@@ -651,6 +652,21 @@ describe('Desktop: dnešek chaty v hlavičce levého menu (#338)', () => {
     expect(within(sidebar).getByTestId('desktop-home-link').compareDocumentPosition(today)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(today.compareDocumentPosition(within(sidebar).getByRole('navigation', { name: 'Hlavní navigace' }))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(within(today).queryByRole('heading')).not.toBeInTheDocument()
+  })
+
+  // #685 (spec #677): přepínače Počasí a Akce v kraji platí i pro dnešek v levém menu
+  it('Počasí a Akce v kraji v menu podle preferencí: výchozí jen počasí, vypnuté počasí zmizí', async () => {
+    weather.current = { temp: 0.2, description: 'Zataženo' }
+    responses.set('/users/me', { dashboardPrefs: null })
+    let today = within(renderSidebar({ municipalityRegion: 'Kraj Vysočina' }, <SidebarToday />)).getByTestId('cabin-today')
+    await waitFor(() => expect(today).toHaveTextContent('0 °C · Zataženo'))
+    expect(within(today).queryByRole('link', { name: /Akce v kraji/ })).not.toBeInTheDocument()
+
+    cleanup()
+    responses.set('/users/me', { dashboardPrefs: { weather: false, regionEvents: true } })
+    today = within(renderSidebar({ municipalityRegion: 'Kraj Vysočina' }, <SidebarToday />)).getByTestId('cabin-today')
+    expect(await within(today).findByRole('link', { name: 'Akce v kraji (otevře web Kudy z nudy)' })).toBeInTheDocument()
+    expect(today).not.toHaveTextContent('°C')
   })
 
   it('výstraha na bouřku a správci odkaz na nastavení lokality jsou pod datem', async () => {
@@ -727,14 +743,15 @@ describe('Přehled: „Visí na tobě“ jako akční karta (#172)', () => {
     attention: [{ name: 'Káva', isEmpty: true, isEssential: true, inventoryId: 'inv-k', shoppingItemId: null }],
   }
 
-  it('na desktopu je v bočním panelu nad „Důležité“, v hlavním sloupci není (#356)', async () => {
+  // #685 (spec #677, „Desktop: hlavní sloupec Visí na tobě → Kdo jede → Důležité“): dřív byla v bočním panelu (#356)
+  it('na desktopu je v hlavním sloupci nad „Důležité“, v bočním panelu není', async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
     try {
       renderOverview(leavingToday(), oneAttentionRow)
-      const aside = await screen.findByRole('complementary', { name: 'Kontext chaty' })
-      const card = await within(aside).findByRole('region', { name: 'Visí na tobě' })
-      const attention = within(aside).getByRole('region', { name: 'Důležité' })
-      expect(screen.getByTestId('dashboard-page')).not.toContainElement(card)
+      const page = screen.getByTestId('dashboard-page')
+      const card = await within(page).findByRole('region', { name: 'Visí na tobě' })
+      const attention = await within(page).findByRole('region', { name: 'Důležité' })
+      expect(screen.getByRole('complementary', { name: 'Kontext chaty' })).not.toContainElement(card)
       expect(card.compareDocumentPosition(attention) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     } finally {
       vi.unstubAllGlobals()
@@ -1072,6 +1089,36 @@ describe('Přehled: výchozí minimum a bloky podle preferencí (#685)', () => {
     await mandatoryShown()
     for (const [name, query] of Object.entries(OPTIONAL)) expect(query(), name).not.toBeInTheDocument()
     expect(screen.getByTestId('cabin-today')).not.toHaveTextContent('°C')
+  })
+
+  const onDesktop = () => vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(min-width: 1024px)', addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+
+  it('desktop: Visí na tobě, Kdo jede a Důležité jsou v hlavním sloupci, zapnuté volitelné bloky v bočním', async () => {
+    onDesktop()
+    try {
+      await renderWithPrefs(ALL_BLOCKS)
+      const main = screen.getByTestId('dashboard-page')
+      expect(main).toContainElement(await screen.findByRole('region', { name: 'Visí na tobě' }))
+      expect(within(main).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Visí na tobě', 'Na chatě teď', 'Důležité'])
+      const aside = screen.getByRole('complementary', { name: 'Kontext chaty' })
+      // Akce v kraji je na desktopu v levém menu spolu s počasím (test „levé menu“ níž)
+      for (const [name, query] of Object.entries(OPTIONAL).filter(([name]) => name !== 'Akce v kraji')) {
+        await waitFor(() => expect(aside, name).toContainElement(query()))
+      }
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('desktop bez preferencí: boční sloupec se nevykreslí', async () => {
+    onDesktop()
+    try {
+      await renderWithPrefs(null)
+      expect(screen.getByTestId('dashboard-page')).toContainElement(screen.getByRole('region', { name: 'Důležité' }))
+      expect(screen.queryByRole('complementary', { name: 'Kontext chaty' })).not.toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('host vidí Kdo jede, Počasí a výstrahu v Důležité; preference ani volitelné bloky nemá', async () => {
