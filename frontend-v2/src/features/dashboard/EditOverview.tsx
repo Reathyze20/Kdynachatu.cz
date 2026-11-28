@@ -48,7 +48,7 @@ export function EditOverview({ onWriteNote }: EditOverviewProps) {
 export function SimplifiedNote() {
   const update = useUpdateDashboardPrefs();
   return (
-    <Card className="flex items-center gap-3 py-2 md:py-2">
+    <Card className="flex items-center gap-3">
       <p className="flex-1 text-body text-(--text-muted)">Přehled je jednodušší. Co chceš vidět, si zapneš v Upravit Přehled.</p>
       <Button variant="ghost" size="icon" aria-label="Zavřít poznámku" onClick={() => update.mutate({ simplifiedNoteDismissed: true })}>
         <X size={20} aria-hidden="true" />

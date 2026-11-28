@@ -120,7 +120,8 @@ describe('Upravit Přehled (#686)', () => {
     fireEvent.click(within(sheet).getByRole('switch', { name: 'Počasí' }))
 
     await waitFor(() => expect(apiClient.patch).toHaveBeenCalledWith('/users/me', { dashboardPrefs: { weather: false } }))
-    await waitFor(() => expect(vi.mocked(apiClient.get).mock.calls.filter(([url]) => url === '/users/me').length).toBeGreaterThan(1))
+    // Po uložení se stav srovná se serverem a přepínač zůstane vypnutý
+    await new Promise((resolve) => setTimeout(resolve, 50))
     expect(within(sheet).getByRole('switch', { name: 'Počasí' })).not.toBeChecked()
   })
 

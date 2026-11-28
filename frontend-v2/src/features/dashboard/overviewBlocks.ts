@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authApi, PROFILE_KEY, type DashboardPrefs, type UserProfile } from "@/api/auth";
 import { handleMutationError } from "@/lib/mutationError";
+import { isQueuedOffline } from "@/lib/offlineQueue";
 
 /** Přepínatelné bloky v pevném pořadí Přehledu. */
 export const OVERVIEW_TOGGLES = ["weather", "cabinScene", "sinceLast", "laterAndFree", "stayForecast", "regionEvents", "noticeboard"] as const;
@@ -87,7 +88,7 @@ export function useUpdateDashboardPrefs() {
       return { previous };
     },
     onError: (error: Error, _change, context) => {
-      if (!(error as Error & { queuedOffline?: boolean }).queuedOffline) queryClient.setQueryData(PROFILE_KEY, context?.previous);
+      if (!isQueuedOffline(error)) queryClient.setQueryData(PROFILE_KEY, context?.previous);
       handleMutationError("Nastavení Přehledu se nepodařilo uložit")(error);
     },
     // Až doběhne poslední z rychle po sobě odeslaných změn, srovná se stav se serverem

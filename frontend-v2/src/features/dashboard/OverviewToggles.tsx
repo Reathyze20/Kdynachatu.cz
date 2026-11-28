@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { effectiveToggles, OVERVIEW_TOGGLE_LABELS, OVERVIEW_TOGGLES, useDashboardPrefs, useUpdateDashboardPrefs } from "./overviewBlocks";
 
 export function OverviewToggles() {
-  const prefs = useDashboardPrefs(true);
+  const prefs = useDashboardPrefs(/* enabled */ true);
   const update = useUpdateDashboardPrefs();
   const toggles = effectiveToggles(prefs);
   // Dokud preference nedorazí, není co přepnout (optimistická změna potřebuje načtený stav)
