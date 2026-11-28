@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.16.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.15.0...v1.16.0) (2026-11-28)
+
+
+### Features
+
+* **dashboard:** "Důležité" block replaces "Potřebuje pozornost" ([#704](https://github.com/Reathyze20/Kdynachatu.cz/issues/704)) ([fc78e73](https://github.com/Reathyze20/Kdynachatu.cz/commit/fc78e7313d50c756dfc1fefe1abc5a3a0e345e57)), closes [#682](https://github.com/Reathyze20/Kdynachatu.cz/issues/682)
+* **dashboard:** "Potom a volno" block with free gaps to book ([#715](https://github.com/Reathyze20/Kdynachatu.cz/issues/715)) ([c4b58e1](https://github.com/Reathyze20/Kdynachatu.cz/commit/c4b58e11f6883d04a8b51f0f98356256d2d9c4a4))
+* **dashboard:** "Upravit Přehled" toggles and profile section ([#741](https://github.com/Reathyze20/Kdynachatu.cz/issues/741)) ([1f6ea2d](https://github.com/Reathyze20/Kdynachatu.cz/commit/1f6ea2d08920a2781cee3612b72c19bad8243e9c))
+* **dashboard:** "Visí na tobě" prompts only for whoever can act on them ([#711](https://github.com/Reathyze20/Kdynachatu.cz/issues/711)) ([cbe51ee](https://github.com/Reathyze20/Kdynachatu.cz/commit/cbe51ee005829aaee16a790c98659612b751edda))
+* **dashboard:** desktop overview columns by importance, toggles in the menu ([#740](https://github.com/Reathyze20/Kdynachatu.cz/issues/740)) ([674684c](https://github.com/Reathyze20/Kdynachatu.cz/commit/674684c5b4a58d1f2d0a06b8cd1ef3538be9696b))
+* **dashboard:** fresh noticeboard note as a row in "Důležité" ([#709](https://github.com/Reathyze20/Kdynachatu.cz/issues/709)) ([44d5ba7](https://github.com/Reathyze20/Kdynachatu.cz/commit/44d5ba756dc8d0130b7b8a94d9149f78c4957994))
+* **dashboard:** minimal default overview with blocks by user preferences ([#739](https://github.com/Reathyze20/Kdynachatu.cz/issues/739)) ([55595b0](https://github.com/Reathyze20/Kdynachatu.cz/commit/55595b0ce044e3cffc2a9d0fcf163f80b9c5ab87))
+* **dashboard:** seasons in the cabin scene ([#670](https://github.com/Reathyze20/Kdynachatu.cz/issues/670)) ([18d4b9b](https://github.com/Reathyze20/Kdynachatu.cz/commit/18d4b9b19270b8bef49efaaef84a0024c32072f0))
+* **dashboard:** show who is buying a claimed ★ item ([#718](https://github.com/Reathyze20/Kdynachatu.cz/issues/718)) ([6d9b3ef](https://github.com/Reathyze20/Kdynachatu.cz/commit/6d9b3eff4f8f66cfac13a1dfeb5fa5973663501d))
+* **handover:** fill in and hand over the cabin on the Předávka tab ([#719](https://github.com/Reathyze20/Kdynachatu.cz/issues/719)) ([8f2338c](https://github.com/Reathyze20/Kdynachatu.cz/commit/8f2338c3e6eec22970c34b1645235e9da0e09e07))
+* **handover:** GET /api/handover with my stay and the last handover ([#707](https://github.com/Reathyze20/Kdynachatu.cz/issues/707)) ([7ddfc31](https://github.com/Reathyze20/Kdynachatu.cz/commit/7ddfc31d637189949e017146ca9dd6a38fb4c7f5))
+* **handover:** give Předávka its own tab with the last handover ([#714](https://github.com/Reathyze20/Kdynachatu.cz/issues/714)) ([49c0cdf](https://github.com/Reathyze20/Kdynachatu.cz/commit/49c0cdff471d1011066061845a916a0bc8a29093))
+* **ideation:** evaluate pipeline vs. baseline from family verdicts ([#639](https://github.com/Reathyze20/Kdynachatu.cz/issues/639)) ([aec749c](https://github.com/Reathyze20/Kdynachatu.cz/commit/aec749c90e651dbc0a5e8d0b4afb100f28e95da1))
+* **inventory:** readable stock states and a separate action column ([#675](https://github.com/Reathyze20/Kdynachatu.cz/issues/675)) ([30b6abd](https://github.com/Reathyze20/Kdynachatu.cz/commit/30b6abd9b026f23bac8cbbc549f355e981d2caae)), closes [#223](https://github.com/Reathyze20/Kdynachatu.cz/issues/223)
+* **landing:** founding cabin, clubs, rental interest and founder sections ([#724](https://github.com/Reathyze20/Kdynachatu.cz/issues/724)) ([4044dd6](https://github.com/Reathyze20/Kdynachatu.cz/commit/4044dd6d6c97a7fecbc9e4685f090678fdb5f573))
+* **landing:** meta tags and Open Graph link preview ([#713](https://github.com/Reathyze20/Kdynachatu.cz/issues/713)) ([72da76e](https://github.com/Reathyze20/Kdynachatu.cz/commit/72da76e248826434a87539a86dc8e6482944e324))
+* **landing:** new landing page skeleton with cabin scene hero, screenshots and core features ([#720](https://github.com/Reathyze20/Kdynachatu.cz/issues/720)) ([9308ab9](https://github.com/Reathyze20/Kdynachatu.cz/commit/9308ab96632f20b6b2a7d0a9e11ea1b5884740f0)), closes [#700](https://github.com/Reathyze20/Kdynachatu.cz/issues/700)
+* **landing:** visible sign-in button in the mobile nav bar ([#703](https://github.com/Reathyze20/Kdynachatu.cz/issues/703)) ([f1ff1a1](https://github.com/Reathyze20/Kdynachatu.cz/commit/f1ff1a14c3ab0b573c9f8de48ff3d52b2f7221ab)), closes [#695](https://github.com/Reathyze20/Kdynachatu.cz/issues/695)
+* **nav:** mascot walks across the mobile bottom bar ([#613](https://github.com/Reathyze20/Kdynachatu.cz/issues/613)) ([86f639d](https://github.com/Reathyze20/Kdynachatu.cz/commit/86f639d57560a8958ddf1c78782b74033009c184))
+* **not-found:** dormouse with a map on the 404 page ([#671](https://github.com/Reathyze20/Kdynachatu.cz/issues/671)) ([74c463d](https://github.com/Reathyze20/Kdynachatu.cz/commit/74c463d6ab9b95d1799746e457e3a68bfd8c7734))
+* **shopping:** add from inventory to the current list in one tap ([#721](https://github.com/Reathyze20/Kdynachatu.cz/issues/721)) ([f91a4de](https://github.com/Reathyze20/Kdynachatu.cz/commit/f91a4de81e89b62b12e6a9fdca37c9bd4b4eadca))
+* **shopping:** desktop side-by-side pantry and shopping list with moves between columns ([#728](https://github.com/Reathyze20/Kdynachatu.cz/issues/728)) ([6d55e43](https://github.com/Reathyze20/Kdynachatu.cz/commit/6d55e4338da11bfa8ed7ef613e1405d721fe2380))
+* **shopping:** shopping item row with a three-state control, star and from-inventory tag ([#678](https://github.com/Reathyze20/Kdynachatu.cz/issues/678)) ([2c2e34a](https://github.com/Reathyze20/Kdynachatu.cz/commit/2c2e34a0d7bfaf4f22dfb2126be963cee685d915)), closes [#221](https://github.com/Reathyze20/Kdynachatu.cz/issues/221)
+* **shopping:** show the current list directly with a list header and ⋮ menu ([#705](https://github.com/Reathyze20/Kdynachatu.cz/issues/705)) ([fc2fc2f](https://github.com/Reathyze20/Kdynachatu.cz/commit/fc2fc2ff17e7c1ab1a31c796976a5dedbf257980))
+* **shopping:** Zásoby / Nákup · N mode switch with the mode in the URL ([#694](https://github.com/Reathyze20/Kdynachatu.cz/issues/694)) ([68b362a](https://github.com/Reathyze20/Kdynachatu.cz/commit/68b362ade52b21eafbba01b72c2dded5eaa4c89a)), closes [#224](https://github.com/Reathyze20/Kdynachatu.cz/issues/224)
+* **ui:** "Předávka chaty" in user-facing texts ([#706](https://github.com/Reathyze20/Kdynachatu.cz/issues/706)) ([5687bc4](https://github.com/Reathyze20/Kdynachatu.cz/commit/5687bc49a3b9ab881044f55ed92ed24add4950c0))
+* **ui:** dormouse in the diary, shopping and gallery empty states ([#668](https://github.com/Reathyze20/Kdynachatu.cz/issues/668)) ([078c14f](https://github.com/Reathyze20/Kdynachatu.cz/commit/078c14f2bba3514c2d8bfa13d4b84d5342dba70f)), closes [#655](https://github.com/Reathyze20/Kdynachatu.cz/issues/655)
+* **ui:** Select primitive with a 48 px touch target ([#662](https://github.com/Reathyze20/Kdynachatu.cz/issues/662)) ([49ff6b8](https://github.com/Reathyze20/Kdynachatu.cz/commit/49ff6b81291c7fa26604ddb9fbf2990b94d750fb))
+* **users:** dashboard preferences stored on the user ([#693](https://github.com/Reathyze20/Kdynachatu.cz/issues/693)) ([9f2e2b7](https://github.com/Reathyze20/Kdynachatu.cz/commit/9f2e2b7c78861e419c80e5843a3fb70b68e7810e)), closes [#681](https://github.com/Reathyze20/Kdynachatu.cz/issues/681)
+* **waitlist:** accept optional questions and rental interest in the API ([#716](https://github.com/Reathyze20/Kdynachatu.cz/issues/716)) ([ed227bf](https://github.com/Reathyze20/Kdynachatu.cz/commit/ed227bfacd75f971873b84a40dd4f724ffd5f9da)), closes [#699](https://github.com/Reathyze20/Kdynachatu.cz/issues/699)
+* **waitlist:** sign up with e-mail on the landing page, confirmation and admin e-mails ([#708](https://github.com/Reathyze20/Kdynachatu.cz/issues/708)) ([16be61d](https://github.com/Reathyze20/Kdynachatu.cz/commit/16be61d0e225622cff194ce65d6c069c54ff25bb))
+
+
+### Bug Fixes
+
+* **design:** diary notebook paper on the sheet token, warm rule lines ([#665](https://github.com/Reathyze20/Kdynachatu.cz/issues/665)) ([7a19e3f](https://github.com/Reathyze20/Kdynachatu.cz/commit/7a19e3f6e6c2b12057358a4917febdf5f310ed53))
+* **design:** status text colours per the DESIGN.md contrast table ([#669](https://github.com/Reathyze20/Kdynachatu.cz/issues/669)) ([c4f1eb7](https://github.com/Reathyze20/Kdynachatu.cz/commit/c4f1eb78c3b19536670ba4eeb0ef2cc437abe5e9))
+* **diary:** store entries under the local day and add a one-off date repair script ([#674](https://github.com/Reathyze20/Kdynachatu.cz/issues/674)) ([a4bc2ca](https://github.com/Reathyze20/Kdynachatu.cz/commit/a4bc2cac52f9175d2c9610d28b661f3167021059))
+* **handover:** deny guests GET /api/handover and cover tenant filters ([#712](https://github.com/Reathyze20/Kdynachatu.cz/issues/712)) ([ced4f0a](https://github.com/Reathyze20/Kdynachatu.cz/commit/ced4f0a84214d09653b48e5d3f3203ace22aae11))
+* **handover:** keep "Čeká na připojení" when a refetch fails after an offline-queued handover ([#722](https://github.com/Reathyze20/Kdynachatu.cz/issues/722)) ([986af4b](https://github.com/Reathyze20/Kdynachatu.cz/commit/986af4b07ae585f504dd4527be88feb5698e8133))
+* **shopping:** only the author, list founder or admin may delete an item ([#684](https://github.com/Reathyze20/Kdynachatu.cz/issues/684)) ([93dba18](https://github.com/Reathyze20/Kdynachatu.cz/commit/93dba18f2c0529b694a9d73511b963d836f2e7e8)), closes [#679](https://github.com/Reathyze20/Kdynachatu.cz/issues/679)
+* **users:** return 404 for reservations of a user outside the cabin ([#672](https://github.com/Reathyze20/Kdynachatu.cz/issues/672)) ([a6b4f2e](https://github.com/Reathyze20/Kdynachatu.cz/commit/a6b4f2e2b6d6f4d890215b3ca42814c8f67cd22e)), closes [#492](https://github.com/Reathyze20/Kdynachatu.cz/issues/492)
+
 ## [1.15.0](https://github.com/Reathyze20/Kdynachatu.cz/compare/v1.14.0...v1.15.0) (2026-11-26)
 
 
