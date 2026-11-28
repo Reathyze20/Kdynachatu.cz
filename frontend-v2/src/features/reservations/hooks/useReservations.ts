@@ -29,9 +29,9 @@ export const USERS_KEY = ["users"] as const;
 
 // ─── Data hooks ───────────────────────────────────────────────────────
 
-/** Tab Předávka a později příjezdová karta (#174); `reservation:updated` ho obnoví přes RESERVATIONS_KEY. */
-export function useHandoverOverview() {
-  return useQuery({ queryKey: HANDOVER_KEY, queryFn: fetchHandoverOverview });
+/** Tab Předávka a příjezdová karta (#174); `reservation:updated` ho obnoví přes RESERVATIONS_KEY. Host dostane 403, nenačítá ho. */
+export function useHandoverOverview(enabled = true) {
+  return useQuery({ queryKey: HANDOVER_KEY, queryFn: fetchHandoverOverview, enabled });
 }
 
 /** Uložená předávka pobytu (GET /checkout) pro shrnutí „Chata předána“ (#218); obnoví ji RESERVATIONS_KEY. */

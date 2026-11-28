@@ -23,6 +23,16 @@ function Row({ icon, className = "", children }: { icon: ReactNode; className?: 
   );
 }
 
+/** Vzkaz z předávky jako osobní citace se jménem; sdílí ho zrcadlo a příjezdová karta (#174). */
+export function HandoverNote({ note, author }: { note: string; author: string | null }) {
+  return (
+    <figure className="flex flex-col gap-1 rounded-xl bg-inset p-3">
+      <blockquote className="text-body text-(--text-main)">„{note}“</blockquote>
+      {author && <figcaption className="text-meta text-(--text-muted)">{author}</figcaption>}
+    </figure>
+  );
+}
+
 /**
  * Read-only zrcadlo předávky (spec #173): stejný jazyk jako formulář, bez interakce. Prázdné části
  * skryje, topení a vodu ukáže jen u uvedeného údaje. Znovu ho použije příjezdová karta #174.
@@ -69,12 +79,7 @@ export function HandoverMirror({ handover, title, nested = false, children }: {
         </p>
       </div>
       {rows.length > 0 && <ul className="flex flex-col gap-2">{rows}</ul>}
-      {s.note && (
-        <figure className="flex flex-col gap-1 rounded-xl bg-inset p-3">
-          <blockquote className="text-body text-(--text-main)">„{s.note}“</blockquote>
-          {who && <figcaption className="text-meta text-(--text-muted)">{who}</figcaption>}
-        </figure>
-      )}
+      {s.note && <HandoverNote note={s.note} author={who} />}
       {children}
     </Card>
   );
