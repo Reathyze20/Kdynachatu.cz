@@ -65,7 +65,7 @@ const G3_DEBT: Record<string, number> = {
   '../styles/notes.css': 19,
   '../styles/reconstruction.css': 3,
   '../styles/reservations.css': 38,
-  '../styles/shopping.css': 37,
+  '../styles/shopping.css': 35,
 }
 
 /** Totéž pro TSX (Tailwind a inline styly). */
@@ -73,8 +73,6 @@ const G3_DEBT_TSX: Record<string, number> = {
   '../features/gallery/UploadModal.tsx': 1,
   '../features/landing/LandingPage.tsx': 3,
   '../features/reservations/ui/BookingForm.tsx': 2,
-  '../features/shopping/AddToCartModal.tsx': 1,
-  '../features/shopping/BulkAddToCartModal.tsx': 1,
 }
 
 describe('G3 · běžný text 16 px, vedlejší 14 px, nic menšího (#270)', () => {

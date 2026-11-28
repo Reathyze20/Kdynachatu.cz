@@ -1,4 +1,5 @@
 import { act, cleanup, render, renderHook, screen, waitFor, within } from '@testing-library/react'
+import { AxiosError, type AxiosResponse } from 'axios'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
@@ -10,6 +11,7 @@ import { DASHBOARD_SHOPPING_KEY, SHOPPING_KEY } from '@/features/shopping/hooks/
 import { INVENTORY_KEY } from '@/features/shopping/hooks/useInventory'
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'
 import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
+import { showToast } from '@/lib/toast'
 
 // Seam celé stránky Zásoby a nákupy (#176): API klient a auth jsou namockované, zbytek je skutečný.
 const { api } = vi.hoisted(() => ({
@@ -306,7 +308,8 @@ describe('shopping page: readable inventory states', () => {
     expect(['Káva', 'Cukr', 'Čaj', 'Sůl'].map(action)).toEqual([[true, false], [true, false], [false, true], [false, false]])
 
     await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
-    expect(await screen.findByRole('dialog', { name: 'Přidat 2 chybějících zásob do nákupu' })).toBeInTheDocument()
+    // Bez seznamu se nejdřív zakládá nový (#225); s aktuálním seznamem potvrzení viz „add from the pantry in one tap“
+    expect(await screen.findByRole('dialog', { name: 'Nový nákupní seznam' })).toBeInTheDocument()
   })
 
   it('lets a guest see the stocks but not the item menu, the edit dialog or the add form; no "Vše do nákupu" when all is in the list', async () => {
@@ -552,5 +555,118 @@ describe('shopping page: current list header and menu', () => {
     await user.click(found)
     await user.click((await dialog('Nový nákupní seznam')).getByRole('button', { name: 'Vytvořit' }))
     expect(api.post).toHaveBeenCalledWith('/shopping-lists', { name: 'Nákup' })
+  })
+})
+
+// #225: „+“ přidá zásobu rovnou do aktuálního seznamu, „Vše do nákupu“ po jednom potvrzení, bez seznamu nejdřív nový.
+describe('shopping page: add from the pantry in one tap', () => {
+  beforeEach(() => { api.post.mockReset(); api.post.mockResolvedValue({ data: {} }); vi.mocked(showToast).mockClear() })
+  const conflict = () => new AxiosError('Conflict', 'ERR_BAD_REQUEST', undefined, null, { status: 409 } as AxiosResponse)
+  const serverError = () => new AxiosError('Server', 'ERR_BAD_RESPONSE', undefined, null, { status: 500 } as AxiosResponse)
+  const openPantry = async (lists?: ListFixture[]) => {
+    const qc = renderPage([], { lists, inventory: pantry, url: '/shopping?view=pantry' })
+    await screen.findByText('Káva')
+    return { qc, user: userEvent.setup() }
+  }
+  const dialog = async (name: string) => {
+    const el = await screen.findByRole('dialog', { name })
+    // Modal přesouvá fokus dovnitř až po 50 ms; člověk neklikne dřív, test na to počká
+    await waitFor(() => expect(el).toContainElement(document.activeElement as HTMLElement))
+    return within(el)
+  }
+  const errorToasts = () => vi.mocked(showToast).mock.calls.filter(([, type]) => type === 'error')
+
+  it('"+" adds the stock to the current list without a dialog, shows "V nákupu" at once and names the list in a toast', async () => {
+    const { user } = await openPantry()
+    let answer!: () => void
+    api.post.mockImplementationOnce(() => new Promise((done) => { answer = () => done({ data: {} }) }))
+
+    await user.click(stockRow('Káva').getByRole('button', { name: 'Přidat do nákupu' }))
+
+    expect(api.post).toHaveBeenCalledWith('/inventory/s-low/add-to-cart', { listId: 'list-1' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(await stockRow('Káva').findByRole('img', { name: 'V nákupu' })).toBeInTheDocument()
+    act(() => answer())
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Přidáno do seznamu „Víkend“.', 'success'))
+  })
+
+  it('only refreshes the data when the stock is already in the list (409) and keeps "V nákupu" when queued offline', async () => {
+    const { qc, user } = await openPantry()
+    const invalidated = invalidatedKeys(qc)
+    api.post
+      .mockRejectedValueOnce(conflict())
+      .mockRejectedValueOnce(Object.assign(new AxiosError('Network Error', 'ERR_NETWORK'), { queuedOffline: true }))
+
+    await user.click(stockRow('Káva').getByRole('button', { name: 'Přidat do nákupu' }))
+    await waitFor(() => expect(invalidated()).toEqual(expect.arrayContaining([INVENTORY_KEY, SHOPPING_KEY])))
+    await user.click(stockRow('Cukr').getByRole('button', { name: 'Přidat do nákupu' }))
+
+    expect(await stockRow('Cukr').findByRole('img', { name: 'V nákupu' })).toBeInTheDocument()
+    expect(errorToasts()).toEqual([])
+  })
+
+  it('without an active list asks for the name of a new list, prefilled "Nákup", and adds the stock into it', async () => {
+    const { user } = await openPantry([])
+
+    await user.click(stockRow('Káva').getByRole('button', { name: 'Přidat do nákupu' }))
+    const prompt = await dialog('Nový nákupní seznam')
+    expect(prompt.getByRole('textbox', { name: 'Název seznamu' })).toHaveValue('Nákup')
+    expect(prompt.getByText('Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj „Káva“.')).toBeInTheDocument()
+    await user.click(prompt.getByRole('button', { name: 'Vytvořit a přidat' }))
+
+    expect(api.post).toHaveBeenCalledWith('/inventory/s-low/add-to-cart', { newListName: 'Nákup' })
+  })
+
+  it('"Vše do nákupu" without an active list creates the named list first and adds every missing stock into it', async () => {
+    const { user } = await openPantry([])
+    // Nejdřív odpoví založení seznamu, pak obě přidání (výchozí odpověď z beforeEach)
+    api.post.mockResolvedValueOnce({ data: { id: 'list-new', name: 'Chata' } })
+
+    await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
+    const prompt = await dialog('Nový nákupní seznam')
+    expect(prompt.getByText('Zatím tu není žádný nákupní seznam. Vytvoř nový a přidej do něj 2 položky.')).toBeInTheDocument()
+    await user.clear(prompt.getByRole('textbox', { name: 'Název seznamu' }))
+    await user.type(prompt.getByRole('textbox', { name: 'Název seznamu' }), 'Chata')
+    await user.click(prompt.getByRole('button', { name: 'Vytvořit a přidat' }))
+
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(3))
+    expect(api.post.mock.calls).toEqual([
+      ['/shopping-lists', { name: 'Chata' }],
+      ['/inventory/s-low/add-to-cart', { listId: 'list-new' }],
+      ['/inventory/s-empty/add-to-cart', { listId: 'list-new' }],
+    ])
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Přidáno do seznamu „Chata“.', 'success'))
+  })
+
+  it('"Vše do nákupu" into a new list while offline says the list waits for the connection and keeps the stocks out of the list', async () => {
+    const { user } = await openPantry([])
+    api.post.mockRejectedValueOnce(Object.assign(new AxiosError('Network Error', 'ERR_NETWORK'), { queuedOffline: true }))
+
+    await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
+    await user.click((await dialog('Nový nákupní seznam')).getByRole('button', { name: 'Vytvořit a přidat' }))
+
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Seznam „Nákup“ se založí po připojení. Zásoby do něj pak přidej znovu.', 'info'))
+    expect(api.post).toHaveBeenCalledTimes(1)
+    expect(stockRow('Káva').queryByRole('img', { name: 'V nákupu' })).not.toBeInTheDocument()
+    expect(errorToasts()).toEqual([])
+  })
+
+  it('"Vše do nákupu" confirms the count and the list once, adds every missing stock outside the list and reports a partial failure', async () => {
+    const { qc, user } = await openPantry()
+    const invalidated = invalidatedKeys(qc)
+    api.post.mockResolvedValueOnce({ data: {} }).mockRejectedValueOnce(serverError())
+
+    await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
+    const confirm = await dialog('Přidat do nákupu')
+    expect(confirm.getByText('Přidat 2 položky do seznamu „Víkend“?')).toBeInTheDocument()
+    await user.click(confirm.getByRole('button', { name: 'Přidat' }))
+
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(2))
+    expect(api.post.mock.calls).toEqual([
+      ['/inventory/s-low/add-to-cart', { listId: 'list-1' }],
+      ['/inventory/s-empty/add-to-cart', { listId: 'list-1' }],
+    ])
+    await waitFor(() => expect(errorToasts()).toEqual([[{ title: 'Některé zásoby se nepodařilo přidat do nákupu', detail: 'Cukr. Zkus to znovu.' }, 'error']]))
+    expect(invalidated()).toEqual(expect.arrayContaining([INVENTORY_KEY, SHOPPING_KEY]))
   })
 })
