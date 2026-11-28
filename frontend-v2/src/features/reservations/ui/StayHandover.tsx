@@ -9,9 +9,6 @@ import { addIsoDays, getLocalTodayIso } from "@/lib/dateUtils";
 import { useCheckoutStatus } from "../hooks/useReservations";
 import { CheckoutSection } from "./CheckoutSection";
 
-// Detail leží v papírovém panelu, předávka je v něm vnořený blok (DESIGN.md §7: karta v kartě rounded-xl, bg-inset).
-const NESTED = "rounded-xl border-0 bg-inset p-4 shadow-none md:p-4";
-
 /** Můj (organizátor nebo spolucestující) hlavní pobyt v okně předávky: den odjezdu a den po něm (spec #173). */
 function isMyStayInHandoverWindow(r: Reservation, userId: string | undefined): boolean {
   if (!userId || (r.status ?? "primary") !== "primary") return false;
@@ -34,7 +31,7 @@ export function StayHandover({ reservation: r }: { reservation: Reservation }) {
     if (status.data) {
       const { checkoutCompletedAt: completedAt, checkoutCompletedByUsername: completedByUsername, checkoutState } = status.data;
       return (
-        <HandoverMirror title="Odjezd potvrzen" className={NESTED}
+        <HandoverMirror title="Odjezd potvrzen" nested
           handover={{ from: r.from, to: r.to, completedAt, completedByUsername, checkoutState: checkoutState ?? {} }} />
       );
     }

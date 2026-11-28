@@ -88,7 +88,7 @@ describe('stay detail: completed handover is a read-only mirror', () => {
     const mirror = await within(card).findByRole('region', { name: 'Odjezd potvrzen' })
     if (expected) expect(within(mirror).getByText(expected)).toBeInTheDocument()
     else expect(mirror).not.toHaveTextContent('Plynová bomba')
-    expect(mirror).not.toHaveTextContent(/Plný|Půl|Prázdný|Plyn:/)
+    expect(mirror).not.toHaveTextContent(/Plný|Půl|Prázdný|Plyn:/i)
   })
 
   it('a mirror that failed to load says so and loads again on "Zkusit znovu"', async () => {

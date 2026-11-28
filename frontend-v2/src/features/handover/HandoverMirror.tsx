@@ -27,12 +27,12 @@ function Row({ icon, className = "", children }: { icon: ReactNode; className?: 
  * Read-only zrcadlo předávky (spec #173): stejný jazyk jako formulář, bez interakce. Prázdné části
  * skryje, topení a vodu ukáže jen u uvedeného údaje. Znovu ho použije příjezdová karta #174.
  */
-export function HandoverMirror({ handover, title, className, children }: {
+export function HandoverMirror({ handover, title, nested = false, children }: {
   handover: Pick<LastHandover, "from" | "to" | "completedAt" | "completedByUsername" | "checkoutState"> & Partial<Pick<LastHandover, "organizer">>;
   /** Shrnutí vlastní předávky („Chata předána“, #218): meta řekne, kdo a kdy předal. */
   title?: string;
-  /** Vnořené zrcadlo v jiné kartě (detail pobytu, #222) přepíše vzhled karty. */
-  className?: string;
+  /** Vnořené zrcadlo v jiné kartě (detail pobytu, #222): blok `bg-inset`, ne karta (DESIGN.md §7). */
+  nested?: boolean;
   children?: ReactNode;
 }) {
   const { checkoutState: s, completedAt } = handover;
@@ -60,7 +60,7 @@ export function HandoverMirror({ handover, title, className, children }: {
   ].filter(Boolean);
 
   return (
-    <Card as="section" aria-labelledby="handover-mirror-title" className={cn("flex flex-col gap-3", className)}>
+    <Card as="section" aria-labelledby="handover-mirror-title" className={cn("flex flex-col gap-3", nested && "rounded-xl border-0 bg-inset p-4 shadow-none md:p-4")}>
       <div>
         <h2 id="handover-mirror-title" className="text-card-title text-(--text-main)">{title ?? `Od minule · ${who}`}</h2>
         <p className="text-meta text-(--text-muted)">
