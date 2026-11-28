@@ -614,7 +614,7 @@
   transform: none;
 }
 
-/* Vstup náhledu odpovědi nad vstupem */
+/* Animace náhledu odpovědi (.reply-preview) */
 @keyframes slideUpPanel {
   from {
     opacity: 0;

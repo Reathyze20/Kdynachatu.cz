@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { KeyRound, SendHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { isFeatureEnabled, useCabinFeatures } from "@/hooks/useCabinFeatures";
+import { useCabinFeatures } from "@/hooks/useCabinFeatures";
+import { PRIMARY_NAV, visibleNavItems } from "@/lib/navRoutes";
 import { useSendNote } from "./hooks/useNotes";
 import type { Note } from "@/api/notes";
 import { getNetworkAwareActionMessage, isNetworkError } from "@/lib/networkError";
@@ -21,8 +22,8 @@ export function MessageInput({ activeThreadId, replyTo, onCancelReply }: Props) 
   const sendNote = useSendNote();
   const { isGuest } = useAuth();
   const { data: cabin } = useCabinFeatures();
-  // Předat chatu jde jen na záložce Předávka (#517); host ji nevidí (403, #216) a bez rezervací záložka není.
-  const showHandoverLink = !isGuest && isFeatureEnabled(cabin?.features, "reservations");
+  // Předat chatu jde jen na záložce Předávka (#517); odkaz jen tomu, kdo záložku vidí (host ne, 403 #216).
+  const showHandoverLink = visibleNavItems(PRIMARY_NAV, cabin?.features, isGuest).some((i) => i.to === "/handover");
 
   // Auto-resize textarea
   const autoResize = () => {
