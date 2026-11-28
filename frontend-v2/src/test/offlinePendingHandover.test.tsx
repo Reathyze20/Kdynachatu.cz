@@ -5,10 +5,9 @@ import type { ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Reservation } from '@/api/reservations'
-import { DepartureBanner } from '@/features/dashboard/DepartureBanner'
 import { CheckoutSection } from '@/features/reservations/ui/CheckoutSection'
 import { RESERVATIONS_KEY } from '@/features/reservations/hooks/useReservations'
-import { enqueueMutation, flushQueue, getQueueLength } from '@/lib/offlineQueue'
+import { enqueueMutation, flushQueue } from '@/lib/offlineQueue'
 import skeletonCssRaw from '@/styles/skeleton.css?raw'
 
 // Pravidlo E4 (#276): předávka odeslaná bez signálu má štítek „Čeká na odeslání“,
@@ -51,29 +50,6 @@ function renderWithClient(ui: ReactNode) {
 }
 
 describe('Předávka bez signálu: štítek „Čeká na odeslání“', () => {
-  it('na Přehledu: předávka jde do fronty bez zprávy do chatu, karta má štítek a po odeslání zmizí', async () => {
-    renderWithClient(<DepartureBanner reservationId="r-1" departureChecklist={['Zavřít okna']} onRefresh={vi.fn()} />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Vyplnit protokol' }))
-    fireEvent.click(screen.getByRole('checkbox', { name: /Zavřít okna/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Odeslat a uzavřít pobyt' }))
-
-    expect(await screen.findByText('Čeká na odeslání')).toBeTruthy()
-    expect(screen.getByText('Předávka chaty je vyplněná')).toBeTruthy()
-    expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Vyplnit protokol' })).toBeNull()
-    // Zpráva by po odmítnuté předávce zůstala v chatu sama, proto se neposílá
-    expect(api.post).not.toHaveBeenCalled()
-    expect(getQueueLength()).toBe(1)
-
-    await reconnectAndFlush()
-
-    expect(api.request.mock.calls.map(([c]) => `${c.method} ${c.url}`)).toEqual(['patch /reservations/r-1/checkout'])
-    // Banner nespadne zpět na „Vyplnit protokol“, než se přenačte stav pobytu
-    await waitFor(() => expect(screen.queryByText('Čeká na odeslání')).toBeNull())
-    expect(screen.queryByText('Dnes odjíždíš!')).toBeNull()
-  })
-
   it('v detailu pobytu: potvrzení bez signálu ukáže štítek místo chyby a po odeslání zmizí', async () => {
     const reservation: Reservation = {
       id: 'r-2', userId: 'u-eva', username: 'Eva', from: '2026-12-08', to: TODAY,

@@ -4,7 +4,7 @@
  * Vstup MUSÍ být už escapovaný (escapeHtml) — tady se jen přidávají vlastní tagy.
  * Umí:
  *  - **tučně** (systémové zprávy z backendu, odjezdový protokol)
- *  - checklist `[x]` / `[ ]`, volitelně s odrážkou `- [x]` (DepartureBanner)
+ *  - checklist `[x]` / `[ ]`, volitelně s odrážkou `- [x]` (starší odjezdové protokoly v historii chatu)
  */
 const CHECK_RE = /^(?:[-*]\s+)?\[([ x])\]\s*(.*)$/i
 
