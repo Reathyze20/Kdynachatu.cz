@@ -4,6 +4,7 @@ import type { LastHandover } from "@/api/handover";
 import { Card } from "@/components/shared/Card";
 import { GAS_LABEL, gasStateLabel, type GasValue } from "@/lib/gasLevel";
 import { formatDate, formatDateRange, formatTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // Štítek plynu tónem stavu (DESIGN.md §2, stavové štítky)
 const GAS_TONE: Record<GasValue, string> = {
@@ -58,10 +59,9 @@ export function HandoverMirror({ handover, title, nested = false, children }: {
     s.leftBehind && <Row key="left" icon={<Package className="size-4" />}>Nechal/a: {s.leftBehind}</Row>,
   ].filter(Boolean);
 
-  // Vnořené zrcadlo je pod nadpisem nadřazené karty, proto h3 a prostý blok místo Card
-  const Heading = nested ? "h3" : "h2";
-  const content = (
-    <>
+  const Heading = nested ? "h3" : "h2"; // vnořené zrcadlo leží pod nadpisem karty detailu
+  return (
+    <Card as="section" aria-labelledby="handover-mirror-title" className={cn("flex flex-col gap-3", nested && "rounded-xl border-0 bg-inset p-4 shadow-none! md:p-4")}>
       <div>
         <Heading id="handover-mirror-title" className="text-card-title text-(--text-main)">{title ?? `Od minule · ${who}`}</Heading>
         <p className="text-meta text-(--text-muted)">
@@ -76,12 +76,6 @@ export function HandoverMirror({ handover, title, nested = false, children }: {
         </figure>
       )}
       {children}
-    </>
-  );
-
-  return nested ? (
-    <section aria-labelledby="handover-mirror-title" className="flex flex-col gap-3 rounded-xl bg-inset p-4">{content}</section>
-  ) : (
-    <Card as="section" aria-labelledby="handover-mirror-title" className="flex flex-col gap-3">{content}</Card>
+    </Card>
   );
 }
