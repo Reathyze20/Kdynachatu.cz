@@ -108,7 +108,7 @@ export function PantryView({ currentList }: Props) {
   }
 
   function handleAddToCart(item: InventoryItem) {
-    if (currentList) addItems([item], { listId: currentList.id, listName: currentList.name })
+    if (currentList) addItems([item], { list: currentList })
     else setNewListFor([item])
   }
 
@@ -390,7 +390,7 @@ export function PantryView({ currentList }: Props) {
         message={`Přidat ${formatCount(missingNotInCart.length, 'položku', 'položky', 'položek')} do seznamu „${currentList?.name ?? ''}“?`}
         confirmLabel="Přidat"
         onConfirm={() => {
-          if (currentList) addItems(missingNotInCart, { listId: currentList.id, listName: currentList.name })
+          if (currentList) addItems(missingNotInCart, { list: currentList })
           setConfirmBulk(false)
         }}
         onCancel={() => setConfirmBulk(false)}

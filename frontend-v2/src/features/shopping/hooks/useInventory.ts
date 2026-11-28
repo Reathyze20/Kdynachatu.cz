@@ -9,10 +9,11 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query'
-import { inventoryApi, shoppingApi, type InventoryItem } from '@/api/shopping'
+import { inventoryApi, shoppingApi, type InventoryItem, type ShoppingList } from '@/api/shopping'
 import { showToast } from '@/lib/toast'
 import { handleMutationError } from '@/lib/mutationError'
 import { isNetworkError } from '@/lib/networkError'
+import { isQueuedOffline } from '@/lib/offlineQueue'
 import { SHOPPING_KEY } from './useShoppingLists'
 
 export const INVENTORY_KEY = ['inventory'] as const
@@ -82,7 +83,9 @@ export function useToggleInventoryEssential() {
 }
 
 /** Kam zásoby přidat (#225): aktuální seznam, nebo nový seznam s tímto názvem */
-export type CartTarget = { listId: string; listName: string } | { newListName: string }
+export type CartTarget = { list: Pick<ShoppingList, 'id' | 'name'> } | { newListName: string }
+
+const targetName = (target: CartTarget) => ('list' in target ? target.list.name : target.newListName)
 
 const isConflict = (err: unknown) => axios.isAxiosError(err) && err.response?.status === 409
 
@@ -104,10 +107,10 @@ export function useAddInventoryToCart() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ item, target }: { item: InventoryItem; target: CartTarget }) =>
-      inventoryApi.addToCart(item.id, 'listId' in target ? { listId: target.listId } : { newListName: target.newListName }),
+      inventoryApi.addToCart(item.id, 'list' in target ? { listId: target.list.id } : { newListName: target.newListName }),
     onMutate: ({ item }) => markInCart(qc, [item.id]),
     onSuccess: (_data, { target }) => {
-      showToast(`Přidáno do seznamu „${'listId' in target ? target.listName : target.newListName}“.`, 'success')
+      showToast(`Přidáno do seznamu „${targetName(target)}“.`, 'success')
     },
     onError: (err, _vars, ctx) => {
       if (isConflict(err)) return
@@ -125,7 +128,7 @@ export function useBulkAddToCart() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ items, target }: { items: InventoryItem[]; target: CartTarget }) => {
-      const list = 'listId' in target ? { id: target.listId, name: target.listName } : await shoppingApi.createList(target.newListName)
+      const list = 'list' in target ? target.list : await shoppingApi.createList(target.newListName)
       const failed: string[] = []
       for (const item of items) {
         try {
@@ -141,10 +144,12 @@ export function useBulkAddToCart() {
       if (failed.length === 0) showToast(`Přidáno do seznamu „${listName}“.`, 'success')
       else showToast({ title: 'Některé zásoby se nepodařilo přidat do nákupu', detail: `${failed.join(', ')}. Zkus to znovu.` }, 'error')
     },
-    onError: (err, _vars, ctx) => {
+    onError: (err, { target }, ctx) => {
       // Selhalo už založení seznamu, nic se nepřidalo
       if (ctx?.previous) qc.setQueryData(INVENTORY_KEY, ctx.previous)
-      handleMutationError('Zásoby se nepodařilo přidat do nákupu')(err)
+      // Bez připojení čeká ve frontě jen založení seznamu; zásoby k němu bez jeho ID poslat nejde
+      if (isQueuedOffline(err)) showToast(`Seznam „${targetName(target)}“ se založí po připojení. Zásoby do něj pak přidej znovu.`, 'info')
+      else handleMutationError('Zásoby se nepodařilo přidat do nákupu')(err)
     },
     onSettled: () => refreshCart(qc),
   })

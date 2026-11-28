@@ -619,9 +619,8 @@ describe('shopping page: add from the pantry in one tap', () => {
 
   it('"Vše do nákupu" without an active list creates the named list first and adds every missing stock into it', async () => {
     const { user } = await openPantry([])
-    api.post.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === '/shopping-lists' ? { id: 'list-new', name: 'Chata' } : {} }),
-    )
+    // Nejdřív odpoví založení seznamu, pak obě přidání (výchozí odpověď z beforeEach)
+    api.post.mockResolvedValueOnce({ data: { id: 'list-new', name: 'Chata' } })
 
     await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
     const prompt = await dialog('Nový nákupní seznam')
@@ -637,6 +636,19 @@ describe('shopping page: add from the pantry in one tap', () => {
       ['/inventory/s-empty/add-to-cart', { listId: 'list-new' }],
     ])
     await waitFor(() => expect(showToast).toHaveBeenCalledWith('Přidáno do seznamu „Chata“.', 'success'))
+  })
+
+  it('"Vše do nákupu" into a new list while offline says the list waits for the connection and keeps the stocks out of the list', async () => {
+    const { user } = await openPantry([])
+    api.post.mockRejectedValueOnce(Object.assign(new AxiosError('Network Error', 'ERR_NETWORK'), { queuedOffline: true }))
+
+    await user.click(screen.getByRole('button', { name: 'Vše do nákupu · 2' }))
+    await user.click((await dialog('Nový nákupní seznam')).getByRole('button', { name: 'Vytvořit a přidat' }))
+
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Seznam „Nákup“ se založí po připojení. Zásoby do něj pak přidej znovu.', 'info'))
+    expect(api.post).toHaveBeenCalledTimes(1)
+    expect(stockRow('Káva').queryByRole('img', { name: 'V nákupu' })).not.toBeInTheDocument()
+    expect(errorToasts()).toEqual([])
   })
 
   it('"Vše do nákupu" confirms the count and the list once, adds every missing stock outside the list and reports a partial failure', async () => {
