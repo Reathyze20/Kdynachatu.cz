@@ -162,7 +162,10 @@ export function useDeleteItem() {
   return useMutation({
     mutationFn: (itemId: string) => shoppingApi.deleteItem(itemId),
     onSuccess: () => {
+      // Smazání propojené položky vrátí zásobě „není v nákupu“ (i „Vrátit do zásob“, #226) a mění varování na Přehledu
       void qc.invalidateQueries({ queryKey: SHOPPING_KEY })
+      void qc.invalidateQueries({ queryKey: INVENTORY_KEY })
+      void qc.invalidateQueries({ queryKey: DASHBOARD_SHOPPING_KEY })
     },
     onError: handleMutationError('Chyba při mazání položky'),
   })

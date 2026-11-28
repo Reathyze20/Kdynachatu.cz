@@ -1,6 +1,7 @@
 /**
  * ShoppingPage.tsx — Zásoby a nákupy: přepínač „Zásoby / Nákup · N“ (#224), režim v URL (`?view=pantry|shopping`),
  * bez parametru Nákup. Nákup = rovnou aktuální seznam s hlavičkou a menu ⋮, Zásoby = spíž na chatě.
+ * Od širokého desktopu (rám shellu) jsou oba režimy vedle sebe ve dvou rovnocenných sloupcích a přepínač zmizí (#226).
  */
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -26,11 +27,13 @@ import { Card } from '@/components/shared/Card'
 import { EmptyState } from '@/components/shared/EmptyState'
 import dormouseBasket from '@/features/dashboard/scene/dormouse-basket.png'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useMediaQuery, WIDE_DESKTOP_QUERY } from '@/hooks/useMediaQuery'
 import { FeatureErrorFallback } from '@/components/shared/FeatureErrorFallback'
 import { getShoppingActionErrorMessage } from './ShoppingErrorState'
 
 /** Aktuální seznam se pamatuje v tomto prohlížeči (#224). */
 const SELECTED_LIST_KEY = 'shoppingSelectedListId'
+const SHOPPING_COLUMN_HEADING_ID = 'shopping-column-heading'
 
 function readSelectedListId(): string | null {
   try {
@@ -44,6 +47,8 @@ export function ShoppingPage() {
   useDocumentTitle('Zásoby a nákupy');
   const [searchParams, setSearchParams] = useSearchParams()
   const activeView: ActiveView = searchParams.get('view') === 'pantry' ? 'pantry' : 'shopping'
+  // Desktop: Zásoby vlevo a Nákup vpravo naráz, bez přepínače (#226)
+  const isDesktop = useMediaQuery(WIDE_DESKTOP_QUERY)
   const {
     data: lists = [],
     isLoading,
@@ -171,6 +176,60 @@ export function ShoppingPage() {
     setRenameTarget(null)
   }
 
+  const pantryView = <PantryView currentList={isLoading || isError ? undefined : selectedList} />
+  // Nadpis pravého sloupce; vedle „Zásoby na chatě“ ho nese hlavička karty (výběr a menu seznamu pod ním)
+  const shoppingColumnHeading = isDesktop ? (
+    <h2 id={SHOPPING_COLUMN_HEADING_ID} className="detail-page-title">Nákupní seznam</h2>
+  ) : null
+  const shoppingView = selectedList ? (
+    <ListDetail
+      list={selectedList}
+      header={
+        <div className="flex flex-col gap-3">
+          {shoppingColumnHeading}
+          <ListHeader
+            list={selectedList}
+            lists={lists}
+            nested={isDesktop}
+            onSelect={rememberList}
+            onRename={setRenameTarget}
+            onShare={setShareList}
+            onArchive={handleArchiveList}
+            onDelete={handleDeleteList}
+          />
+        </div>
+      }
+    />
+  ) : (
+    <div className="p-3 md:p-6">
+      <Card className={isDesktop ? 'flex flex-col gap-4' : undefined}>
+        {shoppingColumnHeading}
+        {isLoading ? (
+          [1, 2, 3].map((i) => (
+            <div key={i} className="skeleton-list-item">
+              <div className="skeleton skeleton-text medium"></div>
+            </div>
+          ))
+        ) : isError ? (
+          <FeatureErrorFallback
+            bare
+            title="Seznamy se nepodařilo načíst"
+            error={listsError}
+            resetErrorBoundary={() => {
+              void refetchLists()
+            }}
+          />
+        ) : (
+          <EmptyState
+            image={dormouseBasket}
+            message="Zatím tu není žádný nákupní seznam."
+            action={{ label: 'Založit nákupní seznam', icon: Plus, onClick: () => setNewListName('Nákup') }}
+          />
+        )}
+      </Card>
+    </div>
+  )
+
   return (
     <div className="shopping-page" id="shopping-page" data-testid="shopping-page">
       {/* Page header inside the legacy master-detail frame, so it pads like the cards below it */}
@@ -178,61 +237,24 @@ export function ShoppingPage() {
         <Card className="flex flex-col gap-4">
           <PageHeader
             title="Zásoby a nákupy"
-            primaryAction={activeView === 'shopping' ? { label: 'Nový seznam', icon: Plus, onClick: () => setNewListName('') } : undefined}
+            primaryAction={activeView === 'shopping' || isDesktop ? { label: 'Nový seznam', icon: Plus, onClick: () => setNewListName('') } : undefined}
           />
-          <ViewSwitcher activeView={activeView} onChange={handleChangeView} pendingCount={pendingCount} />
+          {!isDesktop && <ViewSwitcher activeView={activeView} onChange={handleChangeView} pendingCount={pendingCount} />}
         </Card>
       </div>
 
-      {/* Obsah: Zásoby, nebo rovnou aktuální nákupní seznam */}
-      <div className="shopping-layout" id="shopping-layout">
-        <div className="shopping-right-col">
-          {activeView === 'pantry' ? (
-            <PantryView currentList={isLoading || isError ? undefined : selectedList} />
-          ) : selectedList ? (
-            <ListDetail
-              list={selectedList}
-              header={
-                <ListHeader
-                  list={selectedList}
-                  lists={lists}
-                  onSelect={rememberList}
-                  onRename={setRenameTarget}
-                  onShare={setShareList}
-                  onArchive={handleArchiveList}
-                  onDelete={handleDeleteList}
-                />
-              }
-            />
-          ) : (
-            <div className="p-3 md:p-6">
-              <Card>
-                {isLoading ? (
-                  [1, 2, 3].map((i) => (
-                    <div key={i} className="skeleton-list-item">
-                      <div className="skeleton skeleton-text medium"></div>
-                    </div>
-                  ))
-                ) : isError ? (
-                  <FeatureErrorFallback
-                    bare
-                    title="Seznamy se nepodařilo načíst"
-                    error={listsError}
-                    resetErrorBoundary={() => {
-                      void refetchLists()
-                    }}
-                  />
-                ) : (
-                  <EmptyState
-                    image={dormouseBasket}
-                    message="Zatím tu není žádný nákupní seznam."
-                    action={{ label: 'Založit nákupní seznam', icon: Plus, onClick: () => setNewListName('Nákup') }}
-                  />
-                )}
-              </Card>
-            </div>
-          )}
-        </div>
+      {/* Obsah: Zásoby, nebo rovnou aktuální nákupní seznam; na desktopu obojí vedle sebe */}
+      <div className={isDesktop ? 'shopping-layout is-split' : 'shopping-layout'} id="shopping-layout">
+        {isDesktop ? (
+          <>
+            <div className="shopping-right-col">{pantryView}</div>
+            <section className="shopping-right-col" aria-labelledby={SHOPPING_COLUMN_HEADING_ID}>{shoppingView}</section>
+          </>
+        ) : (
+          <div className="shopping-right-col">
+            {activeView === 'pantry' ? pantryView : shoppingView}
+          </div>
+        )}
       </div>
 
       <PromptDialog
