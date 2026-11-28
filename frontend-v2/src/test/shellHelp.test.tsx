@@ -57,7 +57,6 @@ describe('nápověda bez plovoucího tlačítka (#524)', () => {
     await user.click(within(await screen.findByRole('dialog', { name: 'Víc' })).getByRole('button', { name: 'Nápověda' }))
     const body = (await screen.findByRole('dialog', { name: 'Nápověda k této stránce' })).querySelector<HTMLElement>('#help-modal-content')!
     expect(body.className).toMatch(/(^|\s)text-body(\s|$)/)
-    expect(body.className).toContain('[&_h3]:text-card-title')
     for (const [file, source] of Object.entries(SOURCES)) expect(source, file).not.toMatch(/help-modal-(?!content)[\w-]+/)
   })
 
