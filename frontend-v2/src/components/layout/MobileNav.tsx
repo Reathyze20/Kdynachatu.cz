@@ -23,7 +23,7 @@ import { usePwaInstall } from '@/hooks/usePwaInstall'
 interface MobileNavProps {
   /** Otevře šuplík profilu (drží ho AppShell). Bez něj Víc položku „Můj profil“ nenabízí. */
   onOpenProfileDrawer?: () => void
-  /** Maskot na horní hraně lišty (#566). Dodá ho AppShell, protože čte nastavení Scény chaty ze serveru (#687). */
+  /** Maskot na horní hraně lišty (#566). Dodá ho AppShell: maskot čte nastavení Scény chaty ze serveru (#687), lišta sama preference nenačítá. */
   mascot?: ReactNode
 }
 

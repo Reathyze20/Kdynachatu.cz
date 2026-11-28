@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { useMigrateDeviceSceneMode } from '@/features/dashboard/sceneMode'
+import { Toast } from '@/components/shared/Toast'
 import apiClient from '@/api/client'
 import type { DashboardReservationsData } from '@/api/dashboard'
 
@@ -46,11 +47,8 @@ function patchSucceeds() {
   })
 }
 
-/** Přenos volby ze zařízení běží v rámu přihlášené appky (AppShell), tady vedle Přehledu. */
-function MigrateDeviceSceneMode() {
-  useMigrateDeviceSceneMode(true)
-  return null
-}
+/** Přenos volby ze zařízení běží v AppShell, tady vedle Přehledu. */
+const MigrateDeviceSceneMode = () => (useMigrateDeviceSceneMode(true), null)
 
 function renderApp({ migrate = false } = {}) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
@@ -100,7 +98,7 @@ describe('přenos volby ze zařízení na server (#687)', () => {
     renderApp({ migrate: true })
 
     await waitFor(() => expect(apiClient.patch).toHaveBeenCalledWith('/users/me', { dashboardPrefs: { sceneMode: 'static' } }))
-    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+    await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBeNull())
     await settle()
     expect(apiClient.patch).toHaveBeenCalledTimes(1)
     expect(await sceneImg()).toHaveAttribute('data-motion', 'static')
@@ -113,7 +111,7 @@ describe('přenos volby ze zařízení na server (#687)', () => {
     renderApp({ migrate: true })
 
     await waitFor(() => expect(apiClient.patch).toHaveBeenCalledWith('/users/me', { dashboardPrefs: { cabinScene: false } }))
-    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+    await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBeNull())
     await settle()
     expect(apiClient.patch).toHaveBeenCalledTimes(1)
     expect(within(await openEditSheet()).getByRole('switch', { name: 'Scéna chaty' })).not.toBeChecked()
@@ -129,16 +127,18 @@ describe('přenos volby ze zařízení na server (#687)', () => {
     expect(apiClient.patch).not.toHaveBeenCalled()
   })
 
-  it('když přenos selže, volba v zařízení zůstane na příští pokus', async () => {
+  it('když přenos selže, volba v zařízení zůstane na příští pokus, bez hlášky o chybě', async () => {
     localStorage.setItem(STORAGE_KEY, 'static')
     setApi({ cabinScene: true })
     vi.mocked(apiClient.patch).mockImplementation(() =>
       Promise.reject(Object.assign(new Error('Request failed with status code 500'), { response: { status: 500, data: { message: 'Chyba serveru' } } })))
+    render(<Toast />)
     renderApp({ migrate: true })
 
     await waitFor(() => expect(apiClient.patch).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBe('static'))
     await settle()
     expect(apiClient.patch).toHaveBeenCalledTimes(1)
+    expect(screen.queryByTestId('toast')).not.toBeInTheDocument()
   })
 })
